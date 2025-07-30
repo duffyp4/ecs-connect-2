@@ -1,0 +1,72 @@
+# Prompt for Replit Coding Agent (Updated – ECS MVP with Node.js + Supabase + GoCanvas Workflow)
+
+## Project Objective
+Build a minimal MVP web app overlaying ECS’s existing GoCanvas workflow. Customer Service Reps (CSRs) will initiate jobs via your web form, automatically creating unique Job IDs and timestamps, then submit that data directly into a GoCanvas workflow-enabled form via API. Track technician submissions by the Job ID, calculate turnaround times, and log everything into Google Sheets.
+
+Attached documents:
+- ECS Product Requirements Document (PRD)
+- Screenshot of current CSR form ("Testing Copy") to replicate exactly
+- GoCanvas API v3 documentation (provided separately)
+
+## Technical Requirements (Node.js + Supabase)
+
+1. **Frontend Web Form**
+- Exactly replicate fields from provided CSR form screenshot.
+- Automatically generate a unique Job ID on form submission.
+- Job ID format: `"ECS-" + YYYYMMDDHHMMSS + 4-digit random number`.  
+  Example: `ECS-20250730140123-4829`
+- Automatically capture job initiation timestamp (UTC).
+
+2. **Backend Functionality (Node.js)**
+- Use Express.js (or similar) framework on Node.js for backend logic.
+- Securely manage OAuth2 authentication tokens to interact with GoCanvas API (`POST /oauth/token`).
+- Store job data and timestamps in Supabase.
+- After form submission:
+  - Use GoCanvas API (`POST /submissions`) to create new submission.
+  - Populate form fields exactly (as in CSR screenshot), including the new **"Job ID" field** (please add this field explicitly to GoCanvas form).
+  - Assign submission to technician using provided technician email (`Shop Handoff` field from CSR form).
+- Continuously poll GoCanvas API (`GET /submissions`) or listen to webhooks (if supported) to detect completed technician submissions.
+- Upon technician submission detection:
+  - Identify submission by Job ID.
+  - Capture technician completion timestamp.
+  - Calculate turnaround time: (tech completion timestamp – CSR initiation timestamp).
+
+3. **Google Sheets Integration**
+- Sync each job’s details into Google Sheets automatically:
+  - Job ID
+  - CSR initiation timestamp
+  - Technician submission timestamp
+  - Calculated turnaround time
+  - Customer/job details entered by CSR.
+
+4. **Minimal Admin Dashboard**
+- Display recent job initiations clearly, with statuses:
+  - Job ID, timestamps, turnaround time
+  - Assigned technician, customer details
+  - Easily spot incomplete/stalled jobs.
+
+## Important Technical Clarifications
+- OAuth2 Bearer Tokens required (no basic auth).
+- Use GoCanvas **Submission API** (`POST /submissions`)—do not use Dispatch.
+- Explicitly include newly-created "Job ID" field in your GoCanvas form for easy tracking.
+
+## Tech Stack Summary
+- Frontend: React or plain HTML/CSS/JS form
+- Backend: Node.js (Express recommended)
+- Database: Supabase (for real-time storage)
+- OAuth2 (GoCanvas API)
+- Google Sheets API integration
+
+## Coding Response Requirements
+- Scaffold frontend clearly matching CSR form screenshot.
+- Backend clearly structured for OAuth2, GoCanvas submission API, Google Sheets sync, and Supabase DB storage.
+- Clearly commented code and simple error handling.
+- README with clear setup, config, deployment instructions.
+- Placeholders clearly marked for credentials, IDs, and sensitive information.
+
+## Immediate Next Steps for You
+- Carefully review attached PRD, CSR form screenshot, and GoCanvas API documentation.
+- Clearly scaffold your Node.js backend and frontend with integration points defined.
+- Provide brief, clear step-by-step plan for your build.
+
+Let’s start building!
