@@ -1,0 +1,117 @@
+Great news: this is solvable and you don’t have to guess field IDs. Here’s the playbook.
+
+# Solve the Field-Mapping Challenge (works for **submissions** too)
+
+## 1) Pull the form definition (get every `entry_id`)
+
+Use the Forms API with the **flat** format to expose all fields:
+
+```bash
+curl -H "Authorization: Bearer <TOKEN>" \
+  "https://api.gocanvas.com/api/v3/forms/<FORM_ID>?format=flat"
+```
+
+* This returns a flattened JSON structure that includes each field’s **`entry_id`** (and label/type/required).
+* If `flat` doesn’t show everything for your account, call the nested version and traverse `sections -> sheets -> entries`:
+
+```bash
+curl -H "Authorization: Bearer <TOKEN>" \
+  "https://api.gocanvas.com/api/v3/forms/<FORM_ID>?format=nested"
+```
+
+## 2) Generate a reusable mapping JSON
+
+Run a tiny Node script once to build `{ "Human Label": entry_id }` and cache it.
+
+```js
+// scripts/buildFieldMap.js
+import axios from "axios";
+import fs from "fs";
+
+const BASE = "https://api.gocanvas.com/api/v3";
+const FORM_ID = process.env.GC_FORM_ID;
+
+async function main() {
+  const token = process.env.GC_BEARER;
+  const { data } = await axios.get(`${BASE}/forms/${FORM_ID}?format=flat`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  // Adjust selectors to match your response shape.
+  // Common patterns: data.entries[] or data.fields[] with id/label/required/type
+  const entries = (data.entries || data.fields || []).map(e => ({
+    id: e.id || e.entry_id,
+    label: e.label || e.name || e.display || `field_${e.id}`,
+    required: !!e.required,
+    type: e.type
+  }));
+
+  const map = {};
+  for (const e of entries) map[e.label] = e.id;
+
+  fs.writeFileSync("./gocanvas_field_map.json", JSON.stringify({ form_id: FORM_ID, version: data.version, entries }, null, 2));
+  console.log("Saved gocanvas_field_map.json with", entries.length, "fields");
+}
+
+main().catch(err => { console.error(err.response?.data || err); process.exit(1); });
+```
+
+* Commit `gocanvas_field_map.json` to your repo (or store in Supabase).
+* In your app, load this file and map your CSR web-form fields to the correct `entry_id`s.
+
+## 3) Use the map to build `responses[]` for API calls
+
+When you create the submission (or dispatch), translate your payload with the map:
+
+```js
+import fieldMap from "./gocanvas_field_map.json" assert { type: "json" };
+
+function toResponses(payload) {
+  const mapByLabel = Object.fromEntries(fieldMap.entries.map(e => [e.label, e.id]));
+  return [
+    { entry_id: mapByLabel["Customer Name"], value: payload.customer_name },
+    { entry_id: mapByLabel["Phone Number"],  value: payload.phone },
+    { entry_id: mapByLabel["Trailer ID"],    value: payload.trailer_id },
+    { entry_id: mapByLabel["Job ID"],        value: payload.jobId }, // your new field
+    // …include any other CSR fields (ensure required ones are present)
+  ].filter(r => r.entry_id && r.value !== undefined);
+}
+```
+
+Then:
+
+```js
+await axios.post("https://api.gocanvas.com/api/v3/submissions", {
+  guid: payload.jobId,
+  form: { id: Number(process.env.GC_FORM_ID) },
+  responses: toResponses(payload),
+  // optionally department_id/user_id based on your workflow
+}, { headers: { Authorization: `Bearer ${token}` }});
+```
+
+> Same shape applies if you were using **dispatches**: `{ entry_id, value }` per item.
+> For loop screens, include `multi_key` with consistent values for repeated rows.
+
+## 4) Make it robust (versioning + required fields)
+
+* **Watch form version:** Store `{form_id, version}` next to your map. If the form’s version changes, **rebuild the map** automatically and alert yourself.
+* **Required fields:** Use the map to locate fields marked `required: true` and **enforce they’re populated** before calling the API, otherwise GoCanvas will reject the request.
+* **Label drift:** If labels change, your map builder still works (it uses IDs from GoCanvas). Just rebuild the map to refresh ID↔label pairs.
+* **Permissions:** If you don’t see entries, your token/user may lack permission to read the form definition. Confirm credentials/roles.
+
+---
+
+### Quick fallback if you can’t fetch the form definition
+
+* Create one **test submission** in the UI, then `GET /submissions/<id>` to see its `responses[]` (each includes `entry_id`). You won’t get labels, but you can back-map by comparing values to known fields. It’s clunkier, but works in a pinch.
+
+---
+
+### TL;DR
+
+1. **GET /forms/{id}?format=flat** → extract all `entry_id`s.
+2. Build and cache a **field map** JSON.
+3. Convert your CSR payload into `responses[]` using that map.
+4. Rebuild the map whenever the **form version** changes and validate **required** fields before submission.
+
+This removes guesswork and makes your integration resilient to form edits.

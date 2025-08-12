@@ -84,19 +84,39 @@ export class GoCanvasService {
     }
 
     try {
-      // TEMPORARY: Skip dispatch creation until form field mapping is configured
-      // GoCanvas requires actual form field entry_ids in responses array
-      console.log(`GoCanvas dispatch creation skipped for job ${jobData.jobId} - field mapping needed`);
-      console.log('Job details available for manual dispatch:', {
-        jobId: jobData.jobId,
-        customer: jobData.customerName,
-        store: jobData.storeName,
-        contact: jobData.contactNumber,
-        trailer: jobData.trailerId,
-        checkIn: `${jobData.checkInDate} at ${jobData.checkInTime}`
+      const responses = this.mapJobDataToFormResponses(jobData);
+      const dispatchData = {
+        dispatch_type: 'immediate_dispatch',
+        form_id: parseInt(this.formId),
+        name: `ECS Job: ${jobData.jobId}`,
+        description: `Job for ${jobData.customerName} at ${jobData.storeName}. Contact: ${jobData.contactNumber}. Trailer: ${jobData.trailerId || 'N/A'}`,
+        send_notification: true,
+        responses: responses,
+      };
+
+      console.log('Creating dispatch with mapped responses:', { 
+        dispatchName: dispatchData.name, 
+        responseCount: responses.length,
+        responses: responses
       });
-      
-      return 'skip-field-mapping-needed';
+
+      const response = await fetch(`${this.baseUrl}/dispatches`, {
+        method: 'POST',
+        headers: {
+          'Authorization': this.getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dispatchData),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to create dispatch: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log('GoCanvas dispatch created successfully:', result.id);
+      return result.id;
     } catch (error) {
       console.error('Failed to create GoCanvas dispatch:', error);
       throw error;
@@ -142,53 +162,67 @@ export class GoCanvasService {
   }
 
   private mapJobDataToFormResponses(jobData: any): any[] {
-    // Map key job data to form responses with generic entry IDs
-    // These would need to be mapped to actual form entry IDs from the GoCanvas form structure
+    // Load field mappings from the generated field map
+    let fieldMap: any = {};
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const mapPath = path.join(process.cwd(), 'gocanvas_field_map.json');
+      const mapData = JSON.parse(fs.readFileSync(mapPath, 'utf8'));
+      fieldMap = mapData.labelToIdMap || {};
+    } catch (error) {
+      console.error('Failed to load field map, using fallback mapping:', error);
+      return this.getFallbackResponses(jobData);
+    }
+
     const responses = [];
     
-    if (jobData.jobId) {
-      responses.push({
-        entry_id: "job_id_field",
-        value: jobData.jobId
-      });
+    // Map common ECS fields to GoCanvas form fields based on discovered field map
+    const mappings = [
+      { data: jobData.jobId, labels: ['Job ID', 'Job Number', 'ECS Job ID', 'Job Reference'] },
+      { data: jobData.customerName, labels: ['Customer Name', 'Customer', 'Client Name', 'Account Name'] },
+      { data: jobData.storeName, labels: ['Store Name', 'Shop Name', 'Location', 'Store Location'] },
+      { data: jobData.contactNumber, labels: ['Contact Number', 'Phone Number', 'Phone', 'Contact Phone'] },
+      { data: jobData.contactName, labels: ['Contact Name', 'Contact Person', 'Primary Contact'] },
+      { data: jobData.trailerId, labels: ['Trailer ID', 'Trailer Number', 'Trailer #', 'Unit ID'] },
+      { data: jobData.checkInDate, labels: ['Check In Date', 'Date', 'Service Date', 'Scheduled Date'] },
+      { data: jobData.checkInTime, labels: ['Check In Time', 'Time', 'Service Time', 'Scheduled Time'] },
+      { data: jobData.shopHandoff, labels: ['Technician', 'Tech', 'Assigned Tech', 'Shop Handoff'] },
+    ];
+
+    for (const mapping of mappings) {
+      if (mapping.data) {
+        for (const label of mapping.labels) {
+          const entryId = fieldMap[label];
+          if (entryId) {
+            responses.push({
+              entry_id: entryId,
+              value: String(mapping.data)
+            });
+            break; // Use first matching field
+          }
+        }
+      }
     }
-    
-    if (jobData.customerName) {
-      responses.push({
-        entry_id: "customer_name_field", 
-        value: jobData.customerName
-      });
-    }
-    
-    if (jobData.storeName) {
-      responses.push({
-        entry_id: "store_name_field",
-        value: jobData.storeName
-      });
-    }
-    
-    if (jobData.contactNumber) {
-      responses.push({
-        entry_id: "contact_number_field",
-        value: jobData.contactNumber
-      });
-    }
-    
-    if (jobData.trailerId) {
-      responses.push({
-        entry_id: "trailer_id_field",
-        value: jobData.trailerId
-      });
-    }
-    
-    // Always include at least one field to satisfy GoCanvas requirements
+
+    // Ensure we have at least one response
     if (responses.length === 0) {
-      responses.push({
-        entry_id: "notes_field",
-        value: `ECS Job: ${jobData.jobId} - Auto-dispatched from ECS system`
-      });
+      return this.getFallbackResponses(jobData);
     }
+
+    return responses;
+  }
+
+  private getFallbackResponses(jobData: any): any[] {
+    // Fallback using known field IDs from the discovered form structure
+    const responses = [];
     
+    // Use User ID field (required field from form) as fallback
+    responses.push({
+      entry_id: 708148223, // "User ID" field that is required
+      value: `ECS-${jobData.jobId}`
+    });
+
     return responses;
   }
 }
