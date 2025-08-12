@@ -1,168 +1,211 @@
-interface GoCanvasConfig {
-  clientId: string;
-  clientSecret: string;
-  baseUrl: string;
-}
-
-interface GoCanvasToken {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-}
-
-interface GoCanvasSubmission {
-  id: string;
-  form_id: string;
-  status: string;
-  created_at: string;
-  responses: Array<{
-    entry_id: string;
-    value: string;
-  }>;
-}
-
+// GoCanvas API integration service
 export class GoCanvasService {
-  private config: GoCanvasConfig;
-  private accessToken: string | null = null;
-  private tokenExpiry: number = 0;
+  private baseUrl = 'https://api.gocanvas.com/api/v3';
+  private username: string;
+  private password: string;
+  private formId?: string;
 
   constructor() {
-    this.config = {
-      clientId: process.env.GOCANVAS_CLIENT_ID || process.env.GOCANVAS_CLIENT_ID_ENV_VAR || "default_client_id",
-      clientSecret: process.env.GOCANVAS_CLIENT_SECRET || process.env.GOCANVAS_CLIENT_SECRET_ENV_VAR || "default_client_secret",
-      baseUrl: "https://api.gocanvas.com/api/v3",
-    };
-  }
-
-  private async authenticate(): Promise<string> {
-    if (this.accessToken && Date.now() < this.tokenExpiry) {
-      return this.accessToken;
-    }
-
-    try {
-      const response = await fetch(`${this.config.baseUrl}/oauth/token`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          grant_type: 'client_credentials',
-          client_id: this.config.clientId,
-          client_secret: this.config.clientSecret,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`GoCanvas authentication failed: ${response.statusText}`);
-      }
-
-      const tokenData: GoCanvasToken = await response.json();
-      this.accessToken = tokenData.access_token;
-      this.tokenExpiry = Date.now() + (tokenData.expires_in * 1000) - 60000; // 1 minute buffer
-
-      return this.accessToken;
-    } catch (error) {
-      console.error('GoCanvas authentication error:', error);
-      throw new Error('Failed to authenticate with GoCanvas API');
-    }
-  }
-
-  async createSubmission(formId: string, jobData: any): Promise<string> {
-    const token = await this.authenticate();
+    this.username = process.env.GOCANVAS_USERNAME || '';
+    this.password = process.env.GOCANVAS_PASSWORD || '';
+    this.formId = process.env.GOCANVAS_FORM_ID;
     
-    const submissionData = {
-      guid: jobData.jobId,
-      form: { id: formId },
-      responses: this.mapJobDataToResponses(jobData),
-      department_id: process.env.GOCANVAS_DEPARTMENT_ID,
-      user_id: await this.getTechnicianUserId(jobData.shopHandoff),
-    };
+    if (!this.username || !this.password) {
+      console.warn('GoCanvas credentials not configured. Using mock mode.');
+    }
+  }
+
+  private getAuthHeader(): string {
+    const credentials = Buffer.from(`${this.username}:${this.password}`).toString('base64');
+    return `Basic ${credentials}`;
+  }
+
+  async listForms(): Promise<any[]> {
+    if (!this.username || !this.password) {
+      console.log('GoCanvas not configured, returning empty forms list');
+      return [];
+    }
 
     try {
-      const response = await fetch(`${this.config.baseUrl}/submissions`, {
-        method: 'POST',
+      console.log('Fetching forms from GoCanvas...');
+      const response = await fetch(`${this.baseUrl}/forms`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': this.getAuthHeader(),
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(submissionData),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`GoCanvas submission failed: ${response.statusText} - ${errorText}`);
+        throw new Error(`Failed to list forms: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
-      const submission = await response.json();
-      return submission.id;
+      const data = await response.json();
+      console.log('Available GoCanvas forms:', data);
+      return data;
     } catch (error) {
-      console.error('GoCanvas submission error:', error);
-      throw new Error('Failed to create GoCanvas submission');
+      console.error('Failed to list GoCanvas forms:', error);
+      throw error;
     }
   }
 
-  async getSubmission(submissionId: string): Promise<GoCanvasSubmission | null> {
-    const token = await this.authenticate();
+  async getFormDetails(formId: string): Promise<any> {
+    if (!this.username || !this.password) {
+      throw new Error('GoCanvas credentials not configured');
+    }
 
     try {
-      const response = await fetch(`${this.config.baseUrl}/submissions/${submissionId}`, {
+      console.log(`Fetching form details for form ID: ${formId}`);
+      const response = await fetch(`${this.baseUrl}/forms/${formId}?format=flat`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': this.getAuthHeader(),
+          'Content-Type': 'application/json',
         },
       });
 
-      if (response.status === 404) {
-        return null;
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to get form details: ${response.status} ${response.statusText} - ${errorText}`);
       }
+
+      const formData = await response.json();
+      console.log('Form details:', formData);
+      return formData;
+    } catch (error) {
+      console.error('Failed to get form details:', error);
+      throw error;
+    }
+  }
+
+  async createDispatch(jobData: any): Promise<string> {
+    if (!this.username || !this.password || !this.formId) {
+      console.log('GoCanvas not configured, skipping dispatch creation');
+      return 'mock-dispatch-id';
+    }
+
+    try {
+      // For now, create dispatch without pre-populated responses
+      // The technician will fill out the form manually in GoCanvas
+      const dispatchData = {
+        dispatch_type: 'immediate_dispatch',
+        form_id: parseInt(this.formId),
+        name: `ECS Job: ${jobData.jobId}`,
+        description: `Job for ${jobData.customerName} at ${jobData.storeName}. Contact: ${jobData.contactNumber}. Trailer: ${jobData.trailerId || 'N/A'}`,
+        send_notification: true,
+        // responses: [], // Omit responses for now - technician will fill manually
+      };
+
+      console.log('Creating dispatch with data:', dispatchData);
+      const response = await fetch(`${this.baseUrl}/dispatches`, {
+        method: 'POST',
+        headers: {
+          'Authorization': this.getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dispatchData),
+      });
 
       if (!response.ok) {
-        throw new Error(`Failed to get submission: ${response.statusText}`);
+        const errorText = await response.text();
+        throw new Error(`Failed to create dispatch: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
-      return await response.json();
+      const result = await response.json();
+      console.log('Dispatch created successfully:', result.id);
+      return result.id;
     } catch (error) {
-      console.error('GoCanvas get submission error:', error);
-      return null;
+      console.error('Failed to create GoCanvas dispatch:', error);
+      throw error;
     }
   }
 
-  async checkSubmissionStatus(submissionId: string): Promise<string | null> {
-    const submission = await this.getSubmission(submissionId);
-    return submission?.status || null;
-  }
+  async checkDispatchStatus(dispatchId: string): Promise<'pending' | 'completed' | 'in_progress'> {
+    if (!this.username || !this.password) {
+      console.log('GoCanvas not configured, returning mock status');
+      return 'pending';
+    }
 
-  private mapJobDataToResponses(jobData: any): Array<{ entry_id: string; value: string }> {
-    // Map job data fields to GoCanvas form entry IDs
-    // These would need to be configured based on the actual GoCanvas form structure
-    const fieldMapping = {
-      jobId: "job_id_entry",
-      trailerId: "trailer_id_entry",
-      storeName: "store_name_entry",
-      customerName: "customer_name_entry",
-      contactName: "contact_name_entry",
-      contactNumber: "contact_number_entry",
-      shopHandoff: "technician_entry",
-      // Add more mappings as needed
-    };
+    try {
+      const response = await fetch(`${this.baseUrl}/dispatches/${dispatchId}`, {
+        headers: {
+          'Authorization': this.getAuthHeader(),
+        },
+      });
 
-    const responses: Array<{ entry_id: string; value: string }> = [];
-
-    for (const [field, entryId] of Object.entries(fieldMapping)) {
-      if (jobData[field]) {
-        responses.push({
-          entry_id: entryId,
-          value: jobData[field].toString(),
-        });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to check dispatch status: ${response.status} ${response.statusText} - ${errorText}`);
       }
-    }
 
-    return responses;
+      const dispatch = await response.json();
+      
+      // Map GoCanvas status to our internal status
+      switch (dispatch.status) {
+        case 'assigned':
+        case 'unassigned':
+          return 'pending';
+        case 'received':
+          return 'in_progress';
+        case 'submitted':
+          return 'completed';
+        default:
+          return 'pending';
+      }
+    } catch (error) {
+      console.error('Failed to check dispatch status:', error);
+      return 'pending';
+    }
   }
 
-  private async getTechnicianUserId(email: string): Promise<string | undefined> {
-    // In a real implementation, this would lookup the GoCanvas user ID for the technician email
-    // For now, return undefined to assign to default department
-    return undefined;
+  private mapJobDataToFormResponses(jobData: any): any[] {
+    // Map key job data to form responses with generic entry IDs
+    // These would need to be mapped to actual form entry IDs from the GoCanvas form structure
+    const responses = [];
+    
+    if (jobData.jobId) {
+      responses.push({
+        entry_id: "job_id_field",
+        value: jobData.jobId
+      });
+    }
+    
+    if (jobData.customerName) {
+      responses.push({
+        entry_id: "customer_name_field", 
+        value: jobData.customerName
+      });
+    }
+    
+    if (jobData.storeName) {
+      responses.push({
+        entry_id: "store_name_field",
+        value: jobData.storeName
+      });
+    }
+    
+    if (jobData.contactNumber) {
+      responses.push({
+        entry_id: "contact_number_field",
+        value: jobData.contactNumber
+      });
+    }
+    
+    if (jobData.trailerId) {
+      responses.push({
+        entry_id: "trailer_id_field",
+        value: jobData.trailerId
+      });
+    }
+    
+    // Always include at least one field to satisfy GoCanvas requirements
+    if (responses.length === 0) {
+      responses.push({
+        entry_id: "notes_field",
+        value: `ECS Job: ${jobData.jobId} - Auto-dispatched from ECS system`
+      });
+    }
+    
+    return responses;
   }
 }
 

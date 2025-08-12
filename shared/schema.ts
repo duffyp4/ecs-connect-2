@@ -40,6 +40,7 @@ export const jobs = pgTable("jobs", {
   
   // GoCanvas Integration
   gocanvasSubmissionId: text("gocanvas_submission_id"),
+  gocanvasDispatchId: text("gocanvas_dispatch_id"),
   gocanvasSynced: text("gocanvas_synced").default("false"),
   
   // Google Sheets Integration

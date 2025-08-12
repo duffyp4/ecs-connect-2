@@ -29,20 +29,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create job in storage
       const job = await storage.createJob(validatedData);
       
-      // Create GoCanvas submission
+      // Create GoCanvas dispatch
       try {
-        const formId = process.env.GOCANVAS_FORM_ID || process.env.GOCANVAS_FORM_ID_ENV_VAR || "default_form_id";
-        const submissionId = await goCanvasService.createSubmission(formId, job);
+        const dispatchId = await goCanvasService.createDispatch(job);
         
-        // Update job with GoCanvas submission ID
+        // Update job with GoCanvas dispatch ID
         await storage.updateJob(job.id, {
-          gocanvasSubmissionId: submissionId,
+          gocanvasDispatchId: dispatchId,
           gocanvasSynced: "true",
         });
 
-        console.log(`Created GoCanvas submission ${submissionId} for job ${job.jobId}`);
+        console.log(`Created GoCanvas dispatch ${dispatchId} for job ${job.jobId}`);
       } catch (gocanvasError) {
-        console.error("GoCanvas submission failed:", gocanvasError);
+        console.error("GoCanvas dispatch failed:", gocanvasError);
         // Job is still created, but GoCanvas sync failed
       }
 
@@ -137,6 +136,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating job:", error);
       res.status(500).json({ message: "Failed to update job" });
+    }
+  });
+
+  // GoCanvas API endpoints
+  app.get("/api/gocanvas/forms", async (req, res) => {
+    try {
+      const forms = await goCanvasService.listForms();
+      res.json(forms);
+    } catch (error) {
+      console.error("Error fetching GoCanvas forms:", error);
+      res.status(500).json({ error: "Failed to fetch forms from GoCanvas" });
+    }
+  });
+
+  app.get("/api/gocanvas/forms/:id", async (req, res) => {
+    try {
+      const formDetails = await goCanvasService.getFormDetails(req.params.id);
+      res.json(formDetails);
+    } catch (error) {
+      console.error("Error fetching form details:", error);
+      res.status(500).json({ error: "Failed to fetch form details from GoCanvas" });
     }
   });
 
