@@ -165,8 +165,8 @@ export class GoCanvasService {
     // Load field mappings from the generated field map
     let fieldMap: any = {};
     try {
-      const fs = require('fs');
-      const path = require('path');
+      const fs = eval('require')('fs');
+      const path = eval('require')('path');
       const mapPath = path.join(process.cwd(), 'gocanvas_field_map.json');
       const mapData = JSON.parse(fs.readFileSync(mapPath, 'utf8'));
       fieldMap = mapData.labelToIdMap || {};

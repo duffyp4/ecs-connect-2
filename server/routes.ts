@@ -33,7 +33,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const dispatchId = await goCanvasService.createDispatch(job);
         
-        if (dispatchId && !dispatchId.startsWith('skip-')) {
+        if (dispatchId && typeof dispatchId === 'string' && !dispatchId.startsWith('skip-')) {
           // Update job with GoCanvas dispatch ID
           await storage.updateJob(job.id, {
             gocanvasDispatchId: dispatchId,
