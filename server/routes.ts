@@ -33,13 +33,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const dispatchId = await goCanvasService.createDispatch(job);
         
-        // Update job with GoCanvas dispatch ID
-        await storage.updateJob(job.id, {
-          gocanvasDispatchId: dispatchId,
-          gocanvasSynced: "true",
-        });
-
-        console.log(`Created GoCanvas dispatch ${dispatchId} for job ${job.jobId}`);
+        if (dispatchId && !dispatchId.startsWith('skip-')) {
+          // Update job with GoCanvas dispatch ID
+          await storage.updateJob(job.id, {
+            gocanvasDispatchId: dispatchId,
+            gocanvasSynced: "true",
+          });
+          console.log(`Created GoCanvas dispatch ${dispatchId} for job ${job.jobId}`);
+        } else {
+          console.log(`Job ${job.jobId} created - GoCanvas dispatch ${dispatchId}`);
+        }
       } catch (gocanvasError) {
         console.error("GoCanvas dispatch failed:", gocanvasError);
         // Job is still created, but GoCanvas sync failed

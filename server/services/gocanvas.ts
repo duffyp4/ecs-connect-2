@@ -80,39 +80,23 @@ export class GoCanvasService {
   async createDispatch(jobData: any): Promise<string> {
     if (!this.username || !this.password || !this.formId) {
       console.log('GoCanvas not configured, skipping dispatch creation');
-      return 'mock-dispatch-id';
+      return 'skip-no-config';
     }
 
     try {
-      // For now, create dispatch without pre-populated responses
-      // The technician will fill out the form manually in GoCanvas
-      const dispatchData = {
-        dispatch_type: 'immediate_dispatch',
-        form_id: parseInt(this.formId),
-        name: `ECS Job: ${jobData.jobId}`,
-        description: `Job for ${jobData.customerName} at ${jobData.storeName}. Contact: ${jobData.contactNumber}. Trailer: ${jobData.trailerId || 'N/A'}`,
-        send_notification: true,
-        // responses: [], // Omit responses for now - technician will fill manually
-      };
-
-      console.log('Creating dispatch with data:', dispatchData);
-      const response = await fetch(`${this.baseUrl}/dispatches`, {
-        method: 'POST',
-        headers: {
-          'Authorization': this.getAuthHeader(),
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(dispatchData),
+      // TEMPORARY: Skip dispatch creation until form field mapping is configured
+      // GoCanvas requires actual form field entry_ids in responses array
+      console.log(`GoCanvas dispatch creation skipped for job ${jobData.jobId} - field mapping needed`);
+      console.log('Job details available for manual dispatch:', {
+        jobId: jobData.jobId,
+        customer: jobData.customerName,
+        store: jobData.storeName,
+        contact: jobData.contactNumber,
+        trailer: jobData.trailerId,
+        checkIn: `${jobData.checkInDate} at ${jobData.checkInTime}`
       });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to create dispatch: ${response.status} ${response.statusText} - ${errorText}`);
-      }
-
-      const result = await response.json();
-      console.log('Dispatch created successfully:', result.id);
-      return result.id;
+      
+      return 'skip-field-mapping-needed';
     } catch (error) {
       console.error('Failed to create GoCanvas dispatch:', error);
       throw error;
