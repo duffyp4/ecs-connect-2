@@ -4,7 +4,7 @@ import { googleSheetsService } from './googleSheets';
 
 export class JobTrackerService {
   private pollingInterval: NodeJS.Timeout | null = null;
-  private readonly POLL_INTERVAL_MS = 30000; // 30 seconds
+  private readonly POLL_INTERVAL_MS = 180000; // 3 minutes (increased from 30s)
 
   startPolling(): void {
     if (this.pollingInterval) {
@@ -31,7 +31,7 @@ export class JobTrackerService {
   private async checkPendingJobs(): Promise<void> {
     try {
       const pendingJobs = await storage.getJobsByStatus('pending');
-      const inProgressJobs = await storage.getJobsByStatus('in-progress');
+      const inProgressJobs = await storage.getJobsByStatus('in_progress');
       
       const jobsToCheck = [...pendingJobs, ...inProgressJobs];
 
@@ -47,7 +47,7 @@ export class JobTrackerService {
 
   private async checkJobCompletion(job: any): Promise<void> {
     try {
-      const status = await goCanvasService.checkSubmissionStatus(job.gocanvasSubmissionId!);
+      const status = await goCanvasService.checkSubmissionStatus(job.jobId);
       
       if (!status) {
         console.warn(`Could not get status for job ${job.jobId}`);
@@ -70,16 +70,16 @@ export class JobTrackerService {
         };
 
         console.log(`Job ${job.jobId} completed with turnaround time: ${turnaroundTime} minutes`);
-      } else if (status === 'in-progress' && job.status === 'pending') {
+      } else if (status === 'in_progress' && job.status === 'pending') {
         updates = {
-          status: 'in-progress',
+          status: 'in_progress',
         };
 
         console.log(`Job ${job.jobId} moved to in-progress`);
       }
 
       // Check for overdue jobs (more than 6 hours)
-      if (job.status === 'in-progress' && job.initiatedAt) {
+      if (job.status === 'in_progress' && job.initiatedAt) {
         const hoursElapsed = (currentTime.getTime() - new Date(job.initiatedAt).getTime()) / (1000 * 60 * 60);
         if (hoursElapsed > 6) {
           updates.status = 'overdue';
@@ -118,7 +118,7 @@ export class JobTrackerService {
       today.setHours(0, 0, 0, 0);
 
       const activeJobs = allJobs.filter(job => 
-        job.status === 'pending' || job.status === 'in-progress'
+        job.status === 'pending' || job.status === 'in_progress'
       ).length;
 
       const completedToday = allJobs.filter(job => 

@@ -29,22 +29,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create job in storage
       const job = await storage.createJob(validatedData);
       
-      // Create GoCanvas dispatch
+      // Create GoCanvas submission
       try {
-        const dispatchId = await goCanvasService.createDispatch(job);
+        const submissionId = await goCanvasService.createSubmission(job);
         
-        if (dispatchId && typeof dispatchId === 'string' && !dispatchId.startsWith('skip-')) {
-          // Update job with GoCanvas dispatch ID
+        if (submissionId && typeof submissionId === 'string' && !submissionId.startsWith('skip-')) {
+          // Update job with GoCanvas submission ID
           await storage.updateJob(job.id, {
-            gocanvasDispatchId: dispatchId,
+            gocanvasSubmissionId: submissionId,
             gocanvasSynced: "true",
           });
-          console.log(`Created GoCanvas dispatch ${dispatchId} for job ${job.jobId}`);
+          console.log(`Created GoCanvas submission ${submissionId} for job ${job.jobId}`);
         } else {
-          console.log(`Job ${job.jobId} created - GoCanvas dispatch ${dispatchId}`);
+          console.log(`Job ${job.jobId} created - GoCanvas submission ${submissionId}`);
         }
       } catch (gocanvasError) {
-        console.error("GoCanvas dispatch failed:", gocanvasError);
+        console.error("GoCanvas submission failed:", gocanvasError);
         // Job is still created, but GoCanvas sync failed
       }
 

@@ -1,0 +1,50 @@
+# Delta Prompt — Apply ONLY these changes to the current implementation
+
+1) Replace **dispatches** with **workflow submissions**
+- Wherever you call `POST /dispatches`, change to:
+  - `POST https://api.gocanvas.com/api/v3/submissions`
+  - Body:
+    ```json
+    {
+      "guid": "<jobId>",                   // use our generated Job ID here
+      "form": { "id": <GC_FORM_ID> },
+      "department_id": <GC_DEPARTMENT_ID or omit>,
+      "responses": [ { "entry_id": <id>, "value": "<value>" } ]
+    }
+    ```
+- Remove any dispatch-specific fields (e.g., `dispatch_type`, `send_notification`, `scheduled_at`, etc.).
+
+2) Assignment logic (handoff)
+- Do **not** assign to “available technician.”
+- Include the **shop’s central technician email** in the appropriate CSR field within `responses[]` (the same field the CSR used to trigger handoff).
+- This preserves the existing GoCanvas workflow (CSR → Tech inside a single submission).
+
+3) Correlation key (no Job ID field yet)
+- Continue generating `jobId = ECS-YYYYMMDDHHMMSS-XXXX`.
+- **Use `jobId` as the submission `guid`** so we can match completion later without relying on a form field.
+
+4) Field mapping
+- Add a one-time step to fetch the form structure and cache `entry_id`s:
+  - `GET /forms/{GC_FORM_ID}?format=flat` (fallback to `format=nested`)
+- Build/maintain a `gocanvas_field_map.json` and use it to construct `responses[]`.
+
+5) Polling service adjustments
+- Increase polling interval from **30s** to **2–5 minutes**; implement exponential backoff on **429**.
+- Filter requests by `form_id` and a sensible `start_date`.
+- On each poll:
+  - Retrieve submissions.
+  - If a submission has our `guid` and is **completed**, record `completed_at`, compute **turnaround = completed_at − started_at**, and persist.
+
+6) Data flow and persistence
+- Treat **Supabase** as the **source of truth** (jobs + timestamps).
+- Make Google Sheets writes **idempotent** (upsert by `jobId`) and use it as a mirror for visibility.
+- Add a simple reconciliation task to flag jobs with `started_at` but no completion after N hours.
+
+7) UI/Copy tweaks
+- Update any labels/messages that mention “dispatch” to “submission.”
+- Keep “Technician workflow unchanged” language; clarify CSR takes one minimal step in the web app.
+
+8) Acceptance criteria update
+- Job created in web app → **GoCanvas submission** created (not dispatch), assigned via handoff email → tech completes as usual → system detects completion and computes turnaround → Supabase + Google Sheet updated accurately.
+
+> Implement ONLY these deltas; keep all other parts of the system as-is.

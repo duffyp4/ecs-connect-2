@@ -77,86 +77,89 @@ export class GoCanvasService {
     }
   }
 
-  async createDispatch(jobData: any): Promise<string> {
+  async createSubmission(jobData: any): Promise<string> {
     if (!this.username || !this.password || !this.formId) {
-      console.log('GoCanvas not configured, skipping dispatch creation');
+      console.log('GoCanvas not configured, skipping submission creation');
       return 'skip-no-config';
     }
 
     try {
       const responses = this.mapJobDataToFormResponses(jobData);
-      const dispatchData = {
-        dispatch_type: 'immediate_dispatch',
-        form_id: parseInt(this.formId),
-        name: `ECS Job: ${jobData.jobId}`,
-        description: `Job for ${jobData.customerName} at ${jobData.storeName}. Contact: ${jobData.contactNumber}. Trailer: ${jobData.trailerId || 'N/A'}`,
-        send_notification: true,
+      const submissionData = {
+        guid: jobData.jobId, // Use Job ID as correlation key
+        form: { id: parseInt(this.formId) },
         responses: responses,
       };
 
-      console.log('Creating dispatch with mapped responses:', { 
-        dispatchName: dispatchData.name, 
+      console.log('Creating GoCanvas submission:', { 
+        jobId: jobData.jobId,
+        formId: this.formId,
         responseCount: responses.length,
         responses: responses
       });
 
-      const response = await fetch(`${this.baseUrl}/dispatches`, {
+      const response = await fetch(`${this.baseUrl}/submissions`, {
         method: 'POST',
         headers: {
           'Authorization': this.getAuthHeader(),
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(dispatchData),
+        body: JSON.stringify(submissionData),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Failed to create dispatch: ${response.status} ${response.statusText} - ${errorText}`);
+        throw new Error(`Failed to create submission: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
       const result = await response.json();
-      console.log('GoCanvas dispatch created successfully:', result.id);
-      return result.id;
+      console.log('GoCanvas submission created successfully:', result.id || result.guid);
+      return result.id || result.guid || jobData.jobId;
     } catch (error) {
-      console.error('Failed to create GoCanvas dispatch:', error);
+      console.error('Failed to create GoCanvas submission:', error);
       throw error;
     }
   }
 
-  async checkDispatchStatus(dispatchId: string): Promise<'pending' | 'completed' | 'in_progress'> {
+  async checkSubmissionStatus(jobId: string): Promise<'pending' | 'completed' | 'in_progress'> {
     if (!this.username || !this.password) {
       console.log('GoCanvas not configured, returning mock status');
       return 'pending';
     }
 
     try {
-      const response = await fetch(`${this.baseUrl}/dispatches/${dispatchId}`, {
+      // Query submissions by guid (our job ID) and form_id
+      const response = await fetch(`${this.baseUrl}/submissions?guid=${jobId}&form_id=${this.formId}`, {
         headers: {
           'Authorization': this.getAuthHeader(),
+          'Content-Type': 'application/json',
         },
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to check dispatch status: ${response.status} ${response.statusText} - ${errorText}`);
+        console.warn(`Failed to check submission status: ${response.status}`);
+        return 'pending';
       }
 
-      const dispatch = await response.json();
+      const data = await response.json();
+      const submissions = data.submissions || data.data || [];
       
-      // Map GoCanvas status to our internal status
-      switch (dispatch.status) {
-        case 'assigned':
-        case 'unassigned':
-          return 'pending';
-        case 'received':
-          return 'in_progress';
-        case 'submitted':
-          return 'completed';
-        default:
-          return 'pending';
+      if (submissions.length === 0) {
+        return 'pending';
+      }
+
+      const submission = submissions[0];
+      
+      // Map GoCanvas submission status to our status
+      if (submission.status === 'completed' || submission.completed_at) {
+        return 'completed';
+      } else if (submission.status === 'in_progress' || submission.started_at) {
+        return 'in_progress';
+      } else {
+        return 'pending';
       }
     } catch (error) {
-      console.error('Failed to check dispatch status:', error);
+      console.error('Error checking submission status:', error);
       return 'pending';
     }
   }
@@ -187,7 +190,8 @@ export class GoCanvasService {
       { data: jobData.trailerId, labels: ['Trailer ID', 'Trailer Number', 'Trailer #', 'Unit ID'] },
       { data: jobData.checkInDate, labels: ['Check In Date', 'Date', 'Service Date', 'Scheduled Date'] },
       { data: jobData.checkInTime, labels: ['Check In Time', 'Time', 'Service Time', 'Scheduled Time'] },
-      { data: jobData.shopHandoff, labels: ['Technician', 'Tech', 'Assigned Tech', 'Shop Handoff'] },
+      // Shop handoff field - include central technician email for workflow handoff
+      { data: jobData.shopHandoff, labels: ['Technician', 'Tech', 'Assigned Tech', 'Shop Handoff', 'Technician Email'] },
     ];
 
     for (const mapping of mappings) {
