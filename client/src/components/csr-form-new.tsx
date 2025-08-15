@@ -134,7 +134,7 @@ export default function CSRForm() {
       <div>
         <h1 className="text-2xl font-bold text-[var(--ecs-dark)] flex items-center">
           <ClipboardList className="mr-2 h-6 w-6" />
-          Create New Job
+          CSR Check-in Portal
         </h1>
         <p className="text-muted-foreground">Complete all required fields to initiate a new service job</p>
       </div>
@@ -143,7 +143,7 @@ export default function CSRForm() {
         <CardHeader className="card-header">
           <h2 className="text-lg font-semibold flex items-center">
             <ClipboardList className="mr-2 h-5 w-5" />
-            Job Information
+            Customer Check-in
           </h2>
           <p className="text-sm opacity-90">Fields matching GoCanvas "Testing Copy" form structure</p>
         </CardHeader>

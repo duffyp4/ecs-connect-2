@@ -31,7 +31,7 @@ export default function Layout({ children }: LayoutProps) {
           <div className="flex items-center space-x-2">
             <Bolt className="h-6 w-6 text-[var(--ecs-primary)]" />
             <span className="font-semibold text-[var(--ecs-primary)] text-lg">
-              ECS Tracking System
+              CSR Check-in Portal
             </span>
           </div>
           

@@ -1,8 +1,8 @@
-# ECS Turnaround Time Tracking System
+# CSR Check-in Portal
 
 ## Overview
 
-This is a web application designed to track job turnaround times for Emissions and Cooling Solutions (ECS). The system provides a minimal overlay on top of ECS's existing GoCanvas workflow, allowing Customer Service Representatives (CSRs) to initiate jobs through a web form that automatically integrates with GoCanvas and tracks completion times.
+This is a web application designed as a Customer Service Representative (CSR) Check-in Portal for Emissions and Cooling Solutions (ECS). The system provides a minimal overlay on top of ECS's existing GoCanvas workflow, allowing CSRs to initiate jobs through a web form that automatically integrates with GoCanvas and tracks completion times.
 
 ## User Preferences
 
