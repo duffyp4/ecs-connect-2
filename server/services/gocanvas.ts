@@ -168,8 +168,8 @@ export class GoCanvasService {
     // Load field mappings from the generated field map
     let fieldMap: any = {};
     try {
-      const fs = eval('require')('fs');
-      const path = eval('require')('path');
+      const fs = require('fs');
+      const path = require('path');
       const mapPath = path.join(process.cwd(), 'gocanvas_field_map.json');
       const mapData = JSON.parse(fs.readFileSync(mapPath, 'utf8'));
       fieldMap = mapData.labelToIdMap || {};
@@ -182,16 +182,30 @@ export class GoCanvasService {
     
     // Map common ECS fields to GoCanvas form fields based on discovered field map
     const mappings = [
-      { data: jobData.jobId, labels: ['Job ID', 'Job Number', 'ECS Job ID', 'Job Reference'] },
-      { data: jobData.customerName, labels: ['Customer Name', 'Customer', 'Client Name', 'Account Name'] },
-      { data: jobData.storeName, labels: ['Store Name', 'Shop Name', 'Location', 'Store Location'] },
-      { data: jobData.contactNumber, labels: ['Contact Number', 'Phone Number', 'Phone', 'Contact Phone'] },
-      { data: jobData.contactName, labels: ['Contact Name', 'Contact Person', 'Primary Contact'] },
-      { data: jobData.trailerId, labels: ['Trailer ID', 'Trailer Number', 'Trailer #', 'Unit ID'] },
-      { data: jobData.checkInDate, labels: ['Check In Date', 'Date', 'Service Date', 'Scheduled Date'] },
-      { data: jobData.checkInTime, labels: ['Check In Time', 'Time', 'Service Time', 'Scheduled Time'] },
-      // Shop handoff field - include central technician email for workflow handoff
-      { data: jobData.shopHandoff, labels: ['Technician', 'Tech', 'Assigned Tech', 'Shop Handoff', 'Technician Email'] },
+      // Exact field mappings based on GoCanvas form structure
+      { data: jobData.p21OrderNumber, labels: ['P21 Order Number (Enter after invoicing)'] },
+      { data: jobData.userId, labels: ['User ID'] },
+      { data: jobData.permissionToStart, labels: ['Permission to Start'] },
+      { data: jobData.permissionDeniedStop, labels: ['Permission Denied Stop'] },
+      { data: jobData.shopName, labels: ['Shop Name'] },
+      { data: jobData.customerName, labels: ['Customer Name'] },
+      { data: jobData.customerShipTo, labels: ['Customer Ship To'] },
+      { data: jobData.p21ShipToId, labels: ['P21 Ship to ID'] },
+      { data: jobData.customerSpecificInstructions, labels: ['Customer Specific Instructions?'] },
+      { data: jobData.sendClampsGaskets, labels: ['Send Clamps & Gaskets?'] },
+      { data: jobData.preferredProcess, labels: ['Preferred Process?'] },
+      { data: jobData.anyOtherSpecificInstructions, labels: ['Any Other Specific Instructions?'] },
+      { data: jobData.anyCommentsForTech, labels: ['Any comments for the tech about this submission?'] },
+      { data: jobData.noteToTechAboutCustomer, labels: ['Note to Tech about Customer or service:'] },
+      { data: jobData.contactName, labels: ['Contact Name'] },
+      { data: jobData.contactNumber, labels: ['Contact Number'] },
+      { data: jobData.poNumber, labels: ['PO Number'] },
+      { data: jobData.serialNumbers, labels: ['Serial Number(s)'] },
+      { data: jobData.techCustomerQuestionInquiry, labels: ['Tech Customer Question Inquiry'] },
+      { data: jobData.checkInDate, labels: ['Check In Date'] },
+      { data: jobData.checkInTime, labels: ['Check In Time'] },
+      { data: jobData.shopHandoff, labels: ['Shop Handoff'] },
+      { data: jobData.handoffEmailWorkflow, labels: ['Handoff Email workflow'] },
     ];
 
     for (const mapping of mappings) {

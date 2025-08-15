@@ -1,4 +1,4 @@
-import CSRForm from "@/components/csr-form";
+import CSRForm from "@/components/csr-form-new";
 
 export default function Home() {
   return (

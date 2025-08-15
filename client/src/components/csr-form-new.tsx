@@ -145,7 +145,7 @@ export default function CSRForm() {
             <ClipboardList className="mr-2 h-5 w-5" />
             Job Information
           </h2>
-          <p className="text-sm opacity-90">Complete all required fields to initiate a new service job</p>
+          <p className="text-sm opacity-90">Fields matching GoCanvas "Testing Copy" form structure</p>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Job ID and Timestamp Display */}
@@ -169,75 +169,60 @@ export default function CSRForm() {
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Row 1 */}
+              {/* P21 Order Number */}
+              <FormField
+                control={form.control}
+                name="p21OrderNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>P21 Order Number (Enter after invoicing)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Order number" {...field} data-testid="input-p21-order" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* User ID */}
+              <FormField
+                control={form.control}
+                name="userId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>User ID *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="User ID" {...field} data-testid="input-user-id" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Permission Controls */}
               <div className="grid md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="trailerId"
+                  name="permissionToStart"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required-field">Trailer ID</FormLabel>
+                      <FormLabel>Permission to Start</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter Trailer ID" {...field} value={field.value || ""} />
+                        <Input placeholder="Permission status" {...field} data-testid="input-permission-start" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="permissionStart"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Permission for Start</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select option" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="yes">Yes</SelectItem>
-                          <SelectItem value="no">No</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
 
-              {/* Row 2 */}
-              <div className="grid md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="permissionDenied"
+                  name="permissionDeniedStop"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Permission Denied Stop</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select option" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="yes">Yes</SelectItem>
-                          <SelectItem value="no">No</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="storeName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="required-field">Store Name</FormLabel>
+                      <FormLabel>Permission Denied Stop *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter Store Name" {...field} value={field.value || ""} />
+                        <Input placeholder="Stop reason" {...field} data-testid="input-permission-denied" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -245,67 +230,30 @@ export default function CSRForm() {
                 />
               </div>
 
-              {/* Row 3 */}
+              {/* Shop and Customer Info */}
               <div className="grid md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="shopName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Shop Name *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Shop name" {...field} data-testid="input-shop-name" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <FormField
                   control={form.control}
                   name="customerName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required-field">Customer Name</FormLabel>
+                      <FormLabel>Customer Name *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter Customer Name" {...field} value={field.value || ""} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="noShipId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>If the customer does not have a Ship ID check "Yes"</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select option" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="yes">Yes</SelectItem>
-                          <SelectItem value="no">No</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Row 4 */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="customerShipId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Customer Ship ID</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter Customer Ship ID" {...field} value={field.value || ""} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="poShipToId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>PO Ship to ID</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter PO Ship to ID" {...field} value={field.value || ""} />
+                        <Input placeholder="Customer name" {...field} data-testid="input-customer-name" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -313,49 +261,30 @@ export default function CSRForm() {
                 />
               </div>
 
-              {/* Customer Instructions */}
-              <FormField
-                control={form.control}
-                name="customerInstructions"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Customer Specific Instructions</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Enter any specific customer instructions" 
-                        className="min-h-[80px]"
-                        {...field} 
-                        value={field.value || ""}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Row 5 */}
+              {/* Customer Ship To and P21 Ship ID */}
               <div className="grid md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="serialChange"
+                  name="customerShipTo"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Serial Change & Seasonal</FormLabel>
+                      <FormLabel>Customer Ship To</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter Serial Change & Seasonal" {...field} value={field.value || ""} />
+                        <Input placeholder="Ship to address" {...field} data-testid="input-ship-to" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
                 <FormField
                   control={form.control}
-                  name="preferredPressure"
+                  name="p21ShipToId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Preferred Pressure</FormLabel>
+                      <FormLabel>P21 Ship to ID</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter Preferred Pressure" {...field} value={field.value || ""} />
+                        <Input placeholder="Ship to ID" {...field} data-testid="input-p21-ship-id" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -363,77 +292,120 @@ export default function CSRForm() {
                 />
               </div>
 
-              {/* Other Instructions */}
+              {/* Instructions */}
               <FormField
                 control={form.control}
-                name="otherInstructions"
+                name="customerSpecificInstructions"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Any Other Specific Instructions</FormLabel>
+                    <FormLabel>Customer Specific Instructions?</FormLabel>
                     <FormControl>
-                      <Textarea 
-                        placeholder="Enter any other specific instructions" 
-                        className="min-h-[80px]"
-                        {...field} 
-                        value={field.value || ""}
-                      />
+                      <Textarea placeholder="Any specific customer instructions" {...field} data-testid="input-customer-instructions" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              {/* Tech Comments */}
-              <FormField
-                control={form.control}
-                name="techComments"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Any comments for the tech about this submission</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Enter comments for technician" 
-                        className="min-h-[80px]"
-                        {...field} 
-                        value={field.value || ""}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Row 6 */}
+              {/* Service Details */}
               <div className="grid md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="testCustomer"
+                  name="sendClampsGaskets"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Need to Test this Customer on service</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select option" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="yes">Yes</SelectItem>
-                          <SelectItem value="no">No</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>Send Clamps & Gaskets?</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Yes/No" {...field} data-testid="input-clamps-gaskets" />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="preferredProcess"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Preferred Process?</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Process type" {...field} data-testid="input-preferred-process" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Additional Instructions */}
+              <FormField
+                control={form.control}
+                name="anyOtherSpecificInstructions"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Any Other Specific Instructions?</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Additional instructions" {...field} data-testid="input-other-instructions" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Tech Communication */}
+              <FormField
+                control={form.control}
+                name="anyCommentsForTech"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Any comments for the tech about this submission?</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Comments for technician" {...field} data-testid="input-tech-comments" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="noteToTechAboutCustomer"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Note to Tech about Customer or service:</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Notes about customer or service" {...field} data-testid="input-tech-notes" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Contact Information */}
+              <div className="grid md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="contactName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required-field">Contact Name</FormLabel>
+                      <FormLabel>Contact Name *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter Contact Name" {...field} />
+                        <Input placeholder="Contact person" {...field} data-testid="input-contact-name" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="contactNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contact Number *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Phone number" {...field} data-testid="input-contact-number" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -441,21 +413,8 @@ export default function CSRForm() {
                 />
               </div>
 
-              {/* Row 7 */}
+              {/* PO and Serial Information */}
               <div className="grid md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="contactNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="required-field">Contact Number</FormLabel>
-                      <FormControl>
-                        <Input type="tel" placeholder="Enter Contact Number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
                 <FormField
                   control={form.control}
                   name="poNumber"
@@ -463,37 +422,21 @@ export default function CSRForm() {
                     <FormItem>
                       <FormLabel>PO Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter PO Number" {...field} value={field.value || ""} />
+                        <Input placeholder="Purchase order number" {...field} data-testid="input-po-number" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              </div>
 
-              {/* Row 8 */}
-              <div className="grid md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="serialNumbers"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Serial Number(s)</FormLabel>
+                      <FormLabel>Serial Number(s) *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter Serial Numbers" {...field} value={field.value || ""} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="techHelper"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tech Customer Question Helper</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter Tech Helper Info" {...field} value={field.value || ""} />
+                        <Input placeholder="Serial numbers" {...field} data-testid="input-serial-numbers" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -501,29 +444,45 @@ export default function CSRForm() {
                 />
               </div>
 
-              {/* Row 9 */}
+              {/* Tech Customer Inquiry */}
+              <FormField
+                control={form.control}
+                name="techCustomerQuestionInquiry"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tech Customer Question Inquiry</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Customer inquiry" {...field} data-testid="input-customer-inquiry" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Scheduling */}
               <div className="grid md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="checkInDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required-field">Check In Date</FormLabel>
+                      <FormLabel>Check In Date *</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input type="date" {...field} data-testid="input-check-in-date" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
                 <FormField
                   control={form.control}
                   name="checkInTime"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required-field">Check In Time</FormLabel>
+                      <FormLabel>Check In Time *</FormLabel>
                       <FormControl>
-                        <Input type="time" {...field} />
+                        <Input type="time" {...field} data-testid="input-check-in-time" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -531,24 +490,24 @@ export default function CSRForm() {
                 />
               </div>
 
-              {/* Row 10 */}
+              {/* Handoff */}
               <div className="grid md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="shopHandoff"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required-field">Shop Handoff</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                      <FormLabel>Shop Handoff *</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select Technician" />
+                          <SelectTrigger data-testid="select-shop-handoff">
+                            <SelectValue placeholder="Select technician" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {technicians.map((tech: any) => (
+                          {technicians.map((tech) => (
                             <SelectItem key={tech.id} value={tech.email}>
-                              {tech.name} - {tech.email}
+                              {tech.name} ({tech.email})
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -557,47 +516,43 @@ export default function CSRForm() {
                     </FormItem>
                   )}
                 />
+
                 <FormField
                   control={form.control}
-                  name="internalExternal"
+                  name="handoffEmailWorkflow"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Internal/External correction</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select option" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="internal">Internal</SelectItem>
-                          <SelectItem value="external">External</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>Handoff Email workflow</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Email workflow" {...field} data-testid="input-handoff-email" />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
 
-              {/* Submit Buttons */}
-              <div className="flex justify-end space-x-4 pt-6">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={clearForm}
-                  className="flex items-center space-x-2"
-                >
-                  <X className="h-4 w-4" />
-                  <span>Clear Form</span>
-                </Button>
-                <Button 
-                  type="submit" 
+              {/* Action Buttons */}
+              <div className="flex gap-4 pt-6">
+                <Button
+                  type="submit"
                   disabled={createJobMutation.isPending}
-                  className="flex items-center space-x-2 btn-primary"
+                  className="flex-1 bg-[var(--ecs-dark)] hover:bg-[var(--ecs-dark-hover)]"
+                  data-testid="button-submit"
                 >
-                  <Send className="h-4 w-4" />
-                  <span>{createJobMutation.isPending ? "Submitting..." : "Submit Job"}</span>
+                  <Send className="mr-2 h-4 w-4" />
+                  {createJobMutation.isPending ? "Creating Job..." : "Create Job"}
+                </Button>
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={clearForm}
+                  className="flex-1"
+                  data-testid="button-clear"
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  Clear Form
                 </Button>
               </div>
             </form>
