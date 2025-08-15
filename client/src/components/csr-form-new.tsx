@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ClipboardList, Send, X, Info, Clock } from "lucide-react";
+import { ClipboardList, Send, X, Info, Clock, Database } from "lucide-react";
 import type { z } from "zod";
 
 type FormData = z.infer<typeof insertJobSchema>;
@@ -237,7 +237,9 @@ export default function CSRForm() {
                   name="shopName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Shop Name * 🗄️</FormLabel>
+                      <FormLabel className="flex items-center gap-1">
+                        Shop Name * <Database className="h-3 w-3 text-muted-foreground" />
+                      </FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger data-testid="select-shop-name">
@@ -245,10 +247,7 @@ export default function CSRForm() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="ECS Main Shop">ECS Main Shop</SelectItem>
-                          <SelectItem value="ECS North Location">ECS North Location</SelectItem>
-                          <SelectItem value="ECS South Branch">ECS South Branch</SelectItem>
-                          <SelectItem value="ECS Mobile Unit">ECS Mobile Unit</SelectItem>
+                          {/* Reference Data will be loaded here */}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -261,7 +260,9 @@ export default function CSRForm() {
                   name="customerName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Customer Name * 🗄️</FormLabel>
+                      <FormLabel className="flex items-center gap-1">
+                        Customer Name * <Database className="h-3 w-3 text-muted-foreground" />
+                      </FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger data-testid="select-customer-name">
@@ -269,11 +270,7 @@ export default function CSRForm() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="ABC Transport Inc">ABC Transport Inc</SelectItem>
-                          <SelectItem value="Fleet Solutions LLC">Fleet Solutions LLC</SelectItem>
-                          <SelectItem value="Highway Logistics">Highway Logistics</SelectItem>
-                          <SelectItem value="Prime Trucking Co">Prime Trucking Co</SelectItem>
-                          <SelectItem value="Other - Enter Custom">Other - Enter Custom</SelectItem>
+                          {/* Reference Data will be loaded here */}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -289,7 +286,9 @@ export default function CSRForm() {
                   name="customerShipTo"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Customer Ship To 🗄️</FormLabel>
+                      <FormLabel className="flex items-center gap-1">
+                        Customer Ship To <Database className="h-3 w-3 text-muted-foreground" />
+                      </FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger data-testid="select-ship-to">
@@ -297,10 +296,7 @@ export default function CSRForm() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="Main Warehouse - 123 Industrial Blvd">Main Warehouse - 123 Industrial Blvd</SelectItem>
-                          <SelectItem value="Distribution Center - 456 Logistics Way">Distribution Center - 456 Logistics Way</SelectItem>
-                          <SelectItem value="Service Bay - 789 Maintenance Rd">Service Bay - 789 Maintenance Rd</SelectItem>
-                          <SelectItem value="NA">NA (No Ship To)</SelectItem>
+                          {/* Reference Data will be loaded here */}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -313,7 +309,9 @@ export default function CSRForm() {
                   name="p21ShipToId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>P21 Ship to ID 🗄️</FormLabel>
+                      <FormLabel className="flex items-center gap-1">
+                        P21 Ship to ID <Database className="h-3 w-3 text-muted-foreground" />
+                      </FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger data-testid="select-p21-ship-id">
@@ -321,10 +319,7 @@ export default function CSRForm() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="SHIP001">SHIP001 - Main Warehouse</SelectItem>
-                          <SelectItem value="SHIP002">SHIP002 - Distribution Center</SelectItem>
-                          <SelectItem value="SHIP003">SHIP003 - Service Bay</SelectItem>
-                          <SelectItem value="SHIP999">SHIP999 - Other Location</SelectItem>
+                          {/* Reference Data will be loaded here */}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -363,9 +358,7 @@ export default function CSRForm() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="Yes">Yes</SelectItem>
-                          <SelectItem value="No">No</SelectItem>
-                          <SelectItem value="Customer Provided">Customer Provided</SelectItem>
+                          {/* Reference Data will be loaded here */}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -386,10 +379,7 @@ export default function CSRForm() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="Standard Cleaning">Standard Cleaning</SelectItem>
-                          <SelectItem value="Deep Clean">Deep Clean</SelectItem>
-                          <SelectItem value="Inspection Only">Inspection Only</SelectItem>
-                          <SelectItem value="Repair & Clean">Repair & Clean</SelectItem>
+                          {/* Reference Data will be loaded here */}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -419,7 +409,9 @@ export default function CSRForm() {
                 name="anyCommentsForTech"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Any comments for the tech about this submission? 🗄️</FormLabel>
+                    <FormLabel className="flex items-center gap-1">
+                      Any comments for the tech about this submission? <Database className="h-3 w-3 text-muted-foreground" />
+                    </FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger data-testid="select-tech-comments">
@@ -427,12 +419,7 @@ export default function CSRForm() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Standard Service">Standard Service</SelectItem>
-                        <SelectItem value="Rush Job - High Priority">Rush Job - High Priority</SelectItem>
-                        <SelectItem value="First Time Customer">First Time Customer</SelectItem>
-                        <SelectItem value="Quality Sensitive Customer">Quality Sensitive Customer</SelectItem>
-                        <SelectItem value="Special Instructions Required">Special Instructions Required</SelectItem>
-                        <SelectItem value="None">None</SelectItem>
+                        {/* Reference Data will be loaded here */}
                       </SelectContent>
                     </Select>
                     <FormMessage />
