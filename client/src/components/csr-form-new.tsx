@@ -230,17 +230,27 @@ export default function CSRForm() {
                 />
               </div>
 
-              {/* Shop and Customer Info */}
+              {/* Shop and Customer Info - Reference Data Fields */}
               <div className="grid md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="shopName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Shop Name *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Shop name" {...field} data-testid="input-shop-name" />
-                      </FormControl>
+                      <FormLabel>Shop Name * 🗄️</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-shop-name">
+                            <SelectValue placeholder="Select shop" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="ECS Main Shop">ECS Main Shop</SelectItem>
+                          <SelectItem value="ECS North Location">ECS North Location</SelectItem>
+                          <SelectItem value="ECS South Branch">ECS South Branch</SelectItem>
+                          <SelectItem value="ECS Mobile Unit">ECS Mobile Unit</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -251,27 +261,48 @@ export default function CSRForm() {
                   name="customerName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Customer Name *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Customer name" {...field} data-testid="input-customer-name" />
-                      </FormControl>
+                      <FormLabel>Customer Name * 🗄️</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-customer-name">
+                            <SelectValue placeholder="Select customer" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="ABC Transport Inc">ABC Transport Inc</SelectItem>
+                          <SelectItem value="Fleet Solutions LLC">Fleet Solutions LLC</SelectItem>
+                          <SelectItem value="Highway Logistics">Highway Logistics</SelectItem>
+                          <SelectItem value="Prime Trucking Co">Prime Trucking Co</SelectItem>
+                          <SelectItem value="Other - Enter Custom">Other - Enter Custom</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
 
-              {/* Customer Ship To and P21 Ship ID */}
+              {/* Customer Ship To and P21 Ship ID - Reference Data Fields */}
               <div className="grid md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="customerShipTo"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Customer Ship To</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ship to address" {...field} data-testid="input-ship-to" />
-                      </FormControl>
+                      <FormLabel>Customer Ship To 🗄️</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-ship-to">
+                            <SelectValue placeholder="Select ship to location" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Main Warehouse - 123 Industrial Blvd">Main Warehouse - 123 Industrial Blvd</SelectItem>
+                          <SelectItem value="Distribution Center - 456 Logistics Way">Distribution Center - 456 Logistics Way</SelectItem>
+                          <SelectItem value="Service Bay - 789 Maintenance Rd">Service Bay - 789 Maintenance Rd</SelectItem>
+                          <SelectItem value="NA">NA (No Ship To)</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -282,10 +313,20 @@ export default function CSRForm() {
                   name="p21ShipToId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>P21 Ship to ID</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ship to ID" {...field} data-testid="input-p21-ship-id" />
-                      </FormControl>
+                      <FormLabel>P21 Ship to ID 🗄️</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-p21-ship-id">
+                            <SelectValue placeholder="Select P21 Ship ID" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="SHIP001">SHIP001 - Main Warehouse</SelectItem>
+                          <SelectItem value="SHIP002">SHIP002 - Distribution Center</SelectItem>
+                          <SelectItem value="SHIP003">SHIP003 - Service Bay</SelectItem>
+                          <SelectItem value="SHIP999">SHIP999 - Other Location</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -315,9 +356,18 @@ export default function CSRForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Send Clamps & Gaskets?</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Yes/No" {...field} data-testid="input-clamps-gaskets" />
-                      </FormControl>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-clamps-gaskets">
+                            <SelectValue placeholder="Select option" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Yes">Yes</SelectItem>
+                          <SelectItem value="No">No</SelectItem>
+                          <SelectItem value="Customer Provided">Customer Provided</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -329,9 +379,19 @@ export default function CSRForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Preferred Process?</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Process type" {...field} data-testid="input-preferred-process" />
-                      </FormControl>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-preferred-process">
+                            <SelectValue placeholder="Select process" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Standard Cleaning">Standard Cleaning</SelectItem>
+                          <SelectItem value="Deep Clean">Deep Clean</SelectItem>
+                          <SelectItem value="Inspection Only">Inspection Only</SelectItem>
+                          <SelectItem value="Repair & Clean">Repair & Clean</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -359,10 +419,22 @@ export default function CSRForm() {
                 name="anyCommentsForTech"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Any comments for the tech about this submission?</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Comments for technician" {...field} data-testid="input-tech-comments" />
-                    </FormControl>
+                    <FormLabel>Any comments for the tech about this submission? 🗄️</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-tech-comments">
+                          <SelectValue placeholder="Select comment type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Standard Service">Standard Service</SelectItem>
+                        <SelectItem value="Rush Job - High Priority">Rush Job - High Priority</SelectItem>
+                        <SelectItem value="First Time Customer">First Time Customer</SelectItem>
+                        <SelectItem value="Quality Sensitive Customer">Quality Sensitive Customer</SelectItem>
+                        <SelectItem value="Special Instructions Required">Special Instructions Required</SelectItem>
+                        <SelectItem value="None">None</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
