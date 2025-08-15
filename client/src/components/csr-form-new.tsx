@@ -190,10 +190,19 @@ export default function CSRForm() {
                 name="userId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>User ID *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="User ID" {...field} data-testid="input-user-id" />
-                    </FormControl>
+                    <FormLabel className="flex items-center gap-1">
+                      <Database className="h-3 w-3 text-muted-foreground" /> User ID *
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-user-id">
+                          <SelectValue placeholder="Select user ID" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {/* Reference Data will be loaded here */}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -206,10 +215,19 @@ export default function CSRForm() {
                   name="permissionToStart"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Permission to Start</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Permission status" {...field} data-testid="input-permission-start" />
-                      </FormControl>
+                      <FormLabel className="flex items-center gap-1">
+                        <Database className="h-3 w-3 text-muted-foreground" /> Permission to Start
+                      </FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-permission-start">
+                            <SelectValue placeholder="Select permission status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {/* Reference Data will be loaded here */}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -238,7 +256,7 @@ export default function CSRForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center gap-1">
-                        Shop Name * <Database className="h-3 w-3 text-muted-foreground" />
+                        <Database className="h-3 w-3 text-muted-foreground" /> Shop Name *
                       </FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
@@ -261,7 +279,7 @@ export default function CSRForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center gap-1">
-                        Customer Name * <Database className="h-3 w-3 text-muted-foreground" />
+                        <Database className="h-3 w-3 text-muted-foreground" /> Customer Name *
                       </FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
@@ -287,7 +305,7 @@ export default function CSRForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center gap-1">
-                        Customer Ship To <Database className="h-3 w-3 text-muted-foreground" />
+                        <Database className="h-3 w-3 text-muted-foreground" /> Customer Ship To
                       </FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
@@ -310,7 +328,7 @@ export default function CSRForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center gap-1">
-                        P21 Ship to ID <Database className="h-3 w-3 text-muted-foreground" />
+                        <Database className="h-3 w-3 text-muted-foreground" /> P21 Ship to ID
                       </FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
@@ -410,7 +428,7 @@ export default function CSRForm() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="flex items-center gap-1">
-                      Any comments for the tech about this submission? <Database className="h-3 w-3 text-muted-foreground" />
+                      <Database className="h-3 w-3 text-muted-foreground" /> Any comments for the tech about this submission?
                     </FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
