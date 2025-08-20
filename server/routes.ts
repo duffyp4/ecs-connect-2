@@ -107,6 +107,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/reference/ship2-ids/:customerName/:shipTo", async (req, res) => {
+    try {
+      const { customerName, shipTo } = req.params;
+      const ship2Ids = await referenceDataService.getShip2IdsForCustomerShipTo(
+        decodeURIComponent(customerName),
+        decodeURIComponent(shipTo)
+      );
+      res.json(ship2Ids);
+    } catch (error) {
+      console.error(`Failed to get Ship2 IDs for customer ${req.params.customerName} and shipTo ${req.params.shipTo}:`, error);
+      res.status(500).json({ error: "Failed to fetch Ship2 IDs" });
+    }
+  });
+
   app.get("/api/reference/tech-comments", async (req, res) => {
     try {
       const comments = await referenceDataService.getTechComments();

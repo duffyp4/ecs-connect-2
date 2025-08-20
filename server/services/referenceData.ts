@@ -102,6 +102,18 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
     return customerRow ? customerRow[6] || '' : '';
   }
 
+  async getShip2IdsForCustomerShipTo(customerName: string, shipTo: string): Promise<string[]> {
+    await this.ensureDataLoaded();
+    
+    // Find all Ship2 IDs for specific customer and ship to (column 6: "Ship2 ID")
+    const ship2Ids = this.customerData
+      .filter(row => row[2] === customerName && row[5] === shipTo)
+      .map(row => row[6]) // "Ship2 ID" column
+      .filter(Boolean);
+    
+    return Array.from(new Set(ship2Ids)).sort();
+  }
+
   async getCustomerInstructions(customerName: string): Promise<string> {
     await this.ensureDataLoaded();
     

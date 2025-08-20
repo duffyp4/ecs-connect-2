@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { insertJobSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useShopUsers, useShopsForUser, usePermissionForUser, useCustomerNames, useShipToForCustomer, useTechComments } from "@/hooks/use-reference-data";
+import { useShopUsers, useShopsForUser, usePermissionForUser, useCustomerNames, useShipToForCustomer, useShip2Ids, useTechComments } from "@/hooks/use-reference-data";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -65,7 +65,9 @@ export default function CSRForm() {
   const { data: permissionData } = usePermissionForUser(userId);
   const { data: customerNames = [], isLoading: isLoadingCustomers } = useCustomerNames();
   const customerName = form.watch("customerName");
+  const customerShipTo = form.watch("customerShipTo");
   const { data: shipToOptions = [], isLoading: isLoadingShipTo } = useShipToForCustomer(customerName);
+  const { data: ship2Ids = [], isLoading: isLoadingShip2Ids } = useShip2Ids(customerName, customerShipTo);
   const { data: techComments = [], isLoading: isLoadingComments } = useTechComments();
 
   // Auto-populate permission when user changes
@@ -74,6 +76,11 @@ export default function CSRForm() {
       form.setValue("permissionToStart", permissionData.permission);
     }
   }, [permissionData, form]);
+
+  // Clear Ship2 ID when customer or ship-to changes
+  useEffect(() => {
+    form.setValue("p21ShipToId", "");
+  }, [customerName, customerShipTo, form]);
 
   const createJobMutation = useMutation({
     mutationFn: async (data: FormData) => {
@@ -392,7 +399,17 @@ export default function CSRForm() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {/* Reference Data will be loaded here */}
+                          {isLoadingShip2Ids ? (
+                            <SelectItem value="loading" disabled>Loading Ship2 IDs...</SelectItem>
+                          ) : customerName && customerShipTo ? (
+                            ship2Ids.map((ship2Id) => (
+                              <SelectItem key={ship2Id} value={ship2Id}>
+                                {ship2Id}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-shipto" disabled>Select Customer and Ship To first</SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />

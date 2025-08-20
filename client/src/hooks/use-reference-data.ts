@@ -66,6 +66,20 @@ export function useShipToForCustomer(customerName: string | undefined) {
   });
 }
 
+export function useShip2Ids(customerName: string | undefined, shipTo: string | undefined) {
+  return useQuery({
+    queryKey: ['reference', 'ship2-ids', customerName, shipTo],
+    queryFn: async () => {
+      if (!customerName || !shipTo) return [];
+      const response = await fetch(`/api/reference/ship2-ids/${encodeURIComponent(customerName)}/${encodeURIComponent(shipTo)}`);
+      if (!response.ok) throw new Error('Failed to fetch Ship2 IDs');
+      return response.json() as Promise<string[]>;
+    },
+    enabled: !!(customerName && shipTo),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 export function useTechComments() {
   return useQuery({
     queryKey: ['reference', 'tech-comments'],
