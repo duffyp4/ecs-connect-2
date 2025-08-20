@@ -91,3 +91,27 @@ export function useTechComments() {
     staleTime: 5 * 60 * 1000,
   });
 }
+
+export function useSendClampsGaskets() {
+  return useQuery({
+    queryKey: ['reference', 'send-clamps-gaskets'],
+    queryFn: async () => {
+      const response = await fetch('/api/reference/send-clamps-gaskets');
+      if (!response.ok) throw new Error('Failed to fetch send clamps gaskets');
+      return response.json() as Promise<string[]>;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function usePreferredProcesses() {
+  return useQuery({
+    queryKey: ['reference', 'preferred-processes'],
+    queryFn: async () => {
+      const response = await fetch('/api/reference/preferred-processes');
+      if (!response.ok) throw new Error('Failed to fetch preferred processes');
+      return response.json() as Promise<string[]>;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}

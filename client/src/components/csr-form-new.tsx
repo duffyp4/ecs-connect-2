@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { insertJobSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useShopUsers, useShopsForUser, usePermissionForUser, useCustomerNames, useShipToForCustomer, useShip2Ids, useTechComments } from "@/hooks/use-reference-data";
+import { useShopUsers, useShopsForUser, usePermissionForUser, useCustomerNames, useShipToForCustomer, useShip2Ids, useTechComments, useSendClampsGaskets, usePreferredProcesses } from "@/hooks/use-reference-data";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -60,15 +60,17 @@ export default function CSRForm() {
 
   // Reference data hooks - now that form is defined
   const { data: shopUsers = [], isLoading: isLoadingShopUsers } = useShopUsers();
-  const userId = form.watch("userId");
-  const { data: shopsForUser = [], isLoading: isLoadingShops } = useShopsForUser(userId);
-  const { data: permissionData } = usePermissionForUser(userId);
+  const userId = form.watch("userId") || "";
+  const { data: shopsForUser = [], isLoading: isLoadingShops } = useShopsForUser(userId || undefined);
+  const { data: permissionData } = usePermissionForUser(userId || undefined);
   const { data: customerNames = [], isLoading: isLoadingCustomers } = useCustomerNames();
-  const customerName = form.watch("customerName");
-  const customerShipTo = form.watch("customerShipTo");
-  const { data: shipToOptions = [], isLoading: isLoadingShipTo } = useShipToForCustomer(customerName);
-  const { data: ship2Ids = [], isLoading: isLoadingShip2Ids } = useShip2Ids(customerName, customerShipTo);
+  const customerName = form.watch("customerName") || "";
+  const customerShipTo = form.watch("customerShipTo") || "";
+  const { data: shipToOptions = [], isLoading: isLoadingShipTo } = useShipToForCustomer(customerName || undefined);
+  const { data: ship2Ids = [], isLoading: isLoadingShip2Ids } = useShip2Ids(customerName || undefined, customerShipTo || undefined);
   const { data: techComments = [], isLoading: isLoadingComments } = useTechComments();
+  const { data: sendClampsOptions = [], isLoading: isLoadingSendClamps } = useSendClampsGaskets();
+  const { data: preferredProcesses = [], isLoading: isLoadingProcesses } = usePreferredProcesses();
 
   // Auto-populate permission when user changes
   useEffect(() => {
@@ -76,6 +78,17 @@ export default function CSRForm() {
       form.setValue("permissionToStart", permissionData.permission);
     }
   }, [permissionData, form]);
+
+  // Auto-populate shop name when user changes
+  useEffect(() => {
+    if (shopsForUser.length === 1) {
+      // Auto-select if only one shop available for user
+      form.setValue("shopName", shopsForUser[0]);
+    } else if (shopsForUser.length === 0 && userId) {
+      // Clear shop name if user has no shops
+      form.setValue("shopName", "");
+    }
+  }, [shopsForUser, userId, form]);
 
   // Clear Ship2 ID when customer or ship-to changes
   useEffect(() => {
@@ -202,7 +215,7 @@ export default function CSRForm() {
                   <FormItem>
                     <FormLabel>P21 Order Number (Enter after invoicing)</FormLabel>
                     <FormControl>
-                      <Input placeholder="Order number" {...field} data-testid="input-p21-order" />
+                      <Input placeholder="Order number" {...field} value={field.value || ""} data-testid="input-p21-order" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -440,7 +453,9 @@ export default function CSRForm() {
                   name="sendClampsGaskets"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Send Clamps & Gaskets?</FormLabel>
+                      <FormLabel className="flex items-center gap-1">
+                        <Database className="h-3 w-3 text-muted-foreground" /> Send Clamps & Gaskets?
+                      </FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger data-testid="select-clamps-gaskets">
@@ -448,7 +463,15 @@ export default function CSRForm() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {/* Reference Data will be loaded here */}
+                          {isLoadingSendClamps ? (
+                            <SelectItem value="loading" disabled>Loading options...</SelectItem>
+                          ) : (
+                            sendClampsOptions.map((option) => (
+                              <SelectItem key={option} value={option}>
+                                {option}
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -461,7 +484,9 @@ export default function CSRForm() {
                   name="preferredProcess"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Preferred Process?</FormLabel>
+                      <FormLabel className="flex items-center gap-1">
+                        <Database className="h-3 w-3 text-muted-foreground" /> Preferred Process?
+                      </FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger data-testid="select-preferred-process">
@@ -469,7 +494,15 @@ export default function CSRForm() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {/* Reference Data will be loaded here */}
+                          {isLoadingProcesses ? (
+                            <SelectItem value="loading" disabled>Loading processes...</SelectItem>
+                          ) : (
+                            preferredProcesses.map((process) => (
+                              <SelectItem key={process} value={process}>
+                                {process}
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />

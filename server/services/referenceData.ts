@@ -134,6 +134,32 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
     
     return comments.sort();
   }
+
+  async getSendClampsGaskets(): Promise<string[]> {
+    await this.ensureDataLoaded();
+    
+    // Extract unique values from Send Clamps/Gaskets column (column 7)
+    const options = Array.from(new Set(this.customerData
+      .map(row => row[7])
+      .filter(Boolean)
+      .filter(option => option !== '#N/A' && option.trim() !== '')
+    ));
+    
+    return options.sort();
+  }
+
+  async getPreferredProcesses(): Promise<string[]> {
+    await this.ensureDataLoaded();
+    
+    // Extract unique values from Default Service column (column 9)
+    const processes = Array.from(new Set(this.customerData
+      .map(row => row[9])
+      .filter(Boolean)
+      .filter(process => process !== '#N/A' && process.trim() !== '')
+    ));
+    
+    return processes.sort();
+  }
 }
 
 export const referenceDataService = new GoCanvasReferenceDataService();

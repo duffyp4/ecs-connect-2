@@ -131,6 +131,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/reference/send-clamps-gaskets", async (req, res) => {
+    try {
+      const options = await referenceDataService.getSendClampsGaskets();
+      res.json(options);
+    } catch (error) {
+      console.error("Failed to get send clamps gaskets options:", error);
+      res.status(500).json({ error: "Failed to fetch send clamps gaskets options" });
+    }
+  });
+
+  app.get("/api/reference/preferred-processes", async (req, res) => {
+    try {
+      const processes = await referenceDataService.getPreferredProcesses();
+      res.json(processes);
+    } catch (error) {
+      console.error("Failed to get preferred processes:", error);
+      res.status(500).json({ error: "Failed to fetch preferred processes" });
+    }
+  });
+
 
 
   // Create new job
