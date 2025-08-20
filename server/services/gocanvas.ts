@@ -1,6 +1,6 @@
 // GoCanvas API integration service
 export class GoCanvasService {
-  private baseUrl = 'https://www.gocanvas.com/apiv2';
+  private baseUrl = 'https://api.gocanvas.com/api/v3';
   private username: string;
   private password: string;
   private formId?: string;
@@ -27,8 +27,8 @@ export class GoCanvasService {
     }
 
     try {
-      console.log('Fetching forms from GoCanvas API v2...');
-      const response = await fetch(`${this.baseUrl}/forms.json`, {
+      console.log('Fetching forms from GoCanvas...');
+      const response = await fetch(`${this.baseUrl}/forms`, {
         headers: {
           'Authorization': this.getAuthHeader(),
           'Content-Type': 'application/json',
@@ -56,7 +56,7 @@ export class GoCanvasService {
 
     try {
       console.log(`Fetching form details for form ID: ${formId}`);
-      const response = await fetch(`${this.baseUrl}/forms/${formId}.json?format=flat`, {
+      const response = await fetch(`${this.baseUrl}/forms/${formId}?format=flat`, {
         headers: {
           'Authorization': this.getAuthHeader(),
           'Content-Type': 'application/json',
@@ -77,51 +77,7 @@ export class GoCanvasService {
     }
   }
 
-  async getReferenceData(): Promise<any> {
-    if (!this.username || !this.password) {
-      console.log('GoCanvas not configured, cannot fetch reference data');
-      return null;
-    }
 
-    try {
-      console.log('Fetching reference data from GoCanvas API v2...');
-      
-      // Try different potential endpoints for reference data
-      const endpoints = [
-        '/reference_data.json',
-        '/reference_sheets.json', 
-        '/forms/reference_data.json',
-        `/forms/${this.formId}/reference_data.json`
-      ];
-
-      for (const endpoint of endpoints) {
-        try {
-          const response = await fetch(`${this.baseUrl}${endpoint}`, {
-            headers: {
-              'Authorization': this.getAuthHeader(),
-              'Content-Type': 'application/json',
-            },
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            console.log(`Reference data found at ${endpoint}:`, data);
-            return data;
-          } else {
-            console.log(`Endpoint ${endpoint} returned ${response.status}`);
-          }
-        } catch (err) {
-          console.log(`Endpoint ${endpoint} failed:`, err instanceof Error ? err.message : 'Unknown error');
-        }
-      }
-
-      console.log('No reference data endpoints found');
-      return null;
-    } catch (error) {
-      console.error('Failed to fetch reference data:', error);
-      return null;
-    }
-  }
 
   async createSubmission(jobData: any): Promise<string> {
     if (!this.username || !this.password || !this.formId) {
@@ -144,7 +100,7 @@ export class GoCanvasService {
         responses: responses
       });
 
-      const response = await fetch(`${this.baseUrl}/submissions.json`, {
+      const response = await fetch(`${this.baseUrl}/submissions`, {
         method: 'POST',
         headers: {
           'Authorization': this.getAuthHeader(),
@@ -175,7 +131,7 @@ export class GoCanvasService {
 
     try {
       // Query submissions by guid (our job ID) and form_id
-      const response = await fetch(`${this.baseUrl}/submissions.json?guid=${jobId}&form_id=${this.formId}`, {
+      const response = await fetch(`${this.baseUrl}/submissions?guid=${jobId}&form_id=${this.formId}`, {
         headers: {
           'Authorization': this.getAuthHeader(),
           'Content-Type': 'application/json',
