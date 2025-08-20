@@ -1,0 +1,79 @@
+import { useQuery } from '@tanstack/react-query';
+
+export function useShopUsers() {
+  return useQuery({
+    queryKey: ['reference', 'shop-users'],
+    queryFn: async () => {
+      const response = await fetch('/api/reference/shop-users');
+      if (!response.ok) throw new Error('Failed to fetch shop users');
+      return response.json() as Promise<string[]>;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+export function useShopsForUser(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['reference', 'shops', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const response = await fetch(`/api/reference/shops/${encodeURIComponent(userId)}`);
+      if (!response.ok) throw new Error('Failed to fetch shops');
+      return response.json() as Promise<string[]>;
+    },
+    enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function usePermissionForUser(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['reference', 'permission', userId],
+    queryFn: async () => {
+      if (!userId) return { permission: '' };
+      const response = await fetch(`/api/reference/permission/${encodeURIComponent(userId)}`);
+      if (!response.ok) throw new Error('Failed to fetch permission');
+      return response.json() as Promise<{ permission: string }>;
+    },
+    enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useCustomerNames() {
+  return useQuery({
+    queryKey: ['reference', 'customers'],
+    queryFn: async () => {
+      const response = await fetch('/api/reference/customers');
+      if (!response.ok) throw new Error('Failed to fetch customers');
+      return response.json() as Promise<string[]>;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useShipToForCustomer(customerName: string | undefined) {
+  return useQuery({
+    queryKey: ['reference', 'ship-to', customerName],
+    queryFn: async () => {
+      if (!customerName) return [];
+      const response = await fetch(`/api/reference/ship-to/${encodeURIComponent(customerName)}`);
+      if (!response.ok) throw new Error('Failed to fetch ship to options');
+      return response.json() as Promise<string[]>;
+    },
+    enabled: !!customerName,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useTechComments() {
+  return useQuery({
+    queryKey: ['reference', 'tech-comments'],
+    queryFn: async () => {
+      const response = await fetch('/api/reference/tech-comments');
+      if (!response.ok) throw new Error('Failed to fetch tech comments');
+      return response.json() as Promise<string[]>;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}

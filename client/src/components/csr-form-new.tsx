@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { insertJobSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useShopUsers, useShopsForUser, usePermissionForUser, useCustomerNames, useShipToForCustomer, useTechComments } from "@/hooks/use-reference-data";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -56,6 +57,23 @@ export default function CSRForm() {
       handoffEmailWorkflow: "",
     },
   });
+
+  // Reference data hooks - now that form is defined
+  const { data: shopUsers = [], isLoading: isLoadingShopUsers } = useShopUsers();
+  const userId = form.watch("userId");
+  const { data: shopsForUser = [], isLoading: isLoadingShops } = useShopsForUser(userId);
+  const { data: permissionData } = usePermissionForUser(userId);
+  const { data: customerNames = [], isLoading: isLoadingCustomers } = useCustomerNames();
+  const customerName = form.watch("customerName");
+  const { data: shipToOptions = [], isLoading: isLoadingShipTo } = useShipToForCustomer(customerName);
+  const { data: techComments = [], isLoading: isLoadingComments } = useTechComments();
+
+  // Auto-populate permission when user changes
+  useEffect(() => {
+    if (permissionData?.permission) {
+      form.setValue("permissionToStart", permissionData.permission);
+    }
+  }, [permissionData, form]);
 
   const createJobMutation = useMutation({
     mutationFn: async (data: FormData) => {
@@ -200,7 +218,15 @@ export default function CSRForm() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {/* Reference Data will be loaded here */}
+                        {isLoadingShopUsers ? (
+                          <SelectItem value="loading" disabled>Loading users...</SelectItem>
+                        ) : (
+                          shopUsers.map((user) => (
+                            <SelectItem key={user} value={user}>
+                              {user}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -218,14 +244,15 @@ export default function CSRForm() {
                       <FormLabel className="flex items-center gap-1">
                         <Database className="h-3 w-3 text-muted-foreground" /> Permission to Start
                       </FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger data-testid="select-permission-start">
                             <SelectValue placeholder="Select permission status" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {/* Reference Data will be loaded here */}
+                          <SelectItem value="Yes">Yes</SelectItem>
+                          <SelectItem value="No">No</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -265,7 +292,17 @@ export default function CSRForm() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {/* Reference Data will be loaded here */}
+                          {isLoadingShops ? (
+                            <SelectItem value="loading" disabled>Loading shops...</SelectItem>
+                          ) : userId ? (
+                            shopsForUser.map((shop) => (
+                              <SelectItem key={shop} value={shop}>
+                                {shop}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-user" disabled>Select User ID first</SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -288,7 +325,15 @@ export default function CSRForm() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {/* Reference Data will be loaded here */}
+                          {isLoadingCustomers ? (
+                            <SelectItem value="loading" disabled>Loading customers...</SelectItem>
+                          ) : (
+                            customerNames.slice(0, 100).map((customer) => (
+                              <SelectItem key={customer} value={customer}>
+                                {customer}
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -314,7 +359,17 @@ export default function CSRForm() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {/* Reference Data will be loaded here */}
+                          {isLoadingShipTo ? (
+                            <SelectItem value="loading" disabled>Loading ship to options...</SelectItem>
+                          ) : customerName ? (
+                            shipToOptions.map((shipTo) => (
+                              <SelectItem key={shipTo} value={shipTo}>
+                                {shipTo}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-customer" disabled>Select Customer first</SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />

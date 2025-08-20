@@ -5,6 +5,7 @@ import { insertJobSchema } from "@shared/schema";
 import { goCanvasService } from "./services/gocanvas";
 import { googleSheetsService } from "./services/googleSheets";
 import { jobTrackerService } from "./services/jobTracker";
+import { referenceDataService } from "./services/referenceData";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Start job tracking polling
@@ -18,6 +19,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching technicians:", error);
       res.status(500).json({ message: "Failed to fetch technicians" });
+    }
+  });
+
+  // Get all reference data from GoCanvas
+  app.get("/api/gocanvas/reference-data", async (req, res) => {
+    try {
+      const referenceData = await goCanvasService.getReferenceData();
+      res.json({ success: true, data: referenceData });
+    } catch (error) {
+      console.error("Failed to fetch GoCanvas reference data:", error);
+      res.status(500).json({ 
+        success: false, 
+        error: "Failed to fetch reference data", 
+        details: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  });
+
+  // Get specific reference data by ID
+  app.get("/api/gocanvas/reference-data/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const referenceData = await goCanvasService.getReferenceDataById(id);
+      res.json({ success: true, data: referenceData });
+    } catch (error) {
+      console.error(`Failed to fetch reference data ${req.params.id}:`, error);
+      res.status(500).json({ 
+        success: false, 
+        error: "Failed to fetch reference data", 
+        details: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  });
+
+  // Reference Data endpoints for form population
+  app.get("/api/reference/shop-users", async (req, res) => {
+    try {
+      const users = await referenceDataService.getShopUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Failed to get shop users:", error);
+      res.status(500).json({ error: "Failed to fetch shop users" });
+    }
+  });
+
+  app.get("/api/reference/shops/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const shops = await referenceDataService.getShopsForUser(userId);
+      res.json(shops);
+    } catch (error) {
+      console.error(`Failed to get shops for user ${req.params.userId}:`, error);
+      res.status(500).json({ error: "Failed to fetch shops" });
+    }
+  });
+
+  app.get("/api/reference/permission/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const permission = await referenceDataService.getPermissionForUser(userId);
+      res.json({ permission });
+    } catch (error) {
+      console.error(`Failed to get permission for user ${req.params.userId}:`, error);
+      res.status(500).json({ error: "Failed to fetch permission" });
+    }
+  });
+
+  app.get("/api/reference/customers", async (req, res) => {
+    try {
+      const customers = await referenceDataService.getCustomerNames();
+      res.json(customers);
+    } catch (error) {
+      console.error("Failed to get customers:", error);
+      res.status(500).json({ error: "Failed to fetch customers" });
+    }
+  });
+
+  app.get("/api/reference/ship-to/:customerName", async (req, res) => {
+    try {
+      const { customerName } = req.params;
+      const shipToOptions = await referenceDataService.getShipToForCustomer(decodeURIComponent(customerName));
+      res.json(shipToOptions);
+    } catch (error) {
+      console.error(`Failed to get ship to options for customer ${req.params.customerName}:`, error);
+      res.status(500).json({ error: "Failed to fetch ship to options" });
+    }
+  });
+
+  app.get("/api/reference/tech-comments", async (req, res) => {
+    try {
+      const comments = await referenceDataService.getTechComments();
+      res.json(comments);
+    } catch (error) {
+      console.error("Failed to get tech comments:", error);
+      res.status(500).json({ error: "Failed to fetch tech comments" });
     }
   });
 

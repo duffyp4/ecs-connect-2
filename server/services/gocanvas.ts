@@ -77,6 +77,63 @@ export class GoCanvasService {
     }
   }
 
+  async getReferenceData(): Promise<any[]> {
+    if (!this.username || !this.password) {
+      console.log('GoCanvas not configured, cannot fetch reference data');
+      return [];
+    }
+
+    try {
+      console.log('Fetching reference data from GoCanvas...');
+      const response = await fetch(`${this.baseUrl}/reference_data`, {
+        headers: {
+          'Authorization': this.getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to get reference data: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('Reference data retrieved:', data);
+      return data.reference_data || data.data || data || [];
+    } catch (error) {
+      console.error('Failed to get reference data:', error);
+      throw error;
+    }
+  }
+
+  async getReferenceDataById(id: string): Promise<any> {
+    if (!this.username || !this.password) {
+      throw new Error('GoCanvas credentials not configured');
+    }
+
+    try {
+      console.log(`Fetching reference data for ID: ${id}`);
+      const response = await fetch(`${this.baseUrl}/reference_data/${id}`, {
+        headers: {
+          'Authorization': this.getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to get reference data: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log(`Reference data ${id}:`, data);
+      return data;
+    } catch (error) {
+      console.error(`Failed to get reference data ${id}:`, error);
+      throw error;
+    }
+  }
+
 
 
   async createSubmission(jobData: any): Promise<string> {
