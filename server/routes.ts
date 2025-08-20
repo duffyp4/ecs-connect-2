@@ -151,6 +151,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/reference/customer-instructions/:customerName", async (req, res) => {
+    try {
+      const { customerName } = req.params;
+      const instructions = await referenceDataService.getCustomerSpecificInstructions(decodeURIComponent(customerName));
+      res.json({ instructions });
+    } catch (error) {
+      console.error("Failed to get customer instructions:", error);
+      res.status(500).json({ error: "Failed to fetch customer instructions" });
+    }
+  });
+
+  app.get("/api/reference/customer-notes", async (req, res) => {
+    try {
+      const notes = await referenceDataService.getCustomerNotes();
+      res.json(notes);
+    } catch (error) {
+      console.error("Failed to get customer notes:", error);
+      res.status(500).json({ error: "Failed to fetch customer notes" });
+    }
+  });
+
 
 
   // Create new job

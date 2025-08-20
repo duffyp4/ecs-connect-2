@@ -115,3 +115,29 @@ export function usePreferredProcesses() {
     staleTime: 5 * 60 * 1000,
   });
 }
+
+export function useCustomerInstructions(customerName: string | undefined) {
+  return useQuery({
+    queryKey: ['reference', 'customer-instructions', customerName],
+    queryFn: async () => {
+      if (!customerName) return { instructions: '' };
+      const response = await fetch(`/api/reference/customer-instructions/${encodeURIComponent(customerName)}`);
+      if (!response.ok) throw new Error('Failed to fetch customer instructions');
+      return response.json() as Promise<{ instructions: string }>;
+    },
+    enabled: !!customerName,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useCustomerNotes() {
+  return useQuery({
+    queryKey: ['reference', 'customer-notes'],
+    queryFn: async () => {
+      const response = await fetch('/api/reference/customer-notes');
+      if (!response.ok) throw new Error('Failed to fetch customer notes');
+      return response.json() as Promise<string[]>;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}

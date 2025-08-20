@@ -128,21 +128,34 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
     // Extract unique values from Customer Notes (column 11)
     const comments = Array.from(new Set(this.customerData
       .map(row => row[11])
-      .filter(Boolean)
-      .filter(comment => comment !== '#N/A' && comment.trim() !== '')
+      .filter(value => this.isValidValue(value))
     ));
     
     return comments.sort();
   }
 
+  private isValidValue(value: any): boolean {
+    if (!value) return false;
+    const str = String(value).trim().toUpperCase();
+    return !['#N/A', 'N/A', 'NA', ''].includes(str);
+  }
+
+  async getCustomerSpecificInstructions(customerName: string): Promise<string> {
+    await this.ensureDataLoaded();
+    
+    // Find specific instructions for customer (column 8: "Specific Instructions For This Customer?")
+    const customerRow = this.customerData.find(row => row[2] === customerName);
+    const instructions = customerRow ? customerRow[8] || '' : '';
+    return this.isValidValue(instructions) ? instructions : '';
+  }
+
   async getSendClampsGaskets(): Promise<string[]> {
     await this.ensureDataLoaded();
     
-    // Extract unique values from Send Clamps/Gaskets column (column 7)
+    // Extract unique values from Send Clamps/Gaskets column (column 9) - CORRECTED
     const options = Array.from(new Set(this.customerData
-      .map(row => row[7])
-      .filter(Boolean)
-      .filter(option => option !== '#N/A' && option.trim() !== '')
+      .map(row => row[9])
+      .filter(value => this.isValidValue(value))
     ));
     
     return options.sort();
@@ -151,14 +164,25 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getPreferredProcesses(): Promise<string[]> {
     await this.ensureDataLoaded();
     
-    // Extract unique values from Default Service column (column 9)
+    // Extract unique values from Default Service column (column 10) - CORRECTED
     const processes = Array.from(new Set(this.customerData
-      .map(row => row[9])
-      .filter(Boolean)
-      .filter(process => process !== '#N/A' && process.trim() !== '')
+      .map(row => row[10])
+      .filter(value => this.isValidValue(value))
     ));
     
     return processes.sort();
+  }
+
+  async getCustomerNotes(): Promise<string[]> {
+    await this.ensureDataLoaded();
+    
+    // Extract unique values from Customer Notes column (column 11)
+    const notes = Array.from(new Set(this.customerData
+      .map(row => row[11])
+      .filter(value => this.isValidValue(value))
+    ));
+    
+    return notes.sort();
   }
 }
 

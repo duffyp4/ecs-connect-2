@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { insertJobSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useShopUsers, useShopsForUser, usePermissionForUser, useCustomerNames, useShipToForCustomer, useShip2Ids, useTechComments, useSendClampsGaskets, usePreferredProcesses } from "@/hooks/use-reference-data";
+import { useShopUsers, useShopsForUser, usePermissionForUser, useCustomerNames, useShipToForCustomer, useShip2Ids, useTechComments, useSendClampsGaskets, usePreferredProcesses, useCustomerInstructions, useCustomerNotes } from "@/hooks/use-reference-data";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -71,6 +71,8 @@ export default function CSRForm() {
   const { data: techComments = [], isLoading: isLoadingComments } = useTechComments();
   const { data: sendClampsOptions = [], isLoading: isLoadingSendClamps } = useSendClampsGaskets();
   const { data: preferredProcesses = [], isLoading: isLoadingProcesses } = usePreferredProcesses();
+  const { data: customerInstructionsData } = useCustomerInstructions(customerName || undefined);
+  const { data: customerNotes = [], isLoading: isLoadingNotes } = useCustomerNotes();
 
   // Auto-populate permission when user changes
   useEffect(() => {
@@ -78,6 +80,13 @@ export default function CSRForm() {
       form.setValue("permissionToStart", permissionData.permission);
     }
   }, [permissionData, form]);
+
+  // Auto-populate customer instructions when customer changes
+  useEffect(() => {
+    if (customerInstructionsData?.instructions) {
+      form.setValue("customerSpecificInstructions", customerInstructionsData.instructions);
+    }
+  }, [customerInstructionsData, form]);
 
   // Auto-populate shop name when user changes
   useEffect(() => {
@@ -89,6 +98,15 @@ export default function CSRForm() {
       form.setValue("shopName", "");
     }
   }, [shopsForUser, userId, form]);
+
+  // Auto-populate handoff email when shop handoff changes
+  const shopHandoff = form.watch("shopHandoff") || "";
+  useEffect(() => {
+    if (shopHandoff) {
+      // Use the shop handoff user ID as the handoff email workflow
+      form.setValue("handoffEmailWorkflow", shopHandoff);
+    }
+  }, [shopHandoff, form]);
 
   // Clear Ship2 ID when customer or ship-to changes
   useEffect(() => {
@@ -287,7 +305,7 @@ export default function CSRForm() {
                     <FormItem>
                       <FormLabel>Permission Denied Stop *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Stop reason" {...field} data-testid="input-permission-denied" />
+                        <Input placeholder="Stop reason" {...field} value={field.value || ""} data-testid="input-permission-denied" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -517,10 +535,29 @@ export default function CSRForm() {
                 name="anyOtherSpecificInstructions"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Any Other Specific Instructions?</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Additional instructions" {...field} data-testid="input-other-instructions" />
-                    </FormControl>
+                    <FormLabel className="flex items-center gap-1">
+                      <Database className="h-3 w-3 text-muted-foreground" /> Any Other Specific Instructions?
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-other-instructions">
+                          <SelectValue placeholder="Select instructions" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {isLoadingNotes ? (
+                          <SelectItem value="loading" disabled>Loading instructions...</SelectItem>
+                        ) : customerNotes.length > 0 ? (
+                          customerNotes.map((note) => (
+                            <SelectItem key={note} value={note}>
+                              {note}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-instructions" disabled>No additional instructions available</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -679,19 +716,25 @@ export default function CSRForm() {
                   name="shopHandoff"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Shop Handoff *</FormLabel>
+                      <FormLabel className="flex items-center gap-1">
+                        <Database className="h-3 w-3 text-muted-foreground" /> Shop Handoff *
+                      </FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger data-testid="select-shop-handoff">
-                            <SelectValue placeholder="Select technician" />
+                            <SelectValue placeholder="Select shop user" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {technicians.map((tech) => (
-                            <SelectItem key={tech.id} value={tech.email}>
-                              {tech.name} ({tech.email})
-                            </SelectItem>
-                          ))}
+                          {isLoadingShopUsers ? (
+                            <SelectItem value="loading" disabled>Loading shop users...</SelectItem>
+                          ) : (
+                            shopUsers.map((user) => (
+                              <SelectItem key={user} value={user}>
+                                {user}
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />
