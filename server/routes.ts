@@ -21,6 +21,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test GoCanvas reference data access
+  app.get("/api/gocanvas/reference-data", async (req, res) => {
+    try {
+      const referenceData = await goCanvasService.getReferenceData();
+      
+      if (referenceData) {
+        res.json({ success: true, data: referenceData });
+      } else {
+        res.json({ success: false, message: 'No reference data endpoints found' });
+      }
+    } catch (error) {
+      console.error("Failed to fetch GoCanvas reference data:", error);
+      res.status(500).json({ error: "Failed to fetch reference data", details: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
   // Create new job
   app.post("/api/jobs", async (req, res) => {
     try {

@@ -89,3 +89,40 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+
+// Reference Data Tables
+export const referenceDataShops = pgTable("reference_data_shops", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  shopUserID: text("shop_user_id").notNull(),
+  shop: text("shop").notNull(),
+  permissionToStart: text("permission_to_start"),
+  shopHandoff: text("shop_handoff"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const referenceDataCustomers = pgTable("reference_data_customers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerName: text("customer_name").notNull(),
+  shipToCombined: text("ship_to_combined"),
+  ship2ID: text("ship2_id"),
+  specificInstructionsForCustomer: text("specific_instructions_for_customer"),
+  sendClampsGaskets: text("send_clamps_gaskets"),
+  defaultService: text("default_service"),
+  customerNotes: text("customer_notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertReferenceDataShopsSchema = createInsertSchema(referenceDataShops).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertReferenceDataCustomersSchema = createInsertSchema(referenceDataCustomers).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type SelectReferenceDataShop = typeof referenceDataShops.$inferSelect;
+export type InsertReferenceDataShop = z.infer<typeof insertReferenceDataShopsSchema>;
+export type SelectReferenceDataCustomer = typeof referenceDataCustomers.$inferSelect;
+export type InsertReferenceDataCustomer = z.infer<typeof insertReferenceDataCustomersSchema>;
