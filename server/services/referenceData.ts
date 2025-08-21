@@ -184,6 +184,45 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
     };
   }
 
+  async getAllColumnsBreakdown() {
+    await this.ensureDataLoaded();
+    
+    // Find rows with meaningful data (not all #N/A or empty)
+    const meaningfulRows = this.customerData
+      .filter(row => row.some((cell, index) => 
+        index >= 7 && this.isValidValue(cell) // Check columns 7+ for real data
+      ))
+      .slice(0, 10); // First 10 rows with data
+    
+    const columnHeaders = [
+      'Column 0: Workflow Shop',
+      'Column 1: Shop ID', 
+      'Column 2: Customer Name',
+      'Column 3: Ship To Address',
+      'Column 4: Ship To City', 
+      'Column 5: Ship To Full Address',
+      'Column 6: Ship2 ID',
+      'Column 7: Unknown Data',
+      'Column 8: Send Clamps & Gaskets',
+      'Column 9: Preferred Process',
+      'Column 10: Unknown Data 2',
+      'Column 11: Customer Notes/Instructions'
+    ];
+    
+    return {
+      columnHeaders,
+      sampleRows: meaningfulRows.map((row, index) => ({
+        rowIndex: index,
+        data: row.map((cell, colIndex) => ({
+          column: colIndex,
+          header: columnHeaders[colIndex] || `Column ${colIndex}`,
+          value: cell || '[EMPTY]',
+          isValid: this.isValidValue(cell)
+        }))
+      }))
+    };
+  }
+
   private isValidValue(value: any): boolean {
     if (!value) return false;
     const str = String(value).trim().toUpperCase();
