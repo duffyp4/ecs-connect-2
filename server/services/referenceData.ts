@@ -284,11 +284,22 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
     };
   }
 
-  async getCustomerSpecificData(customerName: string) {
+  async getCustomerSpecificData(customerName: string, shipToAddress?: string) {
     await this.ensureDataLoaded();
     
-    // Find the customer record
-    const customerRow = this.customerData.find(row => row[2] === customerName);
+    // Find the specific customer record that matches both name and ship-to address
+    let customerRow;
+    if (shipToAddress) {
+      // Try to find exact match with ship-to address (column 5: "Ship to Combined")
+      customerRow = this.customerData.find(row => 
+        row[2] === customerName && row[5] && row[5].includes(shipToAddress.split(' (')[0])
+      );
+    }
+    
+    // Fallback to any record for the customer if no ship-to match found
+    if (!customerRow) {
+      customerRow = this.customerData.find(row => row[2] === customerName);
+    }
     
     if (!customerRow) {
       return {
@@ -313,11 +324,23 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
     return !['#N/A', 'N/A', 'NA', ''].includes(str);
   }
 
-  async getCustomerSpecificInstructions(customerName: string): Promise<string> {
+  async getCustomerSpecificInstructions(customerName: string, shipToAddress?: string): Promise<string> {
     await this.ensureDataLoaded();
     
-    // Find specific instructions for customer (column 8: "Specific Instructions For This Customer?")
-    const customerRow = this.customerData.find(row => row[2] === customerName);
+    // Find the specific customer record that matches both name and ship-to address
+    let customerRow;
+    if (shipToAddress) {
+      // Try to find exact match with ship-to address (column 5: "Ship to Combined")
+      customerRow = this.customerData.find(row => 
+        row[2] === customerName && row[5] && row[5].includes(shipToAddress.split(' (')[0])
+      );
+    }
+    
+    // Fallback to any record for the customer if no ship-to match found
+    if (!customerRow) {
+      customerRow = this.customerData.find(row => row[2] === customerName);
+    }
+    
     const instructions = customerRow ? customerRow[8] || '' : '';
     return this.isValidValue(instructions) ? instructions : '';
   }

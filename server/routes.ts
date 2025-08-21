@@ -154,7 +154,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/reference/customer-instructions/:customerName", async (req, res) => {
     try {
       const { customerName } = req.params;
-      const instructions = await referenceDataService.getCustomerSpecificInstructions(decodeURIComponent(customerName));
+      const { shipTo } = req.query;
+      const instructions = await referenceDataService.getCustomerSpecificInstructions(
+        decodeURIComponent(customerName),
+        shipTo ? decodeURIComponent(shipTo as string) : undefined
+      );
       res.json({ instructions });
     } catch (error) {
       console.error("Failed to get customer instructions:", error);
@@ -219,7 +223,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get customer-specific reference data values
   app.get("/api/reference/customer-specific/:customerName", async (req, res) => {
     try {
-      const customerData = await referenceDataService.getCustomerSpecificData(req.params.customerName);
+      const { customerName } = req.params;
+      const { shipTo } = req.query;
+      const customerData = await referenceDataService.getCustomerSpecificData(
+        decodeURIComponent(customerName),
+        shipTo ? decodeURIComponent(shipTo as string) : undefined
+      );
       res.json(customerData);
     } catch (error) {
       console.error("Failed to get customer specific data:", error);

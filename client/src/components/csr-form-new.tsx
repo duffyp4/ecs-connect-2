@@ -74,9 +74,9 @@ export default function CSRForm() {
   const { data: techComments = [], isLoading: isLoadingComments } = useTechComments();
   const { data: sendClampsOptions = [], isLoading: isLoadingSendClamps } = useSendClampsGaskets();
   const { data: preferredProcesses = [], isLoading: isLoadingProcesses } = usePreferredProcesses();
-  const { data: customerInstructionsData } = useCustomerInstructions(customerName || undefined);
+  const { data: customerInstructionsData } = useCustomerInstructions(customerName || undefined, customerShipTo || undefined);
   const { data: customerNotes = [], isLoading: isLoadingNotes } = useCustomerNotes();
-  const { data: customerSpecificData } = useCustomerSpecificData(customerName || undefined);
+  const { data: customerSpecificData } = useCustomerSpecificData(customerName || undefined, customerShipTo || undefined);
 
   // Auto-populate permission when user changes
   useEffect(() => {

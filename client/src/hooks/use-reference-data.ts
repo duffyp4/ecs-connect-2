@@ -116,12 +116,17 @@ export function usePreferredProcesses() {
   });
 }
 
-export function useCustomerInstructions(customerName: string | undefined) {
+export function useCustomerInstructions(customerName: string | undefined, shipToAddress?: string | undefined) {
   return useQuery({
-    queryKey: ['reference', 'customer-instructions', customerName],
+    queryKey: ['reference', 'customer-instructions', customerName, shipToAddress],
     queryFn: async () => {
       if (!customerName) return { instructions: '' };
-      const response = await fetch(`/api/reference/customer-instructions/${encodeURIComponent(customerName)}`);
+      const params = new URLSearchParams();
+      if (shipToAddress) {
+        params.append('shipTo', shipToAddress);
+      }
+      const url = `/api/reference/customer-instructions/${encodeURIComponent(customerName)}${params.toString() ? '?' + params.toString() : ''}`;
+      const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch customer instructions');
       return response.json() as Promise<{ instructions: string }>;
     },
@@ -143,12 +148,17 @@ export function useCustomerNotes() {
 }
 
 // Get customer-specific reference data values (not dropdown options)
-export function useCustomerSpecificData(customerName: string | undefined) {
+export function useCustomerSpecificData(customerName: string | undefined, shipToAddress?: string | undefined) {
   return useQuery({
-    queryKey: ['reference', 'customer-specific', customerName],
+    queryKey: ['reference', 'customer-specific', customerName, shipToAddress],
     queryFn: async () => {
       if (!customerName) return null;
-      const response = await fetch(`/api/reference/customer-specific/${encodeURIComponent(customerName)}`);
+      const params = new URLSearchParams();
+      if (shipToAddress) {
+        params.append('shipTo', shipToAddress);
+      }
+      const url = `/api/reference/customer-specific/${encodeURIComponent(customerName)}${params.toString() ? '?' + params.toString() : ''}`;
+      const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch customer specific data');
       return response.json() as Promise<{
         preferredProcess: string;
