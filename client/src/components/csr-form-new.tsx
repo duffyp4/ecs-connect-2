@@ -479,21 +479,33 @@ export default function CSRForm() {
                 />
               </div>
 
-              {/* Instructions */}
+              {/* Customer Specific Instructions - Read-only reference data field */}
               <FormField
                 control={form.control}
                 name="customerSpecificInstructions"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-1">
-                      <Database className="h-3 w-3 text-muted-foreground" /> Customer Specific Instructions?
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="Any specific customer instructions" {...field} data-testid="input-customer-instructions" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  // Show the field value if it exists and is not #N/A, otherwise empty
+                  const displayValue = field.value && field.value !== '#N/A' ? field.value : '';
+                  
+                  return (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1">
+                        <Database className="h-3 w-3 text-muted-foreground" /> Customer Specific Instructions
+                      </FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field}
+                          value={displayValue}
+                          readOnly
+                          className="bg-muted text-muted-foreground cursor-not-allowed"
+                          data-testid="input-customer-instructions-readonly"
+                          placeholder={customerName ? "Auto-populated from reference data" : "Select customer to load instructions"}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
 
               {/* Service Details */}
