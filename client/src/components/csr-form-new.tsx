@@ -89,8 +89,11 @@ export default function CSRForm() {
   useEffect(() => {
     if (customerInstructionsData?.instructions) {
       form.setValue("customerSpecificInstructions", customerInstructionsData.instructions);
+    } else if (customerName && customerInstructionsData) {
+      // Clear field if no instructions found for selected customer
+      form.setValue("customerSpecificInstructions", "");
     }
-  }, [customerInstructionsData, form]);
+  }, [customerInstructionsData, customerName, form]);
 
   // Auto-populate reference data fields when customer changes
   useEffect(() => {
@@ -486,7 +489,7 @@ export default function CSRForm() {
                 name="customerSpecificInstructions"
                 render={({ field }) => {
                   // Show the field value if it exists and is not #N/A, otherwise empty
-                  const displayValue = field.value && field.value !== '#N/A' ? field.value : '';
+                  const displayValue = field.value && field.value !== '#N/A' && field.value !== '' ? field.value : '';
                   
                   return (
                     <FormItem>
@@ -515,7 +518,7 @@ export default function CSRForm() {
                   control={form.control}
                   name="sendClampsGaskets"
                   render={({ field }) => {
-                    const displayValue = field.value && field.value !== '#N/A' ? field.value : '';
+                    const displayValue = field.value && field.value !== '#N/A' && field.value !== '' ? field.value : '';
                     
                     return (
                       <FormItem>
