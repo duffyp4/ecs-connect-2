@@ -172,6 +172,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Debug endpoint to check column data
+  app.get("/api/debug/columns", async (req, res) => {
+    try {
+      const debugData = await referenceDataService.getDebugColumnData();
+      res.json(debugData);
+    } catch (error) {
+      console.error("Failed to get debug data:", error);
+      res.status(500).json({ error: "Failed to fetch debug data" });
+    }
+  });
+
 
 
   // Create new job

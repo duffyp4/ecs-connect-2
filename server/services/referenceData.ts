@@ -134,6 +134,26 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
     return comments.sort();
   }
 
+  async getDebugColumnData() {
+    await this.ensureDataLoaded();
+    
+    // Find rows with actual data (not all #N/A)
+    const sampleRows = this.customerData
+      .filter(row => row.some(cell => cell && cell !== '#N/A'))
+      .slice(0, 5);
+    
+    return {
+      sampleRows,
+      columns: {
+        col7: Array.from(new Set(this.customerData.map(row => row[7]).filter(v => this.isValidValue(v)))),
+        col8: Array.from(new Set(this.customerData.map(row => row[8]).filter(v => this.isValidValue(v)))),
+        col9: Array.from(new Set(this.customerData.map(row => row[9]).filter(v => this.isValidValue(v)))),
+        col10: Array.from(new Set(this.customerData.map(row => row[10]).filter(v => this.isValidValue(v)))),
+        col11: Array.from(new Set(this.customerData.map(row => row[11]).filter(v => this.isValidValue(v))))
+      }
+    };
+  }
+
   private isValidValue(value: any): boolean {
     if (!value) return false;
     const str = String(value).trim().toUpperCase();
@@ -152,9 +172,9 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getSendClampsGaskets(): Promise<string[]> {
     await this.ensureDataLoaded();
     
-    // Extract unique values from Send Clamps/Gaskets column (column 9) - CORRECTED
+    // CONFIRMED: Column 8 contains 'Yes'/'No' values for Send Clamps & Gaskets
     const options = Array.from(new Set(this.customerData
-      .map(row => row[9])
+      .map(row => row[8])
       .filter(value => this.isValidValue(value))
     ));
     
@@ -164,9 +184,10 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getPreferredProcesses(): Promise<string[]> {
     await this.ensureDataLoaded();
     
-    // Extract unique values from Default Service column (column 10) - CORRECTED
+    // Looking at sample data: 'A Plus Truck Repair, Inc.' has 'Thermal Process' in column 9
+    // So column 9 should be correct for Preferred Process
     const processes = Array.from(new Set(this.customerData
-      .map(row => row[10])
+      .map(row => row[9])
       .filter(value => this.isValidValue(value))
     ));
     
@@ -176,7 +197,7 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getCustomerNotes(): Promise<string[]> {
     await this.ensureDataLoaded();
     
-    // Extract unique values from Customer Notes column (column 11)
+    // Customer Notes should be from column 11 based on field mapping
     const notes = Array.from(new Set(this.customerData
       .map(row => row[11])
       .filter(value => this.isValidValue(value))
