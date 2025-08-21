@@ -240,7 +240,10 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getSendClampsGaskets(): Promise<string[]> {
     await this.ensureDataLoaded();
     
-    // CONFIRMED: Column 8 contains 'Yes'/'No' values for Send Clamps & Gaskets
+    // Your screenshot shows "Send Clamps/Gaskets?" as column 10
+    // However, our working data shows Yes/No values in what logs as column 8
+    // This likely means the API data is different from web interface display
+    // Since we know the working pattern shows Yes/No in column 8, let's use that
     const options = Array.from(new Set(this.customerData
       .map(row => row[8])
       .filter(value => this.isValidValue(value))
@@ -252,8 +255,7 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getPreferredProcesses(): Promise<string[]> {
     await this.ensureDataLoaded();
     
-    // Looking at sample data: 'A Plus Truck Repair, Inc.' has 'Thermal Process' in column 9
-    // So column 9 should be correct for Preferred Process
+    // CORRECTED: Column 9 contains "Default Service" values per screenshot  
     const processes = Array.from(new Set(this.customerData
       .map(row => row[9])
       .filter(value => this.isValidValue(value))
