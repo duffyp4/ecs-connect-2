@@ -634,15 +634,26 @@ export default function CSRForm() {
               <FormField
                 control={form.control}
                 name="noteToTechAboutCustomer"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Note to Tech about Customer or service:</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Notes about customer or service" {...field} data-testid="input-tech-notes" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const hasCommentsForTech = form.watch("anyCommentsForTech") === "Yes";
+                  
+                  return (
+                    <FormItem>
+                      <FormLabel>Note to Tech about Customer or service:</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          {...field}
+                          value={hasCommentsForTech ? field.value : ""}
+                          readOnly={!hasCommentsForTech}
+                          className={hasCommentsForTech ? "" : "bg-muted text-muted-foreground cursor-not-allowed"}
+                          placeholder={hasCommentsForTech ? "Notes about customer or service" : "Select 'Yes' above to enable this field"}
+                          data-testid="input-tech-notes"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
 
               {/* Contact Information */}
