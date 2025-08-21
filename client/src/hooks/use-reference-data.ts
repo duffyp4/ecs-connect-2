@@ -141,3 +141,23 @@ export function useCustomerNotes() {
     staleTime: 5 * 60 * 1000,
   });
 }
+
+// Get customer-specific reference data values (not dropdown options)
+export function useCustomerSpecificData(customerName: string | undefined) {
+  return useQuery({
+    queryKey: ['reference', 'customer-specific', customerName],
+    queryFn: async () => {
+      if (!customerName) return null;
+      const response = await fetch(`/api/reference/customer-specific/${encodeURIComponent(customerName)}`);
+      if (!response.ok) throw new Error('Failed to fetch customer specific data');
+      return response.json() as Promise<{
+        preferredProcess: string;
+        sendClampsGaskets: string;
+        customerNotes: string;
+        ship2Contact: string;
+      }>;
+    },
+    enabled: !!customerName,
+    staleTime: 5 * 60 * 1000,
+  });
+}

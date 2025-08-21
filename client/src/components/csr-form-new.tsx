@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { insertJobSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useShopUsers, useShopsForUser, usePermissionForUser, useCustomerNames, useShipToForCustomer, useShip2Ids, useTechComments, useSendClampsGaskets, usePreferredProcesses, useCustomerInstructions, useCustomerNotes } from "@/hooks/use-reference-data";
+import { useShopUsers, useShopsForUser, usePermissionForUser, useCustomerNames, useShipToForCustomer, useShip2Ids, useTechComments, useSendClampsGaskets, usePreferredProcesses, useCustomerInstructions, useCustomerNotes, useCustomerSpecificData } from "@/hooks/use-reference-data";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -73,6 +73,7 @@ export default function CSRForm() {
   const { data: preferredProcesses = [], isLoading: isLoadingProcesses } = usePreferredProcesses();
   const { data: customerInstructionsData } = useCustomerInstructions(customerName || undefined);
   const { data: customerNotes = [], isLoading: isLoadingNotes } = useCustomerNotes();
+  const { data: customerSpecificData } = useCustomerSpecificData(customerName || undefined);
 
   // Auto-populate permission when user changes
   useEffect(() => {
@@ -87,6 +88,32 @@ export default function CSRForm() {
       form.setValue("customerSpecificInstructions", customerInstructionsData.instructions);
     }
   }, [customerInstructionsData, form]);
+
+  // Auto-populate reference data fields when customer changes
+  useEffect(() => {
+    if (customerSpecificData && customerName) {
+      // Auto-populate preferred process from reference data
+      if (customerSpecificData.preferredProcess) {
+        form.setValue("preferredProcess", customerSpecificData.preferredProcess);
+      } else {
+        form.setValue("preferredProcess", "");
+      }
+      
+      // Auto-populate send clamps/gaskets from reference data
+      if (customerSpecificData.sendClampsGaskets) {
+        form.setValue("sendClampsGaskets", customerSpecificData.sendClampsGaskets);
+      } else {
+        form.setValue("sendClampsGaskets", "");
+      }
+      
+      // Auto-populate customer notes from reference data
+      if (customerSpecificData.customerNotes) {
+        form.setValue("noteToTechAboutCustomer", customerSpecificData.customerNotes);
+      } else {
+        form.setValue("noteToTechAboutCustomer", "");
+      }
+    }
+  }, [customerSpecificData, customerName, form]);
 
   // Auto-populate shop name when user changes
   useEffect(() => {
@@ -469,63 +496,103 @@ export default function CSRForm() {
                 <FormField
                   control={form.control}
                   name="sendClampsGaskets"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-1">
-                        <Database className="h-3 w-3 text-muted-foreground" /> Send Clamps & Gaskets?
-                      </FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger data-testid="select-clamps-gaskets">
-                            <SelectValue placeholder="Select option" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {isLoadingSendClamps ? (
-                            <SelectItem value="loading" disabled>Loading options...</SelectItem>
-                          ) : (
-                            sendClampsOptions.map((option) => (
-                              <SelectItem key={option} value={option}>
-                                {option}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    const hasReferenceData = customerSpecificData?.sendClampsGaskets;
+                    const isReferenceDataField = hasReferenceData && customerName;
+                    
+                    return (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-1">
+                          <Database className="h-3 w-3 text-muted-foreground" /> Send Clamps & Gaskets?
+                        </FormLabel>
+                        {isReferenceDataField ? (
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value || ''}
+                              readOnly
+                              className="bg-muted"
+                              data-testid="input-clamps-gaskets-readonly"
+                              placeholder="Reference data will auto-populate"
+                            />
+                          </FormControl>
+                        ) : (
+                          <>
+                            <Select onValueChange={field.onChange} defaultValue={field.value || ''}>
+                              <FormControl>
+                                <SelectTrigger data-testid="select-clamps-gaskets">
+                                  <SelectValue placeholder="Select option" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {isLoadingSendClamps ? (
+                                  <SelectItem value="loading" disabled>Loading options...</SelectItem>
+                                ) : (
+                                  sendClampsOptions.map((option) => (
+                                    <SelectItem key={option} value={option}>
+                                      {option}
+                                    </SelectItem>
+                                  ))
+                                )}
+                              </SelectContent>
+                            </Select>
+                          </>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
 
                 <FormField
                   control={form.control}
                   name="preferredProcess"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-1">
-                        <Database className="h-3 w-3 text-muted-foreground" /> Preferred Process?
-                      </FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger data-testid="select-preferred-process">
-                            <SelectValue placeholder="Select process" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {isLoadingProcesses ? (
-                            <SelectItem value="loading" disabled>Loading processes...</SelectItem>
-                          ) : (
-                            preferredProcesses.map((process) => (
-                              <SelectItem key={process} value={process}>
-                                {process}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    const hasReferenceData = customerSpecificData?.preferredProcess;
+                    const isReferenceDataField = hasReferenceData && customerName;
+                    
+                    return (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-1">
+                          <Database className="h-3 w-3 text-muted-foreground" /> Preferred Process?
+                        </FormLabel>
+                        {isReferenceDataField ? (
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value || ''}
+                              readOnly
+                              className="bg-muted"
+                              data-testid="input-preferred-process-readonly"
+                              placeholder="Reference data will auto-populate"
+                            />
+                          </FormControl>
+                        ) : (
+                          <>
+                            <Select onValueChange={field.onChange} defaultValue={field.value || ''}>
+                              <FormControl>
+                                <SelectTrigger data-testid="select-preferred-process">
+                                  <SelectValue placeholder="Select process" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {isLoadingProcesses ? (
+                                  <SelectItem value="loading" disabled>Loading processes...</SelectItem>
+                                ) : (
+                                  preferredProcesses.map((process) => (
+                                    <SelectItem key={process} value={process}>
+                                      {process}
+                                    </SelectItem>
+                                  ))
+                                )}
+                              </SelectContent>
+                            </Select>
+                          </>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
               </div>
 

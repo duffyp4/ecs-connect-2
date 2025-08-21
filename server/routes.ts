@@ -216,6 +216,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get customer-specific reference data values
+  app.get("/api/reference/customer-specific/:customerName", async (req, res) => {
+    try {
+      const customerData = await referenceDataService.getCustomerSpecificData(req.params.customerName);
+      res.json(customerData);
+    } catch (error) {
+      console.error("Failed to get customer specific data:", error);
+      res.status(500).json({ error: "Failed to fetch customer specific data" });
+    }
+  });
+
 
 
   // Create new job

@@ -264,6 +264,29 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
     };
   }
 
+  async getCustomerSpecificData(customerName: string) {
+    await this.ensureDataLoaded();
+    
+    // Find the customer record
+    const customerRow = this.customerData.find(row => row[2] === customerName);
+    
+    if (!customerRow) {
+      return {
+        preferredProcess: '',
+        sendClampsGaskets: '',
+        customerNotes: '',
+        ship2Contact: ''
+      };
+    }
+    
+    return {
+      preferredProcess: customerRow[9] || '',  // Column 9: Default Service
+      sendClampsGaskets: customerRow[10] || '', // Column 10: Send Clamps/Gaskets?
+      customerNotes: customerRow[11] || '',     // Column 11: Customer Notes
+      ship2Contact: customerRow[7] || ''        // Column 7: Ship2 Contact
+    };
+  }
+
   private isValidValue(value: any): boolean {
     if (!value) return false;
     const str = String(value).trim().toUpperCase();
