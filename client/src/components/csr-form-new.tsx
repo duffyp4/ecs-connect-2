@@ -50,7 +50,7 @@ export default function CSRForm() {
       contactNumber: "",
       poNumber: "",
       serialNumbers: "",
-      techCustomerQuestionInquiry: "",
+      techCustomerQuestionInquiry: "sales@ecspart.com",
       checkInDate: "",
       checkInTime: "",
       shopHandoff: "",
@@ -707,7 +707,7 @@ export default function CSRForm() {
                 />
               </div>
 
-              {/* Tech Customer Inquiry */}
+              {/* Tech Customer Question Inquiry - Pre-filled and read-only */}
               <FormField
                 control={form.control}
                 name="techCustomerQuestionInquiry"
@@ -715,7 +715,13 @@ export default function CSRForm() {
                   <FormItem>
                     <FormLabel>Tech Customer Question Inquiry</FormLabel>
                     <FormControl>
-                      <Input placeholder="Customer inquiry" {...field} data-testid="input-customer-inquiry" />
+                      <Input 
+                        {...field}
+                        value="sales@ecspart.com"
+                        readOnly
+                        className="bg-muted text-muted-foreground cursor-not-allowed"
+                        data-testid="input-customer-inquiry-readonly"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
