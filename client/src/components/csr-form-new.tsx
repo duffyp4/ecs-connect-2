@@ -51,7 +51,7 @@ export default function CSRForm() {
       poNumber: "",
       serialNumbers: "",
       techCustomerQuestionInquiry: "sales@ecspart.com",
-      checkInDate: "",
+      checkInDate: new Date().toISOString().split('T')[0], // Current date in YYYY-MM-DD format
       checkInTime: "",
       shopHandoff: "",
       handoffEmailWorkflow: "",
