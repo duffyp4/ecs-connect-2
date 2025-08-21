@@ -235,9 +235,9 @@ export class GoCanvasService {
     // Load field mappings from the generated field map
     let fieldMap: any = {};
     try {
-      // Use synchronous imports for CommonJS modules in Node.js
-      const fs = eval('require')('fs');
-      const path = eval('require')('path');
+      // Use CommonJS require for Node.js synchronous file operations
+      const fs = require('fs');
+      const path = require('path');
       const mapPath = path.join(process.cwd(), 'gocanvas_field_map.json');
       const mapData = JSON.parse(fs.readFileSync(mapPath, 'utf8'));
       
