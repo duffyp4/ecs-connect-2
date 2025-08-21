@@ -127,6 +127,9 @@ export default function CSRForm() {
     if (shopsForUser.length === 1) {
       // Auto-select if only one shop available for user
       form.setValue("shopName", shopsForUser[0]);
+    } else if (shopsForUser.length > 1) {
+      // Auto-select first shop if multiple shops available
+      form.setValue("shopName", shopsForUser[0]);
     } else if (shopsForUser.length === 0 && userId) {
       // Clear shop name if user has no shops
       form.setValue("shopName", "");
@@ -352,34 +355,49 @@ export default function CSRForm() {
                 <FormField
                   control={form.control}
                   name="shopName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-1">
-                        <Database className="h-3 w-3 text-muted-foreground" /> Shop Name *
-                      </FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger data-testid="select-shop-name">
-                            <SelectValue placeholder="Select shop" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {isLoadingShops ? (
-                            <SelectItem value="loading" disabled>Loading shops...</SelectItem>
-                          ) : userId ? (
-                            shopsForUser.map((shop) => (
-                              <SelectItem key={shop} value={shop}>
-                                {shop}
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="no-user" disabled>Select User ID first</SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    const hasUserShops = shopsForUser.length > 0 && userId;
+                    
+                    return (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-1">
+                          <Database className="h-3 w-3 text-muted-foreground" /> Shop Name *
+                        </FormLabel>
+                        {hasUserShops ? (
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value || ''}
+                              readOnly
+                              className="bg-muted"
+                              data-testid="input-shop-name-readonly"
+                              placeholder="Auto-populated from User ID"
+                            />
+                          </FormControl>
+                        ) : (
+                          <>
+                            <Select onValueChange={field.onChange} defaultValue={field.value || ''}>
+                              <FormControl>
+                                <SelectTrigger data-testid="select-shop-name">
+                                  <SelectValue placeholder="Select User ID first" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {isLoadingShops ? (
+                                  <SelectItem value="loading" disabled>Loading shops...</SelectItem>
+                                ) : userId ? (
+                                  <SelectItem value="no-shops" disabled>No shops available for this user</SelectItem>
+                                ) : (
+                                  <SelectItem value="no-user" disabled>Select User ID first</SelectItem>
+                                )}
+                              </SelectContent>
+                            </Select>
+                          </>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
 
                 <FormField
