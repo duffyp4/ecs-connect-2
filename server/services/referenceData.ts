@@ -240,12 +240,10 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getSendClampsGaskets(): Promise<string[]> {
     await this.ensureDataLoaded();
     
-    // Your screenshot shows "Send Clamps/Gaskets?" as column 10
-    // However, our working data shows Yes/No values in what logs as column 8
-    // This likely means the API data is different from web interface display
-    // Since we know the working pattern shows Yes/No in column 8, let's use that
+    // CONFIRMED: Column 10 is "Send Clamps/Gaskets?" per your screenshot
+    // Values: Test clamp gaskets, Yes (plus blanks and #N/A that get filtered out)
     const options = Array.from(new Set(this.customerData
-      .map(row => row[8])
+      .map(row => row[10])
       .filter(value => this.isValidValue(value))
     ));
     
