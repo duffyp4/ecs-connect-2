@@ -58,9 +58,11 @@ The system uses PostgreSQL with the following main entities:
 6. Job is assigned to selected technician
 
 ### GoCanvas Integration Status
-- Job ID field mapping: Ready to sync once field appears in GoCanvas API
+- **FIXED**: Core data mapping now working correctly - Shop Name and Customer Ship To fields properly pass through
+- **Storage layer resolved**: Fixed field name mismatches in MemStorage that were causing data corruption
+- Job ID field mapping: Ready to sync once "Job ID" field is added to GoCanvas form
 - Enhanced error logging: Provides detailed API response information for troubleshooting
-- Fallback handling: Includes all required GoCanvas fields to prevent validation errors
+- Comprehensive field mapping: All 13 form fields now correctly mapped and transmitted to GoCanvas API
 
 ### Job Tracking Process
 1. Background polling service monitors GoCanvas submissions

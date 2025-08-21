@@ -137,6 +137,12 @@ export class GoCanvasService {
 
 
   async createSubmission(jobData: any): Promise<string> {
+    console.log('=== GOCANVAS createSubmission called ===');
+    console.log('Raw jobData keys:', Object.keys(jobData));
+    console.log('shopName value:', jobData.shopName);
+    console.log('customerShipTo value:', jobData.customerShipTo);
+    console.log('=======================================');
+    
     if (!this.username || !this.password || !this.formId) {
       console.log('GoCanvas not configured, skipping submission creation');
       return 'skip-no-config';
@@ -302,6 +308,7 @@ export class GoCanvasService {
         for (const label of mapping.labels) {
           const entryId = fieldMap[label];
           if (entryId) {
+            console.log(`Mapping found: ${label} -> ${entryId} = "${mapping.data}"`);
             responses.push({
               entry_id: entryId,
               value: String(mapping.data)
@@ -311,31 +318,67 @@ export class GoCanvasService {
         }
       }
     }
+    
+    console.log(`Initial mapping created ${responses.length} responses`);
+    
+    // CRITICAL: Force add Shop Name and Customer Ship To if not found in mapping
+    const shopNameExists = responses.find(r => r.entry_id === 708148226);
+    const customerShipToExists = responses.find(r => r.entry_id === 708148229);
+    
+    if (!shopNameExists && jobData.shopName) {
+      console.log(`Force adding Shop Name: "${jobData.shopName}"`);
+      responses.push({
+        entry_id: 708148226,
+        value: jobData.shopName
+      });
+    }
+    
+    if (!customerShipToExists && jobData.customerShipTo) {
+      console.log(`Force adding Customer Ship To: "${jobData.customerShipTo}"`);
+      responses.push({
+        entry_id: 708148229,
+        value: jobData.customerShipTo
+      });
+    }
 
-    // ALWAYS add required fields regardless of whether they have data to prevent 400 errors
+    // Log what data we have before adding required fields
+    console.log('Before required fields - current responses:', responses.length);
+    console.log('Available job data:');
+    console.log(`  - shopName: "${jobData.shopName}"`);
+    console.log(`  - customerShipTo: "${jobData.customerShipTo}"`);
+    
+    // ALWAYS add required fields, but preserve actual form data
     const requiredFields = [
       { id: 708148223, data: jobData.userId, default: "system@ecspart.com", label: "User ID" },
       { id: 708148225, data: jobData.permissionDeniedStop, default: "No", label: "Permission Denied Stop" },
-      { id: 708148226, data: jobData.shopName, default: jobData.shopName, label: "Shop Name" }, // Use actual shop name
-      { id: 708148227, data: jobData.customerName, default: jobData.customerName, label: "Customer Name" }, // Use actual customer name
-      { id: 708148229, data: jobData.customerShipTo, default: jobData.customerShipTo, label: "Customer Ship To" }, // Use actual ship to
+      { id: 708148226, data: jobData.shopName, default: "Unknown", label: "Shop Name" },
+      { id: 708148227, data: jobData.customerName, default: "Unknown Customer", label: "Customer Name" },
+      { id: 708148229, data: jobData.customerShipTo, default: "N/A", label: "Customer Ship To" },
       { id: 708148247, data: "New Submission", default: "New Submission", label: "Submission Status" }
     ];
 
-    // Check if required fields are missing and add them (don't override existing good data)
+    // Check if required fields are missing and add them with proper data
     for (const required of requiredFields) {
       const existing = responses.find(r => r.entry_id === required.id);
       if (!existing) {
-        // Only add if missing completely
+        // Add missing field with actual data
+        const value = required.data || required.default;
+        console.log(`Adding missing required field ${required.label}: "${value}"`);
         responses.push({
           entry_id: required.id,
-          value: required.data || required.default || "N/A"
+          value: value
         });
-      } else if (!existing.value || existing.value.trim() === "") {
-        // Replace empty/blank values with defaults
-        existing.value = required.data || required.default || "N/A";
+      } else {
+        // Field exists - check if it has good data
+        if (!existing.value || existing.value.trim() === "") {
+          // Replace empty with actual data
+          const value = required.data || required.default;
+          console.log(`Replacing empty ${required.label} with: "${value}"`);
+          existing.value = value;
+        } else {
+          console.log(`Keeping existing ${required.label}: "${existing.value}"`);
+        }
       }
-      // If field exists with good data, leave it alone
     }
 
     // Ensure we have at least one response

@@ -269,8 +269,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create job in storage
       const job = await storage.createJob(validatedData);
       
-      // Create GoCanvas submission
+      // Create GoCanvas submission  
       try {
+        console.log('=== ROUTE DEBUG: Job data being sent to GoCanvas ===');
+        console.log('Job shopName:', job.shopName);
+        console.log('Job customerShipTo:', job.customerShipTo);  
+        console.log('Job keys:', Object.keys(job));
+        console.log('================================================');
         const submissionId = await goCanvasService.createSubmission(job);
         
         if (submissionId && typeof submissionId === 'string' && !submissionId.startsWith('skip-')) {
