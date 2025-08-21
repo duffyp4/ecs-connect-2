@@ -470,7 +470,7 @@ export default function CSRForm() {
                             readOnly
                             className="bg-muted text-muted-foreground cursor-not-allowed"
                             data-testid="input-p21-ship-id-readonly"
-                            placeholder={customerName && customerShipTo ? "Auto-populated from reference data" : "Select customer and ship-to first"}
+                            placeholder={!displayValue ? (customerName && customerShipTo ? "Auto-populated from reference data" : "Select customer and ship-to first") : ""}
                           />
                         </FormControl>
                         <FormMessage />
@@ -500,7 +500,7 @@ export default function CSRForm() {
                           readOnly
                           className="bg-muted text-muted-foreground cursor-not-allowed"
                           data-testid="input-customer-instructions-readonly"
-                          placeholder={customerName ? "Auto-populated from reference data" : "Select customer to load instructions"}
+                          placeholder={!displayValue ? (customerName ? "Auto-populated from reference data" : "Select customer to load instructions") : ""}
                         />
                       </FormControl>
                       <FormMessage />
@@ -529,7 +529,7 @@ export default function CSRForm() {
                             readOnly
                             className="bg-muted text-muted-foreground cursor-not-allowed"
                             data-testid="input-clamps-gaskets-readonly"
-                            placeholder={customerName ? "Auto-populated from reference data" : "Select customer to load data"}
+                            placeholder={!displayValue ? (customerName ? "Auto-populated from reference data" : "Select customer to load data") : ""}
                           />
                         </FormControl>
                         <FormMessage />
@@ -556,7 +556,7 @@ export default function CSRForm() {
                             readOnly
                             className="bg-muted text-muted-foreground cursor-not-allowed"
                             data-testid="input-preferred-process-readonly"
-                            placeholder={customerName ? "Auto-populated from reference data" : "Select customer to load data"}
+                            placeholder={!displayValue ? (customerName ? "Auto-populated from reference data" : "Select customer to load data") : ""}
                           />
                         </FormControl>
                         <FormMessage />
@@ -585,7 +585,7 @@ export default function CSRForm() {
                           readOnly
                           className="bg-muted text-muted-foreground cursor-not-allowed resize-none"
                           data-testid="input-other-instructions-readonly"
-                          placeholder={customerName ? "Auto-populated from reference data" : "Select customer to load instructions"}
+                          placeholder={!displayValue ? (customerName ? "Auto-populated from reference data" : "Select customer to load instructions") : ""}
                         />
                       </FormControl>
                       <FormMessage />
