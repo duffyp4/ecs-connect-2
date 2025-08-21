@@ -8,7 +8,7 @@ export class GoCanvasService {
   constructor() {
     this.username = process.env.GOCANVAS_USERNAME || '';
     this.password = process.env.GOCANVAS_PASSWORD || '';
-    this.formId = process.env.GOCANVAS_FORM_ID;
+    this.formId = '5568544'; // Testing Copy form with Job ID field
     
     if (!this.username || !this.password) {
       console.warn('GoCanvas credentials not configured. Using mock mode.');
@@ -321,69 +321,41 @@ export class GoCanvasService {
     
     console.log(`Initial mapping created ${responses.length} responses`);
     
-    // CRITICAL: Force add Shop Name and Customer Ship To if not found in mapping
-    const shopNameExists = responses.find(r => r.entry_id === 708148226);
-    const customerShipToExists = responses.find(r => r.entry_id === 708148229);
-    
-    if (!shopNameExists && jobData.shopName) {
-      console.log(`Force adding Shop Name: "${jobData.shopName}"`);
-      responses.push({
-        entry_id: 708148226,
-        value: jobData.shopName
-      });
-    }
-    
-    if (!customerShipToExists && jobData.customerShipTo) {
-      console.log(`Force adding Customer Ship To: "${jobData.customerShipTo}"`);
-      responses.push({
-        entry_id: 708148229,
-        value: jobData.customerShipTo
-      });
-    }
-
-    // Log what data we have before adding required fields
-    console.log('Before required fields - current responses:', responses.length);
-    console.log('Available job data:');
-    console.log(`  - shopName: "${jobData.shopName}"`);
-    console.log(`  - customerShipTo: "${jobData.customerShipTo}"`);
-    
-    // ALWAYS add required fields, but preserve actual form data
-    const requiredFields = [
-      { id: 708148223, data: jobData.userId, default: "system@ecspart.com", label: "User ID" },
-      { id: 708148225, data: jobData.permissionDeniedStop, default: "No", label: "Permission Denied Stop" },
-      { id: 708148226, data: jobData.shopName, default: "Unknown", label: "Shop Name" },
-      { id: 708148227, data: jobData.customerName, default: "Unknown Customer", label: "Customer Name" },
-      { id: 708148229, data: jobData.customerShipTo, default: "N/A", label: "Customer Ship To" },
-      { id: 708148247, data: "New Submission", default: "New Submission", label: "Submission Status" }
+    // Add essential fields that might be missing from main mapping
+    const essentialFields = [
+      { id: 712668557, data: jobData.jobId, default: "ECS-UNKNOWN", label: "Job ID" },
+      { id: 712668558, data: jobData.userId, default: "system@ecspart.com", label: "User ID" },
+      { id: 712668560, data: jobData.permissionDeniedStop, default: "No", label: "Permission Denied Stop" },
+      { id: 712668561, data: jobData.shopName, default: "Unknown", label: "Shop Name" },
+      { id: 712668562, data: jobData.customerName, default: "Unknown Customer", label: "Customer Name" },
+      { id: 712668564, data: jobData.customerShipTo, default: "N/A", label: "Customer Ship To" },
+      { id: 712668582, data: "New Submission", default: "New Submission", label: "Submission Status" }
     ];
 
-    // Check if required fields are missing and add them with proper data
-    for (const required of requiredFields) {
-      const existing = responses.find(r => r.entry_id === required.id);
-      if (!existing) {
-        // Add missing field with actual data
-        const value = required.data || required.default;
-        console.log(`Adding missing required field ${required.label}: "${value}"`);
+    // Add missing essential fields
+    for (const essential of essentialFields) {
+      const existing = responses.find(r => r.entry_id === essential.id);
+      if (!existing && essential.data) {
+        console.log(`Adding essential field ${essential.label}: "${essential.data}"`);
         responses.push({
-          entry_id: required.id,
-          value: value
+          entry_id: essential.id,
+          value: essential.data
         });
-      } else {
-        // Field exists - check if it has good data
-        if (!existing.value || existing.value.trim() === "") {
-          // Replace empty with actual data
-          const value = required.data || required.default;
-          console.log(`Replacing empty ${required.label} with: "${value}"`);
-          existing.value = value;
-        } else {
-          console.log(`Keeping existing ${required.label}: "${existing.value}"`);
-        }
       }
     }
 
-    // Ensure we have at least one response
+    // Ensure we have at least one response - never use fallback as it contains old form IDs
     if (responses.length === 0) {
-      return this.getFallbackResponses(jobData);
+      console.warn('No responses mapped, but avoiding fallback to prevent form ID conflicts');
+      // Add minimum required fields for Testing Copy form
+      responses.push({
+        entry_id: 712668557,
+        value: jobData.jobId || "ECS-UNKNOWN"
+      });
+      responses.push({
+        entry_id: 712668582,
+        value: "New Submission"
+      });
     }
 
     console.log(`Created ${responses.length} form responses with required fields`);
@@ -410,64 +382,70 @@ export class GoCanvasService {
     
     // Add ALL required fields with ACTUAL form data - no generic defaults
     
+    // Job ID (NEW - required) - USE ACTUAL ECS JOB ID
+    responses.push({
+      entry_id: 712668557,
+      value: jobData.jobId || "ECS-UNKNOWN"
+    });
+    
     // User ID (required)
     responses.push({
-      entry_id: 708148223,
+      entry_id: 712668558,
       value: jobData.userId || "system@ecspart.com"
     });
     
     // Permission Denied Stop (required)
     responses.push({
-      entry_id: 708148225,
+      entry_id: 712668560,
       value: jobData.permissionDeniedStop || "No"
     });
     
     // Shop Name (required) - USE ACTUAL DATA
     responses.push({
-      entry_id: 708148226,
+      entry_id: 712668561,
       value: jobData.shopName || "Unknown"
     });
     
     // Customer Name (required) - USE ACTUAL DATA
     responses.push({
-      entry_id: 708148227,
+      entry_id: 712668562,
       value: jobData.customerName || "Unknown Customer"
     });
     
     // Customer Ship To (required) - USE ACTUAL DATA
     responses.push({
-      entry_id: 708148229,
+      entry_id: 712668564,
       value: jobData.customerShipTo || "N/A"
     });
     
     // Contact Name (required) - USE ACTUAL DATA
     responses.push({
-      entry_id: 708148237,
+      entry_id: 712668572,
       value: jobData.contactName || "Unknown Contact"
     });
     
     // Contact Number (required) - USE ACTUAL DATA
     responses.push({
-      entry_id: 708148238,
+      entry_id: 712668573,
       value: jobData.contactNumber || "000-000-0000"
     });
     
     // PO Number (required) - USE ACTUAL DATA
     responses.push({
-      entry_id: 708148239,
+      entry_id: 712668574,
       value: jobData.poNumber || "N/A"
     });
     
     // Serial Numbers (required) - USE ACTUAL DATA
     responses.push({
-      entry_id: 708148240,
+      entry_id: 712668575,
       value: jobData.serialNumbers || "N/A"
     });
     
     // Check In Date (often required) - USE ACTUAL DATA
     if (jobData.checkInDate) {
       responses.push({
-        entry_id: 708148242,
+        entry_id: 712668577,
         value: jobData.checkInDate
       });
     }
@@ -475,20 +453,20 @@ export class GoCanvasService {
     // Check In Time (often required) - USE ACTUAL DATA
     if (jobData.checkInTime) {
       responses.push({
-        entry_id: 708148243,
+        entry_id: 712668578,
         value: jobData.checkInTime
       });
     }
     
     // Shop Handoff (required) - USE ACTUAL DATA
     responses.push({
-      entry_id: 708148245,
+      entry_id: 712668580,
       value: jobData.shopHandoff || "system@ecspart.com"
     });
     
     // Submission Status (required)
     responses.push({
-      entry_id: 708148247,
+      entry_id: 712668582,
       value: "New Submission"
     });
     
@@ -503,36 +481,36 @@ export class GoCanvasService {
   }
 
   private getHardCodedFieldMap(): any {
-    // Hard-coded field mapping based on the latest field map to avoid require() issues
+    // Hard-coded field mapping based on Testing Copy form (5568544) field IDs
     return {
-      'P21 Order Number (Enter after invoicing)': 708148222,
-      'User ID': 708148223,
-      'Permission to Start': 708148224,
-      'Permission Denied Stop': 708148225,
-      'Shop Name': 708148226,
-      'Customer Name': 708148227,
-      'Customer Ship To': 708148229,
-      'P21 Ship to ID': 708148230,
-      'Customer Specific Instructions?': 708148231,
-      'Send Clamps & Gaskets?': 708148232,
-      'Preferred Process?': 708148233,
-      'Any Other Specific Instructions?': 708148234,
-      'Any comments for the tech about this submission?': 708148235,
-      'Note to Tech about Customer or service:': 708148236,
-      'Contact Name': 708148237,
-      'Contact Number': 708148238,
-      'PO Number': 708148239,
-      'Serial Number(s)': 708148240,
-      'Tech Customer Question Inquiry': 708148241,
-      'Check In Date': 708148242,
-      'Check In Time': 708148243,
-      'Shop Handoff': 708148245,
-      'Handoff Email workflow': 708148246,
-      'Submission Status': 708148247,
-      // Add Job ID field - this will be populated when the field appears
-      'Job ID': null, // Will be updated when field is available
-      'ECS Job ID': null,
-      'Job Number': null
+      'P21 Order Number (Enter after invoicing)': 712668556,
+      'Job ID': 712668557, // ✅ NEW: Job ID field now available!
+      'User ID': 712668558,
+      'Permission to Start': 712668559,
+      'Permission Denied Stop': 712668560,
+      'Shop Name': 712668561,
+      'Customer Name': 712668562,
+      'Customer Ship To': 712668564,
+      'P21 Ship to ID': 712668565,
+      'Customer Specific Instructions?': 712668566,
+      'Send Clamps & Gaskets?': 712668567,
+      'Preferred Process?': 712668568,
+      'Any Other Specific Instructions?': 712668569,
+      'Any comments for the tech about this submission?': 712668570,
+      'Note to Tech about Customer or service:': 712668571,
+      'Contact Name': 712668572,
+      'Contact Number': 712668573,
+      'PO Number': 712668574,
+      'Serial Number(s)': 712668575,
+      'Tech Customer Question Inquiry': 712668576,
+      'Check In Date': 712668577,
+      'Check In Time': 712668578,
+      'Shop Handoff': 712668580,
+      'Handoff Email workflow': 712668581,
+      'Submission Status': 712668582,
+      // Alternative Job ID labels
+      'ECS Job ID': 712668557,
+      'Job Number': 712668557
     };
   }
 }
