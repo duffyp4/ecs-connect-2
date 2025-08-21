@@ -161,3 +161,16 @@ export function useCustomerSpecificData(customerName: string | undefined) {
     staleTime: 5 * 60 * 1000,
   });
 }
+
+// Get all available shop names from reference data
+export function useAllShops() {
+  return useQuery({
+    queryKey: ['reference', 'all-shops'],
+    queryFn: async () => {
+      const response = await fetch('/api/reference/all-shops');
+      if (!response.ok) throw new Error('Failed to fetch all shops');
+      return response.json() as Promise<string[]>;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}

@@ -227,6 +227,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all unique shop names from the reference data
+  app.get("/api/reference/all-shops", async (req, res) => {
+    try {
+      const shops = await referenceDataService.getAllShops();
+      res.json(shops);
+    } catch (error) {
+      console.error("Failed to get all shops:", error);
+      res.status(500).json({ error: "Failed to fetch all shops" });
+    }
+  });
+
 
 
   // Create new job

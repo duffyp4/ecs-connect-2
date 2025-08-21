@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { insertJobSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useShopUsers, useShopsForUser, usePermissionForUser, useCustomerNames, useShipToForCustomer, useShip2Ids, useTechComments, useSendClampsGaskets, usePreferredProcesses, useCustomerInstructions, useCustomerNotes, useCustomerSpecificData } from "@/hooks/use-reference-data";
+import { useShopUsers, useShopsForUser, usePermissionForUser, useCustomerNames, useShipToForCustomer, useShip2Ids, useTechComments, useSendClampsGaskets, usePreferredProcesses, useCustomerInstructions, useCustomerNotes, useCustomerSpecificData, useAllShops } from "@/hooks/use-reference-data";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -62,6 +62,7 @@ export default function CSRForm() {
   const { data: shopUsers = [], isLoading: isLoadingShopUsers } = useShopUsers();
   const userId = form.watch("userId") || "";
   const { data: shopsForUser = [], isLoading: isLoadingShops } = useShopsForUser(userId || undefined);
+  const { data: allShops = [], isLoading: isLoadingAllShops } = useAllShops();
   const { data: permissionData } = usePermissionForUser(userId || undefined);
   const { data: customerNames = [], isLoading: isLoadingCustomers } = useCustomerNames();
   const customerName = form.watch("customerName") || "";
@@ -122,10 +123,10 @@ export default function CSRForm() {
     }
   }, [customerSpecificData, customerName, form]);
 
-  // Clear shop name when user changes (let user manually select)
+  // Clear shop name when user changes (let user manually select from all shops)
   useEffect(() => {
     if (userId) {
-      // Clear shop name when user changes so they can select manually
+      // Clear shop name when user changes so they can select manually from all available shops
       form.setValue("shopName", "");
     }
   }, [userId, form]);
@@ -361,16 +362,14 @@ export default function CSRForm() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {isLoadingShops ? (
+                          {isLoadingAllShops ? (
                             <SelectItem value="loading" disabled>Loading shops...</SelectItem>
-                          ) : userId ? (
-                            shopsForUser.map((shop) => (
+                          ) : (
+                            allShops.map((shop) => (
                               <SelectItem key={shop} value={shop}>
                                 {shop}
                               </SelectItem>
                             ))
-                          ) : (
-                            <SelectItem value="no-user" disabled>Select User ID first</SelectItem>
                           )}
                         </SelectContent>
                       </Select>
