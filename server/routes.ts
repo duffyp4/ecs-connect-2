@@ -205,6 +205,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get specific customer record details
+  app.get("/api/debug/customer/:customerName", async (req, res) => {
+    try {
+      const customerData = await referenceDataService.getCustomerRecord(req.params.customerName);
+      res.json(customerData);
+    } catch (error) {
+      console.error("Failed to get customer data:", error);
+      res.status(500).json({ error: "Failed to fetch customer data" });
+    }
+  });
+
 
 
   // Create new job

@@ -195,17 +195,17 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
     }
     
     const columnHeaders = [
-      'Workflow Shop',
-      'Shop ID', 
+      'Corp Name',
+      'Customer ID', 
       'Customer Name',
-      'Ship To Address',
-      'Ship To City', 
-      'Ship To Full Address',
+      'Ship2 Add1',
+      'Ship2 City', 
+      'Ship to Combined',
       'Ship2 ID',
-      'Column 7',
-      'Send Clamps & Gaskets',
-      'Preferred Process', 
-      'Column 10',
+      'Ship2 Contact',
+      'Specific Instructions For This Customer?',
+      'Default Service', 
+      'Send Clamps/Gaskets?',
       'Customer Notes'
     ];
     
@@ -218,6 +218,48 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
         value: value || '[EMPTY]',
         isEmpty: !value || value === '',
         isNA: value === '#N/A'
+      }))
+    };
+  }
+
+  async getCustomerRecord(customerName: string) {
+    await this.ensureDataLoaded();
+    
+    // Find all records for this customer
+    const customerRecords = this.customerData.filter(row => row[2] === customerName);
+    
+    if (customerRecords.length === 0) {
+      return { error: `Customer "${customerName}" not found` };
+    }
+    
+    const columnHeaders = [
+      'Corp Name',
+      'Customer ID', 
+      'Customer Name',
+      'Ship2 Add1',
+      'Ship2 City', 
+      'Ship to Combined',
+      'Ship2 ID',
+      'Ship2 Contact',
+      'Specific Instructions For This Customer?',
+      'Default Service', 
+      'Send Clamps/Gaskets?',
+      'Customer Notes'
+    ];
+    
+    return {
+      customerName,
+      totalRecords: customerRecords.length,
+      records: customerRecords.map((row, index) => ({
+        recordIndex: index,
+        data: row.map((value, colIndex) => ({
+          column: colIndex,
+          header: columnHeaders[colIndex] || `Column ${colIndex}`,
+          value: value || '[EMPTY]',
+          isEmpty: !value || value === '',
+          isNA: value === '#N/A',
+          isValid: this.isValidValue(value)
+        }))
       }))
     };
   }
