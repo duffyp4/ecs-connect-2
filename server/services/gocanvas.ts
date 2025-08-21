@@ -134,7 +134,32 @@ export class GoCanvasService {
     }
   }
 
+  async getUserId(email: string): Promise<number | null> {
+    if (!this.username || !this.password) {
+      return null;
+    }
 
+    try {
+      const response = await fetch(`${this.baseUrl}/users`, {
+        headers: {
+          'Authorization': this.getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        console.warn(`Failed to fetch users: ${response.status}`);
+        return null;
+      }
+
+      const users = await response.json();
+      const user = users.find((u: any) => u.login === email);
+      return user ? user.id : null;
+    } catch (error) {
+      console.error('Error fetching user ID:', error);
+      return null;
+    }
+  }
 
   async createSubmission(jobData: any): Promise<string> {
     console.log('=== GOCANVAS createDispatch called ===');
@@ -151,21 +176,39 @@ export class GoCanvasService {
     try {
       const responses = this.mapJobDataToFormResponses(jobData);
       
+      // Look up technician user ID for assignment
+      let assigneeId = null;
+      if (jobData.shopHandoff) {
+        assigneeId = await this.getUserId(jobData.shopHandoff);
+        if (assigneeId) {
+          console.log(`Found GoCanvas user ID ${assigneeId} for ${jobData.shopHandoff}`);
+        } else {
+          console.warn(`Could not find GoCanvas user for ${jobData.shopHandoff}, dispatch will be unassigned`);
+        }
+      }
+      
       // Create dispatch instead of direct submission (more reliable approach)
-      const dispatchData = {
+      const dispatchData: any = {
         dispatch_type: 'immediate_dispatch',
         form_id: parseInt(this.formId),
         name: `ECS Job: ${jobData.jobId}`,
         description: `Job for ${jobData.customerName} - ${jobData.shopName}`,
         responses: responses,
-        send_notification: false // Don't send notification for automated dispatches
+        send_notification: true // Send notification so technician sees the dispatch
       };
+
+      // Add assignee if found
+      if (assigneeId) {
+        dispatchData.assignee_id = assigneeId;
+      }
 
       console.log('Creating GoCanvas dispatch:', { 
         jobId: jobData.jobId,
         formId: this.formId,
         responseCount: responses.length,
-        dispatchType: 'immediate_dispatch'
+        dispatchType: 'immediate_dispatch',
+        assigneeId: assigneeId,
+        assignedTo: assigneeId ? jobData.shopHandoff : 'unassigned'
       });
       
       // Log if Job ID mapping was found
