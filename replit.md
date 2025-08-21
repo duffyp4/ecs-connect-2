@@ -8,6 +8,8 @@ This is a web application designed as a Customer Service Representative (CSR) Ch
 
 Preferred communication style: Simple, everyday language.
 
+**Critical Communication Rule**: When user explicitly says "don't make changes" or "just answer the question", NEVER proceed with code changes. Only provide the requested information. This was violated on 2025-08-21 when user asked to only answer a question about shop data but changes were made anyway.
+
 ## System Architecture
 
 ### Monorepo Structure
