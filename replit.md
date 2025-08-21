@@ -52,9 +52,15 @@ The system uses PostgreSQL with the following main entities:
 ### Job Creation Workflow
 1. CSR fills out web form with job details
 2. System generates unique Job ID (format: `ECS-YYYYMMDDHHMMSS-XXXX`)
-3. Job data is stored in PostgreSQL database
-4. GoCanvas submission is created via API integration
-5. Job is assigned to selected technician
+3. Job data is stored in PostgreSQL database (always succeeds)
+4. GoCanvas submission is created via API integration (may fail but job is still saved)
+5. Job ID is automatically passed to GoCanvas Job ID field when available
+6. Job is assigned to selected technician
+
+### GoCanvas Integration Status
+- Job ID field mapping: Ready to sync once field appears in GoCanvas API
+- Enhanced error logging: Provides detailed API response information for troubleshooting
+- Fallback handling: Includes all required GoCanvas fields to prevent validation errors
 
 ### Job Tracking Process
 1. Background polling service monitors GoCanvas submissions

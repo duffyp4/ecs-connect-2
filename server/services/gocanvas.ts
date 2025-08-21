@@ -176,6 +176,13 @@ export class GoCanvasService {
 
       if (!response.ok) {
         const errorText = await response.text();
+        console.error('GoCanvas API Error Details:', {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries()),
+          body: errorText,
+          submissionData: JSON.stringify(submissionData, null, 2)
+        });
         throw new Error(`Failed to create submission: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
@@ -250,6 +257,15 @@ export class GoCanvasService {
         }
       }
       console.log('Created field map with', Object.keys(fieldMap).length, 'entries');
+      
+      // Log if any Job ID-related field exists
+      const jobIdFields = Object.keys(fieldMap).filter(label => 
+        label.toLowerCase().includes('job') || 
+        label.toLowerCase().includes('id') && !label.toLowerCase().includes('user id')
+      );
+      if (jobIdFields.length > 0) {
+        console.log('Found potential ID fields:', jobIdFields);
+      }
     } catch (error) {
       console.error('Failed to load field map, using fallback mapping:', error);
       return this.getFallbackResponses(jobData);
@@ -348,8 +364,51 @@ export class GoCanvasService {
         value: String(jobData.customerShipTo)
       });
     }
+    
+    // Add more required fields to avoid 400 errors
+    if (jobData.permissionDeniedStop) {
+      responses.push({
+        entry_id: 708148225, // "Permission Denied Stop" field that is required
+        value: String(jobData.permissionDeniedStop)
+      });
+    }
+    
+    if (jobData.contactName) {
+      responses.push({
+        entry_id: 708148237, // "Contact Name" field that is required
+        value: String(jobData.contactName)
+      });
+    }
+    
+    if (jobData.contactNumber) {
+      responses.push({
+        entry_id: 708148238, // "Contact Number" field that is required
+        value: String(jobData.contactNumber)
+      });
+    }
+    
+    if (jobData.poNumber) {
+      responses.push({
+        entry_id: 708148239, // "PO Number" field that is required
+        value: String(jobData.poNumber)
+      });
+    }
+    
+    if (jobData.serialNumbers) {
+      responses.push({
+        entry_id: 708148240, // "Serial Number(s)" field that is required
+        value: String(jobData.serialNumbers)
+      });
+    }
+    
+    if (jobData.shopHandoff) {
+      responses.push({
+        entry_id: 708148245, // "Shop Handoff" field that is required
+        value: String(jobData.shopHandoff)
+      });
+    }
 
-    console.log(`Created ${responses.length} fallback responses`);
+    console.log(`Created ${responses.length} fallback responses for required fields`);
     return responses;
   }
 }

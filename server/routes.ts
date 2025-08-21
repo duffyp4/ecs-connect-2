@@ -285,7 +285,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       } catch (gocanvasError) {
         console.error("GoCanvas submission failed:", gocanvasError);
-        // Job is still created, but GoCanvas sync failed
+        // Job is still created, but GoCanvas sync failed - this is why user sees success message
+        console.log("Note: Job was saved successfully to database, but GoCanvas integration failed");
       }
 
       const updatedJob = await storage.getJob(job.id);
