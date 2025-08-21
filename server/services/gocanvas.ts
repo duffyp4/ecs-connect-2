@@ -156,6 +156,14 @@ export class GoCanvasService {
         responseCount: responses.length,
         responses: responses
       });
+      
+      // Log if Job ID mapping was found
+      const jobIdMapping = responses.find(response => response.value === jobData.jobId);
+      if (jobIdMapping) {
+        console.log(`✅ Job ID ${jobData.jobId} mapped to GoCanvas field entry_id: ${jobIdMapping.entry_id}`);
+      } else {
+        console.log(`⚠️ Job ID ${jobData.jobId} not yet mapped to GoCanvas field - field may need to be added to GoCanvas form`);
+      }
 
       const response = await fetch(`${this.baseUrl}/submissions`, {
         method: 'POST',
@@ -251,6 +259,8 @@ export class GoCanvasService {
     
     // Map common ECS fields to GoCanvas form fields based on discovered field map
     const mappings = [
+      // Job ID - This is the generated ECS job ID we want to pass to GoCanvas
+      { data: jobData.jobId, labels: ['Job ID', 'ECS Job ID', 'Job Id', 'Job Number'] },
       // Exact field mappings based on GoCanvas form structure
       { data: jobData.p21OrderNumber, labels: ['P21 Order Number (Enter after invoicing)'] },
       { data: jobData.userId, labels: ['User ID'] },
@@ -303,6 +313,12 @@ export class GoCanvasService {
   private getFallbackResponses(jobData: any): any[] {
     // Fallback using known field IDs from the discovered form structure
     const responses = [];
+    
+    // Add Job ID if available (will use once the field appears in GoCanvas)
+    if (jobData.jobId) {
+      // Note: Job ID field ID will need to be updated once it appears in the field map
+      console.log(`Job ID ${jobData.jobId} available for GoCanvas but field mapping not yet found`);
+    }
     
     // Add essential required fields with known IDs
     if (jobData.userId) {
