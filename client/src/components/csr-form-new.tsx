@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { insertJobSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useShopUsers, useShopsForUser, usePermissionForUser, useCustomerNames, useShipToForCustomer, useShip2Ids, useTechComments, useSendClampsGaskets, usePreferredProcesses, useCustomerInstructions, useCustomerNotes, useCustomerSpecificData, useAllShops } from "@/hooks/use-reference-data";
+import { useShopUsers, useShopsForUser, usePermissionForUser, useCustomerNames, useShipToForCustomer, useShip2Ids, useTechComments, useSendClampsGaskets, usePreferredProcesses, useCustomerInstructions, useCustomerNotes, useCustomerSpecificData, useAllShops, useUsersForShop } from "@/hooks/use-reference-data";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -64,6 +64,8 @@ export default function CSRForm() {
   const { data: shopsForUser = [], isLoading: isLoadingShops } = useShopsForUser(userId || undefined);
   const { data: allShops = [], isLoading: isLoadingAllShops } = useAllShops();
   const { data: permissionData } = usePermissionForUser(userId || undefined);
+  const shopName = form.watch("shopName") || "";
+  const { data: usersForSelectedShop = [], isLoading: isLoadingShopHandoffUsers } = useUsersForShop(shopName || undefined);
   const { data: customerNames = [], isLoading: isLoadingCustomers } = useCustomerNames();
   const customerName = form.watch("customerName") || "";
   const customerShipTo = form.watch("customerShipTo") || "";
@@ -130,6 +132,11 @@ export default function CSRForm() {
       form.setValue("shopName", "");
     }
   }, [userId, form]);
+
+  // Clear shop handoff when shop name changes
+  useEffect(() => {
+    form.setValue("shopHandoff", "");
+  }, [shopName, form]);
 
   // Auto-populate handoff email when shop handoff changes
   const shopHandoff = form.watch("shopHandoff") || "";
@@ -787,14 +794,16 @@ export default function CSRForm() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {isLoadingShopUsers ? (
+                          {isLoadingShopHandoffUsers ? (
                             <SelectItem value="loading" disabled>Loading shop users...</SelectItem>
-                          ) : (
-                            shopUsers.map((user) => (
+                          ) : shopName ? (
+                            usersForSelectedShop.map((user) => (
                               <SelectItem key={user} value={user}>
                                 {user}
                               </SelectItem>
                             ))
+                          ) : (
+                            <SelectItem value="no-shop" disabled>Select Shop Name first</SelectItem>
                           )}
                         </SelectContent>
                       </Select>

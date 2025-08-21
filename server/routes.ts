@@ -238,6 +238,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get users for a specific shop
+  app.get("/api/reference/shop/:shopName/users", async (req, res) => {
+    try {
+      const { shopName } = req.params;
+      const users = await referenceDataService.getUsersForShop(decodeURIComponent(shopName));
+      res.json(users);
+    } catch (error) {
+      console.error("Failed to get users for shop:", error);
+      res.status(500).json({ error: "Failed to fetch users for shop" });
+    }
+  });
+
 
 
   // Create new job

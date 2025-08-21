@@ -71,6 +71,18 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
     return shops.sort();
   }
 
+  async getUsersForShop(shopName: string): Promise<string[]> {
+    await this.ensureDataLoaded();
+    
+    // Find all users for the given shop name
+    const users = this.shopData
+      .filter(row => row[1] === shopName) // Shop name is column 1
+      .map(row => row[0]) // User ID is column 0
+      .filter(Boolean);
+    
+    return Array.from(new Set(users)).sort();
+  }
+
   async getPermissionForUser(userId: string): Promise<string> {
     await this.ensureDataLoaded();
     

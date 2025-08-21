@@ -174,3 +174,18 @@ export function useAllShops() {
     staleTime: 5 * 60 * 1000,
   });
 }
+
+// Get users for a specific shop
+export function useUsersForShop(shopName: string | undefined) {
+  return useQuery({
+    queryKey: ['reference', 'shop-users', shopName],
+    queryFn: async () => {
+      if (!shopName) return [];
+      const response = await fetch(`/api/reference/shop/${encodeURIComponent(shopName)}/users`);
+      if (!response.ok) throw new Error('Failed to fetch users for shop');
+      return response.json() as Promise<string[]>;
+    },
+    enabled: !!shopName,
+    staleTime: 5 * 60 * 1000,
+  });
+}
