@@ -106,6 +106,13 @@ export default function CSRForm() {
         form.setValue("sendClampsGaskets", "");
       }
       
+      // Auto-populate "Any Other Specific Instructions?" from reference data (column 11)
+      if (customerSpecificData.customerNotes) {
+        form.setValue("anyOtherSpecificInstructions", customerSpecificData.customerNotes);
+      } else {
+        form.setValue("anyOtherSpecificInstructions", "");
+      }
+      
       // Auto-populate customer notes from reference data
       if (customerSpecificData.customerNotes) {
         form.setValue("noteToTechAboutCustomer", customerSpecificData.customerNotes);
@@ -482,9 +489,11 @@ export default function CSRForm() {
                 name="customerSpecificInstructions"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Customer Specific Instructions?</FormLabel>
+                    <FormLabel className="flex items-center gap-1">
+                      <Database className="h-3 w-3 text-muted-foreground" /> Customer Specific Instructions?
+                    </FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Any specific customer instructions" {...field} data-testid="input-customer-instructions" />
+                      <Input placeholder="Any specific customer instructions" {...field} data-testid="input-customer-instructions" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -605,26 +614,9 @@ export default function CSRForm() {
                     <FormLabel className="flex items-center gap-1">
                       <Database className="h-3 w-3 text-muted-foreground" /> Any Other Specific Instructions?
                     </FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger data-testid="select-other-instructions">
-                          <SelectValue placeholder="Select instructions" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {isLoadingNotes ? (
-                          <SelectItem value="loading" disabled>Loading instructions...</SelectItem>
-                        ) : customerNotes.length > 0 ? (
-                          customerNotes.map((note) => (
-                            <SelectItem key={note} value={note}>
-                              {note}
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="no-instructions" disabled>No additional instructions available</SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Textarea placeholder="Any other specific instructions (manual input allowed)" {...field} data-testid="input-other-instructions" />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
