@@ -87,7 +87,9 @@ export default function CSRForm() {
 
   // Auto-populate customer instructions when customer changes
   useEffect(() => {
-    if (customerInstructionsData?.instructions) {
+    console.log('Customer instructions useEffect:', { customerInstructionsData, customerName });
+    if (customerInstructionsData?.instructions && customerInstructionsData.instructions !== '#N/A') {
+      console.log('Setting customerSpecificInstructions:', customerInstructionsData.instructions);
       form.setValue("customerSpecificInstructions", customerInstructionsData.instructions);
     } else if (customerName && customerInstructionsData) {
       // Clear field if no instructions found for selected customer
@@ -97,30 +99,35 @@ export default function CSRForm() {
 
   // Auto-populate reference data fields when customer changes
   useEffect(() => {
+    console.log('Customer specific data useEffect:', { customerSpecificData, customerName });
     if (customerSpecificData && customerName) {
       // Auto-populate preferred process from reference data
-      if (customerSpecificData.preferredProcess) {
+      if (customerSpecificData.preferredProcess && customerSpecificData.preferredProcess !== '#N/A') {
+        console.log('Setting preferredProcess:', customerSpecificData.preferredProcess);
         form.setValue("preferredProcess", customerSpecificData.preferredProcess);
       } else {
         form.setValue("preferredProcess", "");
       }
       
       // Auto-populate send clamps/gaskets from reference data
-      if (customerSpecificData.sendClampsGaskets) {
+      if (customerSpecificData.sendClampsGaskets && customerSpecificData.sendClampsGaskets !== '#N/A') {
+        console.log('Setting sendClampsGaskets:', customerSpecificData.sendClampsGaskets);
         form.setValue("sendClampsGaskets", customerSpecificData.sendClampsGaskets);
       } else {
         form.setValue("sendClampsGaskets", "");
       }
       
       // Auto-populate "Any Other Specific Instructions?" from reference data (column 11)
-      if (customerSpecificData.customerNotes) {
+      if (customerSpecificData.customerNotes && customerSpecificData.customerNotes !== '#N/A') {
+        console.log('Setting anyOtherSpecificInstructions:', customerSpecificData.customerNotes);
         form.setValue("anyOtherSpecificInstructions", customerSpecificData.customerNotes);
       } else {
         form.setValue("anyOtherSpecificInstructions", "");
       }
       
       // Auto-populate customer notes from reference data
-      if (customerSpecificData.customerNotes) {
+      if (customerSpecificData.customerNotes && customerSpecificData.customerNotes !== '#N/A') {
+        console.log('Setting noteToTechAboutCustomer:', customerSpecificData.customerNotes);
         form.setValue("noteToTechAboutCustomer", customerSpecificData.customerNotes);
       } else {
         form.setValue("noteToTechAboutCustomer", "");
