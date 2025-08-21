@@ -227,11 +227,21 @@ export class GoCanvasService {
     // Load field mappings from the generated field map
     let fieldMap: any = {};
     try {
-      const fs = require('fs');
-      const path = require('path');
+      // Use synchronous imports for CommonJS modules in Node.js
+      const fs = eval('require')('fs');
+      const path = eval('require')('path');
       const mapPath = path.join(process.cwd(), 'gocanvas_field_map.json');
       const mapData = JSON.parse(fs.readFileSync(mapPath, 'utf8'));
-      fieldMap = mapData.labelToIdMap || {};
+      
+      // Create labelToIdMap from the entries array
+      if (mapData.entries && Array.isArray(mapData.entries)) {
+        for (const entry of mapData.entries) {
+          if (entry.label && entry.id) {
+            fieldMap[entry.label.trim()] = entry.id;
+          }
+        }
+      }
+      console.log('Created field map with', Object.keys(fieldMap).length, 'entries');
     } catch (error) {
       console.error('Failed to load field map, using fallback mapping:', error);
       return this.getFallbackResponses(jobData);
@@ -294,12 +304,36 @@ export class GoCanvasService {
     // Fallback using known field IDs from the discovered form structure
     const responses = [];
     
-    // Use User ID field (required field from form) as fallback
-    responses.push({
-      entry_id: 708148223, // "User ID" field that is required
-      value: `ECS-${jobData.jobId}`
-    });
+    // Add essential required fields with known IDs
+    if (jobData.userId) {
+      responses.push({
+        entry_id: 708148223, // "User ID" field that is required
+        value: String(jobData.userId)
+      });
+    }
+    
+    if (jobData.shopName) {
+      responses.push({
+        entry_id: 708148226, // "Shop Name" field that is required
+        value: String(jobData.shopName)
+      });
+    }
+    
+    if (jobData.customerName) {
+      responses.push({
+        entry_id: 708148227, // "Customer Name" field that is required
+        value: String(jobData.customerName)
+      });
+    }
+    
+    if (jobData.customerShipTo) {
+      responses.push({
+        entry_id: 708148229, // "Customer Ship To" field that is required
+        value: String(jobData.customerShipTo)
+      });
+    }
 
+    console.log(`Created ${responses.length} fallback responses`);
     return responses;
   }
 }
