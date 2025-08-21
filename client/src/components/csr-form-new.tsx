@@ -52,7 +52,7 @@ export default function CSRForm() {
       serialNumbers: "",
       techCustomerQuestionInquiry: "sales@ecspart.com",
       checkInDate: new Date().toISOString().split('T')[0], // Current date in YYYY-MM-DD format
-      checkInTime: "",
+      checkInTime: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }), // Current time in HH:MM format
       shopHandoff: "",
       handoffEmailWorkflow: "",
     },
