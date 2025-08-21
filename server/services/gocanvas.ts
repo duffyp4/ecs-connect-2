@@ -137,30 +137,35 @@ export class GoCanvasService {
 
 
   async createSubmission(jobData: any): Promise<string> {
-    console.log('=== GOCANVAS createSubmission called ===');
+    console.log('=== GOCANVAS createDispatch called ===');
     console.log('Raw jobData keys:', Object.keys(jobData));
     console.log('shopName value:', jobData.shopName);
     console.log('customerShipTo value:', jobData.customerShipTo);
     console.log('=======================================');
     
     if (!this.username || !this.password || !this.formId) {
-      console.log('GoCanvas not configured, skipping submission creation');
+      console.log('GoCanvas not configured, skipping dispatch creation');
       return 'skip-no-config';
     }
 
     try {
       const responses = this.mapJobDataToFormResponses(jobData);
-      const submissionData = {
-        guid: jobData.jobId, // Use Job ID as correlation key
-        form: { id: parseInt(this.formId) },
+      
+      // Create dispatch instead of direct submission (more reliable approach)
+      const dispatchData = {
+        dispatch_type: 'immediate_dispatch',
+        form_id: parseInt(this.formId),
+        name: `ECS Job: ${jobData.jobId}`,
+        description: `Job for ${jobData.customerName} - ${jobData.shopName}`,
         responses: responses,
+        send_notification: false // Don't send notification for automated dispatches
       };
 
-      console.log('Creating GoCanvas submission:', { 
+      console.log('Creating GoCanvas dispatch:', { 
         jobId: jobData.jobId,
         formId: this.formId,
         responseCount: responses.length,
-        responses: responses
+        dispatchType: 'immediate_dispatch'
       });
       
       // Log if Job ID mapping was found
@@ -171,13 +176,13 @@ export class GoCanvasService {
         console.log(`⚠️ Job ID ${jobData.jobId} not yet mapped to GoCanvas field - field may need to be added to GoCanvas form`);
       }
 
-      const response = await fetch(`${this.baseUrl}/submissions`, {
+      const response = await fetch(`${this.baseUrl}/dispatches`, {
         method: 'POST',
         headers: {
           'Authorization': this.getAuthHeader(),
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(submissionData),
+        body: JSON.stringify(dispatchData),
       });
 
       if (!response.ok) {
@@ -187,16 +192,16 @@ export class GoCanvasService {
           statusText: response.statusText,
           headers: Object.fromEntries(response.headers.entries()),
           body: errorText,
-          submissionData: JSON.stringify(submissionData, null, 2)
+          dispatchData: JSON.stringify(dispatchData, null, 2)
         });
-        throw new Error(`Failed to create submission: ${response.status} ${response.statusText} - ${errorText}`);
+        throw new Error(`Failed to create dispatch: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
       const result = await response.json();
-      console.log('GoCanvas submission created successfully:', result.id || result.guid);
+      console.log('GoCanvas dispatch created successfully:', result.id || result.guid);
       return result.id || result.guid || jobData.jobId;
     } catch (error) {
-      console.error('Failed to create GoCanvas submission:', error);
+      console.error('Failed to create GoCanvas dispatch:', error);
       throw error;
     }
   }
