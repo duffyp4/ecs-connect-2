@@ -150,10 +150,16 @@ export default function CSRForm() {
     }
   }, [shopHandoff, form]);
 
-  // Clear Ship2 ID when customer or ship-to changes
+  // Auto-populate Ship2 ID when customer and ship-to are selected
   useEffect(() => {
-    form.setValue("p21ShipToId", "");
-  }, [customerName, customerShipTo, form]);
+    if (ship2Ids.length > 0) {
+      // Use the first (and typically only) ship2 ID for this customer/ship-to combination
+      form.setValue("p21ShipToId", ship2Ids[0]);
+    } else if (customerName && customerShipTo) {
+      // Clear field if customer and ship-to are selected but no ship2 ID found
+      form.setValue("p21ShipToId", "");
+    }
+  }, [ship2Ids, customerName, customerShipTo, form]);
 
   const createJobMutation = useMutation({
     mutationFn: async (data: FormData) => {
