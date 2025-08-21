@@ -88,12 +88,12 @@ export default function CSRForm() {
   // Auto-populate customer instructions when customer changes
   useEffect(() => {
     if (customerInstructionsData && customerName) {
-      if (customerInstructionsData.instructions === '#N/A') {
+      if (customerInstructionsData.instructions === '#N/A' || 
+          customerInstructionsData.instructions === '' || 
+          !customerInstructionsData.instructions) {
         form.setValue("customerSpecificInstructions", "N/A");
-      } else if (customerInstructionsData.instructions && customerInstructionsData.instructions.trim() !== '') {
-        form.setValue("customerSpecificInstructions", customerInstructionsData.instructions);
       } else {
-        form.setValue("customerSpecificInstructions", "");
+        form.setValue("customerSpecificInstructions", customerInstructionsData.instructions);
       }
     }
   }, [customerInstructionsData, customerName, form]);
@@ -103,39 +103,39 @@ export default function CSRForm() {
 
     if (customerSpecificData && customerName) {
       // Auto-populate preferred process from reference data
-      if (customerSpecificData.preferredProcess === '#N/A') {
+      if (customerSpecificData.preferredProcess === '#N/A' || 
+          customerSpecificData.preferredProcess === '' || 
+          !customerSpecificData.preferredProcess) {
         form.setValue("preferredProcess", "N/A");
-      } else if (customerSpecificData.preferredProcess && customerSpecificData.preferredProcess.trim() !== '') {
-        form.setValue("preferredProcess", customerSpecificData.preferredProcess);
       } else {
-        form.setValue("preferredProcess", "");
+        form.setValue("preferredProcess", customerSpecificData.preferredProcess);
       }
       
       // Auto-populate send clamps/gaskets from reference data
-      if (customerSpecificData.sendClampsGaskets === '#N/A') {
+      if (customerSpecificData.sendClampsGaskets === '#N/A' || 
+          customerSpecificData.sendClampsGaskets === '' || 
+          !customerSpecificData.sendClampsGaskets) {
         form.setValue("sendClampsGaskets", "N/A");
-      } else if (customerSpecificData.sendClampsGaskets && customerSpecificData.sendClampsGaskets.trim() !== '') {
-        form.setValue("sendClampsGaskets", customerSpecificData.sendClampsGaskets);
       } else {
-        form.setValue("sendClampsGaskets", "");
+        form.setValue("sendClampsGaskets", customerSpecificData.sendClampsGaskets);
       }
       
       // Auto-populate "Any Other Specific Instructions?" from reference data (column 11)
-      if (customerSpecificData.customerNotes === '#N/A') {
+      if (customerSpecificData.customerNotes === '#N/A' || 
+          customerSpecificData.customerNotes === '' || 
+          !customerSpecificData.customerNotes) {
         form.setValue("anyOtherSpecificInstructions", "N/A");
-      } else if (customerSpecificData.customerNotes && customerSpecificData.customerNotes.trim() !== '') {
-        form.setValue("anyOtherSpecificInstructions", customerSpecificData.customerNotes);
       } else {
-        form.setValue("anyOtherSpecificInstructions", "");
+        form.setValue("anyOtherSpecificInstructions", customerSpecificData.customerNotes);
       }
       
       // Auto-populate customer notes from reference data
-      if (customerSpecificData.customerNotes === '#N/A') {
+      if (customerSpecificData.customerNotes === '#N/A' || 
+          customerSpecificData.customerNotes === '' || 
+          !customerSpecificData.customerNotes) {
         form.setValue("noteToTechAboutCustomer", "N/A");
-      } else if (customerSpecificData.customerNotes && customerSpecificData.customerNotes.trim() !== '') {
-        form.setValue("noteToTechAboutCustomer", customerSpecificData.customerNotes);
       } else {
-        form.setValue("noteToTechAboutCustomer", "");
+        form.setValue("noteToTechAboutCustomer", customerSpecificData.customerNotes);
       }
     }
   }, [customerSpecificData, customerName, form]);
