@@ -194,6 +194,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Show row 1 data for all columns
+  app.get("/api/debug/row1", async (req, res) => {
+    try {
+      const rowData = await referenceDataService.getRow1Data();
+      res.json(rowData);
+    } catch (error) {
+      console.error("Failed to get row 1 data:", error);
+      res.status(500).json({ error: "Failed to fetch row 1 data" });
+    }
+  });
+
 
 
   // Create new job
