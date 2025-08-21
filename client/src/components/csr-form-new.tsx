@@ -587,7 +587,7 @@ export default function CSRForm() {
                 }}
               />
 
-              {/* Tech Communication */}
+              {/* Tech Communication - Yes/No Selector */}
               <FormField
                 control={form.control}
                 name="anyCommentsForTech"
@@ -596,16 +596,36 @@ export default function CSRForm() {
                     <FormLabel className="flex items-center gap-1">
                       <Database className="h-3 w-3 text-muted-foreground" /> Any comments for the tech about this submission?
                     </FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger data-testid="select-tech-comments">
-                          <SelectValue placeholder="Select comment type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {/* Reference Data will be loaded here */}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <div className="flex items-center space-x-6" data-testid="radio-tech-comments">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            id="tech-comments-yes"
+                            value="Yes"
+                            checked={field.value === "Yes"}
+                            onChange={() => field.onChange("Yes")}
+                            className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                          />
+                          <label htmlFor="tech-comments-yes" className="text-sm font-medium cursor-pointer">
+                            Yes
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            id="tech-comments-no"
+                            value="No"
+                            checked={field.value === "No"}
+                            onChange={() => field.onChange("No")}
+                            className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                          />
+                          <label htmlFor="tech-comments-no" className="text-sm font-medium cursor-pointer">
+                            No
+                          </label>
+                        </div>
+                      </div>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
