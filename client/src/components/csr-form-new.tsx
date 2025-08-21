@@ -448,34 +448,28 @@ export default function CSRForm() {
                 <FormField
                   control={form.control}
                   name="p21ShipToId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-1">
-                        <Database className="h-3 w-3 text-muted-foreground" /> P21 Ship to ID
-                      </FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  render={({ field }) => {
+                    const displayValue = field.value && field.value !== '#N/A' ? field.value : '';
+                    
+                    return (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-1">
+                          <Database className="h-3 w-3 text-muted-foreground" /> P21 Ship to ID
+                        </FormLabel>
                         <FormControl>
-                          <SelectTrigger data-testid="select-p21-ship-id">
-                            <SelectValue placeholder="Select P21 Ship ID" />
-                          </SelectTrigger>
+                          <Input 
+                            {...field}
+                            value={displayValue}
+                            readOnly
+                            className="bg-muted text-muted-foreground cursor-not-allowed"
+                            data-testid="input-p21-ship-id-readonly"
+                            placeholder={customerName && customerShipTo ? "Auto-populated from reference data" : "Select customer and ship-to first"}
+                          />
                         </FormControl>
-                        <SelectContent>
-                          {isLoadingShip2Ids ? (
-                            <SelectItem value="loading" disabled>Loading Ship2 IDs...</SelectItem>
-                          ) : customerName && customerShipTo ? (
-                            ship2Ids.map((ship2Id) => (
-                              <SelectItem key={ship2Id} value={ship2Id}>
-                                {ship2Id}
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="no-shipto" disabled>Select Customer and Ship To first</SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
               </div>
 
@@ -514,47 +508,23 @@ export default function CSRForm() {
                   control={form.control}
                   name="sendClampsGaskets"
                   render={({ field }) => {
-                    const hasReferenceData = customerSpecificData?.sendClampsGaskets;
-                    const isReferenceDataField = hasReferenceData && customerName;
+                    const displayValue = field.value && field.value !== '#N/A' ? field.value : '';
                     
                     return (
                       <FormItem>
                         <FormLabel className="flex items-center gap-1">
                           <Database className="h-3 w-3 text-muted-foreground" /> Send Clamps & Gaskets?
                         </FormLabel>
-                        {isReferenceDataField ? (
-                          <FormControl>
-                            <Input
-                              {...field}
-                              value={field.value || ''}
-                              readOnly
-                              className="bg-muted"
-                              data-testid="input-clamps-gaskets-readonly"
-                              placeholder="Reference data will auto-populate"
-                            />
-                          </FormControl>
-                        ) : (
-                          <>
-                            <Select onValueChange={field.onChange} defaultValue={field.value || ''}>
-                              <FormControl>
-                                <SelectTrigger data-testid="select-clamps-gaskets">
-                                  <SelectValue placeholder="Select option" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {isLoadingSendClamps ? (
-                                  <SelectItem value="loading" disabled>Loading options...</SelectItem>
-                                ) : (
-                                  sendClampsOptions.map((option) => (
-                                    <SelectItem key={option} value={option}>
-                                      {option}
-                                    </SelectItem>
-                                  ))
-                                )}
-                              </SelectContent>
-                            </Select>
-                          </>
-                        )}
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={displayValue}
+                            readOnly
+                            className="bg-muted text-muted-foreground cursor-not-allowed"
+                            data-testid="input-clamps-gaskets-readonly"
+                            placeholder={customerName ? "Auto-populated from reference data" : "Select customer to load data"}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     );
@@ -565,47 +535,23 @@ export default function CSRForm() {
                   control={form.control}
                   name="preferredProcess"
                   render={({ field }) => {
-                    const hasReferenceData = customerSpecificData?.preferredProcess;
-                    const isReferenceDataField = hasReferenceData && customerName;
+                    const displayValue = field.value && field.value !== '#N/A' ? field.value : '';
                     
                     return (
                       <FormItem>
                         <FormLabel className="flex items-center gap-1">
                           <Database className="h-3 w-3 text-muted-foreground" /> Preferred Process?
                         </FormLabel>
-                        {isReferenceDataField ? (
-                          <FormControl>
-                            <Input
-                              {...field}
-                              value={field.value || ''}
-                              readOnly
-                              className="bg-muted"
-                              data-testid="input-preferred-process-readonly"
-                              placeholder="Reference data will auto-populate"
-                            />
-                          </FormControl>
-                        ) : (
-                          <>
-                            <Select onValueChange={field.onChange} defaultValue={field.value || ''}>
-                              <FormControl>
-                                <SelectTrigger data-testid="select-preferred-process">
-                                  <SelectValue placeholder="Select process" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {isLoadingProcesses ? (
-                                  <SelectItem value="loading" disabled>Loading processes...</SelectItem>
-                                ) : (
-                                  preferredProcesses.map((process) => (
-                                    <SelectItem key={process} value={process}>
-                                      {process}
-                                    </SelectItem>
-                                  ))
-                                )}
-                              </SelectContent>
-                            </Select>
-                          </>
-                        )}
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={displayValue}
+                            readOnly
+                            className="bg-muted text-muted-foreground cursor-not-allowed"
+                            data-testid="input-preferred-process-readonly"
+                            placeholder={customerName ? "Auto-populated from reference data" : "Select customer to load data"}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     );
@@ -613,21 +559,32 @@ export default function CSRForm() {
                 />
               </div>
 
-              {/* Additional Instructions */}
+              {/* Any Other Specific Instructions - Read-only reference data field */}
               <FormField
                 control={form.control}
                 name="anyOtherSpecificInstructions"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-1">
-                      <Database className="h-3 w-3 text-muted-foreground" /> Any Other Specific Instructions?
-                    </FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Any other specific instructions (manual input allowed)" {...field} data-testid="input-other-instructions" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const displayValue = field.value && field.value !== '#N/A' ? field.value : '';
+                  
+                  return (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1">
+                        <Database className="h-3 w-3 text-muted-foreground" /> Any Other Specific Instructions?
+                      </FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          {...field}
+                          value={displayValue}
+                          readOnly
+                          className="bg-muted text-muted-foreground cursor-not-allowed resize-none"
+                          data-testid="input-other-instructions-readonly"
+                          placeholder={customerName ? "Auto-populated from reference data" : "Select customer to load instructions"}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
 
               {/* Tech Communication */}
