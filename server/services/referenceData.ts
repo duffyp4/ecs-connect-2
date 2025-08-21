@@ -154,6 +154,36 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
     };
   }
 
+  async getColumn11Data() {
+    await this.ensureDataLoaded();
+    
+    // Get all unique values from column 11 with their frequency
+    const col11Values = this.customerData.map(row => row[11]);
+    const validValues = col11Values.filter(v => this.isValidValue(v));
+    const uniqueValues = Array.from(new Set(validValues));
+    
+    // Count occurrences of each value
+    const valueCounts = uniqueValues.map(value => ({
+      value,
+      count: validValues.filter(v => v === value).length
+    })).sort((a, b) => b.count - a.count);
+    
+    return {
+      totalRows: col11Values.length,
+      validValues: validValues.length,
+      uniqueValues: uniqueValues.length,
+      values: uniqueValues.slice(0, 20), // First 20 unique values
+      valueCounts: valueCounts.slice(0, 10), // Top 10 most frequent values
+      sampleData: this.customerData
+        .filter(row => this.isValidValue(row[11]))
+        .slice(0, 5)
+        .map(row => ({
+          customerName: row[2],
+          column11Value: row[11]
+        }))
+    };
+  }
+
   private isValidValue(value: any): boolean {
     if (!value) return false;
     const str = String(value).trim().toUpperCase();

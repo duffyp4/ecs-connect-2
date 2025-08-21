@@ -183,6 +183,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Specific endpoint to check column 11
+  app.get("/api/debug/column11", async (req, res) => {
+    try {
+      const col11Data = await referenceDataService.getColumn11Data();
+      res.json(col11Data);
+    } catch (error) {
+      console.error("Failed to get column 11 data:", error);
+      res.status(500).json({ error: "Failed to fetch column 11 data" });
+    }
+  });
+
 
 
   // Create new job
