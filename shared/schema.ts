@@ -75,21 +75,6 @@ export type Job = typeof jobs.$inferSelect;
 export type InsertTechnician = z.infer<typeof insertTechnicianSchema>;
 export type Technician = typeof technicians.$inferSelect;
 
-// Keep existing user schema
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
-});
-
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
-});
-
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
-
 // Reference Data for form dropdowns (temporarily using simple arrays)
 export const referenceDataEntries = pgTable("reference_data_entries", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

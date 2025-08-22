@@ -8,6 +8,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -15,6 +17,8 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const [location] = useLocation();
+  const { logout, isLoggingOut } = useAuth();
+  const { toast } = useToast();
 
   const navigationItems = [
     { href: "/", label: "New Job", icon: Plus },
@@ -48,9 +52,20 @@ export default function Layout({ children }: LayoutProps) {
                 Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => logout(undefined, {
+                  onSuccess: () => {
+                    toast({
+                      title: "Logged out",
+                      description: "You have been logged out successfully",
+                    });
+                  },
+                })}
+                disabled={isLoggingOut}
+                data-testid="button-logout"
+              >
                 <LogOut className="mr-2 h-4 w-4" />
-                Logout
+                {isLoggingOut ? "Logging out..." : "Logout"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

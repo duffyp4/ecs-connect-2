@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-import { jobs, technicians, users, type Job, type InsertJob, type Technician, type InsertTechnician, type User, type InsertUser } from "@shared/schema";
+import { jobs, technicians, type Job, type InsertJob, type Technician, type InsertTechnician } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { IStorage } from "./storage";
@@ -11,25 +11,6 @@ export class DatabaseStorage implements IStorage {
   constructor() {
     const sql = neon(process.env.DATABASE_URL!);
     this.db = drizzle(sql);
-  }
-
-  // User methods
-  async getUser(id: string): Promise<User | undefined> {
-    const result = await this.db.select().from(users).where(eq(users.id, id));
-    return result[0];
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    const result = await this.db.select().from(users).where(eq(users.username, username));
-    return result[0];
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const result = await this.db.insert(users).values({
-      id: randomUUID(),
-      ...insertUser,
-    }).returning();
-    return result[0];
   }
 
   // Job methods

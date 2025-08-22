@@ -6,13 +6,17 @@ import { goCanvasService } from "./services/gocanvas";
 import { googleSheetsService } from "./services/googleSheets";
 import { jobTrackerService } from "./services/jobTracker";
 import { referenceDataService } from "./services/referenceData";
+import { setupAuth, requireAuth } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup authentication
+  setupAuth(app);
+
   // Start job tracking polling
   jobTrackerService.startPolling();
 
-  // Get all technicians
-  app.get("/api/technicians", async (req, res) => {
+  // Get all technicians - protected route
+  app.get("/api/technicians", requireAuth, async (req, res) => {
     try {
       const jobs = await storage.getAllJobs();
       // Extract unique shop handoff emails from jobs
@@ -271,7 +275,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
   // Create new job
-  app.post("/api/jobs", async (req, res) => {
+  app.post("/api/jobs", requireAuth, async (req, res) => {
     try {
       const validatedData = insertJobSchema.parse(req.body);
       
@@ -316,7 +320,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all jobs
-  app.get("/api/jobs", async (req, res) => {
+  app.get("/api/jobs", requireAuth, async (req, res) => {
     try {
       const { status, technician, limit } = req.query;
       
