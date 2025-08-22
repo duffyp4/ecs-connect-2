@@ -114,13 +114,14 @@ export default function Dashboard() {
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Technician</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Status</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Initiated</th>
+                  <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Completed</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Turnaround</th>
                 </tr>
               </thead>
               <tbody>
                 {recentJobs.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center p-8 text-muted-foreground">
+                    <td colSpan={7} className="text-center p-8 text-muted-foreground">
                       No jobs found. Create your first job to get started.
                     </td>
                   </tr>
@@ -139,6 +140,13 @@ export default function Dashboard() {
                       </td>
                       <td className="p-4">
                         {new Date(job.initiatedAt).toLocaleString()}
+                      </td>
+                      <td className="p-4">
+                        {job.completedAt 
+                          ? new Date(job.completedAt).toLocaleString()
+                          : job.status === 'completed' 
+                          ? 'N/A'
+                          : '---'}
                       </td>
                       <td className="p-4">
                         {job.status === 'completed' && job.turnaroundTime
