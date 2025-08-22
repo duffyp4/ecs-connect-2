@@ -36,9 +36,7 @@ export class JobTrackerService {
       const jobsToCheck = [...pendingJobs, ...inProgressJobs];
 
       for (const job of jobsToCheck) {
-        if (job.gocanvasSubmissionId) {
-          await this.checkJobCompletion(job);
-        }
+        await this.checkJobCompletion(job);
       }
     } catch (error) {
       console.error('Error checking pending jobs:', error);
