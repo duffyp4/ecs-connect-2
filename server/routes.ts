@@ -371,6 +371,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Debug endpoint to manually check job status
+  app.post("/api/debug/check-job-status", async (req, res) => {
+    try {
+      const { jobId } = req.body;
+      if (!jobId) {
+        return res.status(400).json({ message: "Job ID required" });
+      }
+
+      console.log(`DEBUG: Manually checking status for job ${jobId}`);
+      const gocanvasStatus = await goCanvasService.checkSubmissionStatus(jobId);
+      console.log(`DEBUG: GoCanvas returned status: ${gocanvasStatus}`);
+      
+      // Get job from database
+      const jobs = await storage.getAllJobs();
+      const job = jobs.find(j => j.jobId === jobId);
+      
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+
+      console.log(`DEBUG: Database job status: ${job.status}`);
+      console.log(`DEBUG: GoCanvas submission ID: ${job.gocanvasSubmissionId}`);
+
+      res.json({
+        jobId,
+        databaseStatus: job.status,
+        gocanvasStatus,
+        gocanvasSubmissionId: job.gocanvasSubmissionId,
+        initiated: job.initiatedAt
+      });
+    } catch (error) {
+      console.error("Debug check failed:", error);
+      res.status(500).json({ message: "Debug check failed", error: String(error) });
+    }
+  });
+
+  // Force manual polling check
+  app.post("/api/debug/force-poll", async (req, res) => {
+    try {
+      console.log("DEBUG: Forcing manual polling check...");
+      // Note: checkPendingJobs is private, so we'll manually trigger the same logic
+      res.json({ message: "Manual polling check not available - method is private" });
+    } catch (error) {
+      console.error("Manual polling failed:", error);
+      res.status(500).json({ message: "Manual polling failed", error: String(error) });
+    }
+  });
+
   // Export jobs to Google Sheets
   app.post("/api/jobs/export", async (req, res) => {
     try {
