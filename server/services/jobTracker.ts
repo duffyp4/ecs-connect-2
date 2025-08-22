@@ -4,7 +4,7 @@ import { googleSheetsService } from './googleSheets';
 
 export class JobTrackerService {
   private pollingInterval: NodeJS.Timeout | null = null;
-  private readonly POLL_INTERVAL_MS = 180000; // 3 minutes (increased from 30s)
+  private readonly POLL_INTERVAL_MS = 30000; // 30 seconds for faster job completion detection
 
   startPolling(): void {
     if (this.pollingInterval) {
