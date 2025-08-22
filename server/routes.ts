@@ -14,7 +14,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all technicians
   app.get("/api/technicians", async (req, res) => {
     try {
-      const technicians = await storage.getActiveTechnicians();
+      const jobs = await storage.getAllJobs();
+      // Extract unique shop handoff emails from jobs
+      const emailSet = new Set(jobs.map(job => job.shopHandoff).filter(Boolean));
+      const uniqueEmails = Array.from(emailSet);
+      // Convert to format expected by frontend: [{id, name, email}]
+      const technicians = uniqueEmails.map(email => ({
+        id: email,
+        name: email.split('@')[0], // Use part before @ as display name
+        email: email
+      }));
       res.json(technicians);
     } catch (error) {
       console.error("Error fetching technicians:", error);
