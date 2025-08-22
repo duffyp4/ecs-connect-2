@@ -249,10 +249,10 @@ export class GoCanvasService {
     }
   }
 
-  async checkSubmissionStatus(jobId: string): Promise<'pending' | 'completed' | 'in_progress'> {
+  async checkSubmissionStatus(jobId: string): Promise<{status: 'pending' | 'completed' | 'in_progress', submittedAt?: string}> {
     if (!this.username || !this.password) {
       console.log('GoCanvas not configured, returning mock status');
-      return 'pending';
+      return {status: 'pending'};
     }
 
     try {
@@ -275,7 +275,7 @@ export class GoCanvasService {
             // Check if this submission is completed
             if (specificData.status === 'completed' || specificData.submitted_at || specificData.completed_at) {
               console.log(`✅ FOUND IT! Submission C0CCC0B5-6A80-4425-BCB8-C56E7BD3CE65 is COMPLETED!`);
-              return 'completed';
+              return {status: 'completed', submittedAt: specificData.submitted_at || specificData.completed_at};
             }
           }
         } catch (err) {
@@ -294,7 +294,7 @@ export class GoCanvasService {
 
       if (!response.ok) {
         console.warn(`Failed to check submission status: ${response.status}`);
-        return 'pending';
+        return {status: 'pending'};
       }
 
       const data = await response.json();
@@ -304,7 +304,7 @@ export class GoCanvasService {
       
       if (submissions.length === 0) {
         console.log('No submissions found for form');
-        return 'pending';
+        return {status: 'pending'};
       }
 
       console.log(`Found ${submissions.length} submissions`);
@@ -320,19 +320,19 @@ export class GoCanvasService {
         // Check if it's completed
         if (targetSubmission.status === 'completed' || targetSubmission.submitted_at || targetSubmission.completed_at) {
           console.log(`✅ Target submission is COMPLETED!`);
-          return 'completed';
+          return {status: 'completed', submittedAt: targetSubmission.submitted_at || targetSubmission.completed_at};
         } else {
           console.log(`Target submission status: ${targetSubmission.status}`);
-          return 'pending';
+          return {status: 'pending'};
         }
       }
 
       console.log(`Target submission not found in ${submissions.length} submissions`);
-      return 'pending';
+      return {status: 'pending'};
       
     } catch (error) {
       console.error('Error checking submission status:', error);
-      return 'pending';
+      return {status: 'pending'};
     }
   }
 

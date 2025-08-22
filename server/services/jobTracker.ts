@@ -47,29 +47,32 @@ export class JobTrackerService {
 
   private async checkJobCompletion(job: any): Promise<void> {
     try {
-      const status = await goCanvasService.checkSubmissionStatus(job.jobId);
+      const result = await goCanvasService.checkSubmissionStatus(job.jobId);
       
-      if (!status) {
+      if (!result) {
         console.warn(`Could not get status for job ${job.jobId}`);
         return;
       }
 
-      const currentTime = new Date();
+      const { status, submittedAt } = result;
       let updates: any = {};
 
       // Update job status based on GoCanvas submission status
       if (status === 'completed' && job.status !== 'completed') {
+        // Use the actual GoCanvas submission time instead of our detection time
+        const completedTime = submittedAt ? new Date(submittedAt) : new Date();
+        
         const turnaroundTime = job.initiatedAt ? 
-          Math.round((currentTime.getTime() - new Date(job.initiatedAt).getTime()) / (1000 * 60)) : 
+          Math.round((completedTime.getTime() - new Date(job.initiatedAt).getTime()) / (1000 * 60)) : 
           null;
 
         updates = {
           status: 'completed',
-          completedAt: currentTime,
+          completedAt: completedTime,
           turnaroundTime,
         };
 
-        console.log(`Job ${job.jobId} completed with turnaround time: ${turnaroundTime} minutes`);
+        console.log(`Job ${job.jobId} completed with turnaround time: ${turnaroundTime} minutes (using GoCanvas timestamp: ${submittedAt || 'detection time'})`);
       } else if (status === 'in_progress' && job.status === 'pending') {
         updates = {
           status: 'in_progress',
@@ -80,6 +83,7 @@ export class JobTrackerService {
 
       // Check for overdue jobs (more than 6 hours)
       if (job.status === 'in_progress' && job.initiatedAt) {
+        const currentTime = new Date();
         const hoursElapsed = (currentTime.getTime() - new Date(job.initiatedAt).getTime()) / (1000 * 60 * 60);
         if (hoursElapsed > 6) {
           updates.status = 'overdue';
