@@ -374,12 +374,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Debug endpoint to manually check job status
   app.post("/api/debug/check-job-status", async (req, res) => {
     try {
-      const { jobId } = req.body;
+      const { jobId, submissionGuid } = req.body;
       if (!jobId) {
         return res.status(400).json({ message: "Job ID required" });
       }
 
       console.log(`DEBUG: Manually checking status for job ${jobId}`);
+      
+      // If a specific submission GUID is provided, test that directly
+      if (submissionGuid) {
+        try {
+          console.log(`DEBUG: Testing direct submission query for GUID: ${submissionGuid}`);
+          const submissionResponse = await fetch(`http://localhost:5000/api/gocanvas/submissions/${submissionGuid}`);
+          const submissionData = submissionResponse.ok ? await submissionResponse.json() : null;
+          console.log(`DEBUG: Direct submission data:`, submissionData);
+        } catch (err) {
+          console.log(`DEBUG: Direct submission query failed:`, err);
+        }
+      }
+
       const gocanvasStatus = await goCanvasService.checkSubmissionStatus(jobId);
       console.log(`DEBUG: GoCanvas returned status: ${gocanvasStatus}`);
       
@@ -467,6 +480,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching form details:", error);
       res.status(500).json({ error: "Failed to fetch form details from GoCanvas" });
+    }
+  });
+
+  // Test direct submissions access
+  app.get("/api/gocanvas/submissions", async (req, res) => {
+    try {
+      const formId = req.query.form_id || '5568544';
+      console.log(`Testing submissions API for form: ${formId}`);
+      const response = await fetch(`https://api.gocanvas.com/api/v3/submissions?form_id=${formId}`, {
+        headers: {
+          'Authorization': `Basic ${Buffer.from(`${process.env.GOCANVAS_USERNAME}:${process.env.GOCANVAS_PASSWORD}`).toString('base64')}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      console.log(`Submissions API response status: ${response.status}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log(`Submissions API error: ${errorText}`);
+        return res.status(response.status).json({ error: errorText });
+      }
+      
+      const xmlText = await response.text();
+      console.log(`XML Response (first 500 chars):`, xmlText.substring(0, 500));
+      console.log(`Total XML length: ${xmlText.length} characters`);
+      
+      // Try to parse basic structure
+      const submissionElements = xmlText.match(/<[^>]*submission[^>]*>/g) || [];
+      console.log(`Found ${submissionElements.length} submission-related elements`);
+      
+      res.json({ 
+        xmlLength: xmlText.length,
+        firstChars: xmlText.substring(0, 500),
+        submissionElements: submissionElements.length,
+        structure: submissionElements 
+      });
+    } catch (error) {
+      console.error("Error testing submissions API:", error);
+      res.status(500).json({ error: "Failed to test submissions API" });
     }
   });
 
