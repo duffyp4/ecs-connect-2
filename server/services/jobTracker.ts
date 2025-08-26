@@ -192,8 +192,8 @@ export class JobTrackerService {
       return {
         activeJobs,
         completedToday,
-        averageTurnaround: Math.round(averageTurnaround / 60 * 10) / 10, // Convert to hours with 1 decimal
-        averageTimeWithTech: Math.round(averageTimeWithTech / 60 * 10) / 10, // Convert to hours with 1 decimal
+        averageTurnaround: Math.round(averageTurnaround), // Keep in minutes
+        averageTimeWithTech: Math.round(averageTimeWithTech), // Keep in minutes
         overdueJobs,
       };
     } catch (error) {

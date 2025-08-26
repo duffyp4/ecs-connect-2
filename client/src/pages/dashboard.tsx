@@ -88,7 +88,7 @@ export default function Dashboard() {
               <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-[var(--ecs-warning)]" />
             </div>
             <div className="metric-number text-[var(--ecs-warning)]">
-              {formatTurnaroundTime(metrics?.averageTurnaround ? Math.round(metrics.averageTurnaround * 60) : 0)}
+              {formatTurnaroundTime(metrics?.averageTurnaround || 0)}
             </div>
             <div className="text-muted-foreground text-xs sm:text-sm">Full Turnaround</div>
           </CardContent>
@@ -100,7 +100,7 @@ export default function Dashboard() {
               <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-[var(--ecs-info)]" />
             </div>
             <div className="metric-number text-[var(--ecs-info)]">
-              {formatTurnaroundTime(metrics?.averageTimeWithTech ? Math.round(metrics.averageTimeWithTech * 60) : 0)}
+              {formatTurnaroundTime(metrics?.averageTimeWithTech || 0)}
             </div>
             <div className="text-muted-foreground text-xs sm:text-sm">Time with Tech</div>
           </CardContent>
