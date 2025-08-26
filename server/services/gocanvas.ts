@@ -795,9 +795,8 @@ export class GoCanvasService {
         console.log('Found potential ID fields:', jobIdFields);
       }
     } catch (error) {
-      console.error('Failed to load field map, using fallback mapping:', error);
-      // Use hardcoded field map as fallback
-      fieldMap = this.getHardCodedFieldMap();
+      console.error('Failed to load dynamic field map:', error);
+      throw new Error('Unable to load field mappings. Please ensure gocanvas_field_map.json is generated for the current form.');
     }
 
     const responses = [];
@@ -926,43 +925,10 @@ export class GoCanvasService {
       return labelToIdMap;
     } catch (error) {
       console.error('Failed to load dynamic field map:', error);
-      console.log('Falling back to hardcoded field map...');
-      return this.getHardCodedFieldMap();
+      throw new Error('Unable to load field mappings. Please regenerate gocanvas_field_map.json for the current form.');
     }
   }
 
-  private getHardCodedFieldMap(): any {
-    // Hard-coded field mapping based on form 5548931 field IDs (DEPRECATED - use dynamic field map instead)
-    console.warn('⚠️  Using deprecated hardcoded field map for form 5548931');
-    return {
-      'P21 Order Number (Enter after invoicing) ': 708148222,
-      'Job ID': 708148223, // ✅ Using User ID field for Job ID in form 5548931
-      'User ID': 708148223,
-      'Permission to Start': 708148224,
-      'Permission Denied Stop': 708148225,
-      'Shop Name': 708148226,
-      'Customer Name': 708148227,
-      'Customer Ship To': 708148229,
-      'P21 Ship to ID': 708148230,
-      'Customer Specific Instructions?': 708148231,
-      'Send Clamps & Gaskets?': 708148232,
-      'Preferred Process?': 708148233,
-      'Any Other Specific Instructions? ': 708148234,
-      'Any comments for the tech about this submission?': 708148235,
-      'Note to Tech about Customer or service:': 708148236,
-      'Contact Name': 708148237,
-      'Contact Number': 708148238,
-      'PO Number': 708148239, // ✅ PO Number field for form 5548931
-      'Serial Number(s)': 708148240,
-      'Tech Customer Question Inquiry': 708148241,
-      'Shop Handoff': 708148245,
-      'Handoff Email workflow': 708148246,
-      'Submission Status': 708148247,
-      // Alternative Job ID labels  
-      'ECS Job ID': 708148223,
-      'Job Number': 708148223
-    };
-  }
 }
 
 export const goCanvasService = new GoCanvasService();
