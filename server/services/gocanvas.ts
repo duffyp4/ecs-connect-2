@@ -776,8 +776,6 @@ export class GoCanvasService {
       'PO Number': 712668574,
       'Serial Number(s)': 712668575,
       'Tech Customer Question Inquiry': 712668576,
-      'Check In Date': 712668577,
-      'Check In Time': 712668578,
       'Shop Handoff': 712668580,
       'Handoff Email workflow': 712668581,
       'Submission Status': 712668582,
