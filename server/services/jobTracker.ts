@@ -83,14 +83,23 @@ export class JobTrackerService {
               // Parse the handoff date and time more reliably
               // handoffDateStr format: "08/26/2025", handoffTimeStr format: "02:50 PM"
               const [month, day, year] = handoffDateStr.split('/');
-              let [time, ampm] = handoffTimeStr.split(' ');
-              let [hours, minutes] = time.split(':').map(Number);
+              let [time, ampm] = handoffTimeStr.trim().split(' ').filter((part: string) => part); // Remove extra spaces
+              let handoffDateTime: Date;
+              let hours = 0;
+              let minutes = 0;
               
-              // Convert to 24-hour format
-              if (ampm === 'PM' && hours !== 12) hours += 12;
-              if (ampm === 'AM' && hours === 12) hours = 0;
+              if (time && ampm) {
+                [hours, minutes] = time.split(':').map(Number);
               
-              const handoffDateTime = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), hours, minutes);
+                // Convert to 24-hour format
+                if (ampm === 'PM' && hours !== 12) hours += 12;
+                if (ampm === 'AM' && hours === 12) hours = 0;
+                
+                handoffDateTime = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), hours, minutes);
+              } else {
+                console.error(`Invalid time format for job ${job.jobId}: "${handoffTimeStr}"`);
+                handoffDateTime = new Date(NaN); // Force invalid date
+              }
               
               console.log(`🔍 HANDOFF TIME DEBUG for job ${job.jobId}:`);
               console.log(`  - Raw handoff date: "${handoffDateStr}", Raw handoff time: "${handoffTimeStr}"`);
