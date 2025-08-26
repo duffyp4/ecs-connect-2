@@ -479,8 +479,17 @@ export default function CSRForm() {
                                    !customerNames.some(customer => 
                                      customer.toLowerCase() === field.value.toLowerCase()
                                    ) && (
-                                    <div className="px-2 py-1 text-sm text-muted-foreground border-t">
-                                      Press Enter or click outside to use "{field.value}" as custom customer
+                                    <div className="p-2 border-t">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full justify-start"
+                                        onClick={() => {
+                                          setCustomerSearchOpen(false);
+                                        }}
+                                      >
+                                        Add "{field.value}" as a new customer
+                                      </Button>
                                     </div>
                                   )}
                                   {!isLoadingCustomers && 
