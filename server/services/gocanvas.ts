@@ -587,8 +587,6 @@ export class GoCanvasService {
       { data: jobData.poNumber, labels: ['PO Number'] },
       { data: jobData.serialNumbers, labels: ['Serial Number(s)'] },
       { data: jobData.techCustomerQuestionInquiry, labels: ['Tech Customer Question Inquiry'] },
-      { data: jobData.checkInDate, labels: ['Check-in Date', 'Check In Date'] },
-      { data: jobData.checkInTime, labels: ['Check-in Time', 'Check In Time'] },
       { data: jobData.shopHandoff, labels: ['Shop Handoff'] },
       { data: jobData.handoffEmailWorkflow, labels: ['Handoff Email workflow'] },
     ];
