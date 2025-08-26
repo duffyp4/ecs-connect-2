@@ -866,7 +866,7 @@ export default function CSRForm() {
                   type="button"
                   variant="outline"
                   onClick={clearForm}
-                  className="flex-1"
+                  className="flex-1 hover:bg-gray-100 hover:shadow-lg hover:scale-[1.02] font-medium transition-all duration-200"
                   data-testid="button-clear"
                 >
                   <X className="mr-2 h-4 w-4" />
