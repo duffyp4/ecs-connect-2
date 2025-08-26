@@ -793,7 +793,7 @@ export default function CSRForm() {
                   name="poNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>PO Number</FormLabel>
+                      <FormLabel>PO Number *</FormLabel>
                       <FormControl>
                         <Input placeholder="Purchase order number" {...field} value={field.value || ""} data-testid="input-po-number" />
                       </FormControl>

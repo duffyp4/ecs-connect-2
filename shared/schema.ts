@@ -24,7 +24,7 @@ export const jobs = pgTable("jobs", {
   noteToTechAboutCustomer: text("note_to_tech_about_customer"),
   contactName: text("contact_name").notNull(),
   contactNumber: text("contact_number").notNull(),
-  poNumber: text("po_number"),
+  poNumber: text("po_number").notNull(),
   serialNumbers: text("serial_numbers"),
   techCustomerQuestionInquiry: text("tech_customer_question_inquiry"),
   shopHandoff: text("shop_handoff").notNull(), // technician email
@@ -62,6 +62,8 @@ export const insertJobSchema = createInsertSchema(jobs).omit({
   googleSheetsSynced: true,
   completedAt: true,
   turnaroundTime: true,
+}).extend({
+  poNumber: z.string().min(1, "PO Number is required"),
 });
 
 export const insertTechnicianSchema = createInsertSchema(technicians).omit({
