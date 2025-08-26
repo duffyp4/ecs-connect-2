@@ -80,8 +80,23 @@ export class JobTrackerService {
               const handoffDateStr = handoffDateField.value; // e.g., "08/26/2025"
               const handoffTimeStr = handoffTimeField.value; // e.g., "02:50 PM"
               
-              // Parse the handoff date and time
-              const handoffDateTime = new Date(`${handoffDateStr} ${handoffTimeStr}`);
+              // Parse the handoff date and time more reliably
+              // handoffDateStr format: "08/26/2025", handoffTimeStr format: "02:50 PM"
+              const [month, day, year] = handoffDateStr.split('/');
+              let [time, ampm] = handoffTimeStr.split(' ');
+              let [hours, minutes] = time.split(':').map(Number);
+              
+              // Convert to 24-hour format
+              if (ampm === 'PM' && hours !== 12) hours += 12;
+              if (ampm === 'AM' && hours === 12) hours = 0;
+              
+              const handoffDateTime = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), hours, minutes);
+              
+              console.log(`🔍 HANDOFF TIME DEBUG for job ${job.jobId}:`);
+              console.log(`  - Raw handoff date: "${handoffDateStr}", Raw handoff time: "${handoffTimeStr}"`);
+              console.log(`  - Parsed components: Month=${month}, Day=${day}, Year=${year}, Hours=${hours}, Minutes=${minutes}`);
+              console.log(`  - Final handoff timestamp: ${handoffDateTime.toISOString()}`);
+              console.log(`  - Completion timestamp: ${completedTime.toISOString()}`);
               
               if (!isNaN(handoffDateTime.getTime())) {
                 handoffTime = handoffDateTime;
@@ -89,7 +104,8 @@ export class JobTrackerService {
                 // Calculate Time with Tech (Handoff to Completed)
                 timeWithTech = Math.round((completedTime.getTime() - handoffTime.getTime()) / (1000 * 60));
                 
-                console.log(`Job ${job.jobId} handoff time: ${handoffDateTime.toISOString()}, Time with Tech: ${timeWithTech} minutes`);
+                console.log(`  - Time difference calculation: ${completedTime.getTime()} - ${handoffTime.getTime()} = ${completedTime.getTime() - handoffTime.getTime()} ms`);
+                console.log(`  - Time with Tech: ${timeWithTech} minutes (${Math.round(timeWithTech / 60 * 10) / 10} hours)`);
               } else {
                 console.warn(`Could not parse handoff time for job ${job.jobId}: ${handoffDateStr} ${handoffTimeStr}`);
               }
