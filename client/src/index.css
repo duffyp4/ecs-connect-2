@@ -243,14 +243,24 @@
     min-height: 0; /* Prevent grid items from stretching */
   }
   
-  /* Ensure consistent form field heights */
-  input, select, [role="combobox"] {
+  /* Ensure consistent form field heights and alignment */
+  input, select, [role="combobox"], button[role="combobox"] {
     min-height: 2.5rem;
+    height: 2.5rem;
   }
   
-  /* Form item consistency */
-  .space-y-6 [data-field] {
-    margin-bottom: 1.5rem;
+  /* Form item consistency - ensure all FormItems have the same structure */
+  .grid .space-y-1 {
+    display: flex;
+    flex-direction: column;
+    min-height: 5rem; /* Consistent minimum height for all form fields */
+  }
+  
+  /* Consistent label heights */
+  label {
+    min-height: 1.25rem;
+    display: flex;
+    align-items: center;
   }
   
   /* Mobile optimizations */

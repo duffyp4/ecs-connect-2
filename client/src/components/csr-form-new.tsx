@@ -364,7 +364,9 @@ export default function CSRForm() {
                   name="permissionDeniedStop"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Permission Denied Stop *</FormLabel>
+                      <FormLabel className="flex items-center gap-1">
+                        <Database className="h-3 w-3 text-muted-foreground" /> Permission Denied Stop *
+                      </FormLabel>
                       <FormControl>
                         <Input placeholder="Stop reason" {...field} value={field.value || ""} data-testid="input-permission-denied" />
                       </FormControl>
