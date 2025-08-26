@@ -842,7 +842,7 @@ export default function CSRForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center gap-1">
-                        <span className="h-3 w-3" /> Handoff Email workflow
+                        <Database className="h-3 w-3 text-muted-foreground" /> Handoff Email workflow
                       </FormLabel>
                       <FormControl>
                         <Input placeholder="Email workflow" {...field} value={field.value || ""} data-testid="input-handoff-email" />
