@@ -67,7 +67,30 @@ export const insertJobSchema = createInsertSchema(jobs).omit({
   gocanvasSynced: true,
   googleSheetsSynced: true,
 }).extend({
+  // Required fields with validation
+  shopName: z.string().min(1, "Shop Name is required"),
+  customerName: z.string().min(1, "Customer Name is required"),
+  contactName: z.string().min(1, "Contact Name is required"),
+  contactNumber: z.string().min(1, "Contact Number is required"),
   poNumber: z.string().min(1, "PO Number is required"),
+  shopHandoff: z.string().min(1, "Shop Handoff is required"),
+  // Optional fields that can be empty
+  customerShipTo: z.string().optional(),
+  p21OrderNumber: z.string().optional(),
+  userId: z.string().optional(),
+  permissionToStart: z.string().optional(),
+  permissionDeniedStop: z.string().optional(),
+  p21ShipToId: z.string().optional(),
+  customerSpecificInstructions: z.string().optional(),
+  sendClampsGaskets: z.string().optional(),
+  preferredProcess: z.string().optional(),
+  anyOtherSpecificInstructions: z.string().optional(),
+  anyCommentsForTech: z.string().optional(),
+  noteToTechAboutCustomer: z.string().optional(),
+  serialNumbers: z.string().optional(),
+  techCustomerQuestionInquiry: z.string().optional(),
+  handoffEmailWorkflow: z.string().optional(),
+  gocanvasDispatchId: z.string().optional(),
 });
 
 export const insertTechnicianSchema = createInsertSchema(technicians).omit({
