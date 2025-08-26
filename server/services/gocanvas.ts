@@ -893,7 +893,7 @@ export class GoCanvasService {
     console.log(`Created ${responses.length} form responses with required fields`);
     console.log('Final response summary:');
     responses.forEach(r => {
-      const fieldName = Object.entries(this.getHardCodedFieldMap()).find(([label, id]) => id === r.entry_id)?.[0] || `Unknown field ${r.entry_id}`;
+      const fieldName = Object.entries(fieldMap).find(([label, id]) => id === r.entry_id)?.[0] || `Field ${r.entry_id}`;
       console.log(`  - ${fieldName}: "${r.value}"`);
       
       // Special logging for PO Number
