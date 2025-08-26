@@ -250,39 +250,44 @@ export class GoCanvasService {
   }
 
   async getMostRecentSubmission(): Promise<any> {
-    if (!this.username || !this.password) {
-      console.log('GoCanvas not configured, cannot fetch submissions');
-      console.log('Username exists:', !!this.username);
-      console.log('Password exists:', !!this.password);
-      return { error: 'GoCanvas credentials not configured' };
-    }
-
     try {
-      console.log('Fetching most recent submission from GoCanvas...');
-      const response = await fetch(`${this.baseUrl}/submissions?form_id=${this.formId}&limit=1&sort=created_at&order=desc`, {
+      console.log('=== FETCHING MOST RECENT GOCANVAS SUBMISSION ===');
+      console.log('Form ID:', this.formId);
+      console.log('Username configured:', !!this.username);
+      
+      // First, get list of submissions for the form
+      const listResponse = await fetch(`${this.baseUrl}/submissions?form_id=${this.formId}`, {
         headers: {
           'Authorization': this.getAuthHeader(),
           'Content-Type': 'application/json',
         },
       });
 
-      if (!response.ok) {
-        console.warn(`Failed to fetch submissions: ${response.status}`);
-        return null;
+      console.log('List submissions response status:', listResponse.status);
+      
+      if (!listResponse.ok) {
+        const errorText = await listResponse.text();
+        console.error('Failed to fetch submissions list:', errorText);
+        return { error: `Failed to fetch submissions: ${listResponse.status}`, details: errorText };
       }
 
-      const data = await response.json();
-      const submissions = Array.isArray(data) ? data : (data.submissions || data.data || []);
+      const listData = await listResponse.json();
+      console.log('Submissions list response keys:', Object.keys(listData));
+      
+      const submissions = Array.isArray(listData) ? listData : (listData.submissions || listData.data || []);
+      console.log('Found submissions count:', submissions.length);
       
       if (submissions.length === 0) {
-        console.log('No submissions found for form');
-        return null;
+        return { message: 'No submissions found for form', formId: this.formId };
       }
 
+      // Get the most recent submission (first one, assuming they're sorted by date)
       const mostRecent = submissions[0];
-      console.log('Most recent submission:', mostRecent);
+      console.log('Most recent submission ID:', mostRecent.id);
+      console.log('Most recent submission keys:', Object.keys(mostRecent));
 
       // Get detailed submission data
+      console.log('=== FETCHING DETAILED SUBMISSION DATA ===');
       const detailResponse = await fetch(`${this.baseUrl}/submissions/${mostRecent.id}`, {
         headers: {
           'Authorization': this.getAuthHeader(),
@@ -290,42 +295,112 @@ export class GoCanvasService {
         },
       });
 
-      if (detailResponse.ok) {
-        const detailData = await detailResponse.json();
-        console.log('Detailed submission data:');
-        console.log('- ID:', detailData.id);
-        console.log('- Status:', detailData.status);
-        console.log('- Created:', detailData.created_at);
-        console.log('- Updated:', detailData.updated_at);
-        console.log('- Submitted:', detailData.submitted_at);
-        
-        // Look for workflow-related fields
-        if (detailData.workflow_states) {
-          console.log('- Workflow States:', JSON.stringify(detailData.workflow_states, null, 2));
-        }
-        
-        if (detailData.workflow_history) {
-          console.log('- Workflow History:', JSON.stringify(detailData.workflow_history, null, 2));
-        }
-        
-        if (detailData.handoffs) {
-          console.log('- Handoffs:', JSON.stringify(detailData.handoffs, null, 2));
-        }
-        
-        if (detailData.transitions) {
-          console.log('- Transitions:', JSON.stringify(detailData.transitions, null, 2));
-        }
+      console.log('Detail response status:', detailResponse.status);
 
-        // Check all top-level keys for workflow-related data
-        console.log('All top-level keys in submission:', Object.keys(detailData));
-        
-        return detailData;
+      if (!detailResponse.ok) {
+        const errorText = await detailResponse.text();
+        console.error('Failed to fetch submission details:', errorText);
+        return { error: `Failed to fetch submission details: ${detailResponse.status}`, details: errorText, basicData: mostRecent };
+      }
+
+      const detailData = await detailResponse.json();
+      console.log('=== DETAILED SUBMISSION ANALYSIS ===');
+      console.log('All top-level keys:', Object.keys(detailData));
+      
+      // Return the analysis in the response for easier examination
+      const analysis = {
+        submissionId: detailData.id,
+        status: detailData.status,
+        created_at: detailData.created_at,
+        updated_at: detailData.updated_at,
+        submitted_at: detailData.submitted_at,
+        allKeys: Object.keys(detailData),
+        workflowFields: {},
+        submissionCheckInFields: [],
+        rawData: detailData
+      };
+      
+      // Basic submission info
+      console.log('ID:', detailData.id);
+      console.log('Status:', detailData.status);
+      console.log('Created:', detailData.created_at);
+      console.log('Updated:', detailData.updated_at);
+      console.log('Submitted:', detailData.submitted_at);
+      
+      // Look for workflow-related data
+      const workflowFields = ['workflow_states', 'workflow_history', 'handoffs', 'transitions', 'workflow', 'states', 'workflow_data'];
+      workflowFields.forEach(field => {
+        if (detailData[field]) {
+          console.log(`Found ${field}:`, JSON.stringify(detailData[field], null, 2));
+          analysis.workflowFields[field] = detailData[field];
+        }
+      });
+      
+      // Look for any field containing "workflow" or "handoff"
+      Object.keys(detailData).forEach(key => {
+        if (key.toLowerCase().includes('workflow') || key.toLowerCase().includes('handoff') || key.toLowerCase().includes('state')) {
+          console.log(`Found workflow-related field '${key}':`, JSON.stringify(detailData[key], null, 2));
+          analysis.workflowFields[key] = detailData[key];
+        }
+      });
+      
+      // Specifically look for "Submission Check in" in any field
+      Object.entries(detailData).forEach(([key, value]) => {
+        if (typeof value === 'string' && value.toLowerCase().includes('submission check in')) {
+          console.log(`Found "Submission Check in" in field '${key}':`, value);
+          analysis.submissionCheckInFields.push({ field: key, value, type: 'string' });
+        } else if (Array.isArray(value)) {
+          value.forEach((item, index) => {
+            if (typeof item === 'string' && item.toLowerCase().includes('submission check in')) {
+              console.log(`Found "Submission Check in" in array field '${key}[${index}]':`, item);
+              analysis.submissionCheckInFields.push({ field: `${key}[${index}]`, value: item, type: 'array_string' });
+            } else if (typeof item === 'object' && item) {
+              Object.entries(item).forEach(([subKey, subValue]) => {
+                if (typeof subValue === 'string' && subValue.toLowerCase().includes('submission check in')) {
+                  console.log(`Found "Submission Check in" in '${key}[${index}].${subKey}':`, subValue);
+                  analysis.submissionCheckInFields.push({ field: `${key}[${index}].${subKey}`, value: subValue, type: 'nested_object' });
+                }
+              });
+            }
+          });
+        } else if (typeof value === 'object' && value) {
+          Object.entries(value).forEach(([subKey, subValue]) => {
+            if (typeof subValue === 'string' && subValue.toLowerCase().includes('submission check in')) {
+              console.log(`Found "Submission Check in" in '${key}.${subKey}':`, subValue);
+              analysis.submissionCheckInFields.push({ field: `${key}.${subKey}`, value: subValue, type: 'object' });
+            }
+          });
+        }
+      });
+      
+      // Look for any timestamp fields that might be related to workflow states
+      if (detailData.responses && Array.isArray(detailData.responses)) {
+        detailData.responses.forEach((response, index) => {
+          if (response.type === 'Time' || response.type === 'Date' || response.type === 'DateTime') {
+            console.log(`Found timestamp field: ${response.label} = ${response.value} (entry_id: ${response.entry_id})`);
+          }
+          if (response.label && response.label.toLowerCase().includes('check in')) {
+            console.log(`Found check-in related field: ${response.label} = ${response.value} (entry_id: ${response.entry_id})`);
+            analysis.submissionCheckInFields.push({ 
+              field: `responses[${index}]`, 
+              value: response, 
+              type: 'form_response',
+              label: response.label,
+              entry_id: response.entry_id 
+            });
+          }
+        });
       }
       
-      return mostRecent;
+      console.log('=== WORKFLOW ANALYSIS COMPLETE ===');
+      console.log(`Found ${Object.keys(analysis.workflowFields).length} workflow-related fields`);
+      console.log(`Found ${analysis.submissionCheckInFields.length} submission check-in related fields`);
+      
+      return analysis;
+      
     } catch (error) {
-      console.error('Failed to get most recent submission:', error);
-      throw error;
+      console.error('Error in getMostRecentSubmission:', error);
+      return { error: 'Exception occurred', details: error.message };
     }
   }
 
