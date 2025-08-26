@@ -8,7 +8,7 @@ export class GoCanvasService {
   constructor() {
     this.username = process.env.GOCANVAS_USERNAME || '';
     this.password = process.env.GOCANVAS_PASSWORD || '';
-    this.formId = '5577570'; // Updated form with correct field mappings
+    this.formId = process.env.GOCANVAS_FORM_ID || '5577570'; // Use environment variable, fallback to previous form
     
     if (!this.username || !this.password) {
       console.warn('GoCanvas credentials not configured. Using mock mode.');
@@ -905,34 +905,34 @@ export class GoCanvasService {
 
 
   private getHardCodedFieldMap(): any {
-    // Hard-coded field mapping based on form 5577570 field IDs
+    // Hard-coded field mapping based on form 5548931 field IDs (updated)
     return {
-      'P21 Order Number (Enter after invoicing) ': 714302718,
-      'Job ID': 714302719, // ✅ Job ID field for form 5577570
-      'User ID': 714302720,
-      'Permission to Start': 714302721,
-      'Permission Denied Stop': 714302722,
-      'Shop Name': 714302723,
-      'Customer Name': 714302724,
-      'Customer Ship To': 714302726,
-      'P21 Ship to ID': 714302727,
-      'Customer Specific Instructions?': 714302728,
-      'Send Clamps & Gaskets?': 714302729,
-      'Preferred Process?': 714302730,
-      'Any Other Specific Instructions? ': 714302731,
-      'Any comments for the tech about this submission?': 714302732,
-      'Note to Tech about Customer or service:': 714302733,
-      'Contact Name': 714302734,
-      'Contact Number': 714302735,
-      'PO Number': 714302736, // ✅ FIRST PO Number field for form 5577570
-      'Serial Number(s)': 714302737,
-      'Tech Customer Question Inquiry': 714302738,
-      'Shop Handoff': 714302742,
-      'Handoff Email workflow': 714302743,
-      'Submission Status': 714302744,
-      // Alternative Job ID labels
-      'ECS Job ID': 714302719,
-      'Job Number': 714302719
+      'P21 Order Number (Enter after invoicing) ': 708148222,
+      'Job ID': 708148223, // ✅ Using User ID field for Job ID in form 5548931
+      'User ID': 708148223,
+      'Permission to Start': 708148224,
+      'Permission Denied Stop': 708148225,
+      'Shop Name': 708148226,
+      'Customer Name': 708148227,
+      'Customer Ship To': 708148229,
+      'P21 Ship to ID': 708148230,
+      'Customer Specific Instructions?': 708148231,
+      'Send Clamps & Gaskets?': 708148232,
+      'Preferred Process?': 708148233,
+      'Any Other Specific Instructions? ': 708148234,
+      'Any comments for the tech about this submission?': 708148235,
+      'Note to Tech about Customer or service:': 708148236,
+      'Contact Name': 708148237,
+      'Contact Number': 708148238,
+      'PO Number': 708148239, // ✅ PO Number field for form 5548931
+      'Serial Number(s)': 708148240,
+      'Tech Customer Question Inquiry': 708148241,
+      'Shop Handoff': 708148245,
+      'Handoff Email workflow': 708148246,
+      'Submission Status': 708148247,
+      // Alternative Job ID labels  
+      'ECS Job ID': 708148223,
+      'Job Number': 708148223
     };
   }
 }
