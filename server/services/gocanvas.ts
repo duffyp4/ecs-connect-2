@@ -502,7 +502,7 @@ export class GoCanvasService {
               if (detailData.responses) {
                 const jobIdField = detailData.responses.find((field: any) => 
                   field.value === jobId && 
-                  (field.label?.toLowerCase().includes('job') || field.entry_id === 712668557)
+                  (field.label?.toLowerCase().includes('job') || field.entry_id === 714287494)
                 );
                 
                 if (jobIdField) {
