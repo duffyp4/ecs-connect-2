@@ -528,7 +528,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Test direct submissions access
   app.get("/api/gocanvas/submissions", async (req, res) => {
     try {
-      const formId = req.query.form_id || '5568544';
+      const formId = req.query.form_id || '5577421';
       console.log(`Testing submissions API for form: ${formId}`);
       const response = await fetch(`https://api.gocanvas.com/api/v3/submissions?form_id=${formId}`, {
         headers: {

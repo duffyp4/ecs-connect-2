@@ -191,6 +191,7 @@ export class GoCanvasService {
       const dispatchData: any = {
         dispatch_type: 'immediate_dispatch',
         form_id: parseInt(this.formId),
+        form_version: 'latest', // Use latest version of the form
         name: `ECS Job: ${jobData.jobId}`,
         description: `Job for ${jobData.customerName} - ${jobData.shopName}`,
         responses: responses,
