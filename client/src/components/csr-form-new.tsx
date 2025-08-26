@@ -838,6 +838,46 @@ export default function CSRForm() {
                 )}
               />
 
+              {/* Check-in Date and Time (Optional) */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+                <FormField
+                  control={form.control}
+                  name="checkInDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Check-in Date (Optional)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="date"
+                          {...field} 
+                          value={field.value || ""} 
+                          data-testid="input-check-in-date"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="checkInTime"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Check-in Time (Optional)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="time"
+                          {...field} 
+                          value={field.value || ""} 
+                          data-testid="input-check-in-time"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               {/* Handoff */}
               <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-4">

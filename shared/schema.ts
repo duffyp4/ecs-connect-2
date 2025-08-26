@@ -30,6 +30,10 @@ export const jobs = pgTable("jobs", {
   shopHandoff: text("shop_handoff").notNull(), // technician email
   handoffEmailWorkflow: text("handoff_email_workflow"),
   
+  // Check-in Fields (optional workflow timing)
+  checkInDate: text("check_in_date"),
+  checkInTime: text("check_in_time"),
+  
   // Tracking Fields
   status: text("status").notNull().default("pending"), // pending, in-progress, completed, overdue
   initiatedAt: timestamp("initiated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
