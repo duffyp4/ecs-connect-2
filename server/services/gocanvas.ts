@@ -912,6 +912,7 @@ export class GoCanvasService {
     try {
       // Load the generated field map JSON file
       const fieldMapPath = join(process.cwd(), 'scripts', 'gocanvas_field_map.json');
+      console.log(`🔍 Trying to load field map from: ${fieldMapPath}`);
       const fieldMapData = JSON.parse(readFileSync(fieldMapPath, 'utf8'));
       
       // Convert the field map to label -> entry_id mapping
