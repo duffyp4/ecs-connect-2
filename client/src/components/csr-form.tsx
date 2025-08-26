@@ -508,9 +508,9 @@ export default function CSRForm() {
                   name="checkInDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="required-field">Check In Date</FormLabel>
+                      <FormLabel>Check In Date</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input type="date" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
