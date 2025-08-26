@@ -855,7 +855,7 @@ export default function CSRForm() {
                 <Button
                   type="submit"
                   disabled={createJobMutation.isPending}
-                  className="flex-1 bg-[var(--ecs-primary)] hover:bg-[var(--ecs-primary-hover)] text-white font-medium transition-colors duration-200"
+                  className="flex-1 bg-[var(--ecs-primary)] hover:bg-[var(--ecs-primary-hover)] hover:shadow-lg hover:scale-[1.02] text-white font-medium transition-all duration-200"
                   data-testid="button-submit"
                 >
                   <Send className="mr-2 h-4 w-4" />

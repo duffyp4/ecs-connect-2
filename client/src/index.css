@@ -26,7 +26,7 @@
 
   /* ECS Brand Colors */
   --ecs-primary: hsl(207, 100%, 40%);
-  --ecs-primary-hover: hsl(207, 100%, 35%);
+  --ecs-primary-hover: hsl(207, 100%, 30%);
   --ecs-secondary: hsl(0, 0%, 42%);
   --ecs-success: hsl(142, 71%, 45%);
   --ecs-warning: hsl(45, 100%, 51%);
