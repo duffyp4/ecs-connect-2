@@ -32,9 +32,17 @@ export default function Dashboard() {
     );
   }
 
-  const formatTurnaroundTime = (hours: number | null): string => {
-    if (!hours || hours === 0) return "N/A";
-    return `${hours}h`;
+  const formatTurnaroundTime = (minutes: number | null): string => {
+    if (!minutes || minutes === 0) return "N/A";
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hours > 0 && mins > 0) {
+      return `${hours}h ${mins}m`;
+    } else if (hours > 0) {
+      return `${hours}h`;
+    } else {
+      return `${mins}m`;
+    }
   };
 
   return (
@@ -80,7 +88,7 @@ export default function Dashboard() {
               <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-[var(--ecs-warning)]" />
             </div>
             <div className="metric-number text-[var(--ecs-warning)]">
-              {formatTurnaroundTime(metrics?.averageTurnaround || 0)}
+              {formatTurnaroundTime(metrics?.averageTurnaround ? Math.round(metrics.averageTurnaround * 60) : 0)}
             </div>
             <div className="text-muted-foreground text-xs sm:text-sm">Full Turnaround</div>
           </CardContent>
@@ -92,7 +100,7 @@ export default function Dashboard() {
               <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-[var(--ecs-info)]" />
             </div>
             <div className="metric-number text-[var(--ecs-info)]">
-              {formatTurnaroundTime(metrics?.averageTimeWithTech || 0)}
+              {formatTurnaroundTime(metrics?.averageTimeWithTech ? Math.round(metrics.averageTimeWithTech * 60) : 0)}
             </div>
             <div className="text-muted-foreground text-xs sm:text-sm">Time with Tech</div>
           </CardContent>
@@ -165,11 +173,11 @@ export default function Dashboard() {
                           <div className="space-y-1">
                             <div className="text-sm">
                               <span className="text-muted-foreground">Full:</span>{' '}
-                              {job.turnaroundTime ? `${Math.round(job.turnaroundTime / 60 * 10) / 10}h` : 'N/A'}
+                              {formatTurnaroundTime(job.turnaroundTime)}
                             </div>
                             <div className="text-sm">
                               <span className="text-muted-foreground">Tech:</span>{' '}
-                              {job.timeWithTech ? `${Math.round(job.timeWithTech / 60 * 10) / 10}h` : 'N/A'}
+                              {formatTurnaroundTime(job.timeWithTech)}
                             </div>
                           </div>
                         ) : job.status === 'pending' || job.status === 'in-progress' ? (

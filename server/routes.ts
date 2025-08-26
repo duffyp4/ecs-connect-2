@@ -608,6 +608,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test handoff data retrieval for debugging
+  app.get("/api/test-handoff/:jobId", async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      console.log(`🧪 TESTING handoff data retrieval for job ${jobId}`);
+      
+      const handoffData = await goCanvasService.getHandoffTimeData(jobId);
+      
+      return res.json({
+        jobId,
+        handoffData,
+        status: handoffData ? 'found' : 'not_found',
+        hasHandoffFields: handoffData?.handoffFields ? handoffData.handoffFields.length : 0
+      });
+    } catch (error) {
+      console.error('Error testing handoff data:', error);
+      return res.status(500).json({ error: 'Failed to test handoff data', details: error.message });
+    }
+  });
+
   // Get handoff time data for a specific job ID
   app.get("/api/gocanvas/handoff-time/:jobId", async (req, res) => {
     try {
