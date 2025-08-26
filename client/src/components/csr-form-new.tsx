@@ -55,8 +55,6 @@ export default function CSRForm() {
       poNumber: "",
       serialNumbers: "",
       techCustomerQuestionInquiry: "sales@ecspart.com",
-      checkInDate: "", // Optional date field
-      checkInTime: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }), // Current time in HH:MM format
       shopHandoff: "",
       handoffEmailWorkflow: "",
     },
@@ -840,36 +838,6 @@ export default function CSRForm() {
                 )}
               />
 
-              {/* Scheduling */}
-              <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="checkInDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Check In Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} value={field.value || ""} data-testid="input-check-in-date" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="checkInTime"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Check In Time *</FormLabel>
-                      <FormControl>
-                        <Input type="time" {...field} data-testid="input-check-in-time" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
 
               {/* Handoff */}
               <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-4">

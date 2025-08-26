@@ -50,8 +50,6 @@ export default function CSRForm() {
       poNumber: "",
       serialNumbers: "",
       techCustomerQuestionInquiry: "",
-      checkInDate: "",
-      checkInTime: "",
       shopHandoff: "",
       handoffEmailWorkflow: "",
     },
@@ -502,36 +500,6 @@ export default function CSRForm() {
               </div>
 
               {/* Row 9 */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="checkInDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Check In Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} value={field.value || ""} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="checkInTime"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="required-field">Check In Time</FormLabel>
-                      <FormControl>
-                        <Input type="time" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Row 10 */}
               <div className="grid md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}

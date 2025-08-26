@@ -390,8 +390,6 @@ export class GoCanvasService {
       { data: jobData.poNumber, labels: ['PO Number'] },
       { data: jobData.serialNumbers, labels: ['Serial Number(s)'] },
       { data: jobData.techCustomerQuestionInquiry, labels: ['Tech Customer Question Inquiry'] },
-      { data: jobData.checkInDate, labels: ['Check In Date'] },
-      { data: jobData.checkInTime, labels: ['Check In Time'] },
       { data: jobData.shopHandoff, labels: ['Shop Handoff'] },
       { data: jobData.handoffEmailWorkflow, labels: ['Handoff Email workflow'] },
     ];
@@ -535,21 +533,6 @@ export class GoCanvasService {
       value: jobData.serialNumbers || "N/A"
     });
     
-    // Check In Date (often required) - USE ACTUAL DATA
-    if (jobData.checkInDate) {
-      responses.push({
-        entry_id: 712668577,
-        value: jobData.checkInDate
-      });
-    }
-    
-    // Check In Time (often required) - USE ACTUAL DATA
-    if (jobData.checkInTime) {
-      responses.push({
-        entry_id: 712668578,
-        value: jobData.checkInTime
-      });
-    }
     
     // Shop Handoff (required) - USE ACTUAL DATA
     responses.push({

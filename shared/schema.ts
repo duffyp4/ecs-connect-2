@@ -27,8 +27,6 @@ export const jobs = pgTable("jobs", {
   poNumber: text("po_number"),
   serialNumbers: text("serial_numbers"),
   techCustomerQuestionInquiry: text("tech_customer_question_inquiry"),
-  checkInDate: text("check_in_date"),
-  checkInTime: text("check_in_time").notNull(),
   shopHandoff: text("shop_handoff").notNull(), // technician email
   handoffEmailWorkflow: text("handoff_email_workflow"),
   
