@@ -52,14 +52,15 @@ export default function JobList() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--ecs-dark)] flex items-center">
-            <List className="mr-2 h-6 w-6" />
-            All Jobs
+          <h1 className="text-xl sm:text-2xl font-bold text-[var(--ecs-dark)] flex items-center">
+            <List className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
+            <span className="hidden sm:inline">All Jobs</span>
+            <span className="sm:hidden">Jobs</span>
           </h1>
-          <p className="text-muted-foreground">Complete list of all service jobs</p>
+          <p className="text-sm sm:text-base text-muted-foreground">Complete list of all service jobs</p>
         </div>
         
         <div className="flex flex-col sm:flex-row gap-2">

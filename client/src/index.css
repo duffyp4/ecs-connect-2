@@ -76,6 +76,39 @@
     border-right: 1px solid hsl(var(--border));
   }
   
+  /* Mobile-friendly touch targets and accessibility */
+  .nav-link {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    touch-action: manipulation;
+  }
+  
+  @media (max-width: 1024px) {
+    .nav-link {
+      padding: 1rem;
+      font-size: 1rem;
+    }
+    
+    button, [role="button"] {
+      min-height: 44px;
+      min-width: 44px;
+      touch-action: manipulation;
+    }
+    
+    input, select, textarea {
+      min-height: 44px;
+      font-size: 16px; /* Prevents zoom on iOS */
+      padding: 0.75rem;
+    }
+    
+    /* Larger tap targets for small screens */
+    .btn-sm {
+      min-height: 40px;
+      padding: 0.5rem 1rem;
+    }
+  }
+  
   .navbar-brand {
     font-weight: 600;
     color: var(--ecs-primary) !important;
@@ -138,9 +171,22 @@
   }
   
   .metric-number {
-    font-size: 2rem;
+    font-size: 1.25rem;
     font-weight: 600;
     margin-bottom: 0.5rem;
+    line-height: 1.2;
+  }
+  
+  @media (min-width: 640px) {
+    .metric-number {
+      font-size: 1.75rem;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .metric-number {
+      font-size: 2rem;
+    }
   }
   
   .job-id {
@@ -154,17 +200,86 @@
     color: var(--ecs-danger);
   }
 
-  @media (max-width: 768px) {
+  /* Responsive card headers */
+  .card-header {
+    background: linear-gradient(135deg, var(--ecs-primary), var(--ecs-primary-hover));
+    color: white;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem 0.5rem 0 0;
+  }
+  
+  @media (min-width: 640px) {
+    .card-header {
+      padding: 1rem 1.25rem;
+    }
+  }
+  
+  .card-header h2 {
+    font-size: 1rem;
+    margin: 0;
+    line-height: 1.25;
+  }
+  
+  @media (min-width: 640px) {
+    .card-header h2 {
+      font-size: 1.125rem;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .card-header h2 {
+      font-size: 1.25rem;
+    }
+  }
+  
+  /* Mobile optimizations */
+  @media (max-width: 1024px) {
     .sidebar {
       min-height: auto;
     }
     
     .metric-card {
+      padding: 0.75rem;
+    }
+    
+    /* Better mobile spacing */
+    .space-y-6 > * + * {
+      margin-top: 1rem;
+    }
+    
+    /* Responsive text sizes */
+    h1 {
+      line-height: 1.2;
+    }
+    
+    /* Table responsiveness improvements */
+    table {
+      font-size: 0.875rem;
+    }
+    
+    th, td {
+      padding: 0.5rem;
+      white-space: nowrap;
+    }
+  }
+  
+  @media (min-width: 640px) {
+    .metric-card {
       padding: 1rem;
     }
     
-    .metric-number {
-      font-size: 1.5rem;
+    th, td {
+      padding: 0.75rem;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .metric-card {
+      padding: 1.5rem;
+    }
+    
+    th, td {
+      padding: 1rem;
     }
   }
 }

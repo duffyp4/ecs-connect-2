@@ -246,13 +246,14 @@ export default function CSRForm() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[var(--ecs-dark)] flex items-center">
-          <ClipboardList className="mr-2 h-6 w-6" />
-          CSR Check-in Portal
+        <h1 className="text-xl sm:text-2xl font-bold text-[var(--ecs-dark)] flex items-center">
+          <ClipboardList className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
+          <span className="hidden sm:inline">CSR Check-in Portal</span>
+          <span className="sm:hidden">New Service Job</span>
         </h1>
-        <p className="text-muted-foreground">Complete all required fields to initiate a new service job</p>
+        <p className="text-sm sm:text-base text-muted-foreground">Complete all required fields to initiate a new service job</p>
       </div>
 
       <Card>
@@ -265,7 +266,7 @@ export default function CSRForm() {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Job ID and Timestamp Display */}
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-4">
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
@@ -309,7 +310,7 @@ export default function CSRForm() {
                     <FormLabel className="flex items-center gap-1">
                       <Database className="h-3 w-3 text-muted-foreground" /> User ID *
                     </FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
                       <FormControl>
                         <SelectTrigger data-testid="select-user-id">
                           <SelectValue placeholder="Select user ID" />
@@ -333,7 +334,7 @@ export default function CSRForm() {
               />
 
               {/* Permission Controls */}
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="permissionToStart"
@@ -342,7 +343,7 @@ export default function CSRForm() {
                       <FormLabel className="flex items-center gap-1">
                         <Database className="h-3 w-3 text-muted-foreground" /> Permission to Start
                       </FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger data-testid="select-permission-start">
                             <SelectValue placeholder="Select permission status" />
@@ -374,7 +375,7 @@ export default function CSRForm() {
               </div>
 
               {/* Shop and Customer Info - Reference Data Fields */}
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="shopName"
@@ -383,7 +384,7 @@ export default function CSRForm() {
                       <FormLabel className="flex items-center gap-1">
                         <Database className="h-3 w-3 text-muted-foreground" /> Shop Name *
                       </FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger data-testid="select-shop-name">
                             <SelectValue placeholder="Select shop" />
@@ -414,7 +415,7 @@ export default function CSRForm() {
                       <FormLabel className="flex items-center gap-1">
                         <Database className="h-3 w-3 text-muted-foreground" /> Customer Name *
                       </FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger data-testid="select-customer-name">
                             <SelectValue placeholder="Select customer" />
@@ -439,7 +440,7 @@ export default function CSRForm() {
               </div>
 
               {/* Customer Ship To and P21 Ship ID - Reference Data Fields */}
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="customerShipTo"
@@ -448,7 +449,7 @@ export default function CSRForm() {
                       <FormLabel className="flex items-center gap-1">
                         <Database className="h-3 w-3 text-muted-foreground" /> Customer Ship To
                       </FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger data-testid="select-ship-to">
                             <SelectValue placeholder="Select ship to location" />
@@ -531,7 +532,7 @@ export default function CSRForm() {
               />
 
               {/* Service Details */}
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="sendClampsGaskets"
@@ -671,7 +672,7 @@ export default function CSRForm() {
                       <FormControl>
                         <Textarea 
                           {...field}
-                          value={hasCommentsForTech ? field.value : ""}
+                          value={hasCommentsForTech ? (field.value || "") : ""}
                           readOnly={!hasCommentsForTech}
                           className={hasCommentsForTech ? "" : "bg-muted text-muted-foreground cursor-not-allowed"}
                           placeholder={hasCommentsForTech ? "Notes about customer or service" : "Select 'Yes' above to enable this field"}
@@ -685,7 +686,7 @@ export default function CSRForm() {
               />
 
               {/* Contact Information */}
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="contactName"
@@ -716,7 +717,7 @@ export default function CSRForm() {
               </div>
 
               {/* PO and Serial Information */}
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="poNumber"
@@ -724,7 +725,7 @@ export default function CSRForm() {
                     <FormItem>
                       <FormLabel>PO Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="Purchase order number" {...field} data-testid="input-po-number" />
+                        <Input placeholder="Purchase order number" {...field} value={field.value || ""} data-testid="input-po-number" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -738,7 +739,7 @@ export default function CSRForm() {
                     <FormItem>
                       <FormLabel>Serial Number(s) *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Serial numbers" {...field} data-testid="input-serial-numbers" />
+                        <Input placeholder="Serial numbers" {...field} value={field.value || ""} data-testid="input-serial-numbers" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -768,7 +769,7 @@ export default function CSRForm() {
               />
 
               {/* Scheduling */}
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="checkInDate"
@@ -799,7 +800,7 @@ export default function CSRForm() {
               </div>
 
               {/* Handoff */}
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="shopHandoff"
@@ -808,7 +809,7 @@ export default function CSRForm() {
                       <FormLabel className="flex items-center gap-1">
                         <Database className="h-3 w-3 text-muted-foreground" /> Shop Handoff *
                       </FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger data-testid="select-shop-handoff">
                             <SelectValue placeholder="Select shop user" />
@@ -842,7 +843,7 @@ export default function CSRForm() {
                         <span className="h-3 w-3" /> Handoff Email workflow
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder="Email workflow" {...field} data-testid="input-handoff-email" />
+                        <Input placeholder="Email workflow" {...field} value={field.value || ""} data-testid="input-handoff-email" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -851,7 +852,7 @@ export default function CSRForm() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-4 pt-6">
+              <div className="flex flex-col sm:flex-row gap-4 pt-6">
                 <Button
                   type="submit"
                   disabled={createJobMutation.isPending}

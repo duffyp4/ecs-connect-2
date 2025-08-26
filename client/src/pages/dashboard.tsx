@@ -39,62 +39,63 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[var(--ecs-dark)] flex items-center">
-          <BarChart3 className="mr-2 h-6 w-6" />
-          Dashboard Overview
+        <h1 className="text-xl sm:text-2xl font-bold text-[var(--ecs-dark)] flex items-center">
+          <BarChart3 className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
+          <span className="hidden sm:inline">Dashboard Overview</span>
+          <span className="sm:hidden">Dashboard</span>
         </h1>
-        <p className="text-muted-foreground">Monitor job performance and turnaround times</p>
+        <p className="text-sm sm:text-base text-muted-foreground">Monitor job performance and turnaround times</p>
       </div>
 
       {/* Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         <Card className="metric-card">
-          <CardContent className="p-6 text-center">
+          <CardContent className="p-3 sm:p-6 text-center">
             <div className="flex items-center justify-center mb-2">
-              <Activity className="h-8 w-8 text-[var(--ecs-primary)]" />
+              <Activity className="h-6 w-6 sm:h-8 sm:w-8 text-[var(--ecs-primary)]" />
             </div>
             <div className="metric-number text-[var(--ecs-primary)]">
               {metrics?.activeJobs || 0}
             </div>
-            <div className="text-muted-foreground text-sm">Active Jobs</div>
+            <div className="text-muted-foreground text-xs sm:text-sm">Active Jobs</div>
           </CardContent>
         </Card>
 
         <Card className="metric-card">
-          <CardContent className="p-6 text-center">
+          <CardContent className="p-3 sm:p-6 text-center">
             <div className="flex items-center justify-center mb-2">
-              <CheckCircle className="h-8 w-8 text-[var(--ecs-success)]" />
+              <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-[var(--ecs-success)]" />
             </div>
             <div className="metric-number text-[var(--ecs-success)]">
               {metrics?.completedToday || 0}
             </div>
-            <div className="text-muted-foreground text-sm">Completed Today</div>
+            <div className="text-muted-foreground text-xs sm:text-sm">Completed Today</div>
           </CardContent>
         </Card>
 
         <Card className="metric-card">
-          <CardContent className="p-6 text-center">
+          <CardContent className="p-3 sm:p-6 text-center">
             <div className="flex items-center justify-center mb-2">
-              <Clock className="h-8 w-8 text-[var(--ecs-warning)]" />
+              <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-[var(--ecs-warning)]" />
             </div>
             <div className="metric-number text-[var(--ecs-warning)]">
-              {metrics?.averageTurnaround ? `${metrics.averageTurnaround}h` : "N/A"}
+              {formatTurnaroundTime(metrics?.averageTurnaround || 0)}
             </div>
-            <div className="text-muted-foreground text-sm">Avg Turnaround</div>
+            <div className="text-muted-foreground text-xs sm:text-sm">Avg Turnaround</div>
           </CardContent>
         </Card>
 
         <Card className="metric-card">
-          <CardContent className="p-6 text-center">
+          <CardContent className="p-3 sm:p-6 text-center">
             <div className="flex items-center justify-center mb-2">
-              <AlertTriangle className="h-8 w-8 text-[var(--ecs-danger)]" />
+              <AlertTriangle className="h-6 w-6 sm:h-8 sm:w-8 text-[var(--ecs-danger)]" />
             </div>
             <div className="metric-number text-[var(--ecs-danger)]">
               {metrics?.overdueJobs || 0}
             </div>
-            <div className="text-muted-foreground text-sm">Overdue Jobs</div>
+            <div className="text-muted-foreground text-xs sm:text-sm">Overdue Jobs</div>
           </CardContent>
         </Card>
       </div>
