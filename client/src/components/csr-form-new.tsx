@@ -854,7 +854,7 @@ export default function CSRForm() {
                             readOnly
                             className="bg-muted text-muted-foreground cursor-not-allowed"
                             data-testid="input-handoff-email-readonly"
-                            placeholder={!displayValue ? (watch("shopHandoff") ? "Auto-populated from shop handoff selection" : "Select shop handoff first") : ""}
+                            placeholder={!displayValue ? (form.getValues("shopHandoff") ? "Auto-populated from shop handoff selection" : "Select shop handoff first") : ""}
                           />
                         </FormControl>
                         <FormMessage />
