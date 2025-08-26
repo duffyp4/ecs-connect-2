@@ -8,7 +8,7 @@ export class GoCanvasService {
   constructor() {
     this.username = process.env.GOCANVAS_USERNAME || '';
     this.password = process.env.GOCANVAS_PASSWORD || '';
-    this.formId = '5568544'; // Testing Copy form with Job ID field
+    this.formId = '5577421'; // Testing Copy form with Job ID field
     
     if (!this.username || !this.password) {
       console.warn('GoCanvas credentials not configured. Using mock mode.');
