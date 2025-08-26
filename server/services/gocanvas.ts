@@ -249,6 +249,48 @@ export class GoCanvasService {
     }
   }
 
+  async getSubmissionById(submissionId: string): Promise<any> {
+    try {
+      console.log(`=== FETCHING GOCANVAS SUBMISSION: ${submissionId} ===`);
+      
+      // Get detailed submission data by ID
+      const detailResponse = await fetch(`${this.baseUrl}/submissions/${submissionId}`, {
+        headers: {
+          'Authorization': this.getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('Detail response status:', detailResponse.status);
+
+      if (!detailResponse.ok) {
+        const errorText = await detailResponse.text();
+        console.error('Failed to fetch submission details:', errorText);
+        return { error: `Failed to fetch submission details: ${detailResponse.status}`, details: errorText };
+      }
+
+      const detailData = await detailResponse.json();
+      console.log('=== TIMING INFORMATION ===');
+      console.log('ID:', detailData.id);
+      console.log('Created:', detailData.created_at);
+      console.log('Updated:', detailData.updated_at);
+      console.log('Submitted:', detailData.submitted_at);
+      
+      return {
+        id: detailData.id,
+        created_at: detailData.created_at,
+        updated_at: detailData.updated_at,
+        submitted_at: detailData.submitted_at,
+        status: detailData.status,
+        rawData: detailData
+      };
+      
+    } catch (error) {
+      console.error('Error in getSubmissionById:', error);
+      return { error: 'Exception occurred', details: error.message };
+    }
+  }
+
   async getMostRecentSubmission(): Promise<any> {
     try {
       console.log('=== FETCHING MOST RECENT GOCANVAS SUBMISSION ===');
