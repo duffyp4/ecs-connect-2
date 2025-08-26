@@ -134,6 +134,7 @@ export default function Dashboard() {
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Technician</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Status</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Initiated</th>
+                  <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Handoff</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Completed</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Turnaround</th>
                 </tr>
@@ -141,7 +142,7 @@ export default function Dashboard() {
               <tbody>
                 {recentJobs.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="text-center p-8 text-muted-foreground">
+                    <td colSpan={8} className="text-center p-8 text-muted-foreground">
                       No jobs found. Create your first job to get started.
                     </td>
                   </tr>
@@ -151,7 +152,12 @@ export default function Dashboard() {
                       <td className="p-4">
                         <span className="job-id">{job.jobId}</span>
                       </td>
-                      <td className="p-4">{job.storeName}</td>
+                      <td className="p-4">
+                        <div className="space-y-1">
+                          <div className="font-medium">{job.customerName || 'N/A'}</div>
+                          <div className="text-sm text-muted-foreground">{job.customerShipTo || 'N/A'}</div>
+                        </div>
+                      </td>
                       <td className="p-4">
                         {job.shopHandoff ? job.shopHandoff.split('@')[0] : 'Unassigned'}
                       </td>
@@ -160,6 +166,13 @@ export default function Dashboard() {
                       </td>
                       <td className="p-4">
                         {new Date(job.initiatedAt).toLocaleString()}
+                      </td>
+                      <td className="p-4">
+                        {job.handoffAt 
+                          ? new Date(job.handoffAt).toLocaleString()
+                          : job.status === 'completed' 
+                          ? 'N/A'
+                          : '---'}
                       </td>
                       <td className="p-4">
                         {job.completedAt 
