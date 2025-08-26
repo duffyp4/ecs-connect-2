@@ -652,6 +652,15 @@ export class GoCanvasService {
     responses.forEach(r => {
       const fieldName = Object.entries(this.getHardCodedFieldMap()).find(([label, id]) => id === r.entry_id)?.[0] || `Unknown field ${r.entry_id}`;
       console.log(`  - ${fieldName}: "${r.value}"`);
+      
+      // Special logging for PO Number
+      if (r.entry_id === 714302757) {
+        console.log(`🔍 PO NUMBER DEBUGGING:`);
+        console.log(`   Field ID: ${r.entry_id}`);
+        console.log(`   Value: "${r.value}"`);
+        console.log(`   Value type: ${typeof r.value}`);
+        console.log(`   Value length: ${r.value?.length || 0}`);
+      }
     });
     return responses;
   }
