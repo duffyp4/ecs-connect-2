@@ -1,4 +1,7 @@
 // GoCanvas API integration service
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
 export class GoCanvasService {
   private baseUrl = 'https://api.gocanvas.com/api/v3';
   private username: string;
@@ -777,9 +780,9 @@ export class GoCanvasService {
     // Load field mappings from the generated field map
     let fieldMap: any = {};
     try {
-      // Skip dynamic loading for now and use hard-coded field map approach
-      console.log('Loading field mappings...');
-      fieldMap = this.getHardCodedFieldMap();
+      // Load dynamic field map from generated JSON file
+      console.log('Loading field mappings from generated field map...');
+      fieldMap = this.loadDynamicFieldMap();
       console.log('Created field map with', Object.keys(fieldMap).length, 'entries');
       
       // Log if any Job ID-related field exists
@@ -792,7 +795,8 @@ export class GoCanvasService {
       }
     } catch (error) {
       console.error('Failed to load field map, using fallback mapping:', error);
-      return this.getFallbackResponses(jobData);
+      // Use hardcoded field map as fallback
+      fieldMap = this.getHardCodedFieldMap();
     }
 
     const responses = [];
@@ -904,8 +908,30 @@ export class GoCanvasService {
   }
 
 
+  private loadDynamicFieldMap(): any {
+    try {
+      // Load the generated field map JSON file
+      const fieldMapPath = join(process.cwd(), 'scripts', 'gocanvas_field_map.json');
+      const fieldMapData = JSON.parse(readFileSync(fieldMapPath, 'utf8'));
+      
+      // Convert the field map to label -> entry_id mapping
+      const labelToIdMap: any = {};
+      for (const entry of fieldMapData.entries) {
+        labelToIdMap[entry.label] = entry.id;
+      }
+      
+      console.log(`✅ Loaded dynamic field map for form ${fieldMapData.form_id} with ${fieldMapData.total_fields} fields`);
+      return labelToIdMap;
+    } catch (error) {
+      console.error('Failed to load dynamic field map:', error);
+      console.log('Falling back to hardcoded field map...');
+      return this.getHardCodedFieldMap();
+    }
+  }
+
   private getHardCodedFieldMap(): any {
-    // Hard-coded field mapping based on form 5548931 field IDs (updated)
+    // Hard-coded field mapping based on form 5548931 field IDs (DEPRECATED - use dynamic field map instead)
+    console.warn('⚠️  Using deprecated hardcoded field map for form 5548931');
     return {
       'P21 Order Number (Enter after invoicing) ': 708148222,
       'Job ID': 708148223, // ✅ Using User ID field for Job ID in form 5548931
