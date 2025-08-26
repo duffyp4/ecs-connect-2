@@ -8,7 +8,7 @@ export class GoCanvasService {
   constructor() {
     this.username = process.env.GOCANVAS_USERNAME || '';
     this.password = process.env.GOCANVAS_PASSWORD || '';
-    this.formId = '5577421'; // Testing Copy form with Job ID field
+    this.formId = '5577570'; // Updated form with correct field mappings
     
     if (!this.username || !this.password) {
       console.warn('GoCanvas credentials not configured. Using mock mode.');
@@ -502,7 +502,7 @@ export class GoCanvasService {
               if (detailData.responses) {
                 const jobIdField = detailData.responses.find((field: any) => 
                   field.value === jobId && 
-                  (field.label?.toLowerCase().includes('job') || field.entry_id === 714287494)
+                  (field.label?.toLowerCase().includes('job') || field.entry_id === 714302719)
                 );
                 
                 if (jobIdField) {
@@ -612,13 +612,13 @@ export class GoCanvasService {
     
     // Add essential fields that might be missing from main mapping
     const essentialFields = [
-      { id: 714287494, data: jobData.jobId, default: "ECS-UNKNOWN", label: "Job ID" },
-      { id: 714287495, data: jobData.userId, default: "system@ecspart.com", label: "User ID" },
-      { id: 714287497, data: jobData.permissionDeniedStop, default: "No", label: "Permission Denied Stop" },
-      { id: 714287498, data: jobData.shopName, default: "Unknown", label: "Shop Name" },
-      { id: 714287499, data: jobData.customerName, default: "Unknown Customer", label: "Customer Name" },
-      { id: 714287501, data: jobData.customerShipTo, default: "N/A", label: "Customer Ship To" },
-      { id: 714287519, data: "New Submission", default: "New Submission", label: "Submission Status" }
+      { id: 714302719, data: jobData.jobId, default: "ECS-UNKNOWN", label: "Job ID" },
+      { id: 714302720, data: jobData.userId, default: "system@ecspart.com", label: "User ID" },
+      { id: 714302722, data: jobData.permissionDeniedStop, default: "No", label: "Permission Denied Stop" },
+      { id: 714302723, data: jobData.shopName, default: "Unknown", label: "Shop Name" },
+      { id: 714302724, data: jobData.customerName, default: "Unknown Customer", label: "Customer Name" },
+      { id: 714302726, data: jobData.customerShipTo, default: "N/A", label: "Customer Ship To" },
+      { id: 714302744, data: "New Submission", default: "New Submission", label: "Submission Status" }
     ];
 
     // Add missing essential fields
@@ -636,13 +636,13 @@ export class GoCanvasService {
     // Ensure we have at least one response
     if (responses.length === 0) {
       console.warn('No responses mapped, adding minimum required fields');
-      // Add minimum required fields for form 5577421
+      // Add minimum required fields for form 5577570
       responses.push({
-        entry_id: 714287494,
+        entry_id: 714302719,
         value: jobData.jobId || "ECS-UNKNOWN"
       });
       responses.push({
-        entry_id: 714287519,
+        entry_id: 714302744,
         value: "New Submission"
       });
     }
@@ -658,34 +658,34 @@ export class GoCanvasService {
 
 
   private getHardCodedFieldMap(): any {
-    // Hard-coded field mapping based on form 5577421 field IDs
+    // Hard-coded field mapping based on form 5577570 field IDs
     return {
-      'P21 Order Number (Enter after invoicing)': 714287493,
-      'Job ID': 714287494, // ✅ Job ID field for form 5577421
-      'User ID': 714287495,
-      'Permission to Start': 714287496,
-      'Permission Denied Stop': 714287497,
-      'Shop Name': 714287498,
-      'Customer Name': 714287499,
-      'Customer Ship To': 714287501,
-      'P21 Ship to ID': 714287502,
-      'Customer Specific Instructions?': 714287503,
-      'Send Clamps & Gaskets?': 714287504,
-      'Preferred Process?': 714287505,
-      'Any Other Specific Instructions?': 714287506,
-      'Any comments for the tech about this submission?': 714287507,
-      'Note to Tech about Customer or service:': 714287508,
-      'Contact Name': 714287509,
-      'Contact Number': 714287510,
-      'PO Number': 714287532,
-      'Serial Number(s)': 714287512,
-      'Tech Customer Question Inquiry': 714287513,
-      'Shop Handoff': 714287517,
-      'Handoff Email workflow': 714287518,
-      'Submission Status': 714287519,
+      'P21 Order Number (Enter after invoicing) ': 714302718,
+      'Job ID': 714302719, // ✅ Job ID field for form 5577570
+      'User ID': 714302720,
+      'Permission to Start': 714302721,
+      'Permission Denied Stop': 714302722,
+      'Shop Name': 714302723,
+      'Customer Name': 714302724,
+      'Customer Ship To': 714302726,
+      'P21 Ship to ID': 714302727,
+      'Customer Specific Instructions?': 714302728,
+      'Send Clamps & Gaskets?': 714302729,
+      'Preferred Process?': 714302730,
+      'Any Other Specific Instructions? ': 714302731,
+      'Any comments for the tech about this submission?': 714302732,
+      'Note to Tech about Customer or service:': 714302733,
+      'Contact Name': 714302734,
+      'Contact Number': 714302735,
+      'PO Number': 714302757, // ✅ NEW PO Number field for form 5577570
+      'Serial Number(s)': 714302737,
+      'Tech Customer Question Inquiry': 714302738,
+      'Shop Handoff': 714302742,
+      'Handoff Email workflow': 714302743,
+      'Submission Status': 714302744,
       // Alternative Job ID labels
-      'ECS Job ID': 714287494,
-      'Job Number': 714287494
+      'ECS Job ID': 714302719,
+      'Job Number': 714302719
     };
   }
 }

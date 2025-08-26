@@ -6,7 +6,7 @@
 import { writeFileSync } from 'fs';
 
 const BASE_URL = "https://api.gocanvas.com/api/v3";
-const FORM_ID = process.env.GOCANVAS_FORM_ID;
+const FORM_ID = process.argv[2] || process.env.GOCANVAS_FORM_ID;
 const USERNAME = process.env.GOCANVAS_USERNAME;
 const PASSWORD = process.env.GOCANVAS_PASSWORD;
 
