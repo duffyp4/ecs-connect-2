@@ -839,17 +839,28 @@ export default function CSRForm() {
                 <FormField
                   control={form.control}
                   name="handoffEmailWorkflow"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-1">
-                        <Database className="h-3 w-3 text-muted-foreground" /> Handoff Email workflow
-                      </FormLabel>
-                      <FormControl>
-                        <Input placeholder="Email workflow" {...field} value={field.value || ""} data-testid="input-handoff-email" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    const displayValue = field.value || "";
+                    
+                    return (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-1">
+                          <Database className="h-3 w-3 text-muted-foreground" /> Handoff Email workflow
+                        </FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field}
+                            value={displayValue}
+                            readOnly
+                            className="bg-muted text-muted-foreground cursor-not-allowed"
+                            data-testid="input-handoff-email-readonly"
+                            placeholder={!displayValue ? (watch("shopHandoff") ? "Auto-populated from shop handoff selection" : "Select shop handoff first") : ""}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
               </div>
 
