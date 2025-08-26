@@ -264,7 +264,7 @@ export default function CSRForm() {
           </h2>
           <p className="text-sm opacity-90">Fields matching GoCanvas "Testing Copy" form structure</p>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="pt-6 pb-6 px-4 sm:px-6 space-y-6">
           {/* Job ID and Timestamp Display */}
           <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-4">
             <Alert>
