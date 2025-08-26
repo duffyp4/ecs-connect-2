@@ -57,7 +57,7 @@ export default function Dashboard() {
       </div>
 
       {/* Metrics Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         <Card className="metric-card">
           <CardContent className="p-3 sm:p-6 text-center">
             <div className="flex items-center justify-center mb-2">
@@ -90,7 +90,7 @@ export default function Dashboard() {
             <div className="metric-number text-[var(--ecs-warning)]">
               {formatTurnaroundTime(metrics?.averageTurnaround || 0)}
             </div>
-            <div className="text-muted-foreground text-xs sm:text-sm">Full Turnaround</div>
+            <div className="text-muted-foreground text-xs sm:text-sm">Avg Full Turnaround</div>
           </CardContent>
         </Card>
 
@@ -102,21 +102,10 @@ export default function Dashboard() {
             <div className="metric-number text-[var(--ecs-info)]">
               {formatTurnaroundTime(metrics?.averageTimeWithTech || 0)}
             </div>
-            <div className="text-muted-foreground text-xs sm:text-sm">Time with Tech</div>
+            <div className="text-muted-foreground text-xs sm:text-sm">Avg Time with Tech</div>
           </CardContent>
         </Card>
 
-        <Card className="metric-card">
-          <CardContent className="p-3 sm:p-6 text-center">
-            <div className="flex items-center justify-center mb-2">
-              <AlertTriangle className="h-6 w-6 sm:h-8 sm:w-8 text-[var(--ecs-danger)]" />
-            </div>
-            <div className="metric-number text-[var(--ecs-danger)]">
-              {metrics?.overdueJobs || 0}
-            </div>
-            <div className="text-muted-foreground text-xs sm:text-sm">Overdue Jobs</div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Recent Jobs */}
