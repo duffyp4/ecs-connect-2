@@ -249,6 +249,86 @@ export class GoCanvasService {
     }
   }
 
+  async getMostRecentSubmission(): Promise<any> {
+    if (!this.username || !this.password) {
+      console.log('GoCanvas not configured, cannot fetch submissions');
+      console.log('Username exists:', !!this.username);
+      console.log('Password exists:', !!this.password);
+      return { error: 'GoCanvas credentials not configured' };
+    }
+
+    try {
+      console.log('Fetching most recent submission from GoCanvas...');
+      const response = await fetch(`${this.baseUrl}/submissions?form_id=${this.formId}&limit=1&sort=created_at&order=desc`, {
+        headers: {
+          'Authorization': this.getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        console.warn(`Failed to fetch submissions: ${response.status}`);
+        return null;
+      }
+
+      const data = await response.json();
+      const submissions = Array.isArray(data) ? data : (data.submissions || data.data || []);
+      
+      if (submissions.length === 0) {
+        console.log('No submissions found for form');
+        return null;
+      }
+
+      const mostRecent = submissions[0];
+      console.log('Most recent submission:', mostRecent);
+
+      // Get detailed submission data
+      const detailResponse = await fetch(`${this.baseUrl}/submissions/${mostRecent.id}`, {
+        headers: {
+          'Authorization': this.getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (detailResponse.ok) {
+        const detailData = await detailResponse.json();
+        console.log('Detailed submission data:');
+        console.log('- ID:', detailData.id);
+        console.log('- Status:', detailData.status);
+        console.log('- Created:', detailData.created_at);
+        console.log('- Updated:', detailData.updated_at);
+        console.log('- Submitted:', detailData.submitted_at);
+        
+        // Look for workflow-related fields
+        if (detailData.workflow_states) {
+          console.log('- Workflow States:', JSON.stringify(detailData.workflow_states, null, 2));
+        }
+        
+        if (detailData.workflow_history) {
+          console.log('- Workflow History:', JSON.stringify(detailData.workflow_history, null, 2));
+        }
+        
+        if (detailData.handoffs) {
+          console.log('- Handoffs:', JSON.stringify(detailData.handoffs, null, 2));
+        }
+        
+        if (detailData.transitions) {
+          console.log('- Transitions:', JSON.stringify(detailData.transitions, null, 2));
+        }
+
+        // Check all top-level keys for workflow-related data
+        console.log('All top-level keys in submission:', Object.keys(detailData));
+        
+        return detailData;
+      }
+      
+      return mostRecent;
+    } catch (error) {
+      console.error('Failed to get most recent submission:', error);
+      throw error;
+    }
+  }
+
   async checkSubmissionStatus(jobId: string): Promise<{status: 'pending' | 'completed' | 'in_progress', submittedAt?: string}> {
     if (!this.username || !this.password) {
       console.log('GoCanvas not configured, returning mock status');

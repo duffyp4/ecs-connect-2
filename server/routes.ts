@@ -483,6 +483,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get most recent submission with workflow data
+  app.get("/api/gocanvas/recent-submission", async (req, res) => {
+    try {
+      console.log('=== GoCanvas Recent Submission API Called ===');
+      console.log('Headers:', req.headers);
+      console.log('URL:', req.url);
+      
+      const submission = await goCanvasService.getMostRecentSubmission();
+      console.log('=== GoCanvas Service Response ===');
+      console.log(JSON.stringify(submission, null, 2));
+      
+      // Ensure we're sending JSON
+      res.setHeader('Content-Type', 'application/json');
+      res.status(200).json(submission || { message: 'No submission data available' });
+    } catch (error) {
+      console.error("Error fetching recent submission:", error);
+      res.setHeader('Content-Type', 'application/json');
+      res.status(500).json({ error: "Failed to fetch recent submission", details: error.message });
+    }
+  });
+
   // Test direct submissions access
   app.get("/api/gocanvas/submissions", async (req, res) => {
     try {
