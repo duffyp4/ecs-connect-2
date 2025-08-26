@@ -529,16 +529,47 @@ export class GoCanvasService {
         allResponses: targetSubmission.responses || []
       };
 
+      // Log ALL form responses to find the exact fields we're looking for
+      console.log(`\n📋 SCANNING ALL ${targetSubmission.responses?.length || 0} FORM RESPONSES:`);
+      console.log(`🔍 Looking specifically for "Handoff Date" and "Handoff Time" fields...`);
+      console.log(`🔍 Also searching for values "08/26/2025" and "02:50 PM"...`);
+      
       // Search through all responses for handoff and time-related fields
       if (targetSubmission.responses && Array.isArray(targetSubmission.responses)) {
         targetSubmission.responses.forEach((response: any, index: number) => {
-          // Look for handoff-related fields
+          // Check for exact field label matches first
+          if (response.label === 'Handoff Date' || response.label === 'Handoff Time') {
+            console.log(`🎯🎯🎯 FOUND EXACT TARGET FIELD: ${response.label} = "${response.value}" (entry_id: ${response.entry_id}) 🎯🎯🎯`);
+          }
+          
+          // Check for specific values from the screenshot
+          if (response.value === '08/26/2025' || response.value === '02:50 PM') {
+            console.log(`🎯 FOUND TARGET VALUE: "${response.label}" = "${response.value}" (entry_id: ${response.entry_id})`);
+          }
+          
+          // Log only handoff-related or date/time fields to reduce noise
+          if (response.label && (
+            response.label.toLowerCase().includes('handoff') ||
+            response.label.toLowerCase().includes('date') ||
+            response.label.toLowerCase().includes('time') ||
+            response.type === 'Date' ||
+            response.type === 'Time'
+          )) {
+            console.log(`📋 Field ${index}: "${response.label}" = "${response.value}" (type: ${response.type}, entry_id: ${response.entry_id})`);
+          }
+          // Look for handoff-related fields (including exact matches for "Handoff Date" and "Handoff Time")
           if (response.label && (
             response.label.toLowerCase().includes('handoff') ||
             response.label.toLowerCase().includes('hand off') ||
             response.label.toLowerCase().includes('hand-off')
           )) {
-            console.log(`📋 Found handoff field: "${response.label}" = "${response.value}" (entry_id: ${response.entry_id})`);
+            console.log(`📋 Found handoff field: "${response.label}" = "${response.value}" (entry_id: ${response.entry_id}, type: ${response.type})`);
+            
+            // Special logging for exact matches
+            if (response.label === 'Handoff Date' || response.label === 'Handoff Time') {
+              console.log(`🎯 EXACT MATCH - ${response.label}: "${response.value}" (entry_id: ${response.entry_id})`);
+            }
+            
             handoffData.handoffFields.push({
               label: response.label,
               value: response.value,
