@@ -654,7 +654,7 @@ export class GoCanvasService {
       console.log(`  - ${fieldName}: "${r.value}"`);
       
       // Special logging for PO Number
-      if (r.entry_id === 714302757) {
+      if (r.entry_id === 714302736) {
         console.log(`🔍 PO NUMBER DEBUGGING:`);
         console.log(`   Field ID: ${r.entry_id}`);
         console.log(`   Value: "${r.value}"`);
@@ -686,7 +686,7 @@ export class GoCanvasService {
       'Note to Tech about Customer or service:': 714302733,
       'Contact Name': 714302734,
       'Contact Number': 714302735,
-      'PO Number': 714302757, // ✅ NEW PO Number field for form 5577570
+      'PO Number': 714302736, // ✅ FIRST PO Number field for form 5577570
       'Serial Number(s)': 714302737,
       'Tech Customer Question Inquiry': 714302738,
       'Shop Handoff': 714302742,
