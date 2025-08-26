@@ -778,6 +778,7 @@ export class GoCanvasService {
 
   private mapJobDataToFormResponses(jobData: any): any[] {
     // Load field mappings from the generated field map
+    console.log('🔍 Starting field mapping process...');
     let fieldMap: any = {};
     try {
       // Load dynamic field map from generated JSON file
