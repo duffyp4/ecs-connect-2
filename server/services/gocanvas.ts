@@ -755,34 +755,34 @@ export class GoCanvasService {
   }
 
   private getHardCodedFieldMap(): any {
-    // Hard-coded field mapping based on Testing Copy form (5568544) field IDs
+    // Hard-coded field mapping based on form 5577421 field IDs
     return {
-      'P21 Order Number (Enter after invoicing)': 712668556,
-      'Job ID': 712668557, // ✅ NEW: Job ID field now available!
-      'User ID': 712668558,
-      'Permission to Start': 712668559,
-      'Permission Denied Stop': 712668560,
-      'Shop Name': 712668561,
-      'Customer Name': 712668562,
-      'Customer Ship To': 712668564,
-      'P21 Ship to ID': 712668565,
-      'Customer Specific Instructions?': 712668566,
-      'Send Clamps & Gaskets?': 712668567,
-      'Preferred Process?': 712668568,
-      'Any Other Specific Instructions?': 712668569,
-      'Any comments for the tech about this submission?': 712668570,
-      'Note to Tech about Customer or service:': 712668571,
-      'Contact Name': 712668572,
-      'Contact Number': 712668573,
-      'PO Number': 712668574,
-      'Serial Number(s)': 712668575,
-      'Tech Customer Question Inquiry': 712668576,
-      'Shop Handoff': 712668580,
-      'Handoff Email workflow': 712668581,
-      'Submission Status': 712668582,
+      'P21 Order Number (Enter after invoicing)': 714287493,
+      'Job ID': 714287494, // ✅ Job ID field for form 5577421
+      'User ID': 714287495,
+      'Permission to Start': 714287496,
+      'Permission Denied Stop': 714287497,
+      'Shop Name': 714287498,
+      'Customer Name': 714287499,
+      'Customer Ship To': 714287501,
+      'P21 Ship to ID': 714287502,
+      'Customer Specific Instructions?': 714287503,
+      'Send Clamps & Gaskets?': 714287504,
+      'Preferred Process?': 714287505,
+      'Any Other Specific Instructions?': 714287506,
+      'Any comments for the tech about this submission?': 714287507,
+      'Note to Tech about Customer or service:': 714287508,
+      'Contact Name': 714287509,
+      'Contact Number': 714287510,
+      'PO Number': 714287532,
+      'Serial Number(s)': 714287512,
+      'Tech Customer Question Inquiry': 714287513,
+      'Shop Handoff': 714287517,
+      'Handoff Email workflow': 714287518,
+      'Submission Status': 714287519,
       // Alternative Job ID labels
-      'ECS Job ID': 712668557,
-      'Job Number': 712668557
+      'ECS Job ID': 714287494,
+      'Job Number': 714287494
     };
   }
 }
