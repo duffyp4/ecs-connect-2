@@ -279,6 +279,10 @@ export class GoCanvasService {
       console.log('Created:', detailData.created_at);
       console.log('Updated:', detailData.updated_at);
       console.log('Submitted:', detailData.submitted_at);
+      console.log('🔍 TIMEZONE ANALYSIS:');
+      console.log('  - Created format:', typeof detailData.created_at, detailData.created_at);
+      console.log('  - Updated format:', typeof detailData.updated_at, detailData.updated_at);
+      console.log('  - Submitted format:', typeof detailData.submitted_at, detailData.submitted_at);
       
       return {
         id: detailData.id,

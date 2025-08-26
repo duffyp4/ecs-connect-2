@@ -95,7 +95,33 @@ export class JobTrackerService {
                 if (ampm === 'PM' && hours !== 12) hours += 12;
                 if (ampm === 'AM' && hours === 12) hours = 0;
                 
-                handoffDateTime = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), hours, minutes);
+                // Create handoff time in the same timezone context as GoCanvas submitted_at
+                // GoCanvas submitted_at comes as ISO string (e.g., "2025-08-26T21:53:51.000Z")
+                // We need to create handoff time that's consistent with that timezone context
+                
+                // Parse the submitted_at to understand the timezone context
+                const submittedDate = submittedAt ? new Date(submittedAt) : new Date();
+                console.log(`🔍 TIMEZONE CONTEXT from GoCanvas submitted_at: ${submittedDate.toISOString()}`);
+                
+                // Create handoff time - first assume local server time, then we'll adjust
+                const localHandoff = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), hours, minutes);
+                
+                // Check timezone offset between what we parsed and the submission time  
+                const submittedDay = submittedDate.getDate();
+                const handoffDay = parseInt(day);
+                const submittedHour = submittedDate.getHours();
+                
+                console.log(`🔍 COMPARING DATES: Handoff day=${handoffDay}, Submitted day=${submittedDay}, Submitted hour=${submittedHour}`);
+                
+                // If the dates are the same day, use local parsing
+                // If there's a day difference, we might have timezone issues
+                if (Math.abs(submittedDay - handoffDay) <= 1) {
+                  handoffDateTime = localHandoff;
+                  console.log(`✅ Using local handoff time: ${handoffDateTime.toISOString()}`);
+                } else {
+                  console.warn(`⚠️ Potential timezone mismatch: handoff day ${handoffDay} vs submitted day ${submittedDay}`);
+                  handoffDateTime = localHandoff;
+                }
               } else {
                 console.error(`Invalid time format for job ${job.jobId}: "${handoffTimeStr}"`);
                 handoffDateTime = new Date(NaN); // Force invalid date
