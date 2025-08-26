@@ -612,13 +612,13 @@ export class GoCanvasService {
     
     // Add essential fields that might be missing from main mapping
     const essentialFields = [
-      { id: 712668557, data: jobData.jobId, default: "ECS-UNKNOWN", label: "Job ID" },
-      { id: 712668558, data: jobData.userId, default: "system@ecspart.com", label: "User ID" },
-      { id: 712668560, data: jobData.permissionDeniedStop, default: "No", label: "Permission Denied Stop" },
-      { id: 712668561, data: jobData.shopName, default: "Unknown", label: "Shop Name" },
-      { id: 712668562, data: jobData.customerName, default: "Unknown Customer", label: "Customer Name" },
-      { id: 712668564, data: jobData.customerShipTo, default: "N/A", label: "Customer Ship To" },
-      { id: 712668582, data: "New Submission", default: "New Submission", label: "Submission Status" }
+      { id: 714287494, data: jobData.jobId, default: "ECS-UNKNOWN", label: "Job ID" },
+      { id: 714287495, data: jobData.userId, default: "system@ecspart.com", label: "User ID" },
+      { id: 714287497, data: jobData.permissionDeniedStop, default: "No", label: "Permission Denied Stop" },
+      { id: 714287498, data: jobData.shopName, default: "Unknown", label: "Shop Name" },
+      { id: 714287499, data: jobData.customerName, default: "Unknown Customer", label: "Customer Name" },
+      { id: 714287501, data: jobData.customerShipTo, default: "N/A", label: "Customer Ship To" },
+      { id: 714287519, data: "New Submission", default: "New Submission", label: "Submission Status" }
     ];
 
     // Add missing essential fields
@@ -633,16 +633,16 @@ export class GoCanvasService {
       }
     }
 
-    // Ensure we have at least one response - never use fallback as it contains old form IDs
+    // Ensure we have at least one response
     if (responses.length === 0) {
-      console.warn('No responses mapped, but avoiding fallback to prevent form ID conflicts');
-      // Add minimum required fields for Testing Copy form
+      console.warn('No responses mapped, adding minimum required fields');
+      // Add minimum required fields for form 5577421
       responses.push({
-        entry_id: 712668557,
+        entry_id: 714287494,
         value: jobData.jobId || "ECS-UNKNOWN"
       });
       responses.push({
-        entry_id: 712668582,
+        entry_id: 714287519,
         value: "New Submission"
       });
     }
@@ -656,103 +656,6 @@ export class GoCanvasService {
     return responses;
   }
 
-  private getFallbackResponses(jobData: any): any[] {
-    // Enhanced fallback using known field IDs with actual form data
-    const responses = [];
-    
-    console.log('Using enhanced fallback with actual form data:');
-    console.log(`  - shopName: "${jobData.shopName}"`);
-    console.log(`  - customerShipTo: "${jobData.customerShipTo}"`);
-    
-    // Add Job ID if available (will use once the field appears in GoCanvas)
-    if (jobData.jobId) {
-      console.log(`Job ID ${jobData.jobId} available for GoCanvas but field mapping not yet found`);
-    }
-    
-    // Add ALL required fields with ACTUAL form data - no generic defaults
-    
-    // Job ID (NEW - required) - USE ACTUAL ECS JOB ID
-    responses.push({
-      entry_id: 712668557,
-      value: jobData.jobId || "ECS-UNKNOWN"
-    });
-    
-    // User ID (required)
-    responses.push({
-      entry_id: 712668558,
-      value: jobData.userId || "system@ecspart.com"
-    });
-    
-    // Permission Denied Stop (required)
-    responses.push({
-      entry_id: 712668560,
-      value: jobData.permissionDeniedStop || "No"
-    });
-    
-    // Shop Name (required) - USE ACTUAL DATA
-    responses.push({
-      entry_id: 712668561,
-      value: jobData.shopName || "Unknown"
-    });
-    
-    // Customer Name (required) - USE ACTUAL DATA
-    responses.push({
-      entry_id: 712668562,
-      value: jobData.customerName || "Unknown Customer"
-    });
-    
-    // Customer Ship To (required) - USE ACTUAL DATA
-    responses.push({
-      entry_id: 712668564,
-      value: jobData.customerShipTo || "N/A"
-    });
-    
-    // Contact Name (required) - USE ACTUAL DATA
-    responses.push({
-      entry_id: 712668572,
-      value: jobData.contactName || "Unknown Contact"
-    });
-    
-    // Contact Number (required) - USE ACTUAL DATA
-    responses.push({
-      entry_id: 712668573,
-      value: jobData.contactNumber || "000-000-0000"
-    });
-    
-    // PO Number (required) - USE ACTUAL DATA
-    responses.push({
-      entry_id: 712668574,
-      value: jobData.poNumber || "N/A"
-    });
-    
-    // Serial Numbers (required) - USE ACTUAL DATA
-    responses.push({
-      entry_id: 712668575,
-      value: jobData.serialNumbers || "N/A"
-    });
-    
-    
-    // Shop Handoff (required) - USE ACTUAL DATA
-    responses.push({
-      entry_id: 712668580,
-      value: jobData.shopHandoff || "system@ecspart.com"
-    });
-    
-    // Submission Status (required)
-    responses.push({
-      entry_id: 712668582,
-      value: "New Submission"
-    });
-    
-    console.log(`Created ${responses.length} enhanced fallback responses for required fields`);
-    console.log('Enhanced fallback field summary:');
-    responses.forEach(r => {
-      const fieldName = Object.entries(this.getHardCodedFieldMap()).find(([label, id]) => id === r.entry_id)?.[0] || `Unknown field ${r.entry_id}`;
-      console.log(`  - ${fieldName}: "${r.value}"`);
-    });
-    
-    return responses;
-  }
 
   private getHardCodedFieldMap(): any {
     // Hard-coded field mapping based on form 5577421 field IDs
