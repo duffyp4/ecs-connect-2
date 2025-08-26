@@ -827,7 +827,7 @@ export class GoCanvasService {
       { data: jobData.noteToTechAboutCustomer, labels: ['Note to Tech about Customer or service:'] },
       { data: jobData.contactName, labels: ['Contact Name'] },
       { data: jobData.contactNumber, labels: ['Contact Number'] },
-      { data: jobData.poNumber, labels: ['PO Number'] },
+      { data: jobData.poNumber, labels: ['PO Number (Check In)', 'PO Number'] },
       { data: jobData.serialNumbers, labels: ['Serial Number(s)'] },
       { data: jobData.techCustomerQuestionInquiry, labels: ['Tech Customer Question Inquiry'] },
       { data: jobData.shopHandoff, labels: ['Shop Handoff'] },
