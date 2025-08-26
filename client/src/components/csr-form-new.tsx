@@ -281,7 +281,7 @@ export default function CSRForm() {
             <Alert>
               <Clock className="h-4 w-4" />
               <AlertDescription>
-                <strong>Initiated:</strong> Time recorded upon form submission
+                <strong>Initiated:</strong> Time recorded upon check-in form submission
               </AlertDescription>
             </Alert>
           </div>
