@@ -238,6 +238,21 @@
     }
   }
   
+  /* Form field alignment improvements */
+  .grid > * {
+    min-height: 0; /* Prevent grid items from stretching */
+  }
+  
+  /* Ensure consistent form field heights */
+  input, select, [role="combobox"] {
+    min-height: 2.5rem;
+  }
+  
+  /* Form item consistency */
+  .space-y-6 [data-field] {
+    margin-bottom: 1.5rem;
+  }
+  
   /* Mobile optimizations */
   @media (max-width: 1024px) {
     .sidebar {

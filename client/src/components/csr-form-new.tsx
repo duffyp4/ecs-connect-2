@@ -334,7 +334,7 @@ export default function CSRForm() {
               />
 
               {/* Permission Controls */}
-              <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
                 <FormField
                   control={form.control}
                   name="permissionToStart"
@@ -375,7 +375,7 @@ export default function CSRForm() {
               </div>
 
               {/* Shop and Customer Info - Reference Data Fields */}
-              <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
                 <FormField
                   control={form.control}
                   name="shopName"
@@ -440,7 +440,7 @@ export default function CSRForm() {
               </div>
 
               {/* Customer Ship To and P21 Ship ID - Reference Data Fields */}
-              <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
                 <FormField
                   control={form.control}
                   name="customerShipTo"
