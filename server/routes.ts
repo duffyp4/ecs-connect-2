@@ -525,6 +525,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get handoff time data for a specific job ID
+  app.get("/api/gocanvas/handoff-time/:jobId", async (req, res) => {
+    try {
+      console.log('=== GoCanvas Handoff Time API Called ===');
+      const jobId = req.params.jobId;
+      console.log('Job ID:', jobId);
+      
+      const handoffData = await goCanvasService.getHandoffTimeData(jobId);
+      console.log('=== GoCanvas Handoff Service Response ===');
+      console.log(JSON.stringify(handoffData, null, 2));
+      
+      // Ensure we're sending JSON
+      res.setHeader('Content-Type', 'application/json');
+      res.status(200).json(handoffData || { message: 'No handoff data available for this job' });
+    } catch (error) {
+      console.error("Error fetching handoff time data:", error);
+      res.setHeader('Content-Type', 'application/json');
+      res.status(500).json({ error: "Failed to fetch handoff time data", details: error.message });
+    }
+  });
+
   // Test direct submissions access
   app.get("/api/gocanvas/submissions", async (req, res) => {
     try {

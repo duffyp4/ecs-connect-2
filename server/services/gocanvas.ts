@@ -447,6 +447,169 @@ export class GoCanvasService {
     }
   }
 
+  async getHandoffTimeData(jobId: string): Promise<any> {
+    if (!this.username || !this.password) {
+      console.log('GoCanvas not configured, cannot fetch handoff data');
+      return null;
+    }
+
+    try {
+      console.log(`\n=== FETCHING HANDOFF TIME DATA FOR JOB: ${jobId} ===`);
+      
+      // Get all submissions for the form
+      const response = await fetch(`${this.baseUrl}/submissions?form_id=${this.formId}`, {
+        headers: {
+          'Authorization': this.getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        console.warn(`Failed to fetch submissions: ${response.status}`);
+        return null;
+      }
+
+      const data = await response.json();
+      const submissions = Array.isArray(data) ? data : (data.submissions || data.data || []);
+      
+      console.log(`Found ${submissions.length} submissions to search through`);
+      
+      // Find the submission with matching job ID
+      let targetSubmission = null;
+      
+      for (const submission of submissions) {
+        try {
+          const detailResponse = await fetch(`${this.baseUrl}/submissions/${submission.id}`, {
+            headers: {
+              'Authorization': this.getAuthHeader(),
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (detailResponse.ok) {
+            const detailData = await detailResponse.json();
+            
+            // Search through form fields for our Job ID
+            if (detailData.responses) {
+              const jobIdField = detailData.responses.find((field: any) => 
+                field.value === jobId && 
+                (field.label?.toLowerCase().includes('job') || field.entry_id === 714302719)
+              );
+              
+              if (jobIdField) {
+                console.log(`🎯 Found target submission for job ${jobId}!`);
+                targetSubmission = detailData;
+                break;
+              }
+            }
+          }
+        } catch (err) {
+          console.log(`Error checking submission ${submission.id}:`, err);
+        }
+      }
+      
+      if (!targetSubmission) {
+        console.log(`❌ No submission found for job ${jobId}`);
+        return null;
+      }
+
+      console.log('\n=== ANALYZING SUBMISSION FOR HANDOFF TIME DATA ===');
+      
+      // Look for handoff-related fields
+      const handoffData = {
+        submissionId: targetSubmission.id,
+        jobId: jobId,
+        status: targetSubmission.status,
+        created_at: targetSubmission.created_at,
+        updated_at: targetSubmission.updated_at,
+        submitted_at: targetSubmission.submitted_at,
+        handoffFields: [],
+        timeFields: [],
+        workflowFields: [],
+        allResponses: targetSubmission.responses || []
+      };
+
+      // Search through all responses for handoff and time-related fields
+      if (targetSubmission.responses && Array.isArray(targetSubmission.responses)) {
+        targetSubmission.responses.forEach((response: any, index: number) => {
+          // Look for handoff-related fields
+          if (response.label && (
+            response.label.toLowerCase().includes('handoff') ||
+            response.label.toLowerCase().includes('hand off') ||
+            response.label.toLowerCase().includes('hand-off')
+          )) {
+            console.log(`📋 Found handoff field: "${response.label}" = "${response.value}" (entry_id: ${response.entry_id})`);
+            handoffData.handoffFields.push({
+              label: response.label,
+              value: response.value,
+              entry_id: response.entry_id,
+              type: response.type,
+              index: index
+            });
+          }
+          
+          // Look for time/date fields
+          if (response.type === 'Time' || response.type === 'Date' || response.type === 'DateTime' || 
+              (response.label && (response.label.toLowerCase().includes('time') || 
+                                 response.label.toLowerCase().includes('date')))) {
+            console.log(`⏰ Found time field: "${response.label}" = "${response.value}" (type: ${response.type}, entry_id: ${response.entry_id})`);
+            handoffData.timeFields.push({
+              label: response.label,
+              value: response.value,
+              entry_id: response.entry_id,
+              type: response.type,
+              index: index
+            });
+          }
+          
+          // Look for workflow-related fields
+          if (response.label && (
+            response.label.toLowerCase().includes('workflow') ||
+            response.label.toLowerCase().includes('state') ||
+            response.label.toLowerCase().includes('status') ||
+            response.label.toLowerCase().includes('check in') ||
+            response.label.toLowerCase().includes('checkin')
+          )) {
+            console.log(`🔄 Found workflow field: "${response.label}" = "${response.value}" (entry_id: ${response.entry_id})`);
+            handoffData.workflowFields.push({
+              label: response.label,
+              value: response.value,
+              entry_id: response.entry_id,
+              type: response.type,
+              index: index
+            });
+          }
+        });
+      }
+
+      // Look for workflow-related data in top-level fields
+      const workflowTopLevelFields = ['workflow_states', 'workflow_history', 'handoffs', 'transitions', 'workflow', 'states', 'workflow_data'];
+      workflowTopLevelFields.forEach(field => {
+        if (targetSubmission[field]) {
+          console.log(`🔄 Found top-level workflow field '${field}':`, JSON.stringify(targetSubmission[field], null, 2));
+          handoffData.workflowFields.push({
+            label: field,
+            value: targetSubmission[field],
+            entry_id: null,
+            type: 'top_level',
+            index: null
+          });
+        }
+      });
+
+      console.log('\n=== HANDOFF DATA SUMMARY ===');
+      console.log(`Found ${handoffData.handoffFields.length} handoff-related fields`);
+      console.log(`Found ${handoffData.timeFields.length} time-related fields`);
+      console.log(`Found ${handoffData.workflowFields.length} workflow-related fields`);
+      
+      return handoffData;
+      
+    } catch (error) {
+      console.error('Error fetching handoff time data:', error);
+      return null;
+    }
+  }
+
   async checkSubmissionStatus(jobId: string): Promise<{status: 'pending' | 'completed' | 'in_progress', submittedAt?: string}> {
     if (!this.username || !this.password) {
       console.log('GoCanvas not configured, returning mock status');
