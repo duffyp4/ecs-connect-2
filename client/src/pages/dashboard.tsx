@@ -9,6 +9,7 @@ export default function Dashboard() {
     activeJobs: number;
     completedToday: number;
     averageTurnaround: number;
+    averageTimeWithTech: number;
     overdueJobs: number;
   }>({
     queryKey: ["/api/metrics"],
@@ -31,11 +32,9 @@ export default function Dashboard() {
     );
   }
 
-  const formatTurnaroundTime = (minutes: number | null): string => {
-    if (!minutes) return "N/A";
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+  const formatTurnaroundTime = (hours: number | null): string => {
+    if (!hours || hours === 0) return "N/A";
+    return `${hours}h`;
   };
 
   return (
@@ -50,7 +49,7 @@ export default function Dashboard() {
       </div>
 
       {/* Metrics Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2 sm:gap-4">
         <Card className="metric-card">
           <CardContent className="p-3 sm:p-6 text-center">
             <div className="flex items-center justify-center mb-2">
@@ -83,7 +82,19 @@ export default function Dashboard() {
             <div className="metric-number text-[var(--ecs-warning)]">
               {formatTurnaroundTime(metrics?.averageTurnaround || 0)}
             </div>
-            <div className="text-muted-foreground text-xs sm:text-sm">Avg Turnaround</div>
+            <div className="text-muted-foreground text-xs sm:text-sm">Full Turnaround</div>
+          </CardContent>
+        </Card>
+
+        <Card className="metric-card">
+          <CardContent className="p-3 sm:p-6 text-center">
+            <div className="flex items-center justify-center mb-2">
+              <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-[var(--ecs-info)]" />
+            </div>
+            <div className="metric-number text-[var(--ecs-info)]">
+              {formatTurnaroundTime(metrics?.averageTimeWithTech || 0)}
+            </div>
+            <div className="text-muted-foreground text-xs sm:text-sm">Time with Tech</div>
           </CardContent>
         </Card>
 
@@ -150,11 +161,22 @@ export default function Dashboard() {
                           : '---'}
                       </td>
                       <td className="p-4">
-                        {job.status === 'completed' && job.turnaroundTime
-                          ? formatTurnaroundTime(job.turnaroundTime)
-                          : job.status === 'pending' || job.status === 'in-progress'
-                          ? `${Math.round((Date.now() - new Date(job.initiatedAt).getTime()) / (1000 * 60))}m elapsed`
-                          : 'N/A'}
+                        {job.status === 'completed' ? (
+                          <div className="space-y-1">
+                            <div className="text-sm">
+                              <span className="text-muted-foreground">Full:</span>{' '}
+                              {job.turnaroundTime ? `${Math.round(job.turnaroundTime / 60 * 10) / 10}h` : 'N/A'}
+                            </div>
+                            <div className="text-sm">
+                              <span className="text-muted-foreground">Tech:</span>{' '}
+                              {job.timeWithTech ? `${Math.round(job.timeWithTech / 60 * 10) / 10}h` : 'N/A'}
+                            </div>
+                          </div>
+                        ) : job.status === 'pending' || job.status === 'in-progress' ? (
+                          `${Math.round((Date.now() - new Date(job.initiatedAt).getTime()) / (1000 * 60))}m elapsed`
+                        ) : (
+                          'N/A'
+                        )}
                       </td>
                     </tr>
                   ))

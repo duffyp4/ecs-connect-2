@@ -33,8 +33,10 @@ export const jobs = pgTable("jobs", {
   // Tracking Fields
   status: text("status").notNull().default("pending"), // pending, in-progress, completed, overdue
   initiatedAt: timestamp("initiated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  handoffAt: timestamp("handoff_at"), // when handed off to technician
   completedAt: timestamp("completed_at"),
-  turnaroundTime: integer("turnaround_time"), // in minutes
+  turnaroundTime: integer("turnaround_time"), // in minutes (Full Turnaround: Initiated to Completed)
+  timeWithTech: integer("time_with_tech"), // in minutes (Time with Tech: Handoff to Completed)
   
   // GoCanvas Integration
   gocanvasSubmissionId: text("gocanvas_submission_id"),
@@ -57,11 +59,13 @@ export const insertJobSchema = createInsertSchema(jobs).omit({
   jobId: true,
   initiatedAt: true,
   status: true,
+  handoffAt: true,
+  completedAt: true,
+  turnaroundTime: true,
+  timeWithTech: true,
   gocanvasSubmissionId: true,
   gocanvasSynced: true,
   googleSheetsSynced: true,
-  completedAt: true,
-  turnaroundTime: true,
 }).extend({
   poNumber: z.string().min(1, "PO Number is required"),
 });

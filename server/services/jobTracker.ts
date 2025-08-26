@@ -60,17 +60,56 @@ export class JobTrackerService {
         // Use the actual GoCanvas submission time instead of our detection time
         const completedTime = submittedAt ? new Date(submittedAt) : new Date();
         
+        // Calculate Full Turnaround Time (Initiated to Completed)
         const turnaroundTime = job.initiatedAt ? 
           Math.round((completedTime.getTime() - new Date(job.initiatedAt).getTime()) / (1000 * 60)) : 
           null;
 
+        // Get handoff time data and calculate Time with Tech
+        let handoffTime = null;
+        let timeWithTech = null;
+        
+        try {
+          const handoffData = await goCanvasService.getHandoffTimeData(job.jobId);
+          if (handoffData && handoffData.handoffFields) {
+            const handoffDateField = handoffData.handoffFields.find((f: any) => f.label === 'Handoff Date');
+            const handoffTimeField = handoffData.handoffFields.find((f: any) => f.label === 'Handoff Time');
+            
+            if (handoffDateField && handoffTimeField) {
+              // Combine handoff date and time into a proper timestamp
+              const handoffDateStr = handoffDateField.value; // e.g., "08/26/2025"
+              const handoffTimeStr = handoffTimeField.value; // e.g., "02:50 PM"
+              
+              // Parse the handoff date and time
+              const handoffDateTime = new Date(`${handoffDateStr} ${handoffTimeStr}`);
+              
+              if (!isNaN(handoffDateTime.getTime())) {
+                handoffTime = handoffDateTime;
+                
+                // Calculate Time with Tech (Handoff to Completed)
+                timeWithTech = Math.round((completedTime.getTime() - handoffTime.getTime()) / (1000 * 60));
+                
+                console.log(`Job ${job.jobId} handoff time: ${handoffDateTime.toISOString()}, Time with Tech: ${timeWithTech} minutes`);
+              } else {
+                console.warn(`Could not parse handoff time for job ${job.jobId}: ${handoffDateStr} ${handoffTimeStr}`);
+              }
+            }
+          }
+        } catch (handoffError) {
+          console.warn(`Could not retrieve handoff time for job ${job.jobId}:`, handoffError);
+        }
+
         updates = {
           status: 'completed',
           completedAt: completedTime,
-          turnaroundTime,
+          turnaroundTime, // Full Turnaround Time (Initiated to Completed)
+          handoffAt: handoffTime,
+          timeWithTech, // Time with Tech (Handoff to Completed)
         };
 
-        console.log(`Job ${job.jobId} completed with turnaround time: ${turnaroundTime} minutes (using GoCanvas timestamp: ${submittedAt || 'detection time'})`);
+        console.log(`Job ${job.jobId} completed:
+          - Full Turnaround Time: ${turnaroundTime} minutes (${Math.round(turnaroundTime / 60 * 10) / 10} hours)
+          - Time with Tech: ${timeWithTech || 'N/A'} minutes${timeWithTech ? ` (${Math.round(timeWithTech / 60 * 10) / 10} hours)` : ''}`);
       } else if (status === 'in_progress' && job.status === 'pending') {
         updates = {
           status: 'in_progress',
@@ -112,6 +151,7 @@ export class JobTrackerService {
     activeJobs: number;
     completedToday: number;
     averageTurnaround: number;
+    averageTimeWithTech: number;
     overdueJobs: number;
   }> {
     try {
@@ -129,12 +169,22 @@ export class JobTrackerService {
         new Date(job.completedAt) >= today
       ).length;
 
-      const completedJobs = allJobs.filter(job => 
+      // Jobs with Full Turnaround Time data
+      const completedJobsWithTurnaround = allJobs.filter(job => 
         job.status === 'completed' && job.turnaroundTime
       );
 
-      const averageTurnaround = completedJobs.length > 0 ? 
-        completedJobs.reduce((sum, job) => sum + (job.turnaroundTime || 0), 0) / completedJobs.length :
+      const averageTurnaround = completedJobsWithTurnaround.length > 0 ? 
+        completedJobsWithTurnaround.reduce((sum, job) => sum + (job.turnaroundTime || 0), 0) / completedJobsWithTurnaround.length :
+        0;
+
+      // Jobs with Time with Tech data
+      const completedJobsWithTechTime = allJobs.filter(job => 
+        job.status === 'completed' && job.timeWithTech
+      );
+
+      const averageTimeWithTech = completedJobsWithTechTime.length > 0 ? 
+        completedJobsWithTechTime.reduce((sum, job) => sum + (job.timeWithTech || 0), 0) / completedJobsWithTechTime.length :
         0;
 
       const overdueJobs = allJobs.filter(job => job.status === 'overdue').length;
@@ -143,11 +193,12 @@ export class JobTrackerService {
         activeJobs,
         completedToday,
         averageTurnaround: Math.round(averageTurnaround / 60 * 10) / 10, // Convert to hours with 1 decimal
+        averageTimeWithTech: Math.round(averageTimeWithTech / 60 * 10) / 10, // Convert to hours with 1 decimal
         overdueJobs,
       };
     } catch (error) {
       console.error('Error calculating metrics:', error);
-      return { activeJobs: 0, completedToday: 0, averageTurnaround: 0, overdueJobs: 0 };
+      return { activeJobs: 0, completedToday: 0, averageTurnaround: 0, averageTimeWithTech: 0, overdueJobs: 0 };
     }
   }
 }
