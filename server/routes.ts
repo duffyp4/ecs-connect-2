@@ -525,6 +525,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all field labels for a specific job ID (debugging)
+  app.get("/api/gocanvas/all-fields/:jobId", async (req, res) => {
+    try {
+      console.log('=== GoCanvas All Fields API Called ===');
+      const jobId = req.params.jobId;
+      
+      // Get all submissions for the form
+      const response = await fetch(`https://api.gocanvas.com/api/v3/submissions?form_id=5577570`, {
+        headers: {
+          'Authorization': `Basic ${Buffer.from(`${process.env.GOCANVAS_USERNAME}:${process.env.GOCANVAS_PASSWORD}`).toString('base64')}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        return res.status(500).json({ error: 'Failed to fetch submissions' });
+      }
+
+      const data = await response.json();
+      const submissions = Array.isArray(data) ? data : (data.submissions || data.data || []);
+      
+      // Find the submission with matching job ID
+      let targetSubmission = null;
+      
+      for (const submission of submissions) {
+        try {
+          const detailResponse = await fetch(`https://api.gocanvas.com/api/v3/submissions/${submission.id}`, {
+            headers: {
+              'Authorization': `Basic ${Buffer.from(`${process.env.GOCANVAS_USERNAME}:${process.env.GOCANVAS_PASSWORD}`).toString('base64')}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (detailResponse.ok) {
+            const detailData = await detailResponse.json();
+            
+            // Search through form fields for our Job ID
+            if (detailData.responses) {
+              const jobIdField = detailData.responses.find((field: any) => 
+                field.value === jobId && 
+                (field.label?.toLowerCase().includes('job') || field.entry_id === 714302719)
+              );
+              
+              if (jobIdField) {
+                targetSubmission = detailData;
+                break;
+              }
+            }
+          }
+        } catch (err) {
+          // Continue searching
+        }
+      }
+      
+      if (!targetSubmission) {
+        return res.status(404).json({ error: 'Job submission not found' });
+      }
+
+      // Return all field labels and search for exact matches
+      const allLabels = targetSubmission.responses.map((r: any) => r.label);
+      const handoffDateField = targetSubmission.responses.find((r: any) => r.label === 'Handoff Date');
+      const handoffTimeField = targetSubmission.responses.find((r: any) => r.label === 'Handoff Time');
+      
+      res.json({
+        jobId,
+        totalFields: targetSubmission.responses.length,
+        allFieldLabels: allLabels,
+        handoffDateFound: !!handoffDateField,
+        handoffTimeFound: !!handoffTimeField,
+        handoffDateData: handoffDateField || null,
+        handoffTimeData: handoffTimeField || null,
+        // Include fields containing "handoff" in the name
+        handoffFields: targetSubmission.responses.filter((r: any) => 
+          r.label && r.label.toLowerCase().includes('handoff')
+        )
+      });
+      
+    } catch (error) {
+      console.error("Error fetching all fields:", error);
+      res.status(500).json({ error: "Failed to fetch all fields", details: error.message });
+    }
+  });
+
   // Get handoff time data for a specific job ID
   app.get("/api/gocanvas/handoff-time/:jobId", async (req, res) => {
     try {

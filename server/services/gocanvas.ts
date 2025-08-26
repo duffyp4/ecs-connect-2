@@ -628,10 +628,54 @@ export class GoCanvasService {
         }
       });
 
+      console.log('\n=== SEARCHING FOR EXACT FIELD NAMES ===');
+      
+      // Search for exact field matches
+      const exactHandoffDate = targetSubmission.responses?.find((r: any) => r.label === 'Handoff Date');
+      const exactHandoffTime = targetSubmission.responses?.find((r: any) => r.label === 'Handoff Time');
+      
+      if (exactHandoffDate) {
+        console.log(`🎯 FOUND EXACT "Handoff Date": "${exactHandoffDate.value}" (entry_id: ${exactHandoffDate.entry_id})`);
+        handoffData.handoffFields.push({
+          label: exactHandoffDate.label,
+          value: exactHandoffDate.value,
+          entry_id: exactHandoffDate.entry_id,
+          type: exactHandoffDate.type,
+          index: 'exact_match'
+        });
+      } else {
+        console.log('❌ "Handoff Date" field not found');
+      }
+      
+      if (exactHandoffTime) {
+        console.log(`🎯 FOUND EXACT "Handoff Time": "${exactHandoffTime.value}" (entry_id: ${exactHandoffTime.entry_id})`);
+        handoffData.handoffFields.push({
+          label: exactHandoffTime.label,
+          value: exactHandoffTime.value,
+          entry_id: exactHandoffTime.entry_id,
+          type: exactHandoffTime.type,
+          index: 'exact_match'
+        });
+      } else {
+        console.log('❌ "Handoff Time" field not found');
+      }
+      
+      // Log first 50 field labels to see what's available
+      console.log('\n=== FIRST 50 FIELD LABELS ===');
+      if (targetSubmission.responses && Array.isArray(targetSubmission.responses)) {
+        targetSubmission.responses.slice(0, 50).forEach((response: any, index: number) => {
+          console.log(`${index}: "${response.label}"`);
+        });
+        
+        // Also return all field labels in the response for easier inspection
+        handoffData.allFieldLabels = targetSubmission.responses.map((r: any) => r.label);
+      }
+      
       console.log('\n=== HANDOFF DATA SUMMARY ===');
       console.log(`Found ${handoffData.handoffFields.length} handoff-related fields`);
       console.log(`Found ${handoffData.timeFields.length} time-related fields`);
       console.log(`Found ${handoffData.workflowFields.length} workflow-related fields`);
+      console.log(`Total responses examined: ${targetSubmission.responses?.length || 0}`);
       
       return handoffData;
       
