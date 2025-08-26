@@ -12,8 +12,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ClipboardList, Send, X, Info, Clock, Database } from "lucide-react";
+import { ClipboardList, Send, X, Info, Clock, Database, Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { z } from "zod";
 
 type FormData = z.infer<typeof insertJobSchema>;
@@ -23,6 +26,7 @@ export default function CSRForm() {
   const queryClient = useQueryClient();
   const [generatedJobId, setGeneratedJobId] = useState<string>("");
   const [currentTimestamp, setCurrentTimestamp] = useState<string>("");
+  const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
 
   // Fetch technicians
   const { data: technicians = [] } = useQuery<any[]>({
@@ -417,24 +421,81 @@ export default function CSRForm() {
                       <FormLabel className="flex items-center gap-1">
                         <Database className="h-3 w-3 text-muted-foreground" /> Customer Name *
                       </FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
-                        <FormControl>
-                          <SelectTrigger data-testid="select-customer-name">
-                            <SelectValue placeholder="Select customer" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {isLoadingCustomers ? (
-                            <SelectItem value="loading" disabled>Loading customers...</SelectItem>
-                          ) : (
-                            customerNames.slice(0, 100).map((customer) => (
-                              <SelectItem key={customer} value={customer}>
-                                {customer}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
+                      <Popover open={customerSearchOpen} onOpenChange={setCustomerSearchOpen}>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={customerSearchOpen}
+                              className="w-full justify-between"
+                              data-testid="select-customer-name"
+                            >
+                              {field.value || "Select or type customer name..."}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[400px] p-0">
+                          <Command shouldFilter={false}>
+                            <div className="flex items-center border-b px-3">
+                              <Database className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                              <Input
+                                placeholder="Search customers or enter custom name..."
+                                value={field.value || ""}
+                                onChange={(e) => field.onChange(e.target.value)}
+                                className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                              />
+                            </div>
+                            <CommandList>
+                              {isLoadingCustomers ? (
+                                <div className="py-6 text-center text-sm">Loading customers...</div>
+                              ) : (
+                                <>
+                                  {customerNames
+                                    .filter((customer) =>
+                                      customer.toLowerCase().includes((field.value || "").toLowerCase())
+                                    )
+                                    .slice(0, 100)
+                                    .map((customer) => (
+                                      <CommandItem
+                                        key={customer}
+                                        value={customer}
+                                        onSelect={() => {
+                                          field.onChange(customer);
+                                          setCustomerSearchOpen(false);
+                                        }}
+                                      >
+                                        <Check
+                                          className={cn(
+                                            "mr-2 h-4 w-4",
+                                            field.value === customer ? "opacity-100" : "opacity-0"
+                                          )}
+                                        />
+                                        {customer}
+                                      </CommandItem>
+                                    ))}
+                                  {field.value && 
+                                   !customerNames.some(customer => 
+                                     customer.toLowerCase() === field.value.toLowerCase()
+                                   ) && (
+                                    <div className="px-2 py-1 text-sm text-muted-foreground border-t">
+                                      Press Enter or click outside to use "{field.value}" as custom customer
+                                    </div>
+                                  )}
+                                  {!isLoadingCustomers && 
+                                   customerNames
+                                     .filter((customer) =>
+                                       customer.toLowerCase().includes((field.value || "").toLowerCase())
+                                     ).length === 0 && !field.value && (
+                                    <div className="py-6 text-center text-sm">No customers found</div>
+                                  )}
+                                </>
+                              )}
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}
