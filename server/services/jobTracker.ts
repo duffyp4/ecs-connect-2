@@ -122,84 +122,44 @@ export class JobTrackerService {
               const gpsField = handoffData.responses?.find((f: any) => 
                 f.label === 'New GPS' || f.entry_id === 714491454
               );
-              // Combine handoff date and time into a proper timestamp
-              const handoffDateStr = handoffDateField.value; // e.g., "08/26/2025"
-              const handoffTimeStr = handoffTimeField.value; // e.g., "02:50 PM"
-              
-              // Parse the handoff date and time more reliably
-              // handoffDateStr format: "08/26/2025", handoffTimeStr format: "02:50 PM"
-              const [month, day, year] = handoffDateStr.split('/');
-              let [time, ampm] = handoffTimeStr.trim().split(' ').filter((part: string) => part); // Remove extra spaces
-              let hours = 0;
-              let minutes = 0;
-              
-              if (time && ampm) {
-                [hours, minutes] = time.split(':').map(Number);
-              
-                // Convert to 24-hour format
-                if (ampm === 'PM' && hours !== 12) hours += 12;
-                if (ampm === 'AM' && hours === 12) hours = 0;
+              if (handoffDateField && handoffTimeField) {
+                const handoffDateStr = handoffDateField.value; // e.g., "08/26/2025"
+                const handoffTimeStr = handoffTimeField.value; // e.g., "02:50 PM"
+                console.log(`🔄 Processing handoff fields: Date="${handoffDateStr}", Time="${handoffTimeStr}"`);
                 
-                // Create handoff time in the same timezone context as GoCanvas submitted_at
-                // GoCanvas submitted_at comes as ISO string (e.g., "2025-08-26T21:53:51.000Z")
-                // We need to create handoff time that's consistent with that timezone context
-                
-                // Parse the submitted_at to understand the timezone context
-                const submittedDate = submittedAt ? new Date(submittedAt) : new Date();
-                console.log(`🔍 TIMEZONE CONTEXT from GoCanvas submitted_at: ${submittedDate.toISOString()}`);
-                
-                // TIMEZONE FIX: Users enter handoff times in their local timezone (likely EST/CST)
-                // but we need to convert to UTC to match GoCanvas submitted_at timestamps
-                
-                // First, create handoff time assuming user's local timezone (EST = UTC-5)
-                const userLocalHandoff = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), hours, minutes);
-                
-                // Estimate timezone offset based on completion time vs handoff time comparison
-                const submittedHour = submittedDate.getHours();
-                const estimatedLocalHour = hours + (ampm === 'PM' && hours !== 12 ? 12 : 0) + (ampm === 'AM' && hours === 12 ? -12 : 0);
-                const hourDifference = submittedHour - estimatedLocalHour;
-                
-                console.log(`🔍 TIMEZONE ANALYSIS:`);
-                console.log(`  - Submitted hour (UTC): ${submittedHour}`);
-                console.log(`  - Handoff hour (as entered): ${estimatedLocalHour}`);
-                console.log(`  - Estimated timezone offset: ${hourDifference} hours`);
-                
-                // Apply timezone offset to convert user local time to UTC
-                // Common US timezones: EST (-5), CST (-6), MST (-7), PST (-8)
-                let timezoneOffsetHours = 5; // Default to EST (UTC-5)
-                if (Math.abs(hourDifference - 5) < 2) timezoneOffsetHours = 5; // EST
-                else if (Math.abs(hourDifference - 6) < 2) timezoneOffsetHours = 6; // CST
-                else if (Math.abs(hourDifference - 7) < 2) timezoneOffsetHours = 7; // MST
-                else if (Math.abs(hourDifference - 8) < 2) timezoneOffsetHours = 8; // PST
-                
-                // Convert to UTC by adding the timezone offset
-                handoffDateTime = new Date(userLocalHandoff.getTime() + (timezoneOffsetHours * 60 * 60 * 1000));
-                
-                console.log(`🔧 TIMEZONE CORRECTION:`);
-                console.log(`  - User local time: ${userLocalHandoff.toISOString()}`);
-                console.log(`  - Applied offset: +${timezoneOffsetHours} hours (UTC-${timezoneOffsetHours})`);
-                console.log(`  - Corrected UTC time: ${handoffDateTime.toISOString()}`);
+                if (gpsField && gpsField.value) {
+                  console.log(`📍 GPS field available: "${gpsField.value}"`);
+                  
+                  // PRIORITY 1: Try GPS timestamp first (most accurate, already UTC)
+                  const gpsTimestamp = timezoneService.extractGPSTimestamp(gpsField.value);
+                  if (gpsTimestamp) {
+                    console.log(`✅ Using GPS timestamp: ${gpsTimestamp.toISOString()}`);
+                    handoffDateTime = gpsTimestamp;
+                  } else {
+                    console.log(`⚠️ GPS timestamp extraction failed, trying timezone conversion...`);
+                    
+                    // PRIORITY 2: GPS-based timezone conversion of manual times
+                    try {
+                      handoffDateTime = await timezoneService.convertHandoffTimeWithGPS(
+                        gpsField.value,
+                        handoffDateStr,
+                        handoffTimeStr
+                      );
+                      
+                      if (handoffDateTime) {
+                        console.log(`✅ GPS timezone conversion successful: ${handoffDateTime.toISOString()}`);
+                      } else {
+                        console.log(`❌ GPS timezone conversion failed`);
+                      }
+                    } catch (gpsError) {
+                      console.error(`❌ GPS timezone conversion error:`, gpsError);
+                    }
+                  }
+                } else {
+                  console.log(`❌ No GPS field found - cannot determine accurate handoff time`);
+                }
               } else {
-                console.error(`Invalid time format for job ${job.jobId}: "${handoffTimeStr}"`);
-                handoffDateTime = new Date(NaN); // Force invalid date
-              }
-              
-              console.log(`🔍 HANDOFF TIME DEBUG for job ${job.jobId}:`);
-              console.log(`  - Raw handoff date: "${handoffDateStr}", Raw handoff time: "${handoffTimeStr}"`);
-              console.log(`  - Parsed components: Month=${month}, Day=${day}, Year=${year}, Hours=${hours}, Minutes=${minutes}`);
-              console.log(`  - Final handoff timestamp: ${handoffDateTime.toISOString()}`);
-              console.log(`  - Completion timestamp: ${completedTime.toISOString()}`);
-              
-              if (!isNaN(handoffDateTime.getTime())) {
-                handoffTime = handoffDateTime;
-                
-                // Calculate Time with Tech (Handoff to Completed)
-                timeWithTech = Math.round((completedTime.getTime() - handoffTime.getTime()) / (1000 * 60));
-                
-                console.log(`  - Time difference calculation: ${completedTime.getTime()} - ${handoffTime.getTime()} = ${completedTime.getTime() - handoffTime.getTime()} ms`);
-                console.log(`  - Time with Tech: ${timeWithTech} minutes (${Math.round(timeWithTech / 60 * 10) / 10} hours)`);
-              } else {
-                console.warn(`Could not parse handoff time for job ${job.jobId}: ${handoffDateStr} ${handoffTimeStr}`);
+                console.log(`❌ Missing handoff date or time fields`);
               }
             } else {
               console.log(`❌ No handoff date/time fields found in form responses`);

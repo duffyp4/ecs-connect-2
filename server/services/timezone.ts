@@ -118,6 +118,32 @@ export class TimezoneService {
   }
   
   /**
+   * Extract GPS timestamp (already in UTC) from GPS string
+   * Format: "Lat:41.908566,Lon:-87.677826,Acc:6.550611,Alt:190.527401,Bear:-1.000000,Speed:-1.000000,Time:1756312898.246060"
+   */
+  extractGPSTimestamp(gpsString: string): Date | null {
+    try {
+      console.log(`⏰ Extracting GPS timestamp from: "${gpsString}"`);
+      
+      const timeMatch = gpsString.match(/Time:([-]?\d+\.?\d*)/);
+      if (!timeMatch) {
+        console.error('❌ Could not extract timestamp from GPS string');
+        return null;
+      }
+      
+      const unixTimestamp = parseFloat(timeMatch[1]);
+      const utcDate = new Date(unixTimestamp * 1000); // Convert seconds to milliseconds
+      
+      console.log(`✅ Extracted GPS timestamp: ${unixTimestamp} → ${utcDate.toISOString()}`);
+      return utcDate;
+      
+    } catch (error) {
+      console.error('❌ Error extracting GPS timestamp:', error);
+      return null;
+    }
+  }
+
+  /**
    * Main function: Parse GPS and convert handoff time to UTC
    */
   async convertHandoffTimeWithGPS(gpsString: string, handoffDate: string, handoffTime: string): Promise<Date | null> {
