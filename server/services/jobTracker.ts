@@ -115,25 +115,37 @@ export class JobTrackerService {
                 const submittedDate = submittedAt ? new Date(submittedAt) : new Date();
                 console.log(`🔍 TIMEZONE CONTEXT from GoCanvas submitted_at: ${submittedDate.toISOString()}`);
                 
-                // Create handoff time - first assume local server time, then we'll adjust
-                const localHandoff = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), hours, minutes);
+                // TIMEZONE FIX: Users enter handoff times in their local timezone (likely EST/CST)
+                // but we need to convert to UTC to match GoCanvas submitted_at timestamps
                 
-                // Check timezone offset between what we parsed and the submission time  
-                const submittedDay = submittedDate.getDate();
-                const handoffDay = parseInt(day);
+                // First, create handoff time assuming user's local timezone (EST = UTC-5)
+                const userLocalHandoff = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), hours, minutes);
+                
+                // Estimate timezone offset based on completion time vs handoff time comparison
                 const submittedHour = submittedDate.getHours();
+                const estimatedLocalHour = hours + (ampm === 'PM' && hours !== 12 ? 12 : 0) + (ampm === 'AM' && hours === 12 ? -12 : 0);
+                const hourDifference = submittedHour - estimatedLocalHour;
                 
-                console.log(`🔍 COMPARING DATES: Handoff day=${handoffDay}, Submitted day=${submittedDay}, Submitted hour=${submittedHour}`);
+                console.log(`🔍 TIMEZONE ANALYSIS:`);
+                console.log(`  - Submitted hour (UTC): ${submittedHour}`);
+                console.log(`  - Handoff hour (as entered): ${estimatedLocalHour}`);
+                console.log(`  - Estimated timezone offset: ${hourDifference} hours`);
                 
-                // If the dates are the same day, use local parsing
-                // If there's a day difference, we might have timezone issues
-                if (Math.abs(submittedDay - handoffDay) <= 1) {
-                  handoffDateTime = localHandoff;
-                  console.log(`✅ Using local handoff time: ${handoffDateTime.toISOString()}`);
-                } else {
-                  console.warn(`⚠️ Potential timezone mismatch: handoff day ${handoffDay} vs submitted day ${submittedDay}`);
-                  handoffDateTime = localHandoff;
-                }
+                // Apply timezone offset to convert user local time to UTC
+                // Common US timezones: EST (-5), CST (-6), MST (-7), PST (-8)
+                let timezoneOffsetHours = 5; // Default to EST (UTC-5)
+                if (Math.abs(hourDifference - 5) < 2) timezoneOffsetHours = 5; // EST
+                else if (Math.abs(hourDifference - 6) < 2) timezoneOffsetHours = 6; // CST
+                else if (Math.abs(hourDifference - 7) < 2) timezoneOffsetHours = 7; // MST
+                else if (Math.abs(hourDifference - 8) < 2) timezoneOffsetHours = 8; // PST
+                
+                // Convert to UTC by adding the timezone offset
+                handoffDateTime = new Date(userLocalHandoff.getTime() + (timezoneOffsetHours * 60 * 60 * 1000));
+                
+                console.log(`🔧 TIMEZONE CORRECTION:`);
+                console.log(`  - User local time: ${userLocalHandoff.toISOString()}`);
+                console.log(`  - Applied offset: +${timezoneOffsetHours} hours (UTC-${timezoneOffsetHours})`);
+                console.log(`  - Corrected UTC time: ${handoffDateTime.toISOString()}`);
               } else {
                 console.error(`Invalid time format for job ${job.jobId}: "${handoffTimeStr}"`);
                 handoffDateTime = new Date(NaN); // Force invalid date

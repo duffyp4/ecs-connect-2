@@ -1,0 +1,132 @@
+2025-08-27 09:47:53.52
+ab456112
+User
+49: "Inlet Damage"
+2025-08-27 09:47:53.62
+ab456112
+User
+=== HANDOFF DATA SUMMARY ===
+2025-08-27 09:47:53.62
+ab456112
+User
+Found 8 handoff-related fields
+2025-08-27 09:47:53.62
+ab456112
+User
+Found 5 time-related fields
+2025-08-27 09:47:53.62
+ab456112
+User
+Found 6 workflow-related fields
+2025-08-27 09:47:53.62
+ab456112
+User
+Total responses examined: 164
+2025-08-27 09:47:53.62
+ab456112
+User
+🔍 TIMEZONE CONTEXT from GoCanvas submitted_at: 2025-08-27T14:47:47.000Z
+2025-08-27 09:47:53.62
+ab456112
+User
+🔍 COMPARING DATES: Handoff day=27, Submitted day=27, Submitted hour=14
+2025-08-27 09:47:53.62
+ab456112
+User
+✅ Using local handoff time: 2025-08-27T09:46:00.000Z
+2025-08-27 09:47:53.62
+ab456112
+User
+🔍 HANDOFF TIME DEBUG for job ECS-20250827144546-6938:
+2025-08-27 09:47:53.62
+ab456112
+User
+- Raw handoff date: "08/27/2025", Raw handoff time: "09:46 AM"
+2025-08-27 09:47:53.62
+ab456112
+User
+- Parsed components: Month=08, Day=27, Year=2025, Hours=9, Minutes=46
+2025-08-27 09:47:53.62
+ab456112
+User
+- Final handoff timestamp: 2025-08-27T09:46:00.000Z
+2025-08-27 09:47:53.62
+ab456112
+User
+- Completion timestamp: 2025-08-27T14:47:47.000Z
+2025-08-27 09:47:53.62
+ab456112
+User
+- Time difference calculation: 1756306067000 - 1756287960000 = 18107000 ms
+2025-08-27 09:47:53.62
+ab456112
+User
+- Time with Tech: 302 minutes (5 hours)
+2025-08-27 09:47:53.62
+ab456112
+User
+Job ECS-20250827144546-6938 completed:
+2025-08-27 09:47:53.62
+ab456112
+User
+- Full Turnaround Time: 2 minutes (0 hours)
+2025-08-27 09:47:53.62
+ab456112
+User
+- Time with Tech: 302 minutes (5 hours)
+2025-08-27 09:47:56.82
+ab456112
+User
+Syncing job ECS-20250827144546-6938 to Google Sheets: [
+2025-08-27 09:47:56.82
+ab456112
+User
+'ECS-20250827144546-6938',
+2025-08-27 09:47:56.82
+ab456112
+User
+undefined,
+2025-08-27 09:47:56.82
+ab456112
+User
+'10 Roads Express LLC',
+2025-08-27 09:47:56.82
+ab456112
+User
+'PJ',
+2025-08-27 09:47:56.82
+ab456112
+User
+'5555555555',
+2025-08-27 09:47:56.82
+ab456112
+User
+'troy@ecspart.com',
+2025-08-27 09:47:56.82
+ab456112
+User
+'completed',
+2025-08-27 09:47:56.82
+ab456112
+User
+'2025-08-27T14:45:46.703Z',
+2025-08-27 09:47:56.82
+ab456112
+User
+'2025-08-27T14:47:47.000Z',
+2025-08-27 09:47:56.82
+ab456112
+User
+'2 minutes'
+2025-08-27 09:47:56.82
+ab456112
+User
+]
+2025-08-27 09:48:29.89
+ab456112
+User
+2:48:29 PM [express] GET /api/metrics 200 in 78ms :: {"activeJobs":0,"completedToday":1,"averageTurn…
+2025-08-27 09:48:29.89
+ab456112
+User
+2:48:29 PM [express] GET /api/jobs 200 in 71ms :: [{"id":"779abc79-1bb4-4087-b852-cf482b379fa0","job…
