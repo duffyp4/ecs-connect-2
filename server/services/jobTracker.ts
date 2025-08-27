@@ -64,7 +64,8 @@ export class JobTrackerService {
         return;
       }
 
-      const { status, submittedAt } = result;
+      const { status, submittedAt, submissionId } = result;
+      console.log(`🔍 DEBUG: checkSubmissionStatus returned: status=${status}, submittedAt=${submittedAt}, submissionId=${submissionId}`);
       let updates: any = {};
 
       // Update job status based on GoCanvas submission status
@@ -88,7 +89,9 @@ export class JobTrackerService {
           let handoffDateTime: Date | null = null;
           const submissionId = result.submissionId;
           
+          console.log(`🔍 DEBUG: About to check revision history with submissionId: ${submissionId}`);
           if (submissionId) {
+            console.log(`✅ SubmissionId exists, calling getSubmissionRevisions...`);
             const revisionData = await goCanvasService.getSubmissionRevisions(submissionId);
             if (revisionData && revisionData.workflow_revisions?.length > 0) {
               console.log(`🎯 Found ${revisionData.workflow_revisions.length} workflow revisions - checking for handoff timestamps...`);
@@ -108,7 +111,7 @@ export class JobTrackerService {
           
           // FALLBACK: If no revision data, try the handoff form fields approach
           if (!handoffDateTime) {
-            console.log(`⚠️ No workflow revisions found, falling back to form field parsing...`);
+            console.log(`⚠️ No workflow timestamp found from revision history, falling back to form field parsing...`);
             const handoffData = await goCanvasService.getHandoffTimeData(job.jobId);
             if (handoffData && handoffData.handoffFields) {
               const handoffDateField = handoffData.handoffFields.find((f: any) => f.label === 'Handoff Date');
