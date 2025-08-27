@@ -862,14 +862,15 @@ export class GoCanvasService {
     ];
 
     for (const mapping of mappings) {
-      if (mapping.data) {
+      if (mapping.data !== undefined && mapping.data !== null) {
         for (const label of mapping.labels) {
           const entryId = fieldMap[label];
           if (entryId) {
-            console.log(`Mapping found: ${label} -> ${entryId} = "${mapping.data}"`);
+            const value = mapping.data || "N/A"; // Use "N/A" for empty strings
+            console.log(`Mapping found: ${label} -> ${entryId} = "${value}"`);
             responses.push({
               entry_id: entryId,
-              value: String(mapping.data)
+              value: String(value)
             });
             break; // Use first matching field
           }
