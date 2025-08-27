@@ -77,9 +77,9 @@ export const insertJobSchema = createInsertSchema(jobs).omit({
   serialNumbers: z.string().min(1, "Serial Number(s) is required"),
   shopHandoff: z.string().min(1, "Shop Handoff is required"),
   userId: z.string().min(1, "User ID is required"),
-  permissionDeniedStop: z.string().min(1, "Permission Denied Stop is required"),
   // Optional fields that can be empty
   permissionToStart: z.string().optional(),
+  permissionDeniedStop: z.string().optional(),
   p21ShipToId: z.string().optional(),
   customerSpecificInstructions: z.string().optional(),
   sendClampsGaskets: z.string().optional(),
