@@ -6,11 +6,23 @@ export class JobTrackerService {
   private pollingInterval: NodeJS.Timeout | null = null;
   private readonly POLL_INTERVAL_MS = 30000; // 30 seconds for faster job completion detection
 
+  private logEnvironmentInfo() {
+    console.log('🌍 ===== ENVIRONMENT DEBUG INFO =====');
+    console.log('Node.js timezone:', Intl.DateTimeFormat().resolvedOptions().timeZone);
+    console.log('Process TZ env var:', process.env.TZ || 'undefined');
+    console.log('Date.now() sample:', new Date().toISOString());
+    console.log('Local time sample:', new Date().toLocaleString());
+    console.log('UTC offset (minutes):', new Date().getTimezoneOffset());
+    console.log('Server timezone offset:', new Date().toString().match(/GMT[+-]\d{4}/)?.[0] || 'unknown');
+    console.log('=========================================');
+  }
+
   startPolling(): void {
     if (this.pollingInterval) {
       return; // Already polling
     }
 
+    this.logEnvironmentInfo();
     console.log('Starting job tracking polling...');
     this.pollingInterval = setInterval(() => {
       this.checkPendingJobs();
