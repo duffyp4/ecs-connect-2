@@ -357,6 +357,10 @@ export class GoCanvasService {
       console.log('=== DETAILED SUBMISSION ANALYSIS ===');
       console.log('All top-level keys:', Object.keys(detailData));
       
+      // NEW: Log the COMPLETE submission object to find hidden workflow fields
+      console.log('🔍🔍🔍 COMPLETE SUBMISSION OBJECT (looking for workflow history):');
+      console.log(JSON.stringify(detailData, null, 2));
+      
       // Return the analysis in the response for easier examination
       const analysis = {
         submissionId: detailData.id,
@@ -377,11 +381,15 @@ export class GoCanvasService {
       console.log('Updated:', detailData.updated_at);
       console.log('Submitted:', detailData.submitted_at);
       
-      // Look for workflow-related data
-      const workflowFields = ['workflow_states', 'workflow_history', 'handoffs', 'transitions', 'workflow', 'states', 'workflow_data'];
+      // Look for workflow-related data - EXPANDED SEARCH
+      const workflowFields = [
+        'workflow_states', 'workflow_history', 'handoffs', 'transitions', 'workflow', 'states', 'workflow_data',
+        'history', 'workflow_log', 'transition_log', 'handoff_history', 'state_history', 'workflow_events',
+        'revisions', 'revision_history', 'changes', 'activity', 'activity_log', 'events', 'log'
+      ];
       workflowFields.forEach(field => {
         if (detailData[field]) {
-          console.log(`Found ${field}:`, JSON.stringify(detailData[field], null, 2));
+          console.log(`🎯 Found ${field}:`, JSON.stringify(detailData[field], null, 2));
           analysis.workflowFields[field] = detailData[field];
         }
       });
@@ -930,6 +938,57 @@ export class GoCanvasService {
     } catch (error) {
       console.error('Failed to load dynamic field map:', error);
       throw new Error('Unable to load field mappings. Please regenerate gocanvas_field_map.json for the current form.');
+    }
+  }
+
+  // NEW: Get revision history to find workflow timestamps
+  async getSubmissionRevisions(submissionId: string): Promise<any> {
+    if (!this.username || !this.password) {
+      console.log('GoCanvas not configured, skipping revision history');
+      return null;
+    }
+
+    try {
+      console.log(`\n🕒 FETCHING REVISION HISTORY FOR SUBMISSION: ${submissionId}`);
+      
+      const response = await fetch(`${this.baseUrl}/submissions/${submissionId}/revisions`, {
+        headers: {
+          'Authorization': this.getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        console.log(`❌ Revision history failed: ${response.status} ${response.statusText}`);
+        return null;
+      }
+
+      const revisions = await response.json();
+      console.log(`✅ Found ${revisions.length || 0} revisions`);
+      console.log('📋 REVISION HISTORY:', JSON.stringify(revisions, null, 2));
+
+      // Look for workflow-related revisions
+      const workflowRevisions = revisions?.filter((rev: any) => {
+        return rev.entry_id && (
+          rev.value?.toLowerCase().includes('handoff') ||
+          rev.value?.toLowerCase().includes('hand off') ||
+          rev.value?.toLowerCase().includes('workflow') ||
+          rev.value?.toLowerCase().includes('check') ||
+          rev.value?.toLowerCase().includes('submission')
+        );
+      }) || [];
+
+      console.log(`🔄 Found ${workflowRevisions.length} potential workflow revisions:`, workflowRevisions);
+
+      return {
+        total_revisions: revisions?.length || 0,
+        all_revisions: revisions,
+        workflow_revisions: workflowRevisions
+      };
+
+    } catch (error) {
+      console.error('Exception getting revision history:', error.message);
+      return null;
     }
   }
 

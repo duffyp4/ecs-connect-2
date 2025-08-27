@@ -82,12 +82,37 @@ export class JobTrackerService {
         let timeWithTech = null;
         
         try {
-          const handoffData = await goCanvasService.getHandoffTimeData(job.jobId);
-          if (handoffData && handoffData.handoffFields) {
-            const handoffDateField = handoffData.handoffFields.find((f: any) => f.label === 'Handoff Date');
-            const handoffTimeField = handoffData.handoffFields.find((f: any) => f.label === 'Handoff Time');
-            
-            if (handoffDateField && handoffTimeField) {
+          console.log(`\n🕒 CHECKING FOR WORKFLOW TIMESTAMPS IN REVISION HISTORY...`);
+          
+          // FIRST: Try to get workflow timestamps from revision history (more accurate)
+          let handoffDateTime: Date | null = null;
+          const submissionId = result.submissionId;
+          
+          if (submissionId) {
+            const revisionData = await goCanvasService.getSubmissionRevisions(submissionId);
+            if (revisionData && revisionData.workflow_revisions?.length > 0) {
+              console.log(`🎯 Found ${revisionData.workflow_revisions.length} workflow revisions - checking for handoff timestamps...`);
+              
+              // Look for handoff or check-in related revisions with timestamps
+              const handoffRevision = revisionData.workflow_revisions.find((rev: any) => 
+                rev.value?.toLowerCase().includes('check') || 
+                rev.value?.toLowerCase().includes('handoff')
+              );
+              
+              if (handoffRevision && handoffRevision.created_at) {
+                handoffDateTime = new Date(handoffRevision.created_at);
+                console.log(`✅ FOUND WORKFLOW TIMESTAMP: ${handoffDateTime.toISOString()} from revision history`);
+              }
+            }
+          }
+          
+          // FALLBACK: If no revision data, try the handoff form fields approach
+          if (!handoffDateTime) {
+            console.log(`⚠️ No workflow revisions found, falling back to form field parsing...`);
+            const handoffData = await goCanvasService.getHandoffTimeData(job.jobId);
+            if (handoffData && handoffData.handoffFields) {
+              const handoffDateField = handoffData.handoffFields.find((f: any) => f.label === 'Handoff Date');
+              const handoffTimeField = handoffData.handoffFields.find((f: any) => f.label === 'Handoff Time');
               // Combine handoff date and time into a proper timestamp
               const handoffDateStr = handoffDateField.value; // e.g., "08/26/2025"
               const handoffTimeStr = handoffTimeField.value; // e.g., "02:50 PM"
@@ -96,7 +121,6 @@ export class JobTrackerService {
               // handoffDateStr format: "08/26/2025", handoffTimeStr format: "02:50 PM"
               const [month, day, year] = handoffDateStr.split('/');
               let [time, ampm] = handoffTimeStr.trim().split(' ').filter((part: string) => part); // Remove extra spaces
-              let handoffDateTime: Date;
               let hours = 0;
               let minutes = 0;
               
@@ -168,8 +192,26 @@ export class JobTrackerService {
               } else {
                 console.warn(`Could not parse handoff time for job ${job.jobId}: ${handoffDateStr} ${handoffTimeStr}`);
               }
+            } else {
+              console.log(`❌ No handoff date/time fields found in form responses`);
             }
           }
+          
+          // Final processing - set handoffTime from whichever method worked
+          if (handoffDateTime && !isNaN(handoffDateTime.getTime())) {
+            handoffTime = handoffDateTime;
+            
+            // Calculate Time with Tech (Handoff to Completed)
+            timeWithTech = Math.round((completedTime.getTime() - handoffTime.getTime()) / (1000 * 60));
+            
+            console.log(`✅ FINAL HANDOFF TIME CALCULATION:`);
+            console.log(`  - Handoff timestamp: ${handoffTime.toISOString()}`);
+            console.log(`  - Completion timestamp: ${completedTime.toISOString()}`);
+            console.log(`  - Time with Tech: ${timeWithTech} minutes (${Math.round(timeWithTech / 60 * 10) / 10} hours)`);
+          } else {
+            console.warn(`❌ Could not determine handoff time for job ${job.jobId}`);
+          }
+          
         } catch (handoffError) {
           console.warn(`Could not retrieve handoff time for job ${job.jobId}:`, handoffError);
         }
