@@ -700,7 +700,7 @@ export class GoCanvasService {
     }
   }
 
-  async checkSubmissionStatus(jobId: string): Promise<{status: 'pending' | 'completed' | 'in_progress', submittedAt?: string}> {
+  async checkSubmissionStatus(jobId: string): Promise<{status: 'pending' | 'completed' | 'in_progress', submittedAt?: string, submissionId?: string}> {
     if (!this.username || !this.password) {
       console.log('GoCanvas not configured, returning mock status');
       return {status: 'pending'};
@@ -775,8 +775,8 @@ export class GoCanvasService {
         console.log(`🎯 Found target submission! Status: ${targetSubmission.status}, Keys: ${Object.keys(targetSubmission).join(', ')}`);
         
         // Use GoCanvas created_at as the submission timestamp
-        console.log(`✅ Target submission is COMPLETED! Submission time: ${targetSubmission.created_at}`);
-        return {status: 'completed', submittedAt: targetSubmission.created_at};
+        console.log(`✅ Target submission is COMPLETED! Submission ID: ${targetSubmission.id}, Submission time: ${targetSubmission.created_at}`);
+        return {status: 'completed', submittedAt: targetSubmission.created_at, submissionId: targetSubmission.id};
       }
 
       console.log(`Target submission not found in ${submissions.length} submissions`);
