@@ -1,6 +1,7 @@
 import { storage } from '../storage';
 import { goCanvasService } from './gocanvas';
 import { googleSheetsService } from './googleSheets';
+import { timezoneService } from './timezone';
 
 export class JobTrackerService {
   private pollingInterval: NodeJS.Timeout | null = null;
@@ -116,6 +117,11 @@ export class JobTrackerService {
             if (handoffData && handoffData.handoffFields) {
               const handoffDateField = handoffData.handoffFields.find((f: any) => f.label === 'Handoff Date');
               const handoffTimeField = handoffData.handoffFields.find((f: any) => f.label === 'Handoff Time');
+              
+              // NEW: Check for GPS field for accurate timezone conversion
+              const gpsField = handoffData.responses?.find((f: any) => 
+                f.label === 'New GPS' || f.entry_id === 714491454
+              );
               // Combine handoff date and time into a proper timestamp
               const handoffDateStr = handoffDateField.value; // e.g., "08/26/2025"
               const handoffTimeStr = handoffTimeField.value; // e.g., "02:50 PM"
