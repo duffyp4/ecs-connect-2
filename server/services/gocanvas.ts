@@ -541,6 +541,7 @@ export class GoCanvasService {
         handoffFields: [],
         timeFields: [],
         workflowFields: [],
+        responses: targetSubmission.responses || [], // Fixed: jobTracker expects 'responses', not 'allResponses'
         allResponses: targetSubmission.responses || []
       };
 
