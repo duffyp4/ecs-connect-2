@@ -349,7 +349,7 @@ export default function CSRForm() {
                       <FormControl>
                         <Input 
                           {...field} 
-                          value={field.value || "Loading..."}
+                          value={field.value || (userId ? "Loading..." : "First select User ID")}
                           readOnly
                           disabled
                           className="bg-muted cursor-not-allowed"
