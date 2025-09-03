@@ -565,7 +565,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (detailData.responses) {
               const jobIdField = detailData.responses.find((field: any) => 
                 field.value === jobId && 
-                (field.label?.toLowerCase().includes('job') || field.entry_id === 714302719)
+                field.label?.toLowerCase().includes('job')
               );
               
               if (jobIdField) {

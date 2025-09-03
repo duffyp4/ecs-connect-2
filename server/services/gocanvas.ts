@@ -508,7 +508,7 @@ export class GoCanvasService {
             if (detailData.responses) {
               const jobIdField = detailData.responses.find((field: any) => 
                 field.value === jobId && 
-                (field.label?.toLowerCase().includes('job') || field.entry_id === 714302719)
+                field.label?.toLowerCase().includes('job')
               );
               
               if (jobIdField) {
@@ -771,7 +771,7 @@ export class GoCanvasService {
               if (detailData.responses) {
                 const jobIdField = detailData.responses.find((field: any) => 
                   field.value === jobId && 
-                  (field.label?.toLowerCase().includes('job') || field.entry_id === 714302719)
+                  field.label?.toLowerCase().includes('job')
                 );
                 
                 if (jobIdField) {
@@ -881,41 +881,28 @@ export class GoCanvasService {
     
     console.log(`Initial mapping created ${responses.length} responses`);
     
-    // Add essential fields that might be missing from main mapping
-    const essentialFields = [
-      { id: 714302719, data: jobData.jobId, default: "ECS-UNKNOWN", label: "Job ID" },
-      { id: 714302720, data: jobData.userId, default: "system@ecspart.com", label: "User ID" },
-      { id: 714302722, data: jobData.permissionDeniedStop, default: "No", label: "Permission Denied Stop" },
-      { id: 714302723, data: jobData.shopName, default: "Unknown", label: "Shop Name" },
-      { id: 714302724, data: jobData.customerName, default: "Unknown Customer", label: "Customer Name" },
-      { id: 714302726, data: jobData.customerShipTo, default: "N/A", label: "Customer Ship To" },
-      { id: 714302744, data: "New Submission", default: "New Submission", label: "Submission Status" }
-    ];
-
-    // Add missing essential fields
-    for (const essential of essentialFields) {
-      const existing = responses.find(r => r.entry_id === essential.id);
-      if (!existing && essential.data) {
-        console.log(`Adding essential field ${essential.label}: "${essential.data}"`);
-        responses.push({
-          entry_id: essential.id,
-          value: essential.data
-        });
-      }
-    }
-
-    // Ensure we have at least one response
-    if (responses.length === 0) {
-      console.warn('No responses mapped, adding minimum required fields');
-      // Add minimum required fields for form 5577570
+    // Add "Submission Status" field as it's required for workflow
+    const submissionStatusLabel = 'Submission Status';
+    const submissionStatusId = fieldMap[submissionStatusLabel];
+    if (submissionStatusId && !responses.find(r => r.entry_id === submissionStatusId)) {
+      console.log(`Adding required Submission Status field: ${submissionStatusId}`);
       responses.push({
-        entry_id: 714302719,
-        value: jobData.jobId || "ECS-UNKNOWN"
-      });
-      responses.push({
-        entry_id: 714302744,
+        entry_id: submissionStatusId,
         value: "New Submission"
       });
+    }
+
+    // Ensure we have at least one response with valid field IDs from the current form
+    if (responses.length === 0) {
+      console.warn('No responses mapped, adding minimum required field from current form');
+      // Add Job ID as minimum required field using current form's field map
+      const jobIdFieldId = fieldMap['Job ID'];
+      if (jobIdFieldId) {
+        responses.push({
+          entry_id: jobIdFieldId,
+          value: jobData.jobId || "ECS-UNKNOWN"
+        });
+      }
     }
 
     console.log(`Created ${responses.length} form responses with required fields`);
