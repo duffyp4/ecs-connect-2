@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useShopUsers, useShopsForUser, usePermissionForUser, useCustomerNames, useShipToForCustomer, useShip2Ids, useTechComments, useSendClampsGaskets, usePreferredProcesses, useCustomerInstructions, useCustomerNotes, useCustomerSpecificData, useAllShops, useUsersForShop } from "@/hooks/use-reference-data";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -346,17 +346,19 @@ export default function CSRForm() {
                       <FormLabel className="flex items-center gap-1">
                         <Database className="h-3 w-3 text-muted-foreground" /> Permission to Start
                       </FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
-                        <FormControl>
-                          <SelectTrigger data-testid="select-permission-start">
-                            <SelectValue placeholder="Select permission status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Yes">Yes</SelectItem>
-                          <SelectItem value="No">No</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          value={field.value || "Loading..."}
+                          readOnly
+                          disabled
+                          className="bg-muted cursor-not-allowed"
+                          data-testid="input-permission-start"
+                        />
+                      </FormControl>
+                      <FormDescription className="text-xs">
+                        Automatically populated from reference data
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
