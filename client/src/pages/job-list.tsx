@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { List, Download, Eye } from "lucide-react";
+import { List, Download } from "lucide-react";
 import JobStatusBadge from "@/components/job-status-badge";
 
 export default function JobList() {
@@ -112,13 +112,12 @@ export default function JobList() {
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Initiated</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Completed</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Turnaround</th>
-                  <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {jobs.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="text-center p-8 text-muted-foreground">
+                    <td colSpan={8} className="text-center p-8 text-muted-foreground">
                       No jobs found. Try adjusting your filters or create a new job.
                     </td>
                   </tr>
@@ -158,16 +157,6 @@ export default function JobList() {
                           : job.status === 'pending' || job.status === 'in-progress'
                           ? `${Math.round((Date.now() - new Date(job.initiatedAt).getTime()) / (1000 * 60))}m elapsed`
                           : 'N/A'}
-                      </td>
-                      <td className="p-4">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="flex items-center space-x-1"
-                        >
-                          <Eye className="h-3 w-3" />
-                          <span>View</span>
-                        </Button>
                       </td>
                     </tr>
                   ))
