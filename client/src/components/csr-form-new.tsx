@@ -356,9 +356,6 @@ export default function CSRForm() {
                           data-testid="input-permission-start"
                         />
                       </FormControl>
-                      <FormDescription className="text-xs">
-                        Automatically populated from reference data
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
