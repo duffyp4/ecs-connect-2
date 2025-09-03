@@ -840,15 +840,42 @@ export default function CSRForm() {
                 <FormField
                   control={form.control}
                   name="contactNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Contact Number *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Phone number" {...field} data-testid="input-contact-number" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    const formatPhoneNumber = (value: string) => {
+                      // Remove all non-digits
+                      const digits = value.replace(/\D/g, '');
+                      
+                      // Limit to 10 digits
+                      const limitedDigits = digits.substring(0, 10);
+                      
+                      // Format based on length
+                      if (limitedDigits.length === 0) return '';
+                      if (limitedDigits.length <= 3) return `(${limitedDigits}`;
+                      if (limitedDigits.length <= 6) return `(${limitedDigits.substring(0, 3)}) ${limitedDigits.substring(3)}`;
+                      return `(${limitedDigits.substring(0, 3)}) ${limitedDigits.substring(3, 6)}-${limitedDigits.substring(6)}`;
+                    };
+
+                    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+                      const formatted = formatPhoneNumber(e.target.value);
+                      field.onChange(formatted);
+                    };
+
+                    return (
+                      <FormItem>
+                        <FormLabel>Contact Number *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="(XXX) XXX-XXXX" 
+                            value={field.value}
+                            onChange={handleChange}
+                            data-testid="input-contact-number"
+                            maxLength={14} // (XXX) XXX-XXXX = 14 characters
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
               </div>
 

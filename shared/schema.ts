@@ -72,7 +72,14 @@ export const insertJobSchema = createInsertSchema(jobs).omit({
   customerName: z.string().min(1, "Customer Name is required"),
   customerShipTo: z.string().min(1, "Customer Ship To is required"),
   contactName: z.string().min(1, "Contact Name is required"),
-  contactNumber: z.string().min(1, "Contact Number is required"),
+  contactNumber: z.string().min(1, "Contact Number is required").refine(
+    (value) => {
+      // Remove all non-digits to check if we have exactly 10 digits
+      const digits = value.replace(/\D/g, '');
+      return digits.length === 10;
+    },
+    { message: "Contact Number must be a valid 10-digit phone number" }
+  ),
   poNumber: z.string().min(1, "PO Number is required"),
   serialNumbers: z.string().min(1, "Serial Number(s) is required"),
   shopHandoff: z.string().min(1, "Shop Handoff is required"),
