@@ -815,26 +815,25 @@ export class GoCanvasService {
   }
 
   private mapJobDataToFormResponses(jobData: any): any[] {
-    // Load field mappings from the generated field map
-    console.log('🔍 Starting field mapping process...');
-    let fieldMap: any = {};
-    try {
-      // Load dynamic field map from generated JSON file
-      console.log('Loading field mappings from generated field map...');
-      fieldMap = this.loadDynamicFieldMap();
-      console.log('Created field map with', Object.keys(fieldMap).length, 'entries');
-      
-      // Log if any Job ID-related field exists
-      const jobIdFields = Object.keys(fieldMap).filter(label => 
-        label.toLowerCase().includes('job') || 
-        (label.toLowerCase().includes('id') && !label.toLowerCase().includes('user id'))
-      );
-      if (jobIdFields.length > 0) {
-        console.log('Found potential ID fields:', jobIdFields);
-      }
-    } catch (error) {
-      console.error('Failed to load dynamic field map:', error);
-      throw new Error('Unable to load field mappings. Please ensure gocanvas_field_map.json is generated for the current form.');
+    console.log('🔍 Starting field mapping process using FieldMapper...');
+    
+    // Use the FieldMapper to get all fields
+    const allFields = fieldMapper.getAllFields();
+    console.log('Loaded', allFields.length, 'fields from FieldMapper');
+    
+    // Create label-to-ID mapping
+    const fieldMap: any = {};
+    allFields.forEach(field => {
+      fieldMap[field.label] = field.id;
+    });
+    
+    // Log if any Job ID-related field exists
+    const jobIdFields = allFields.filter(field => 
+      field.label.toLowerCase().includes('job') || 
+      (field.label.toLowerCase().includes('id') && !field.label.toLowerCase().includes('user id'))
+    );
+    if (jobIdFields.length > 0) {
+      console.log('Found potential ID fields:', jobIdFields.map(f => f.label));
     }
 
     const responses = [];
@@ -934,26 +933,7 @@ export class GoCanvasService {
   }
 
 
-  private loadDynamicFieldMap(): any {
-    try {
-      // Load the generated field map JSON file
-      const fieldMapPath = join(process.cwd(), 'scripts', 'gocanvas_field_map.json');
-      console.log(`🔍 Trying to load field map from: ${fieldMapPath}`);
-      const fieldMapData = JSON.parse(readFileSync(fieldMapPath, 'utf8'));
-      
-      // Convert the field map to label -> entry_id mapping
-      const labelToIdMap: any = {};
-      for (const entry of fieldMapData.entries) {
-        labelToIdMap[entry.label] = entry.id;
-      }
-      
-      console.log(`✅ Loaded dynamic field map for form ${fieldMapData.form_id} with ${fieldMapData.total_fields} fields`);
-      return labelToIdMap;
-    } catch (error) {
-      console.error('Failed to load dynamic field map:', error);
-      throw new Error('Unable to load field mappings. Please regenerate gocanvas_field_map.json for the current form.');
-    }
-  }
+  // Note: loadDynamicFieldMap() function removed - now using FieldMapper singleton
 
   // NEW: Get revision history to find workflow timestamps
   async getSubmissionRevisions(submissionId: string): Promise<any> {
