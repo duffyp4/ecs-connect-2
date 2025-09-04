@@ -58,7 +58,7 @@ The system uses PostgreSQL with the following main entities:
 6. Job is assigned to selected technician
 
 ### GoCanvas Integration Status
-- **✅ COMPLETED**: Job ID field integration fully working - ECS Job IDs automatically passed to GoCanvas Job ID field (entry_id: 712668557)
+- **✅ COMPLETED**: Job ID field integration fully working - ECS Job IDs automatically passed to GoCanvas Job ID field
 - **✅ COMPLETED**: Core data mapping working correctly - Shop Name and Customer Ship To fields properly pass through
 - **✅ COMPLETED**: Storage layer resolved - Fixed field name mismatches that were causing data corruption
 - **✅ COMPLETED**: Using Testing Copy form (5568544) with proper dispatch creation instead of direct submissions

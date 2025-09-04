@@ -11,7 +11,7 @@ export class GoCanvasService {
   constructor() {
     this.username = process.env.GOCANVAS_USERNAME || '';
     this.password = process.env.GOCANVAS_PASSWORD || '';
-    this.formId = process.env.GOCANVAS_FORM_ID || '5577570'; // Use environment variable, fallback to previous form
+    this.formId = process.env.GOCANVAS_FORM_ID || '5584204'; // Use environment variable, fallback to current form
     
     if (!this.username || !this.password) {
       console.warn('GoCanvas credentials not configured. Using mock mode.');
