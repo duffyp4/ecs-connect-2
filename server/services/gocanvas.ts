@@ -1,6 +1,7 @@
 // GoCanvas API integration service
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { fieldMapper } from '@shared/fieldMapper';
 
 export class GoCanvasService {
   private baseUrl = 'https://api.gocanvas.com/api/v3';
@@ -11,7 +12,16 @@ export class GoCanvasService {
   constructor() {
     this.username = process.env.GOCANVAS_USERNAME || '';
     this.password = process.env.GOCANVAS_PASSWORD || '';
-    this.formId = process.env.GOCANVAS_FORM_ID || '5584204'; // Use environment variable, fallback to current form
+    
+    // Validate field mapping and get form ID
+    const validation = fieldMapper.validateMapping();
+    if (!validation.valid) {
+      console.error('❌ GoCanvas Field Mapping Error:', validation.message);
+      throw new Error(validation.message);
+    }
+    
+    this.formId = fieldMapper.getFormId();
+    console.log('✅ GoCanvas initialized:', validation.message);
     
     if (!this.username || !this.password) {
       console.warn('GoCanvas credentials not configured. Using mock mode.');

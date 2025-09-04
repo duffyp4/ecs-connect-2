@@ -10,13 +10,24 @@ const FORM_ID = process.argv[2] || process.env.GOCANVAS_FORM_ID;
 const USERNAME = process.env.GOCANVAS_USERNAME;
 const PASSWORD = process.env.GOCANVAS_PASSWORD;
 
-if (!FORM_ID || !USERNAME || !PASSWORD) {
-  console.error('Missing required environment variables:');
-  console.error('- GOCANVAS_FORM_ID');
+if (!USERNAME || !PASSWORD) {
+  console.error('❌ Missing required GoCanvas credentials:');
   console.error('- GOCANVAS_USERNAME'); 
   console.error('- GOCANVAS_PASSWORD');
+  console.error('Please set these environment variables and try again.');
   process.exit(1);
 }
+
+if (!FORM_ID) {
+  console.error('❌ Missing GOCANVAS_FORM_ID environment variable');
+  console.error('Please set GOCANVAS_FORM_ID and try again.');
+  console.error('Example: export GOCANVAS_FORM_ID=5584204');
+  process.exit(1);
+}
+
+console.log('🚀 Starting GoCanvas field mapping update...');
+console.log(`📋 Form ID: ${FORM_ID}`);
+console.log(`👤 Username: ${USERNAME}`);
 
 function getAuthHeader() {
   const credentials = Buffer.from(`${USERNAME}:${PASSWORD}`).toString('base64');
@@ -24,7 +35,7 @@ function getAuthHeader() {
 }
 
 async function fetchFormDefinition() {
-  console.log(`Fetching form definition for form ID: ${FORM_ID}`);
+  console.log(`🔍 Fetching form definition for form ID: ${FORM_ID}`);
   
   try {
     // Try the flat format first
