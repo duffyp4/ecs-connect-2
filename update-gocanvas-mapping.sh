@@ -2,7 +2,7 @@
 
 # GoCanvas Field Mapping Update Script
 # Usage: ./update-gocanvas-mapping.sh [FORM_ID]
-# Example: ./update-gocanvas-mapping.sh 5584204
+# Example: ./update-gocanvas-mapping.sh 5592447
 
 set -e
 
@@ -19,7 +19,7 @@ else
   echo "❌ No form ID provided!"
   echo ""
   echo "Usage:"
-  echo "  ./update-gocanvas-mapping.sh 5584204"
+  echo "  ./update-gocanvas-mapping.sh 5592447"
   echo "  OR set GOCANVAS_FORM_ID environment variable"
   echo ""
   exit 1
