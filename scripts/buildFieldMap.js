@@ -21,7 +21,7 @@ if (!USERNAME || !PASSWORD) {
 if (!FORM_ID) {
   console.error('❌ Missing GOCANVAS_FORM_ID environment variable');
   console.error('Please set GOCANVAS_FORM_ID and try again.');
-  console.error('Example: export GOCANVAS_FORM_ID=5592447');
+  console.error('Example: export GOCANVAS_FORM_ID=5594156');
   process.exit(1);
 }
 
