@@ -8,10 +8,12 @@ export class GoCanvasService {
   private username: string;
   private password: string;
   private formId?: string;
+  private dryRun: boolean;
 
   constructor() {
     this.username = process.env.GOCANVAS_USERNAME || '';
     this.password = process.env.GOCANVAS_PASSWORD || '';
+    this.dryRun = process.env.GOCANVAS_DRY_RUN === 'true';
     
     // Validate field mapping and get form ID
     const validation = fieldMapper.validateMapping();
@@ -23,6 +25,10 @@ export class GoCanvasService {
     this.formId = fieldMapper.getFormId();
     console.log('✅ GoCanvas initialized:', validation.message);
     
+    if (this.dryRun) {
+      console.log('🧪 DRY_RUN MODE ENABLED - No actual API calls will be made');
+    }
+    
     if (!this.username || !this.password) {
       console.warn('GoCanvas credentials not configured. Using mock mode.');
     }
@@ -31,6 +37,183 @@ export class GoCanvasService {
   private getAuthHeader(): string {
     const credentials = Buffer.from(`${this.username}:${this.password}`).toString('base64');
     return `Basic ${credentials}`;
+  }
+
+  /**
+   * Comprehensive payload logging for debugging ghost parts issues
+   */
+  private logPayloadAnalysis(dispatchData: any, jobData: any): void {
+    console.log('\n🔍 ===== COMPREHENSIVE PAYLOAD ANALYSIS =====');
+    console.log('🕐 Timestamp:', new Date().toISOString());
+    console.log('👤 Job ID:', jobData.jobId);
+    console.log('🏢 Customer:', jobData.customerName);
+    console.log('🔧 Shop:', jobData.shopName);
+    console.log('');
+    
+    console.log('📦 DISPATCH STRUCTURE:');
+    console.log('===================');
+    console.log(`   dispatch_type: "${dispatchData.dispatch_type}"`);
+    console.log(`   form_id: ${dispatchData.form_id}`);
+    console.log(`   name: "${dispatchData.name}"`);
+    console.log(`   description: "${dispatchData.description}"`);
+    console.log(`   send_notification: ${dispatchData.send_notification}`);
+    if (dispatchData.assignee_id) {
+      console.log(`   assignee_id: ${dispatchData.assignee_id}`);
+    }
+    console.log('');
+    
+    console.log('📋 RESPONSES ARRAY ANALYSIS:');
+    console.log('==========================');
+    console.log(`   Total responses: ${dispatchData.responses.length}`);
+    console.log('');
+    
+    dispatchData.responses.forEach((response: any, index: number) => {
+      console.log(`   Response ${index + 1}:`);
+      console.log(`      entry_id: ${response.entry_id}`);
+      console.log(`      value: "${response.value}"`);
+      console.log(`      value_type: ${typeof response.value}`);
+      console.log(`      value_length: ${response.value?.length || 0}`);
+      
+      // Check for multi_key (should be absent for CSR)
+      if (response.multi_key) {
+        console.log(`      🚨 multi_key: "${response.multi_key}" (THIS CREATES LOOP ROWS!)`);
+      } else {
+        console.log(`      ✅ multi_key: none (safe)`);
+      }
+      
+      // Identify field category
+      const fieldAnalysis = this.analyzeFieldCategory(response.entry_id);
+      console.log(`      field_category: ${fieldAnalysis.category}`);
+      if (fieldAnalysis.risk) {
+        console.log(`      ⚠️  risk: ${fieldAnalysis.risk}`);
+      }
+      console.log('');
+    });
+    
+    console.log('🎯 POTENTIAL GHOST PARTS TRIGGERS:');
+    console.log('================================');
+    const triggers = this.identifyPotentialTriggers(dispatchData.responses);
+    if (triggers.length === 0) {
+      console.log('   ✅ No obvious triggers detected');
+    } else {
+      triggers.forEach((trigger, index) => {
+        console.log(`   ${index + 1}. ${trigger.description}`);
+        console.log(`      entry_id: ${trigger.entry_id}`);
+        console.log(`      value: "${trigger.value}"`);
+        console.log(`      risk_level: ${trigger.risk_level}`);
+      });
+    }
+    console.log('');
+    
+    console.log('💾 FULL PAYLOAD (JSON):');
+    console.log('=====================');
+    console.log(JSON.stringify(dispatchData, null, 2));
+    console.log('\n🔍 ===== END PAYLOAD ANALYSIS =====\n');
+    
+    // Write to file for inspection
+    this.writePayloadToFile(dispatchData, jobData);
+  }
+
+  /**
+   * Analyze field category and risk level
+   */
+  private analyzeFieldCategory(entry_id: number): {category: string, risk?: string} {
+    // Load field analysis data
+    try {
+      const fs = require('fs');
+      const fieldAnalysis = JSON.parse(fs.readFileSync('/tmp/field_mapping_analysis.json', 'utf8'));
+      
+      const checkInField = fieldAnalysis.checkInFields.find((f: any) => f.id === entry_id);
+      if (checkInField) {
+        return {category: 'Check-In'};
+      }
+      
+      const partsLogField = fieldAnalysis.partsLogFields.find((f: any) => f.id === entry_id);
+      if (partsLogField) {
+        return {
+          category: 'Parts Log', 
+          risk: partsLogField.required ? 'CRITICAL - Required field' : 'WARNING - Parts Log field'
+        };
+      }
+      
+      return {category: 'Unknown'};
+    } catch (e) {
+      return {category: 'Unknown'};
+    }
+  }
+
+  /**
+   * Identify potential triggers for ghost parts issues
+   */
+  private identifyPotentialTriggers(responses: any[]): any[] {
+    const triggers = [];
+    
+    for (const response of responses) {
+      const value = response.value.toLowerCase();
+      
+      // Check for trigger patterns
+      if (value === 'new submission') {
+        triggers.push({
+          entry_id: response.entry_id,
+          value: response.value,
+          description: 'Submission Status = "New Submission" might activate conditional logic',
+          risk_level: 'MEDIUM'
+        });
+      }
+      
+      if (value === 'yes' || value === 'true') {
+        triggers.push({
+          entry_id: response.entry_id,
+          value: response.value,
+          description: 'Yes/True value might enable conditional sections',
+          risk_level: 'LOW'
+        });
+      }
+      
+      // Check for specific field IDs known to cause issues
+      if (response.entry_id === 718414077) { // FORCE STOP field
+        triggers.push({
+          entry_id: response.entry_id,
+          value: response.value,
+          description: 'FORCE STOP field detected - CRITICAL trigger risk',
+          risk_level: 'CRITICAL'
+        });
+      }
+    }
+    
+    return triggers;
+  }
+
+  /**
+   * Write payload to file for inspection
+   */
+  private writePayloadToFile(dispatchData: any, jobData: any): void {
+    try {
+      const fs = require('fs');
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const filename = `/tmp/gocanvas_payload_${jobData.jobId}_${timestamp}.json`;
+      
+      const payloadLog = {
+        timestamp: new Date().toISOString(),
+        jobId: jobData.jobId,
+        dryRun: this.dryRun,
+        dispatchData,
+        originalJobData: jobData,
+        analysis: {
+          totalResponses: dispatchData.responses.length,
+          potentialTriggers: this.identifyPotentialTriggers(dispatchData.responses),
+          fieldCategories: dispatchData.responses.map((r: any) => ({
+            entry_id: r.entry_id,
+            category: this.analyzeFieldCategory(r.entry_id)
+          }))
+        }
+      };
+      
+      fs.writeFileSync(filename, JSON.stringify(payloadLog, null, 2));
+      console.log(`💾 Payload saved to: ${filename}`);
+    } catch (error) {
+      console.error('Failed to write payload file:', error.message);
+    }
   }
 
   async listForms(): Promise<any[]> {
@@ -216,13 +399,17 @@ export class GoCanvasService {
         dispatchData.assignee_id = assigneeId;
       }
 
+      // COMPREHENSIVE PAYLOAD LOGGING (always enabled for debugging)
+      this.logPayloadAnalysis(dispatchData, jobData);
+
       console.log('Creating GoCanvas dispatch:', { 
         jobId: jobData.jobId,
         formId: this.formId,
         responseCount: responses.length,
         dispatchType: 'immediate_dispatch',
         assigneeId: assigneeId,
-        assignedTo: assigneeId ? jobData.shopHandoff : 'unassigned'
+        assignedTo: assigneeId ? jobData.shopHandoff : 'unassigned',
+        dryRun: this.dryRun
       });
       
       // Log if Job ID mapping was found
@@ -231,6 +418,14 @@ export class GoCanvasService {
         console.log(`✅ Job ID ${jobData.jobId} mapped to GoCanvas field entry_id: ${jobIdMapping.entry_id}`);
       } else {
         console.log(`⚠️ Job ID ${jobData.jobId} not yet mapped to GoCanvas field - field may need to be added to GoCanvas form`);
+      }
+
+      // DRY RUN MODE - Skip actual API call
+      if (this.dryRun) {
+        console.log('🧪 DRY_RUN: Skipping actual GoCanvas API call');
+        console.log('🧪 Would have called:', `${this.baseUrl}/dispatches`);
+        console.log('🧪 Would have sent payload:', JSON.stringify(dispatchData, null, 2));
+        return `dryrun-${jobData.jobId}-${Date.now()}`;
       }
 
       const response = await fetch(`${this.baseUrl}/dispatches`, {
@@ -244,21 +439,55 @@ export class GoCanvasService {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('GoCanvas API Error Details:', {
+        console.error('🚨 GoCanvas API Error Details:', {
           status: response.status,
           statusText: response.statusText,
           headers: Object.fromEntries(response.headers.entries()),
           body: errorText,
           dispatchData: JSON.stringify(dispatchData, null, 2)
         });
+        
+        // Enhanced error logging for ghost parts debugging
+        console.error('🚨 POTENTIAL GHOST PARTS ERROR ANALYSIS:');
+        console.error('========================================');
+        
+        if (errorText.toLowerCase().includes('required field') || 
+            errorText.toLowerCase().includes('input is required')) {
+          console.error('🎯 DETECTED: Required field error - likely ghost parts issue!');
+          console.error('💡 Check for:');
+          console.error('   - Conditional logic activating Parts Log fields');
+          console.error('   - FORCE STOP field (718414077) being triggered');
+          console.error('   - Loop/table rows being accidentally created');
+        }
+        
+        if (errorText.toLowerCase().includes('validation error')) {
+          console.error('🎯 DETECTED: Validation error - check field values and types');
+        }
+        
         throw new Error(`Failed to create dispatch: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
       const result = await response.json();
-      console.log('GoCanvas dispatch created successfully:', result.id || result.guid);
+      console.log('✅ GoCanvas dispatch created successfully:', result.id || result.guid);
+      console.log('📊 Response details:', {
+        id: result.id,
+        guid: result.guid,
+        status: result.status,
+        created_at: result.created_at
+      });
+      
       return result.id || result.guid || jobData.jobId;
     } catch (error) {
-      console.error('Failed to create GoCanvas dispatch:', error);
+      console.error('❌ Failed to create GoCanvas dispatch:', error);
+      
+      // Enhanced error analysis
+      if (error.message && typeof error.message === 'string') {
+        const errorMsg = error.message.toLowerCase();
+        if (errorMsg.includes('required field') || errorMsg.includes('ghost') || errorMsg.includes('parts')) {
+          console.error('🚨 GHOST PARTS ERROR DETECTED - See payload analysis above');
+        }
+      }
+      
       throw error;
     }
   }
