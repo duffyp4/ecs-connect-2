@@ -1,0 +1,60 @@
+# Diagnostic Prompt for Replit Coding Agent — Find the “Ghost Parts” / Required-Field Errors in our GoCanvas Integration
+
+## Context
+- Our GoCanvas form has three screens: **Check-In** (CSR), **Parts Log** (a Table/Loop with multiple rows), and **Sign Off**.
+- Our **CSR web portal** only replicates **Check-In**. After CSR submits, we **pre-fill GoCanvas** via API so techs can continue in the native app.
+- We are seeing intermittent “**Required field error: The following field requires an entry to be made**” during tech submission on the **Parts Log** screen, even when visible fields appear filled. This suggests either:
+  - An **empty/hidden required field** is being created, or
+  - A **ghost row** in the Table/Loop is being instantiated by our API payload (e.g., partial or accidental pre-population of the loop) — a known pattern when pre-populating tables/loops or when required-but-hidden fields exist in GoCanvas.
+
+## What to Examine in THIS codebase (step-by-step)
+1) **Enumerate all GoCanvas API calls** used in the portal:
+   - Print out the endpoints in use (are we calling `/api/v3/submissions` or `/api/v3/dispatches` anywhere?).
+   - For each call, dump the **exact request body** we send (redact secrets), including the full `responses[]` array and any `multi_key` fields.
+
+2) **Confirm we NEVER touch Parts Log entry_ids in the CSR step**
+   - Locate our **entry_id map** and list which entry_ids belong to **Parts Log** (Loop/Table) vs **Check-In**.
+   - Assert that our CSR submission payload includes **only Check-In entry_ids** (no Parts Log entry_ids, no partial loop rows, no `multi_key`).
+   - If any Parts Log IDs appear, list them and where they’re added to the payload.
+
+3) **Verify Loop/Table handling**
+   - If we prefill **any** Table/Loop data, ensure we do it **explicitly and completely** (all required columns populated) and with **proper `multi_key`** per row. Otherwise, do **not** include loop/table fields at all in CSR submit.
+   - Add a unit test that builds the payload from a sample CSR submission and asserts that **responses[] contains no Parts Log entry_ids**.
+
+4) **Check conditional toggles we might be triggering**
+   - Identify CSR values that might **activate required fields** in Parts Log (via conditional logic). List any known condition-controlled fields and how CSR inputs might flip them to “required and hidden.”
+   - If such conditions exist, add a **debug log** listing condition-relevant fields and their values on submit.
+
+5) **Add instrumentation & safe repro**
+   - Add a “**DRY_RUN**” flag that logs the **final JSON payload** (pretty-printed) before calling the GoCanvas API.
+   - Log the **GoCanvas response** including any validation errors and the server-side `submission_id`/`dispatch id`.
+   - Create a **minimal repro script** that posts a CSR-only payload to our test form. This should be runnable from the Replit shell (node script) and write a JSON transcript to `/tmp/gc_payload_log.json`.
+
+6) **Polling / completion detection**
+   - In the worker that polls for completion, log the **submission `status`**, **created_at**, and whether our **correlation key** (e.g., `guid`) is present.
+   - If an error is returned on submission, ensure the job is marked **Needs Attention** and surfaces on the dashboard.
+
+## Deliverables
+- A short report (markdown) with:
+  1) All GC endpoints found and the exact payload shapes we send.
+  2) A table listing **Check-In vs Parts Log entry_ids** and confirming that only Check-In IDs are used in CSR payloads.
+  3) Any places where **Parts Log IDs** (loop/table) or `multi_key` are accidentally referenced.
+  4) A hypothesis + code diff to prevent creating a ghost loop row (e.g., remove loop fields from CSR payload; or if pre-populating, fully populate with correct `multi_key`).
+  5) Test results from the minimal repro script and logs.
+
+- Code changes:
+  - Added **payload logging** (DRY_RUN mode), **error logging**, and **unit test** preventing Parts Log entry_ids in CSR flow.
+  - Optional: a feature flag to **switch between `/submissions` and `/dispatches`** for A/B testing the behavior.
+
+## Notes / Known Behaviors to Keep in Mind (for the Agent)
+- **Pre-populating Tables/Loops** in GoCanvas Dispatch creates real rows; blank required columns will block submission. If we’re sending any loop/table responses, they must be complete and correctly keyed. (See GoCanvas docs on **pre-populating tables** and **loop styles**.) [Refs: help.gocanvas.com → “Pre-populate a Table when Creating a Dispatch”; “Loop/Table styles (Grid/Pre-populated)”.]
+- **Hidden or conditionally hidden required fields** still cause “input is required” validation errors. Ensure our CSR payload isn’t flipping a condition that makes a required field invisible but enforced. [Refs: GoCanvas community threads on **“Validation error: input is required”** and hidden required fields.]
+- **Workflow handoff** uses an **Email field** to route and can control what screen the next user starts on (beginning vs handoff screen); confirm our behavior doesn’t change that expectation. [Refs: GoCanvas **Using Workflow** and **Workflow Notification Options** docs.]
+
+## References (for the Agent’s context)
+- Pre-populate Table via Dispatch (rows are real and must be valid). :contentReference[oaicite:0]{index=0}
+- Bulk Dispatch note re: loops (context on loop handling). :contentReference[oaicite:1]{index=1}
+- Hidden-required fields cause “input is required” errors. :contentReference[oaicite:2]{index=2}
+- Workflow handoff + notifications (email/push, start location). :contentReference[oaicite:3]{index=3}
+
+> Please proceed with the code search, payload audits, and add the instrumentation/tests above. Return the report, logs, and any proposed diffs that remove unintended loop/table population during CSR check-in.
