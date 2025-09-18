@@ -1119,16 +1119,9 @@ export class GoCanvasService {
     
     console.log(`Initial mapping created ${responses.length} responses`);
     
-    // Add "Submission Status" field as it's required for workflow
-    const submissionStatusLabel = 'Submission Status';
-    const submissionStatusId = fieldMap[submissionStatusLabel];
-    if (submissionStatusId && !responses.find(r => r.entry_id === submissionStatusId)) {
-      console.log(`Adding required Submission Status field: ${submissionStatusId}`);
-      responses.push({
-        entry_id: submissionStatusId,
-        value: "New Submission"
-      });
-    }
+    // REMOVED: "Submission Status" field to prevent ghost parts activation
+    // This field was triggering conditional logic that enabled Parts Log requirements
+    console.log('🚫 Skipping Submission Status field (718413927) to prevent ghost parts issues');
 
     // Ensure we have at least one response with valid field IDs from the current form
     if (responses.length === 0) {
