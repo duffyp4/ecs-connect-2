@@ -274,7 +274,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-
+  // Get drivers for pickup/delivery
+  app.get("/api/reference/drivers", async (req, res) => {
+    try {
+      const drivers = await referenceDataService.getDrivers();
+      res.json(drivers);
+    } catch (error) {
+      console.error("Failed to get drivers:", error);
+      res.status(500).json({ error: "Failed to fetch drivers" });
+    }
+  });
 
   // Create new job
   app.post("/api/jobs", requireAuth, async (req, res) => {

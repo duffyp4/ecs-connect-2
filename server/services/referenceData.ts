@@ -10,11 +10,13 @@ export interface ReferenceDataService {
   getP21ShipToIdForCustomer(customerName: string, shipTo: string): Promise<string>;
   getCustomerInstructions(customerName: string): Promise<string>;
   getTechComments(): Promise<string[]>;
+  getDrivers(): Promise<string[]>;
 }
 
 class GoCanvasReferenceDataService implements ReferenceDataService {
   private shopData: any[] = [];
   private customerData: any[] = [];
+  private driversData: any[] = [];
   private lastFetched: number = 0;
   private cacheExpiry = 5 * 60 * 1000; // 5 minutes
 
@@ -35,8 +37,12 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
       const customersResponse = await goCanvasService.getReferenceDataById('608480');
       this.customerData = customersResponse.rows || [];
       
+      // Load Drivers (ID: 343087)
+      const driversResponse = await goCanvasService.getReferenceDataById('343087');
+      this.driversData = driversResponse.rows || [];
+      
       this.lastFetched = now;
-      console.log(`Loaded ${this.shopData.length} shop records and ${this.customerData.length} customer records`);
+      console.log(`Loaded ${this.shopData.length} shop records, ${this.customerData.length} customer records, and ${this.driversData.length} driver records`);
     } catch (error) {
       console.error('Failed to load reference data:', error);
       throw error;
@@ -380,6 +386,18 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
     ));
     
     return notes.sort();
+  }
+
+  async getDrivers(): Promise<string[]> {
+    await this.ensureDataLoaded();
+    
+    // Extract driver emails from column 0 of drivers reference data (ID: 343087)
+    const drivers = Array.from(new Set(this.driversData
+      .map(row => row[0])
+      .filter(value => this.isValidValue(value))
+    ));
+    
+    return drivers.sort();
   }
 }
 

@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { insertJobSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useShopUsers, useShopsForUser, usePermissionForUser, useCustomerNames, useShipToForCustomer, useShip2Ids, useTechComments, useSendClampsGaskets, usePreferredProcesses, useCustomerInstructions, useCustomerNotes, useCustomerSpecificData, useAllShops, useUsersForShop } from "@/hooks/use-reference-data";
+import { useShopUsers, useShopsForUser, usePermissionForUser, useCustomerNames, useShipToForCustomer, useShip2Ids, useTechComments, useSendClampsGaskets, usePreferredProcesses, useCustomerInstructions, useCustomerNotes, useCustomerSpecificData, useAllShops, useUsersForShop, useDrivers } from "@/hooks/use-reference-data";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -28,6 +28,7 @@ export default function CSRForm() {
   const [currentTimestamp, setCurrentTimestamp] = useState<string>("");
   const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
   const [shipToSearchOpen, setShipToSearchOpen] = useState(false);
+  const [arrivalPath, setArrivalPath] = useState<'pickup' | 'direct'>('direct');
 
   // Fetch technicians
   const { data: technicians = [] } = useQuery<any[]>({
@@ -80,6 +81,13 @@ export default function CSRForm() {
   const { data: customerInstructionsData } = useCustomerInstructions(customerName || undefined, customerShipTo || undefined);
   const { data: customerNotes = [], isLoading: isLoadingNotes } = useCustomerNotes();
   const { data: customerSpecificData } = useCustomerSpecificData(customerName || undefined, customerShipTo || undefined);
+  const { data: drivers = [], isLoading: isLoadingDrivers } = useDrivers();
+
+  // Pickup fields state
+  const [pickupDriver, setPickupDriver] = useState<string>("");
+  const [pickupAddress, setPickupAddress] = useState<string>("");
+  const [pickupNotes, setPickupNotes] = useState<string>("");
+  const [pickupFieldErrors, setPickupFieldErrors] = useState<{ driver?: string; address?: string }>({});
 
   // Auto-populate permission when user changes
   useEffect(() => {
@@ -178,22 +186,60 @@ export default function CSRForm() {
 
   const createJobMutation = useMutation({
     mutationFn: async (data: FormData) => {
+      // Step 1: Validate pickup fields BEFORE creating job
+      if (arrivalPath === 'pickup') {
+        const errors: { driver?: string; address?: string } = {};
+        if (!pickupDriver) errors.driver = "Driver is required for pickup dispatch";
+        if (!pickupAddress) errors.address = "Pickup address is required";
+        
+        if (Object.keys(errors).length > 0) {
+          setPickupFieldErrors(errors);
+          throw new Error("Please complete all required pickup fields");
+        }
+        setPickupFieldErrors({});
+      }
+      
+      // Step 2: Create the job
       const response = await apiRequest("POST", "/api/jobs", data);
-      return response.json();
+      const job = await response.json();
+      
+      // Step 3: Handle arrival path
+      if (arrivalPath === 'pickup') {
+        // Dispatch pickup
+        await apiRequest("POST", `/api/jobs/${job.id}/dispatch-pickup`, {
+          driverEmail: pickupDriver,
+          pickupAddress,
+          pickupNotes,
+        });
+      } else {
+        // Direct check-in at shop
+        await apiRequest("POST", `/api/jobs/${job.id}/check-in`, {});
+      }
+      
+      // Return the original job object for success handling
+      return job;
     },
-    onSuccess: (data) => {
+    onSuccess: (job) => {
+      const pathDescription = arrivalPath === 'pickup' 
+        ? 'and dispatched for pickup' 
+        : 'and checked in at shop';
       toast({
         title: "Job Created Successfully",
-        description: `Job ${data.jobId} has been created and assigned to technician.`,
+        description: `Job ${job.jobId} has been created ${pathDescription}.`,
       });
       form.reset();
+      setPickupDriver("");
+      setPickupAddress("");
+      setPickupNotes("");
+      setPickupFieldErrors({});
+      setArrivalPath('direct');
       queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
       queryClient.invalidateQueries({ queryKey: ["/api/metrics"] });
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to create job. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to create job. Please try again.",
         variant: "destructive",
       });
       console.error("Job creation error:", error);
@@ -285,6 +331,103 @@ export default function CSRForm() {
                 <strong>Initiated:</strong> Time recorded upon check-in form submission
               </AlertDescription>
             </Alert>
+          </div>
+
+          {/* Arrival Path Selection */}
+          <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+            <div>
+              <h3 className="font-semibold text-sm mb-2">How will items arrive at the shop? *</h3>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    value="direct"
+                    checked={arrivalPath === 'direct'}
+                    onChange={(e) => setArrivalPath(e.target.value as 'direct' | 'pickup')}
+                    className="w-4 h-4"
+                    data-testid="radio-arrival-direct"
+                  />
+                  <span>Direct Shop Check-in</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    value="pickup"
+                    checked={arrivalPath === 'pickup'}
+                    onChange={(e) => setArrivalPath(e.target.value as 'direct' | 'pickup')}
+                    className="w-4 h-4"
+                    data-testid="radio-arrival-pickup"
+                  />
+                  <span>Dispatch Pickup</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Pickup Fields - Show only when pickup path is selected */}
+            {arrivalPath === 'pickup' && (
+              <div className="space-y-4 pt-4 border-t">
+                <h4 className="font-medium text-sm">Pickup Information</h4>
+                
+                <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Driver Selection */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Driver *</label>
+                    <Select value={pickupDriver} onValueChange={(value) => {
+                      setPickupDriver(value);
+                      setPickupFieldErrors(prev => ({ ...prev, driver: undefined }));
+                    }}>
+                      <SelectTrigger data-testid="select-pickup-driver" className={pickupFieldErrors.driver ? "border-red-500" : ""}>
+                        <SelectValue placeholder="Select driver" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {isLoadingDrivers ? (
+                          <SelectItem value="_loading">Loading drivers...</SelectItem>
+                        ) : (
+                          drivers.map((driver) => (
+                            <SelectItem key={driver} value={driver} data-testid={`option-driver-${driver}`}>
+                              {driver}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                    {pickupFieldErrors.driver && (
+                      <p className="text-sm text-red-500 mt-1" data-testid="error-pickup-driver">{pickupFieldErrors.driver}</p>
+                    )}
+                  </div>
+
+                  {/* Pickup Address */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Pickup Address *</label>
+                    <Input
+                      placeholder="Enter pickup address"
+                      value={pickupAddress}
+                      onChange={(e) => {
+                        setPickupAddress(e.target.value);
+                        setPickupFieldErrors(prev => ({ ...prev, address: undefined }));
+                      }}
+                      className={pickupFieldErrors.address ? "border-red-500" : ""}
+                      data-testid="input-pickup-address"
+                    />
+                    {pickupFieldErrors.address && (
+                      <p className="text-sm text-red-500 mt-1" data-testid="error-pickup-address">{pickupFieldErrors.address}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Pickup Notes */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">Pickup Notes (Optional)</label>
+                  <Textarea
+                    placeholder="Any special instructions for pickup..."
+                    value={pickupNotes}
+                    onChange={(e) => setPickupNotes(e.target.value)}
+                    rows={2}
+                    data-testid="input-pickup-notes"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <Form {...form}>
