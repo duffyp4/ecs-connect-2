@@ -52,3 +52,32 @@ Includes diagnostic scripts in `/scripts/` for GoCanvas integration debugging, s
 
 ### Timezone Services
 - **API**: TimeZone API for GPS coordinate to timezone conversion.
+
+## Recent Development - Pickup and Delivery Add-on
+
+### Phase 4 (September 29, 2025) - Job Creation Enhancement
+**Implemented Two-Path Job Creation**:
+- Radio button selection: "Direct Shop Check-in" vs "Dispatch Pickup"
+- Conditional pickup fields (driver, address, notes) shown only for pickup path
+- Pre-submission validation prevents orphaned jobs
+- Visual validation feedback with automatic error clearing
+- Driver selection integrated from GoCanvas reference data (table 343087)
+- API endpoints for all 8 job state transitions created
+
+### Phase 5 (September 29, 2025) - Job Actions & Detail Page
+**Implemented Job Management Interface**:
+- **Job Detail Page** (`/jobs/:id`) with comprehensive job information
+- **Event Timeline** showing all state transitions with timestamps and visual indicators
+- **State-Specific Action Buttons**:
+  - Queued for Pickup → Mark as Picked Up
+  - Picked Up → Check In at Shop
+  - At Shop → Start Service
+  - In Service → Ready for Pickup OR Ready for Delivery
+  - Ready for Delivery → Dispatch for Delivery
+  - Out for Delivery → Mark as Delivered
+  - Cancel Job (available for all active states)
+- Clickable Job IDs from Dashboard and Job List
+- Real-time updates with automatic cache invalidation
+- Error handling and success notifications
+
+**Status**: Phase 5 complete. Full pickup and delivery lifecycle now manageable through UI. Ready for integration testing (Phase 6).
