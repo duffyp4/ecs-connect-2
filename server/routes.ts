@@ -7,6 +7,7 @@ import { fieldMapper } from "@shared/fieldMapper";
 import { googleSheetsService } from "./services/googleSheets";
 import { jobTrackerService } from "./services/jobTracker";
 import { referenceDataService } from "./services/referenceData";
+import { jobEventsService } from "./services/jobEvents";
 import { setupAuth, requireAuth } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -317,6 +318,153 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         res.status(500).json({ message: "Failed to create job" });
       }
+    }
+  });
+
+  // Job Action Endpoints - Pickup and Delivery Workflow
+  
+  // Dispatch pickup for a job
+  app.post("/api/jobs/:jobId/dispatch-pickup", requireAuth, async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const { driverEmail, pickupAddress, pickupNotes } = req.body;
+      
+      if (!driverEmail || !pickupAddress) {
+        return res.status(400).json({ message: "Driver email and pickup address are required" });
+      }
+
+      const updatedJob = await jobEventsService.dispatchPickup(jobId, {
+        driverEmail,
+        pickupAddress,
+        pickupNotes,
+      });
+      
+      res.json(updatedJob);
+    } catch (error) {
+      console.error("Error dispatching pickup:", error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to dispatch pickup" });
+    }
+  });
+
+  // Mark job as picked up
+  app.post("/api/jobs/:jobId/mark-picked-up", requireAuth, async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const { itemCount } = req.body;
+
+      const updatedJob = await jobEventsService.markPickedUp(jobId, itemCount);
+      res.json(updatedJob);
+    } catch (error) {
+      console.error("Error marking job as picked up:", error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to mark job as picked up" });
+    }
+  });
+
+  // Check in job at shop
+  app.post("/api/jobs/:jobId/check-in", requireAuth, async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const updatedJob = await jobEventsService.checkInAtShop(jobId);
+      res.json(updatedJob);
+    } catch (error) {
+      console.error("Error checking in job:", error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to check in job" });
+    }
+  });
+
+  // Start service on job
+  app.post("/api/jobs/:jobId/start-service", requireAuth, async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const { technicianName } = req.body;
+      
+      if (!technicianName) {
+        return res.status(400).json({ message: "Technician name is required" });
+      }
+
+      const updatedJob = await jobEventsService.startService(jobId, technicianName);
+      res.json(updatedJob);
+    } catch (error) {
+      console.error("Error starting service:", error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to start service" });
+    }
+  });
+
+  // Mark job as ready (for pickup or delivery)
+  app.post("/api/jobs/:jobId/mark-ready", requireAuth, async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const { deliveryMethod } = req.body;
+      
+      if (!deliveryMethod || !['pickup', 'delivery'].includes(deliveryMethod)) {
+        return res.status(400).json({ message: "Valid delivery method (pickup or delivery) is required" });
+      }
+
+      const updatedJob = await jobEventsService.markReady(jobId, deliveryMethod);
+      res.json(updatedJob);
+    } catch (error) {
+      console.error("Error marking job as ready:", error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to mark job as ready" });
+    }
+  });
+
+  // Dispatch delivery for a job
+  app.post("/api/jobs/:jobId/dispatch-delivery", requireAuth, async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const { driverEmail, deliveryAddress, deliveryNotes } = req.body;
+      
+      if (!driverEmail || !deliveryAddress) {
+        return res.status(400).json({ message: "Driver email and delivery address are required" });
+      }
+
+      const updatedJob = await jobEventsService.dispatchDelivery(jobId, {
+        driverEmail,
+        deliveryAddress,
+        deliveryNotes,
+      });
+      
+      res.json(updatedJob);
+    } catch (error) {
+      console.error("Error dispatching delivery:", error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to dispatch delivery" });
+    }
+  });
+
+  // Mark job as delivered
+  app.post("/api/jobs/:jobId/mark-delivered", requireAuth, async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const updatedJob = await jobEventsService.markDelivered(jobId);
+      res.json(updatedJob);
+    } catch (error) {
+      console.error("Error marking job as delivered:", error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to mark job as delivered" });
+    }
+  });
+
+  // Cancel job
+  app.post("/api/jobs/:jobId/cancel", requireAuth, async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const { reason } = req.body;
+      const updatedJob = await jobEventsService.cancelJob(jobId, reason);
+      res.json(updatedJob);
+    } catch (error) {
+      console.error("Error cancelling job:", error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to cancel job" });
+    }
+  });
+
+  // Get job events timeline
+  app.get("/api/jobs/:jobId/events", requireAuth, async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const events = await storage.getJobEvents(jobId);
+      res.json(events);
+    } catch (error) {
+      console.error("Error fetching job events:", error);
+      res.status(500).json({ message: "Failed to fetch job events" });
     }
   });
 
