@@ -1,4 +1,4 @@
-import { type Job, type InsertJob, type Technician, type InsertTechnician } from "@shared/schema";
+import { type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent } from "@shared/schema";
 import { DatabaseStorage } from "./database";
 
 export interface IStorage {
@@ -9,7 +9,13 @@ export interface IStorage {
   updateJob(id: string, updates: Partial<Job>): Promise<Job | undefined>;
   getAllJobs(): Promise<Job[]>;
   getJobsByStatus(status: string): Promise<Job[]>;
+  getJobsByState(state: string): Promise<Job[]>;
   getJobsByTechnician(technicianEmail: string): Promise<Job[]>;
+  
+  // Job Event methods
+  createJobEvent(event: InsertJobEvent): Promise<JobEvent>;
+  getJobEvents(jobId: string): Promise<JobEvent[]>;
+  getAllJobEvents(limit?: number): Promise<JobEvent[]>;
   
   // Technician methods
   getTechnician(id: string): Promise<Technician | undefined>;

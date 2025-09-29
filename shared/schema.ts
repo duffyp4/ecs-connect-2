@@ -30,17 +30,33 @@ export const jobs = pgTable("jobs", {
   shopHandoff: text("shop_handoff").notNull(), // technician email
   handoffEmailWorkflow: text("handoff_email_workflow"),
   
-  // Tracking Fields
-  status: text("status").notNull().default("pending"), // pending, in-progress, completed, overdue
+  // Tracking Fields - New State System (7 states)
+  state: text("state").notNull().default("queued_for_pickup"), // queued_for_pickup, picked_up, at_shop, in_service, ready_for_pickup_delivery, out_for_delivery, delivered
   initiatedAt: timestamp("initiated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-  handoffAt: timestamp("handoff_at"), // when handed off to technician
-  completedAt: timestamp("completed_at"),
-  turnaroundTime: integer("turnaround_time"), // in minutes (Full Turnaround: Initiated to Completed)
-  timeWithTech: integer("time_with_tech"), // in minutes (Time with Tech: Handoff to Completed)
   
-  // GoCanvas Integration
-  gocanvasSubmissionId: text("gocanvas_submission_id"),
-  gocanvasDispatchId: text("gocanvas_dispatch_id"),
+  // Pickup/Delivery Timestamps
+  possessionStart: timestamp("possession_start"), // earliest of picked_up or shop_checkin
+  handoffAt: timestamp("handoff_at"), // when handed off to technician
+  readyForPickupDeliveryAt: timestamp("ready_for_pickup_delivery_at"),
+  deliveredAt: timestamp("delivered_at"),
+  completedAt: timestamp("completed_at"), // kept for backward compatibility
+  
+  // Scenario Tracking
+  startedWithPickup: text("started_with_pickup").default("false"), // did job start with pickup dispatch?
+  selfPickup: text("self_pickup").default("false"), // is customer picking up vs ECS delivery?
+  
+  // Pre-calculated KPI Fields (in minutes)
+  timeToPickup: integer("time_to_pickup"), // pickup_dispatched to picked_up
+  timeAtShop: integer("time_at_shop"), // possession_start to ready_for_pickup_delivery
+  timeWithTech: integer("time_with_tech"), // tech_start to tech_complete
+  totalTurnaround: integer("total_turnaround"), // start to end (depends on scenario)
+  turnaroundTime: integer("turnaround_time"), // kept for backward compatibility
+  
+  // GoCanvas Integration - Multiple Forms
+  gocanvasSubmissionId: text("gocanvas_submission_id"), // Emissions Service Log submission
+  gocanvasDispatchId: text("gocanvas_dispatch_id"), // Emissions Service Log dispatch
+  pickupDispatchId: text("pickup_dispatch_id"), // Pickup Log dispatch
+  deliveryDispatchId: text("delivery_dispatch_id"), // Delivery Log dispatch
   gocanvasSynced: text("gocanvas_synced").default("false"),
   
   // Google Sheets Integration
@@ -54,16 +70,37 @@ export const technicians = pgTable("technicians", {
   active: text("active").notNull().default("true"),
 });
 
+export const jobEvents = pgTable("job_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  jobId: varchar("job_id").notNull(), // references jobs.id
+  eventType: text("event_type").notNull(), // pickup_dispatched, picked_up, shop_checkin, tech_start, tech_complete, ready_for_pickup, delivery_dispatched, delivered
+  timestamp: timestamp("timestamp").notNull().default(sql`CURRENT_TIMESTAMP`),
+  actor: text("actor").notNull(), // CSR, Driver, System, Technician
+  actorEmail: text("actor_email"), // who performed the action
+  metadata: json("metadata"), // GPS coords, notes, driver name, etc.
+});
+
 export const insertJobSchema = createInsertSchema(jobs).omit({
   id: true,
   jobId: true,
   initiatedAt: true,
-  status: true,
+  state: true,
+  possessionStart: true,
   handoffAt: true,
+  readyForPickupDeliveryAt: true,
+  deliveredAt: true,
   completedAt: true,
-  turnaroundTime: true,
+  startedWithPickup: true,
+  selfPickup: true,
+  timeToPickup: true,
+  timeAtShop: true,
   timeWithTech: true,
+  totalTurnaround: true,
+  turnaroundTime: true,
   gocanvasSubmissionId: true,
+  gocanvasDispatchId: true,
+  pickupDispatchId: true,
+  deliveryDispatchId: true,
   gocanvasSynced: true,
   googleSheetsSynced: true,
 }).extend({
@@ -103,10 +140,17 @@ export const insertTechnicianSchema = createInsertSchema(technicians).omit({
   id: true,
 });
 
+export const insertJobEventSchema = createInsertSchema(jobEvents).omit({
+  id: true,
+  timestamp: true,
+});
+
 export type InsertJob = z.infer<typeof insertJobSchema>;
 export type Job = typeof jobs.$inferSelect;
 export type InsertTechnician = z.infer<typeof insertTechnicianSchema>;
 export type Technician = typeof technicians.$inferSelect;
+export type InsertJobEvent = z.infer<typeof insertJobEventSchema>;
+export type JobEvent = typeof jobEvents.$inferSelect;
 
 // Reference Data for form dropdowns (temporarily using simple arrays)
 export const referenceDataEntries = pgTable("reference_data_entries", {

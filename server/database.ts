@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-import { jobs, technicians, type Job, type InsertJob, type Technician, type InsertTechnician } from "@shared/schema";
+import { jobs, technicians, jobEvents, type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { IStorage } from "./storage";
@@ -27,9 +27,7 @@ export class DatabaseStorage implements IStorage {
   async createJob(insertJob: InsertJob): Promise<Job> {
     const jobId = this.generateJobId();
     const result = await this.db.insert(jobs).values({
-      id: randomUUID(),
       jobId,
-      status: "pending",
       gocanvasSynced: "false",
       googleSheetsSynced: "false",
       ...insertJob,
@@ -48,12 +46,42 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getJobsByStatus(status: string): Promise<Job[]> {
-    const result = await this.db.select().from(jobs).where(eq(jobs.status, status));
+    // For backward compatibility, map old status to new state
+    const result = await this.db.select().from(jobs).where(eq(jobs.state, status));
+    return result;
+  }
+
+  async getJobsByState(state: string): Promise<Job[]> {
+    const result = await this.db.select().from(jobs).where(eq(jobs.state, state)).orderBy(desc(jobs.initiatedAt));
     return result;
   }
 
   async getJobsByTechnician(technicianEmail: string): Promise<Job[]> {
     const result = await this.db.select().from(jobs).where(eq(jobs.shopHandoff, technicianEmail));
+    return result;
+  }
+
+  // Job Event methods
+  async createJobEvent(insertEvent: InsertJobEvent): Promise<JobEvent> {
+    const result = await this.db.insert(jobEvents).values({
+      id: randomUUID(),
+      ...insertEvent,
+    }).returning();
+    return result[0];
+  }
+
+  async getJobEvents(jobId: string): Promise<JobEvent[]> {
+    const result = await this.db.select().from(jobEvents).where(eq(jobEvents.jobId, jobId)).orderBy(jobEvents.timestamp);
+    return result;
+  }
+
+  async getAllJobEvents(limit?: number): Promise<JobEvent[]> {
+    const query = this.db.select().from(jobEvents).orderBy(desc(jobEvents.timestamp));
+    if (limit) {
+      const result = await query.limit(limit);
+      return result;
+    }
+    const result = await query;
     return result;
   }
 
