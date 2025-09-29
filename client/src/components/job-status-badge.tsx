@@ -5,15 +5,28 @@ interface JobStatusBadgeProps {
 }
 
 export default function JobStatusBadge({ status }: JobStatusBadgeProps) {
+  if (!status) {
+    return <Badge className="bg-gray-100 text-gray-800">Unknown</Badge>;
+  }
+
   const getStatusStyle = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'pending':
-        return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
-      case 'in-progress':
+      case 'queued_for_pickup':
+        return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
+      case 'picked_up':
+        return 'bg-indigo-100 text-indigo-800 hover:bg-indigo-200';
+      case 'at_shop':
+        return 'bg-purple-100 text-purple-800 hover:bg-purple-200';
+      case 'in_service':
         return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200';
-      case 'completed':
+      case 'ready_for_pickup':
+      case 'ready_for_delivery':
+        return 'bg-orange-100 text-orange-800 hover:bg-orange-200';
+      case 'out_for_delivery':
+        return 'bg-cyan-100 text-cyan-800 hover:bg-cyan-200';
+      case 'delivered':
         return 'bg-green-100 text-green-800 hover:bg-green-200';
-      case 'overdue':
+      case 'cancelled':
         return 'bg-red-100 text-red-800 hover:bg-red-200';
       default:
         return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
@@ -22,16 +35,26 @@ export default function JobStatusBadge({ status }: JobStatusBadgeProps) {
 
   const getStatusLabel = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'pending':
-        return 'Pending';
-      case 'in-progress':
-        return 'In Progress';
-      case 'completed':
-        return 'Completed';
-      case 'overdue':
-        return 'Overdue';
+      case 'queued_for_pickup':
+        return 'Queued for Pickup';
+      case 'picked_up':
+        return 'Picked Up';
+      case 'at_shop':
+        return 'At Shop';
+      case 'in_service':
+        return 'In Service';
+      case 'ready_for_pickup':
+        return 'Ready for Pickup';
+      case 'ready_for_delivery':
+        return 'Ready for Delivery';
+      case 'out_for_delivery':
+        return 'Out for Delivery';
+      case 'delivered':
+        return 'Delivered';
+      case 'cancelled':
+        return 'Cancelled';
       default:
-        return status;
+        return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
   };
 

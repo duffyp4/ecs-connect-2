@@ -70,10 +70,15 @@ export default function JobList() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="in-progress">In Progress</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="overdue">Overdue</SelectItem>
+              <SelectItem value="queued_for_pickup">Queued for Pickup</SelectItem>
+              <SelectItem value="picked_up">Picked Up</SelectItem>
+              <SelectItem value="at_shop">At Shop</SelectItem>
+              <SelectItem value="in_service">In Service</SelectItem>
+              <SelectItem value="ready_for_pickup">Ready for Pickup</SelectItem>
+              <SelectItem value="ready_for_delivery">Ready for Delivery</SelectItem>
+              <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
+              <SelectItem value="delivered">Delivered</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
           
@@ -143,7 +148,7 @@ export default function JobList() {
                         {job.shopHandoff ? job.shopHandoff.split('@')[0] : 'Unassigned'}
                       </td>
                       <td className="p-4">
-                        <JobStatusBadge status={job.status} />
+                        <JobStatusBadge status={job.currentState} />
                       </td>
                       <td className="p-4">
                         {new Date(job.initiatedAt).toLocaleString()}
@@ -152,9 +157,9 @@ export default function JobList() {
                         {job.completedAt ? new Date(job.completedAt).toLocaleString() : '-'}
                       </td>
                       <td className="p-4">
-                        {job.status === 'completed' && job.turnaroundTime
+                        {job.currentState === 'delivered' && job.turnaroundTime
                           ? formatTurnaroundTime(job.turnaroundTime)
-                          : job.status === 'pending' || job.status === 'in-progress'
+                          : job.currentState !== 'delivered' && job.currentState !== 'cancelled'
                           ? `${Math.round((Date.now() - new Date(job.initiatedAt).getTime()) / (1000 * 60))}m elapsed`
                           : 'N/A'}
                       </td>

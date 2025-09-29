@@ -45,7 +45,7 @@ export default function Reports() {
 
   // Calculate report metrics
   const calculateMetrics = () => {
-    const completedJobs = jobs.filter((job: any) => job.status === 'completed' && job.turnaroundTime);
+    const completedJobs = jobs.filter((job: any) => job.currentState === 'delivered' && job.turnaroundTime);
     
     if (completedJobs.length === 0) {
       return {
@@ -84,7 +84,7 @@ export default function Reports() {
     const techPerformance: { [key: string]: { jobs: number; avgTime: number; name: string } } = {};
 
     jobs.forEach((job: any) => {
-      if (job.status === 'completed' && job.turnaroundTime && job.shopHandoff) {
+      if (job.currentState === 'delivered' && job.turnaroundTime && job.shopHandoff) {
         const techEmail = job.shopHandoff;
         const tech = technicians.find((t: any) => t.email === techEmail);
         const techName = tech ? tech.name : techEmail.split('@')[0];

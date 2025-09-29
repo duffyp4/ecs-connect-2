@@ -151,7 +151,7 @@ export default function Dashboard() {
                         {job.shopHandoff ? job.shopHandoff.split('@')[0] : 'Unassigned'}
                       </td>
                       <td className="p-4">
-                        <JobStatusBadge status={job.status} />
+                        <JobStatusBadge status={job.currentState} />
                       </td>
                       <td className="p-4">
                         {new Date(job.initiatedAt).toLocaleString()}
@@ -159,19 +159,19 @@ export default function Dashboard() {
                       <td className="p-4">
                         {job.handoffAt 
                           ? new Date(job.handoffAt).toLocaleString()
-                          : job.status === 'completed' 
+                          : job.currentState === 'delivered' 
                           ? 'N/A'
                           : '---'}
                       </td>
                       <td className="p-4">
                         {job.completedAt 
                           ? new Date(job.completedAt).toLocaleString()
-                          : job.status === 'completed' 
+                          : job.currentState === 'delivered' 
                           ? 'N/A'
                           : '---'}
                       </td>
                       <td className="p-4">
-                        {job.status === 'completed' ? (
+                        {job.currentState === 'delivered' ? (
                           <div className="space-y-1">
                             <div className="text-sm">
                               <span className="text-muted-foreground">Full:</span>{' '}
@@ -182,7 +182,7 @@ export default function Dashboard() {
                               {formatTurnaroundTime(job.timeWithTech)}
                             </div>
                           </div>
-                        ) : job.status === 'pending' || job.status === 'in-progress' ? (
+                        ) : job.currentState !== 'delivered' && job.currentState !== 'cancelled' ? (
                           `${Math.round((Date.now() - new Date(job.initiatedAt).getTime()) / (1000 * 60))}m elapsed`
                         ) : (
                           'N/A'
