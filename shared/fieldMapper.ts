@@ -21,11 +21,11 @@ interface FieldMap {
 
 export class FieldMapper {
   private static instance: FieldMapper;
-  private fieldMap: FieldMap | null = null;
-  private readonly mapPath: string;
+  private fieldMaps: Map<string, FieldMap> = new Map();
 
   private constructor() {
-    this.mapPath = join(process.cwd(), 'gocanvas_field_map.json');
+    // Initialize with known form IDs
+    this.initializeFieldMaps();
   }
 
   static getInstance(): FieldMapper {
@@ -35,39 +35,58 @@ export class FieldMapper {
     return FieldMapper.instance;
   }
 
-  private loadFieldMap(): FieldMap {
-    if (this.fieldMap) {
-      return this.fieldMap;
+  private initializeFieldMaps(): void {
+    // Try to load all known field maps
+    const formIds = [
+      '5594156', // Emissions Service Log
+      '5628229', // Pickup Log
+      '5604777', // Delivery Log
+    ];
+
+    formIds.forEach(formId => {
+      try {
+        this.loadFieldMapForForm(formId);
+      } catch (error) {
+        // Silent fail - maps will be loaded on demand
+      }
+    });
+  }
+
+  private getMapPath(formId: string): string {
+    return join(process.cwd(), `gocanvas_field_map_${formId}.json`);
+  }
+
+  private loadFieldMapForForm(formId: string): FieldMap {
+    // Check cache first
+    if (this.fieldMaps.has(formId)) {
+      return this.fieldMaps.get(formId)!;
     }
 
     try {
-      const mapData = readFileSync(this.mapPath, 'utf8');
-      this.fieldMap = JSON.parse(mapData);
+      const mapPath = this.getMapPath(formId);
+      const mapData = readFileSync(mapPath, 'utf8');
+      const fieldMap: FieldMap = JSON.parse(mapData);
       
-      if (!this.fieldMap || !this.fieldMap.form_id) {
+      if (!fieldMap || !fieldMap.form_id) {
         throw new Error('Invalid field map structure');
       }
       
-      return this.fieldMap;
+      // Cache the map
+      this.fieldMaps.set(formId, fieldMap);
+      return fieldMap;
     } catch (error) {
-      const envFormId = process.env.GOCANVAS_FORM_ID;
-      const errorMsg = `
-❌ Field mapping file not found or invalid!
-
-To fix this issue:
-1. Set GOCANVAS_FORM_ID environment variable: ${envFormId || 'NOT_SET'}
-2. Run: npm run update-field-mapping
-3. Restart your application
-
-Error details: ${error.message}
-      `.trim();
-      
-      throw new Error(errorMsg);
+      throw new Error(`Field mapping file not found for form ${formId}. Run field mapping update script for this form.`);
     }
   }
 
+  private loadFieldMap(): FieldMap {
+    // For backward compatibility - load default emissions form
+    const defaultFormId = process.env.GOCANVAS_FORM_ID || '5594156';
+    return this.loadFieldMapForForm(defaultFormId);
+  }
+
   /**
-   * Get the current GoCanvas form ID from the field mapping
+   * Get the current GoCanvas form ID from the field mapping (backward compatible)
    */
   getFormId(): string {
     const map = this.loadFieldMap();
@@ -75,7 +94,7 @@ Error details: ${error.message}
   }
 
   /**
-   * Get field ID by exact label match
+   * Get field ID by exact label match (backward compatible - uses default form)
    */
   getFieldId(label: string): number | null {
     const map = this.loadFieldMap();
@@ -84,7 +103,28 @@ Error details: ${error.message}
   }
 
   /**
-   * Get field ID by partial label match (case-insensitive)
+   * Get field ID by exact label match for specific form
+   */
+  getFieldIdForForm(formId: string, label: string): number | null {
+    const map = this.loadFieldMapForForm(formId);
+    const field = map.entries.find(entry => entry.label === label);
+    return field ? field.id : null;
+  }
+
+  /**
+   * Get field ID by partial label match (case-insensitive) for specific form
+   */
+  getFieldIdByPartialLabelForForm(formId: string, partialLabel: string): number | null {
+    const map = this.loadFieldMapForForm(formId);
+    const normalizedSearch = partialLabel.toLowerCase();
+    const field = map.entries.find(entry => 
+      entry.label.toLowerCase().includes(normalizedSearch)
+    );
+    return field ? field.id : null;
+  }
+
+  /**
+   * Get field ID by partial label match (case-insensitive) - backward compatible
    */
   getFieldIdByPartialLabel(partialLabel: string): number | null {
     const map = this.loadFieldMap();
@@ -96,7 +136,7 @@ Error details: ${error.message}
   }
 
   /**
-   * Get multiple field IDs by labels (returns map of label -> field ID)
+   * Get multiple field IDs by labels (returns map of label -> field ID) - backward compatible
    */
   getFieldIds(labels: string[]): Record<string, number | null> {
     const result: Record<string, number | null> = {};
@@ -107,7 +147,18 @@ Error details: ${error.message}
   }
 
   /**
-   * Get all required field IDs and labels
+   * Get multiple field IDs by labels for specific form
+   */
+  getFieldIdsForForm(formId: string, labels: string[]): Record<string, number | null> {
+    const result: Record<string, number | null> = {};
+    labels.forEach(label => {
+      result[label] = this.getFieldIdForForm(formId, label);
+    });
+    return result;
+  }
+
+  /**
+   * Get all required field IDs and labels - backward compatible
    */
   getRequiredFields(): FieldEntry[] {
     const map = this.loadFieldMap();
@@ -115,11 +166,34 @@ Error details: ${error.message}
   }
 
   /**
-   * Get all field entries for debugging/inspection
+   * Get all required fields for specific form
+   */
+  getRequiredFieldsForForm(formId: string): FieldEntry[] {
+    const map = this.loadFieldMapForForm(formId);
+    return map.entries.filter(entry => entry.required);
+  }
+
+  /**
+   * Get all field entries for debugging/inspection - backward compatible
    */
   getAllFields(): FieldEntry[] {
     const map = this.loadFieldMap();
     return map.entries;
+  }
+
+  /**
+   * Get all field entries for specific form
+   */
+  getAllFieldsForForm(formId: string): FieldEntry[] {
+    const map = this.loadFieldMapForForm(formId);
+    return map.entries;
+  }
+
+  /**
+   * Get all loaded form IDs
+   */
+  getLoadedFormIds(): string[] {
+    return Array.from(this.fieldMaps.keys());
   }
 
   /**
@@ -163,16 +237,23 @@ Error details: ${error.message}
     } catch (error) {
       return {
         valid: false,
-        message: error.message
+        message: error instanceof Error ? error.message : 'Unknown error'
       };
     }
   }
 
   /**
-   * Clear cached mapping (useful for testing or after updates)
+   * Clear cached mapping for specific form
+   */
+  clearCacheForForm(formId: string): void {
+    this.fieldMaps.delete(formId);
+  }
+
+  /**
+   * Clear all cached mappings (useful for testing or after updates)
    */
   clearCache(): void {
-    this.fieldMap = null;
+    this.fieldMaps.clear();
   }
 }
 
