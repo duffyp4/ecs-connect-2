@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BarChart3, Activity, CheckCircle, Clock, AlertTriangle } from "lucide-react";
@@ -139,7 +140,9 @@ export default function Dashboard() {
                   recentJobs.map((job: any) => (
                     <tr key={job.id} className="border-b hover:bg-gray-50">
                       <td className="p-4">
-                        <span className="job-id">{job.jobId}</span>
+                        <Link href={`/jobs/${job.id}`}>
+                          <span className="job-id cursor-pointer hover:underline" data-testid={`link-job-${job.id}`}>{job.jobId}</span>
+                        </Link>
                       </td>
                       <td className="p-4">
                         <div className="space-y-1">

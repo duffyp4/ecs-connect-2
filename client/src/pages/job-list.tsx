@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -130,7 +131,9 @@ export default function JobList() {
                   jobs.map((job: any) => (
                     <tr key={job.id} className="border-b hover:bg-gray-50">
                       <td className="p-4">
-                        <span className="job-id">{job.jobId}</span>
+                        <Link href={`/jobs/${job.id}`}>
+                          <span className="job-id cursor-pointer hover:underline" data-testid={`link-job-${job.id}`}>{job.jobId}</span>
+                        </Link>
                       </td>
                       <td className="p-4">
                         <div>

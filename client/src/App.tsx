@@ -9,6 +9,7 @@ import Home from "@/pages/home";
 import Dashboard from "@/pages/dashboard";
 import JobList from "@/pages/job-list";
 import Reports from "@/pages/reports";
+import JobDetail from "@/pages/job-detail";
 import { Landing } from "@/pages/landing";
 import Layout from "@/components/layout";
 
@@ -36,6 +37,7 @@ function Router() {
         <Route path="/" component={Home} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/jobs" component={JobList} />
+        <Route path="/jobs/:id" component={JobDetail} />
         <Route path="/reports" component={Reports} />
         <Route component={NotFound} />
       </Switch>
