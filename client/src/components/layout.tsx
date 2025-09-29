@@ -26,6 +26,7 @@ export default function Layout({ children }: LayoutProps) {
     { href: "/", label: "New Job", icon: Plus },
     { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
     { href: "/jobs", label: "Job List", icon: List },
+    { href: "/reports", label: "Reports", icon: FileText },
   ];
 
   return (
