@@ -3,11 +3,20 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { fieldMapper } from '@shared/fieldMapper';
 
+// GoCanvas Form IDs
+export const FORM_IDS = {
+  EMISSIONS: '5594156',      // Emissions Service Log
+  PICKUP: '5628229',         // Pickup Log
+  DELIVERY: '5604777',       // Delivery Log
+} as const;
+
+export type FormType = keyof typeof FORM_IDS;
+
 export class GoCanvasService {
   private baseUrl = 'https://api.gocanvas.com/api/v3';
   private username: string;
   private password: string;
-  private formId?: string;
+  private formId?: string; // Default form ID (emissions) - kept for backward compatibility
   private dryRun: boolean;
 
   constructor() {
@@ -15,7 +24,7 @@ export class GoCanvasService {
     this.password = process.env.GOCANVAS_PASSWORD || '';
     this.dryRun = process.env.GOCANVAS_DRY_RUN === 'true';
     
-    // Validate field mapping and get form ID
+    // Validate field mapping and get default form ID (emissions)
     const validation = fieldMapper.validateMapping();
     if (!validation.valid) {
       console.error('❌ GoCanvas Field Mapping Error:', validation.message);
@@ -24,6 +33,12 @@ export class GoCanvasService {
     
     this.formId = fieldMapper.getFormId();
     console.log('✅ GoCanvas initialized:', validation.message);
+    
+    // Log available forms
+    const loadedForms = fieldMapper.getLoadedFormIds();
+    if (loadedForms.length > 0) {
+      console.log(`📋 Loaded field maps for ${loadedForms.length} forms:`, loadedForms.join(', '));
+    }
     
     if (this.dryRun) {
       console.log('🧪 DRY_RUN MODE ENABLED - No actual API calls will be made');
@@ -489,6 +504,216 @@ export class GoCanvasService {
       }
       
       throw error;
+    }
+  }
+
+  /**
+   * Create a dispatch for a specific form type (pickup, delivery, or emissions)
+   */
+  async createDispatchForForm(
+    formType: FormType,
+    jobData: any,
+    assigneeEmail?: string
+  ): Promise<string> {
+    const formId = FORM_IDS[formType];
+    console.log(`=== GOCANVAS createDispatchForForm called for ${formType} (Form ID: ${formId}) ===`);
+    console.log('Job ID:', jobData.jobId);
+    console.log('Assignee:', assigneeEmail || 'unassigned');
+    
+    if (!this.username || !this.password) {
+      console.log('GoCanvas not configured, skipping dispatch creation');
+      return 'skip-no-config';
+    }
+
+    try {
+      // Map job data to form responses for the specific form
+      const responses = this.mapJobDataToFormResponsesForForm(formId, jobData, formType);
+      
+      // Look up assignee user ID if provided
+      let assigneeId = null;
+      if (assigneeEmail) {
+        assigneeId = await this.getUserId(assigneeEmail);
+        if (assigneeId) {
+          console.log(`Found GoCanvas user ID ${assigneeId} for ${assigneeEmail}`);
+        } else {
+          console.warn(`Could not find GoCanvas user for ${assigneeEmail}, dispatch will be unassigned`);
+        }
+      }
+      
+      // Create dispatch data
+      const dispatchData: any = {
+        dispatch_type: 'immediate_dispatch',
+        form_id: parseInt(formId),
+        name: `ECS ${formType} Job: ${jobData.jobId}`,
+        description: this.getDispatchDescription(formType, jobData),
+        responses: responses,
+        send_notification: true
+      };
+
+      // Add assignee if found
+      if (assigneeId) {
+        dispatchData.assignee_id = assigneeId;
+      }
+
+      console.log('Creating GoCanvas dispatch:', { 
+        jobId: jobData.jobId,
+        formType,
+        formId,
+        responseCount: responses.length,
+        assigneeId: assigneeId,
+        dryRun: this.dryRun
+      });
+
+      // DRY RUN MODE - Skip actual API call
+      if (this.dryRun) {
+        console.log('🧪 DRY_RUN: Skipping actual GoCanvas API call');
+        console.log('🧪 Would have called:', `${this.baseUrl}/dispatches`);
+        console.log('🧪 Would have sent payload:', JSON.stringify(dispatchData, null, 2));
+        return `dryrun-${formType}-${jobData.jobId}-${Date.now()}`;
+      }
+
+      const response = await fetch(`${this.baseUrl}/dispatches`, {
+        method: 'POST',
+        headers: {
+          'Authorization': this.getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dispatchData),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('🚨 GoCanvas API Error Details:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText,
+          formType,
+          formId
+        });
+        throw new Error(`Failed to create ${formType} dispatch: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log(`✅ GoCanvas ${formType} dispatch created successfully:`, result.id || result.guid);
+      
+      return result.id || result.guid || jobData.jobId;
+    } catch (error) {
+      console.error(`❌ Failed to create GoCanvas ${formType} dispatch:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get dispatch description based on form type
+   */
+  private getDispatchDescription(formType: FormType, jobData: any): string {
+    switch (formType) {
+      case 'PICKUP':
+        return `Pickup for ${jobData.customerName} - ${jobData.shopName || 'Shop'}`;
+      case 'DELIVERY':
+        return `Delivery for ${jobData.customerName} - ${jobData.shopName || 'Shop'}`;
+      case 'EMISSIONS':
+        return `Job for ${jobData.customerName} - ${jobData.shopName}`;
+      default:
+        return `Job ${jobData.jobId}`;
+    }
+  }
+
+  /**
+   * Map job data to form responses for a specific form
+   */
+  private mapJobDataToFormResponsesForForm(formId: string, jobData: any, formType: FormType): any[] {
+    console.log(`🔍 Starting field mapping for ${formType} form (${formId})...`);
+    
+    // Get all fields for this specific form
+    const allFields = fieldMapper.getAllFieldsForForm(formId);
+    console.log(`Loaded ${allFields.length} fields from FieldMapper for form ${formId}`);
+    
+    // Create label-to-ID mapping
+    const fieldMap: any = {};
+    allFields.forEach(field => {
+      fieldMap[field.label] = field.id;
+    });
+
+    const responses = [];
+    
+    // Get form-specific mappings
+    const mappings = this.getFormSpecificMappings(formType, jobData);
+
+    // Map fields
+    for (const mapping of mappings) {
+      if (mapping.data !== undefined && mapping.data !== null) {
+        for (const label of mapping.labels) {
+          const entryId = fieldMap[label];
+          if (entryId) {
+            const value = mapping.data || "N/A";
+            console.log(`Mapping found: ${label} -> ${entryId} = "${value}"`);
+            responses.push({
+              entry_id: entryId,
+              value: String(value)
+            });
+            break; // Use first matching field
+          }
+        }
+      }
+    }
+    
+    console.log(`Created ${responses.length} form responses for ${formType}`);
+    return responses;
+  }
+
+  /**
+   * Get form-specific field mappings
+   */
+  private getFormSpecificMappings(formType: FormType, jobData: any): any[] {
+    const commonMappings = [
+      { data: jobData.jobId, labels: ['Job ID', 'ECS Job ID', 'Job Id', 'Job Number'] },
+      { data: jobData.customerName, labels: ['Customer Name'] },
+      { data: jobData.shopName, labels: ['Shop Name'] },
+      { data: jobData.contactName, labels: ['Contact Name'] },
+      { data: jobData.contactNumber, labels: ['Contact Number'] },
+    ];
+
+    switch (formType) {
+      case 'PICKUP':
+        return [
+          ...commonMappings,
+          { data: jobData.pickupAddress, labels: ['Pickup Address', 'Address'] },
+          { data: jobData.pickupNotes, labels: ['Pickup Notes', 'Notes'] },
+          { data: jobData.itemCount, labels: ['Item Count', 'Number of Items'] },
+        ];
+      
+      case 'DELIVERY':
+        return [
+          ...commonMappings,
+          { data: jobData.deliveryAddress, labels: ['Delivery Address', 'Address'] },
+          { data: jobData.deliveryNotes, labels: ['Delivery Notes', 'Notes'] },
+          { data: jobData.itemCount, labels: ['Item Count', 'Number of Items'] },
+        ];
+      
+      case 'EMISSIONS':
+      default:
+        // Full emissions form mappings
+        return [
+          ...commonMappings,
+          { data: jobData.p21OrderNumber, labels: ['P21 Order Number (Enter after invoicing)'] },
+          { data: jobData.userId, labels: ['User ID'] },
+          { data: jobData.permissionToStart, labels: ['Permission to Start'] },
+          { data: jobData.permissionDeniedStop, labels: ['Permission Denied Stop'] },
+          { data: jobData.customerShipTo, labels: ['Customer Ship To'] },
+          { data: jobData.p21ShipToId, labels: ['P21 Ship to ID'] },
+          { data: jobData.customerSpecificInstructions, labels: ['Customer Specific Instructions?'] },
+          { data: jobData.sendClampsGaskets, labels: ['Send Clamps & Gaskets?'] },
+          { data: jobData.preferredProcess, labels: ['Preferred Process?'] },
+          { data: jobData.anyOtherSpecificInstructions, labels: ['Any Other Specific Instructions?'] },
+          { data: jobData.anyCommentsForTech, labels: ['Any comments for the tech about this submission?'] },
+          { data: jobData.noteToTechAboutCustomer, labels: ['Note to Tech about Customer or service:'] },
+          { data: jobData.poNumber, labels: ['PO Number (Check In)', 'PO Number'] },
+          { data: jobData.serialNumbers, labels: ['Serial Number(s)'] },
+          { data: jobData.techCustomerQuestionInquiry, labels: ['Tech Customer Question Inquiry'] },
+          { data: jobData.shopHandoff, labels: ['Shop Handoff'] },
+          { data: jobData.handoffEmailWorkflow, labels: ['Handoff Email workflow'] },
+        ];
     }
   }
 
