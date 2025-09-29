@@ -31,15 +31,36 @@ export const jobs = pgTable("jobs", {
   handoffEmailWorkflow: text("handoff_email_workflow"),
   
   // Tracking Fields - New State System (7 states)
-  state: text("state").notNull().default("queued_for_pickup"), // queued_for_pickup, picked_up, at_shop, in_service, ready_for_pickup_delivery, out_for_delivery, delivered
+  state: text("state").notNull().default("queued_for_pickup"), // queued_for_pickup, picked_up, at_shop, in_service, ready_for_pickup, ready_for_delivery, out_for_delivery, delivered
   initiatedAt: timestamp("initiated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at"),
   
-  // Pickup/Delivery Timestamps
+  // State-specific Timestamps
+  pickedUpAt: timestamp("picked_up_at"),
+  atShopAt: timestamp("at_shop_at"),
+  inServiceAt: timestamp("in_service_at"),
+  readyAt: timestamp("ready_at"), // when marked ready_for_pickup or ready_for_delivery
+  outForDeliveryAt: timestamp("out_for_delivery_at"),
+  deliveredAt: timestamp("delivered_at"),
+  
+  // Legacy Timestamps (kept for backward compatibility)
   possessionStart: timestamp("possession_start"), // earliest of picked_up or shop_checkin
   handoffAt: timestamp("handoff_at"), // when handed off to technician
   readyForPickupDeliveryAt: timestamp("ready_for_pickup_delivery_at"),
-  deliveredAt: timestamp("delivered_at"),
-  completedAt: timestamp("completed_at"), // kept for backward compatibility
+  completedAt: timestamp("completed_at"),
+  
+  // Pickup/Delivery Data
+  pickupAddress: text("pickup_address"),
+  pickupNotes: text("pickup_notes"),
+  pickupDriverEmail: text("pickup_driver_email"),
+  deliveryAddress: text("delivery_address"),
+  deliveryNotes: text("delivery_notes"),
+  deliveryDriverEmail: text("delivery_driver_email"),
+  deliveryMethod: text("delivery_method"), // 'pickup' or 'delivery'
+  itemCount: integer("item_count"),
+  
+  // Technician Assignment
+  assignedTechnician: text("assigned_technician"),
   
   // Scenario Tracking
   startedWithPickup: text("started_with_pickup").default("false"), // did job start with pickup dispatch?
@@ -74,6 +95,7 @@ export const jobEvents = pgTable("job_events", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   jobId: varchar("job_id").notNull(), // references jobs.id
   eventType: text("event_type").notNull(), // pickup_dispatched, picked_up, shop_checkin, tech_start, tech_complete, ready_for_pickup, delivery_dispatched, delivered
+  description: text("description").notNull(), // human-readable description of the event
   timestamp: timestamp("timestamp").notNull().default(sql`CURRENT_TIMESTAMP`),
   actor: text("actor").notNull(), // CSR, Driver, System, Technician
   actorEmail: text("actor_email"), // who performed the action

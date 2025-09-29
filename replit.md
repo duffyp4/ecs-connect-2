@@ -4,7 +4,33 @@
 
 This is a web application designed as a Customer Service Representative (CSR) Check-in Portal for Emissions and Cooling Solutions (ECS). The system provides a minimal overlay on top of ECS's existing GoCanvas workflow, allowing CSRs to initiate jobs through a web form that automatically integrates with GoCanvas and tracks completion times with accurate turnaround analytics.
 
-**Last Updated**: September 24, 2025
+The system now includes a **Pickup and Delivery Add-on** that extends the workflow to support a 7-state job lifecycle with pickup and delivery tracking, separate GoCanvas forms for each workflow stage, and comprehensive event timeline tracking.
+
+**Last Updated**: September 29, 2025
+
+## Recent Changes
+
+### September 29, 2025 - Pickup and Delivery Add-on (Phase 1-3)
+**Implemented Core Backend Infrastructure**:
+
+- **Database Schema Extension**: Added 7-state job lifecycle (queued_for_pickup → picked_up → at_shop → in_service → ready_for_pickup/delivery → out_for_delivery → delivered)
+  - Added state-specific timestamps (pickedUpAt, atShopAt, inServiceAt, readyAt, outForDeliveryAt)
+  - Added pickup/delivery data fields (addresses, notes, driver emails, item count)
+  - Added delivery method tracking and technician assignment fields
+
+- **Job Events Service**: Created complete state machine with validation
+  - Implemented all major job action methods (dispatch pickup, mark picked up, check in, start service, mark ready, dispatch delivery, mark delivered, cancel)
+  - Automatic event recording to job_events table with human-readable descriptions
+  - Timeline tracking with actor, email, and metadata for each event
+
+- **Multi-Form GoCanvas Integration**: Extended FieldMapper and GoCanvas service to support three forms:
+  - Form 5594156: Emissions Service Log (existing)
+  - Form 5628229: Pickup Log (new - for driver pickup dispatches)
+  - Form 5604777: Delivery Log (new - for driver delivery dispatches)
+  - Created form-specific field mapping methods
+  - Maintained backward compatibility with existing emissions workflow
+
+**Status**: Backend infrastructure complete and tested. Ready for Phase 4 (UI implementation)
 
 ## User Preferences
 
