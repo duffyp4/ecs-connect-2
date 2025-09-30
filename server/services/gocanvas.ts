@@ -676,11 +676,19 @@ export class GoCanvasService {
 
     switch (formType) {
       case 'PICKUP':
+        // Generate dispatch date/time
+        const now = new Date();
+        const dispatchDate = now.toISOString().split('T')[0]; // YYYY-MM-DD
+        const dispatchTime = now.toTimeString().split(' ')[0].substring(0, 5); // HH:MM
+        
         return [
-          ...commonMappings,
-          { data: jobData.pickupAddress, labels: ['Pickup Address', 'Address'] },
-          { data: jobData.pickupNotes, labels: ['Pickup Notes', 'Notes'] },
-          { data: jobData.itemCount, labels: ['Item Count', 'Number of Items'] },
+          { data: jobData.jobId, labels: ['Job ID'] },
+          { data: dispatchDate, labels: ['Dispatch Date'] },
+          { data: dispatchTime, labels: ['Dispatch Time'] },
+          { data: jobData.shopName, labels: ['Location'] }, // Connected to reference_data_id=947586
+          { data: jobData.customerName, labels: ['Customer Name'] }, // Connected to Workflow Customer Name table
+          { data: jobData.customerShipTo, labels: ['Customer Ship-To'] }, // Connected to same table, "ship to combined" field
+          { data: jobData.pickupNotes, labels: ['Notes to Driver'] },
         ];
       
       case 'DELIVERY':
