@@ -486,7 +486,247 @@ export default function CSRForm() {
               )}
 
               <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  
+                  {/* PICKUP PATH - Show only essential fields */}
+                  {arrivalPath === 'pickup' && (
+                    <>
+                      {/* Shop and Customer Info for Pickup */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+                        <FormField
+                          control={form.control}
+                          name="shopName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-1">
+                            <Database className="h-3 w-3 text-muted-foreground" /> Location *
+                          </FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-shop-name">
+                                <SelectValue placeholder="Select location" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {isLoadingAllShops ? (
+                                <SelectItem value="loading" disabled>Loading locations...</SelectItem>
+                              ) : (
+                                allShops.map((shop) => (
+                                  <SelectItem key={shop} value={shop}>
+                                    {shop}
+                                  </SelectItem>
+                                ))
+                              )}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="customerName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-1">
+                            <Database className="h-3 w-3 text-muted-foreground" /> Customer Name *
+                          </FormLabel>
+                          <Popover open={customerSearchOpen} onOpenChange={setCustomerSearchOpen}>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  aria-expanded={customerSearchOpen}
+                                  className="w-full justify-between"
+                                  data-testid="select-customer-name"
+                                >
+                                  {field.value || "Select or type customer name..."}
+                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[400px] p-0">
+                              <Command shouldFilter={false}>
+                                <div className="flex items-center border-b px-3">
+                                  <Database className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                                  <Input
+                                    placeholder="Search customers or enter custom name..."
+                                    value={field.value || ""}
+                                    onChange={(e) => field.onChange(e.target.value)}
+                                    className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                  />
+                                </div>
+                                <CommandList>
+                                  {isLoadingCustomers ? (
+                                    <div className="py-6 text-center text-sm">Loading customers...</div>
+                                  ) : (
+                                    <>
+                                      {customerNames
+                                        .filter((customer) =>
+                                          customer.toLowerCase().includes((field.value || "").toLowerCase())
+                                        )
+                                        .slice(0, 100)
+                                        .map((customer) => (
+                                          <CommandItem
+                                            key={customer}
+                                            value={customer}
+                                            onSelect={() => {
+                                              field.onChange(customer);
+                                              setCustomerSearchOpen(false);
+                                            }}
+                                          >
+                                            <Check
+                                              className={cn(
+                                                "mr-2 h-4 w-4",
+                                                field.value === customer ? "opacity-100" : "opacity-0"
+                                              )}
+                                            />
+                                            {customer}
+                                          </CommandItem>
+                                        ))}
+                                      {field.value && 
+                                       !customerNames.some(customer => 
+                                         customer.toLowerCase() === field.value.toLowerCase()
+                                       ) && (
+                                        <div className="p-2 border-t">
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="w-full justify-start"
+                                            onClick={() => {
+                                              setCustomerSearchOpen(false);
+                                            }}
+                                          >
+                                            Add "{field.value}" as a new customer
+                                          </Button>
+                                        </div>
+                                      )}
+                                      {!isLoadingCustomers && 
+                                       customerNames
+                                         .filter((customer) =>
+                                           customer.toLowerCase().includes((field.value || "").toLowerCase())
+                                         ).length === 0 && !field.value && (
+                                        <div className="py-6 text-center text-sm">No customers found</div>
+                                      )}
+                                    </>
+                                  )}
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Customer Ship To */}
+                  <FormField
+                    control={form.control}
+                    name="customerShipTo"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-1">
+                          <Database className="h-3 w-3 text-muted-foreground" /> Customer Ship-To *
+                        </FormLabel>
+                        <Popover open={shipToSearchOpen} onOpenChange={setShipToSearchOpen}>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={shipToSearchOpen}
+                                className="w-full justify-between"
+                                data-testid="select-ship-to"
+                              >
+                                {field.value || "Select or type ship to location..."}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[400px] p-0">
+                            <Command shouldFilter={false}>
+                              <div className="flex items-center border-b px-3">
+                                <Database className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                                <Input
+                                  placeholder="Search ship to locations or enter custom location..."
+                                  value={field.value || ""}
+                                  onChange={(e) => field.onChange(e.target.value)}
+                                  className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                />
+                              </div>
+                              <CommandList>
+                                {isLoadingShipTo ? (
+                                  <div className="py-6 text-center text-sm">Loading ship to options...</div>
+                                ) : !customerName ? (
+                                  <div className="py-6 text-center text-sm">Select Customer first</div>
+                                ) : (
+                                  <>
+                                    {shipToOptions
+                                      .filter((shipTo) =>
+                                        shipTo.toLowerCase().includes((field.value || "").toLowerCase())
+                                      )
+                                      .slice(0, 100)
+                                      .map((shipTo) => (
+                                        <CommandItem
+                                          key={shipTo}
+                                          value={shipTo}
+                                          onSelect={() => {
+                                            field.onChange(shipTo);
+                                            setShipToSearchOpen(false);
+                                          }}
+                                        >
+                                          <Check
+                                            className={cn(
+                                              "mr-2 h-4 w-4",
+                                              field.value === shipTo ? "opacity-100" : "opacity-0"
+                                            )}
+                                          />
+                                          {shipTo}
+                                        </CommandItem>
+                                      ))}
+                                    {field.value && 
+                                     !shipToOptions.some(shipTo => 
+                                       shipTo.toLowerCase() === field.value.toLowerCase()
+                                     ) && (
+                                      <div className="p-2 border-t">
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="w-full justify-start"
+                                          onClick={() => {
+                                            setShipToSearchOpen(false);
+                                          }}
+                                        >
+                                          Add "{field.value}" as a new ship to location
+                                        </Button>
+                                      </div>
+                                    )}
+                                    {!isLoadingShipTo && 
+                                     shipToOptions
+                                       .filter((shipTo) =>
+                                         shipTo.toLowerCase().includes((field.value || "").toLowerCase())
+                                       ).length === 0 && !field.value && (
+                                      <div className="py-6 text-center text-sm">No ship to locations found</div>
+                                    )}
+                                  </>
+                                )}
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
+
+              {/* DIRECT SHOP CHECK-IN PATH - Show all fields */}
+              {arrivalPath === 'direct' && (
+                <>
               {/* P21 Order Number */}
               <FormField
                 control={form.control}
@@ -1191,6 +1431,8 @@ export default function CSRForm() {
                   }}
                 />
               </div>
+                </>
+              )}
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 pt-6">
