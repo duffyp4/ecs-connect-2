@@ -420,119 +420,26 @@ export default function CSRForm() {
                 </Alert>
               </div>
 
-              {/* Pickup Fields - Show only when pickup path is selected */}
-              {arrivalPath === 'pickup' && (
-                <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
-                  <h4 className="font-semibold text-base">Pickup Information</h4>
-                  
-                  <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Driver Selection */}
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Driver *</label>
-                      <Select value={pickupDriver} onValueChange={(value) => {
-                        setPickupDriver(value);
-                        setPickupFieldErrors(prev => ({ ...prev, driver: undefined }));
-                      }}>
-                        <SelectTrigger data-testid="select-pickup-driver" className={pickupFieldErrors.driver ? "border-red-500" : ""}>
-                          <SelectValue placeholder="Select driver" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {isLoadingDrivers ? (
-                            <SelectItem value="_loading">Loading drivers...</SelectItem>
-                          ) : (
-                            drivers.map((driver) => (
-                              <SelectItem key={driver} value={driver} data-testid={`option-driver-${driver}`}>
-                                {driver}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                      {pickupFieldErrors.driver && (
-                        <p className="text-sm text-red-500 mt-1" data-testid="error-pickup-driver">{pickupFieldErrors.driver}</p>
-                      )}
-                    </div>
-
-                    {/* Pickup Address */}
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Pickup Address *</label>
-                      <Input
-                        placeholder="Enter pickup address"
-                        value={pickupAddress}
-                        onChange={(e) => {
-                          setPickupAddress(e.target.value);
-                          setPickupFieldErrors(prev => ({ ...prev, address: undefined }));
-                        }}
-                        className={pickupFieldErrors.address ? "border-red-500" : ""}
-                        data-testid="input-pickup-address"
-                      />
-                      {pickupFieldErrors.address && (
-                        <p className="text-sm text-red-500 mt-1" data-testid="error-pickup-address">{pickupFieldErrors.address}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Pickup Notes */}
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Pickup Notes (Optional)</label>
-                    <Textarea
-                      placeholder="Any special instructions for pickup..."
-                      value={pickupNotes}
-                      onChange={(e) => setPickupNotes(e.target.value)}
-                      rows={2}
-                      data-testid="input-pickup-notes"
-                    />
-                  </div>
-                </div>
-              )}
 
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   
-                  {/* PICKUP PATH - Show only essential fields */}
+                  {/* PICKUP PATH - Reorganized by workflow */}
                   {arrivalPath === 'pickup' && (
                     <>
-                      {/* Shop and Customer Info for Pickup */}
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-                        <FormField
-                          control={form.control}
-                          name="shopName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="flex items-center gap-1">
-                            <Database className="h-3 w-3 text-muted-foreground" /> Location *
-                          </FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value || ""}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-shop-name">
-                                <SelectValue placeholder="Select location" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {isLoadingLocations ? (
-                                <SelectItem value="loading" disabled>Loading locations...</SelectItem>
-                              ) : (
-                                locations.map((location) => (
-                                  <SelectItem key={location} value={location}>
-                                    {location}
-                                  </SelectItem>
-                                ))
-                              )}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="customerName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="flex items-center gap-1">
-                            <Database className="h-3 w-3 text-muted-foreground" /> Customer Name *
-                          </FormLabel>
+                      {/* 1. Customer & Pickup Details */}
+                      <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                        <h4 className="font-semibold text-base">Customer & Pickup Details</h4>
+                        
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+                          <FormField
+                            control={form.control}
+                            name="customerName"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="flex items-center gap-1">
+                                  <Database className="h-3 w-3 text-muted-foreground" /> Customer Name *
+                                </FormLabel>
                           <Popover open={customerSearchOpen} onOpenChange={setCustomerSearchOpen}>
                             <PopoverTrigger asChild>
                               <FormControl>
