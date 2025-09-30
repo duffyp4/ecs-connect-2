@@ -343,11 +343,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Driver email and pickup address are required" });
       }
 
-      const updatedJob = await jobEventsService.dispatchPickup(jobId, {
-        driverEmail,
-        pickupAddress,
-        pickupNotes,
-      });
+      const updatedJob = await jobEventsService.dispatchPickup(
+        jobId,
+        {
+          driverEmail,
+          pickupAddress,
+          pickupNotes,
+        }
+      );
       
       res.json(updatedJob);
     } catch (error) {

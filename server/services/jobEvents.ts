@@ -183,9 +183,13 @@ export class JobEventsService {
    */
   async dispatchPickup(
     jobId: string,
-    driverEmail: string,
+    params: {
+      driverEmail: string;
+      pickupAddress: string;
+      pickupNotes?: string;
+    },
     options: StateChangeOptions = {}
-  ): Promise<{ job: Job; dispatchId: string }> {
+  ): Promise<Job> {
     // Get job
     const job = await storage.getJob(jobId);
     
@@ -198,7 +202,7 @@ export class JobEventsService {
       throw new Error(`Cannot dispatch pickup: job is in ${job.state} state, must be in queued_for_pickup`);
     }
 
-    // Create GoCanvas pickup dispatch
+    // Create GoCanvas pickup dispatch using the driver email for assignment
     const dispatchId = await goCanvasService.createDispatchForForm(
       'PICKUP',
       {
@@ -207,16 +211,18 @@ export class JobEventsService {
         shopName: job.shopName,
         contactName: job.contactName,
         contactNumber: job.contactNumber,
-        pickupAddress: job.pickupAddress,
-        pickupNotes: job.pickupNotes,
+        pickupAddress: params.pickupAddress,
+        pickupNotes: params.pickupNotes || '',
       },
-      driverEmail
+      params.driverEmail // Use the actual driver email for GoCanvas assignment
     );
 
     // Update job with dispatch info
     await storage.updateJob(jobId, {
       pickupDispatchId: dispatchId,
-      pickupDriverEmail: driverEmail,
+      pickupDriverEmail: params.driverEmail,
+      pickupAddress: params.pickupAddress,
+      pickupNotes: params.pickupNotes || '',
       updatedAt: new Date(),
     });
 
@@ -224,12 +230,14 @@ export class JobEventsService {
     await this.recordEvent(
       jobId,
       'pickup_dispatched',
-      `Pickup dispatched to ${driverEmail}`,
+      `Pickup dispatched to ${params.driverEmail} at ${params.pickupAddress}`,
       {
         ...options,
         metadata: {
           ...options.metadata,
-          driverEmail,
+          driverEmail: params.driverEmail,
+          pickupAddress: params.pickupAddress,
+          pickupNotes: params.pickupNotes,
           dispatchId,
           formType: 'PICKUP',
         },
@@ -243,7 +251,7 @@ export class JobEventsService {
       throw new Error(`Failed to get updated job ${jobId}`);
     }
     
-    return { job: updatedJob, dispatchId };
+    return updatedJob;
   }
 
   /**
