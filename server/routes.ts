@@ -301,33 +301,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertJobSchema.parse(req.body);
       
-      // Create job in storage
+      // Create job in storage (starts in queued_for_pickup state)
       const job = await storage.createJob(validatedData);
       
-      // Create GoCanvas submission  
-      try {
-        console.log('=== ROUTE DEBUG: Job data being sent to GoCanvas ===');
-        console.log('Job shopName:', job.shopName);
-        console.log('Job customerShipTo:', job.customerShipTo);  
-        console.log('Job keys:', Object.keys(job));
-        console.log('================================================');
-        const submissionId = await goCanvasService.createSubmission(job);
-        
-        if (submissionId && typeof submissionId === 'string' && !submissionId.startsWith('skip-')) {
-          // Update job with GoCanvas submission ID
-          await storage.updateJob(job.id, {
-            gocanvasSubmissionId: submissionId,
-            gocanvasSynced: "true",
-          });
-          console.log(`Created GoCanvas submission ${submissionId} for job ${job.jobId}`);
-        } else {
-          console.log(`Job ${job.jobId} created - GoCanvas submission ${submissionId}`);
-        }
-      } catch (gocanvasError) {
-        console.error("GoCanvas submission failed:", gocanvasError);
-        // Job is still created, but GoCanvas sync failed - this is why user sees success message
-        console.log("Note: Job was saved successfully to database, but GoCanvas integration failed");
-      }
+      // NOTE: Emissions Service Log will be created at check-in time, not here
+      // This prevents duplicate dispatches for pickup jobs
+      console.log(`Job ${job.jobId} created in ${job.state} state`);
 
       const updatedJob = await storage.getJob(job.id);
       res.json(updatedJob);
@@ -385,6 +364,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { jobId } = req.params;
       const updatedJob = await jobEventsService.checkInAtShop(jobId);
+      
+      // Create Emissions Service Log dispatch when job is checked in at shop
+      try {
+        const submissionId = await goCanvasService.createSubmission(updatedJob);
+        
+        if (submissionId && typeof submissionId === 'string' && !submissionId.startsWith('skip-')) {
+          await storage.updateJob(updatedJob.id, {
+            gocanvasSubmissionId: submissionId,
+            gocanvasSynced: "true",
+          });
+          console.log(`Created Emissions Service Log ${submissionId} for job ${updatedJob.jobId} at check-in`);
+        }
+      } catch (gocanvasError) {
+        console.error("Emissions Service Log creation failed at check-in:", gocanvasError);
+        // Job is still checked in, but GoCanvas sync failed
+      }
+      
       res.json(updatedJob);
     } catch (error) {
       console.error("Error checking in job:", error);
