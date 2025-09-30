@@ -283,7 +283,46 @@ export default function CSRForm() {
   }, []);
 
   const onSubmit = (data: FormData) => {
-    createJobMutation.mutate(data);
+    console.log("Form submitted with data:", data);
+    console.log("Arrival path:", arrivalPath);
+    
+    // For pickup path, add default values for fields that will be filled later
+    if (arrivalPath === 'pickup') {
+      const pickupData = {
+        ...data,
+        contactName: data.contactName || "TBD - Will be provided at check-in",
+        contactNumber: data.contactNumber || "0000000000", // Placeholder 10-digit number
+        poNumber: data.poNumber || "TBD",
+        serialNumbers: data.serialNumbers || "TBD - Will be provided at check-in",
+        shopHandoff: data.shopHandoff || "TBD",
+        userId: data.userId || "pickup@ecspart.com",
+      };
+      createJobMutation.mutate(pickupData);
+    } else {
+      createJobMutation.mutate(data);
+    }
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // For pickup path, set default values BEFORE validation
+    if (arrivalPath === 'pickup') {
+      if (!form.getValues("contactName")) form.setValue("contactName", "TBD - Will be provided at check-in");
+      if (!form.getValues("contactNumber")) form.setValue("contactNumber", "0000000000");
+      if (!form.getValues("poNumber")) form.setValue("poNumber", "TBD");
+      if (!form.getValues("serialNumbers")) form.setValue("serialNumbers", "TBD - Will be provided at check-in");
+      if (!form.getValues("shopHandoff")) form.setValue("shopHandoff", "TBD");
+      if (!form.getValues("userId")) form.setValue("userId", "pickup@ecspart.com");
+    }
+    
+    // Log any form errors for debugging
+    const errors = form.formState.errors;
+    if (Object.keys(errors).length > 0) {
+      console.error("Form validation errors:", errors);
+    }
+    
+    form.handleSubmit(onSubmit)(e);
   };
 
   const clearForm = () => {
@@ -422,7 +461,7 @@ export default function CSRForm() {
 
 
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={handleFormSubmit} className="space-y-6">
                   
                   {/* PICKUP PATH - Match GoCanvas field order */}
                   {arrivalPath === 'pickup' && (
