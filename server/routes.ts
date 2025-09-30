@@ -285,6 +285,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get locations from ECS Locations - Drivers reference data
+  app.get("/api/reference/locations", async (req, res) => {
+    try {
+      const locations = await referenceDataService.getLocations();
+      res.json(locations);
+    } catch (error) {
+      console.error("Failed to get locations:", error);
+      res.status(500).json({ error: "Failed to fetch locations" });
+    }
+  });
+
   // Create new job
   app.post("/api/jobs", requireAuth, async (req, res) => {
     try {

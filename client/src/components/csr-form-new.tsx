@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { insertJobSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useShopUsers, useShopsForUser, usePermissionForUser, useCustomerNames, useShipToForCustomer, useShip2Ids, useTechComments, useSendClampsGaskets, usePreferredProcesses, useCustomerInstructions, useCustomerNotes, useCustomerSpecificData, useAllShops, useUsersForShop, useDrivers } from "@/hooks/use-reference-data";
+import { useShopUsers, useShopsForUser, usePermissionForUser, useCustomerNames, useShipToForCustomer, useShip2Ids, useTechComments, useSendClampsGaskets, usePreferredProcesses, useCustomerInstructions, useCustomerNotes, useCustomerSpecificData, useAllShops, useUsersForShop, useDrivers, useLocations } from "@/hooks/use-reference-data";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -68,6 +68,7 @@ export default function CSRForm() {
   const userId = form.watch("userId") || "";
   const { data: shopsForUser = [], isLoading: isLoadingShops } = useShopsForUser(userId || undefined);
   const { data: allShops = [], isLoading: isLoadingAllShops } = useAllShops();
+  const { data: locations = [], isLoading: isLoadingLocations } = useLocations();
   const { data: permissionData } = usePermissionForUser(userId || undefined);
   const shopName = form.watch("shopName") || "";
   const { data: usersForSelectedShop = [], isLoading: isLoadingShopHandoffUsers } = useUsersForShop(shopName || undefined);
@@ -508,12 +509,12 @@ export default function CSRForm() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {isLoadingAllShops ? (
+                              {isLoadingLocations ? (
                                 <SelectItem value="loading" disabled>Loading locations...</SelectItem>
                               ) : (
-                                allShops.map((shop) => (
-                                  <SelectItem key={shop} value={shop}>
-                                    {shop}
+                                locations.map((location) => (
+                                  <SelectItem key={location} value={location}>
+                                    {location}
                                   </SelectItem>
                                 ))
                               )}

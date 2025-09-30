@@ -11,12 +11,14 @@ export interface ReferenceDataService {
   getCustomerInstructions(customerName: string): Promise<string>;
   getTechComments(): Promise<string[]>;
   getDrivers(): Promise<string[]>;
+  getLocations(): Promise<string[]>;
 }
 
 class GoCanvasReferenceDataService implements ReferenceDataService {
   private shopData: any[] = [];
   private customerData: any[] = [];
   private driversData: any[] = [];
+  private locationsData: any[] = [];
   private lastFetched: number = 0;
   private cacheExpiry = 5 * 60 * 1000; // 5 minutes
 
@@ -29,8 +31,8 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
     try {
       console.log('Loading reference data from GoCanvas...');
       
-      // Load Location reference data (ID: 947586)
-      const shopsResponse = await goCanvasService.getReferenceDataById('947586');
+      // Load Workflow Shops (ID: 608300)
+      const shopsResponse = await goCanvasService.getReferenceDataById('608300');
       this.shopData = shopsResponse.rows || [];
       
       // Load Workflow Customer Name (ID: 608480)
@@ -41,8 +43,12 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
       const driversResponse = await goCanvasService.getReferenceDataById('343087');
       this.driversData = driversResponse.rows || [];
       
+      // Load ECS Locations - Drivers (ID: 947586)
+      const locationsResponse = await goCanvasService.getReferenceDataById('947586');
+      this.locationsData = locationsResponse.rows || [];
+      
       this.lastFetched = now;
-      console.log(`Loaded ${this.shopData.length} shop records, ${this.customerData.length} customer records, and ${this.driversData.length} driver records`);
+      console.log(`Loaded ${this.shopData.length} shop records, ${this.customerData.length} customer records, ${this.driversData.length} driver records, and ${this.locationsData.length} location records`);
     } catch (error) {
       console.error('Failed to load reference data:', error);
       throw error;
@@ -398,6 +404,18 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
     ));
     
     return drivers.sort();
+  }
+
+  async getLocations(): Promise<string[]> {
+    await this.ensureDataLoaded();
+    
+    // Extract location names from column 0 of ECS Locations reference data (ID: 947586)
+    const locations = Array.from(new Set(this.locationsData
+      .map(row => row[0])
+      .filter(value => this.isValidValue(value))
+    ));
+    
+    return locations.sort();
   }
 }
 

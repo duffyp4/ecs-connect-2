@@ -212,3 +212,16 @@ export function useDrivers() {
     staleTime: 5 * 60 * 1000,
   });
 }
+
+// Get locations from ECS Locations - Drivers reference data
+export function useLocations() {
+  return useQuery({
+    queryKey: ['reference', 'locations'],
+    queryFn: async () => {
+      const response = await fetch('/api/reference/locations');
+      if (!response.ok) throw new Error('Failed to fetch locations');
+      return response.json() as Promise<string[]>;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
