@@ -286,7 +286,21 @@ export default function CSRForm() {
   }, []);
 
   const onSubmit = (data: FormData) => {
-    createJobMutation.mutate(data);
+    // For pickup path, some fields will be provided later at check-in
+    // Set reasonable defaults for those fields
+    if (arrivalPath === 'pickup') {
+      const pickupData = {
+        ...data,
+        contactName: data.contactName || "To be provided at check-in",
+        contactNumber: data.contactNumber || "0000000000", // Valid 10-digit placeholder
+        poNumber: data.poNumber || "TBD",
+        serialNumbers: data.serialNumbers || "To be provided at check-in",
+        shopHandoff: data.shopHandoff || "TBD",
+      };
+      createJobMutation.mutate(pickupData);
+    } else {
+      createJobMutation.mutate(data);
+    }
   };
 
   const clearForm = () => {
@@ -429,7 +443,21 @@ export default function CSRForm() {
 
 
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  
+                  // For pickup path, set placeholder values before validation
+                  if (arrivalPath === 'pickup') {
+                    if (!form.getValues("contactName")) form.setValue("contactName", "To be provided at check-in");
+                    if (!form.getValues("contactNumber")) form.setValue("contactNumber", "0000000000");
+                    if (!form.getValues("poNumber")) form.setValue("poNumber", "TBD");
+                    if (!form.getValues("serialNumbers")) form.setValue("serialNumbers", "To be provided at check-in");
+                    if (!form.getValues("shopHandoff")) form.setValue("shopHandoff", "TBD");
+                  }
+                  
+                  // Now trigger form validation and submission
+                  form.handleSubmit(onSubmit)(e);
+                }} className="space-y-6">
                   
                   {/* PICKUP PATH - Match GoCanvas field order */}
                   {arrivalPath === 'pickup' && (
