@@ -158,6 +158,56 @@ export const insertJobSchema = createInsertSchema(jobs).omit({
   gocanvasDispatchId: z.string().optional(),
 });
 
+// Pickup-specific validation schema - only validates fields needed for pickup dispatch
+export const pickupJobSchema = createInsertSchema(jobs).omit({
+  id: true,
+  jobId: true,
+  initiatedAt: true,
+  state: true,
+  possessionStart: true,
+  handoffAt: true,
+  readyForPickupDeliveryAt: true,
+  deliveredAt: true,
+  completedAt: true,
+  startedWithPickup: true,
+  selfPickup: true,
+  timeToPickup: true,
+  timeAtShop: true,
+  timeWithTech: true,
+  totalTurnaround: true,
+  turnaroundTime: true,
+  gocanvasSubmissionId: true,
+  gocanvasDispatchId: true,
+  pickupDispatchId: true,
+  deliveryDispatchId: true,
+  gocanvasSynced: true,
+  googleSheetsSynced: true,
+}).extend({
+  // Only require fields needed for pickup dispatch
+  shopName: z.string().min(1, "Location is required"),
+  customerName: z.string().min(1, "Customer Name is required"),
+  customerShipTo: z.string().min(1, "Customer Ship To is required"),
+  // All other fields are optional for pickup
+  contactName: z.string().optional(),
+  contactNumber: z.string().optional(),
+  poNumber: z.string().optional(),
+  serialNumbers: z.string().optional(),
+  shopHandoff: z.string().optional(),
+  userId: z.string().optional(),
+  permissionToStart: z.string().optional(),
+  permissionDeniedStop: z.string().optional(),
+  p21ShipToId: z.string().optional(),
+  customerSpecificInstructions: z.string().optional(),
+  sendClampsGaskets: z.string().optional(),
+  preferredProcess: z.string().optional(),
+  anyOtherSpecificInstructions: z.string().optional(),
+  anyCommentsForTech: z.string().optional(),
+  noteToTechAboutCustomer: z.string().optional(),
+  techCustomerQuestionInquiry: z.string().optional(),
+  handoffEmailWorkflow: z.string().optional(),
+  gocanvasDispatchId: z.string().optional(),
+});
+
 export const insertTechnicianSchema = createInsertSchema(technicians).omit({
   id: true,
 });
@@ -168,6 +218,7 @@ export const insertJobEventSchema = createInsertSchema(jobEvents).omit({
 });
 
 export type InsertJob = z.infer<typeof insertJobSchema>;
+export type PickupJob = z.infer<typeof pickupJobSchema>;
 export type Job = typeof jobs.$inferSelect;
 export type InsertTechnician = z.infer<typeof insertTechnicianSchema>;
 export type Technician = typeof technicians.$inferSelect;
