@@ -117,10 +117,10 @@ export class JobEventsService {
     }
 
     // Validate transition
-    if (!this.canTransitionTo(job.state, newState)) {
+    if (!this.canTransitionTo(job.state as JobState, newState)) {
       throw new Error(
         `Invalid state transition: cannot go from ${job.state} to ${newState}. ` +
-        `Allowed transitions: ${this.getAllowedNextStates(job.state).join(', ')}`
+        `Allowed transitions: ${this.getAllowedNextStates(job.state as JobState).join(', ')}`
       );
     }
 
