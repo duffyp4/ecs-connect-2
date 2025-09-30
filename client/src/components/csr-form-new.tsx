@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ClipboardList, Send, X, Info, Clock, Database, Check, ChevronsUpDown } from "lucide-react";
+import { ClipboardList, Send, X, Info, Clock, Database, Check, ChevronsUpDown, Truck, Store, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { z } from "zod";
 
@@ -29,6 +29,7 @@ export default function CSRForm() {
   const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
   const [shipToSearchOpen, setShipToSearchOpen] = useState(false);
   const [arrivalPath, setArrivalPath] = useState<'pickup' | 'direct'>('direct');
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
 
   // Fetch technicians
   const { data: technicians = [] } = useQuery<any[]>({
@@ -314,123 +315,177 @@ export default function CSRForm() {
           <p className="text-sm opacity-90">Fields matching GoCanvas "Testing Copy" form structure</p>
         </CardHeader>
         <CardContent className="pt-6 pb-6 px-4 sm:px-6 space-y-6">
-          {/* Job ID and Timestamp Display */}
-          <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-4">
-            <Alert>
-              <Info className="h-4 w-4" />
-              <AlertDescription>
-                <strong>Job ID:</strong> <span className="job-id">{generatedJobId}</span>
-                <div className="text-xs text-muted-foreground mt-1">
-                  Automatically generated on form submission
-                </div>
-              </AlertDescription>
-            </Alert>
-            <Alert>
-              <Clock className="h-4 w-4" />
-              <AlertDescription>
-                <strong>Initiated:</strong> Time recorded upon check-in form submission
-              </AlertDescription>
-            </Alert>
-          </div>
+          {/* Step 1: Path Selection */}
+          {currentStep === 1 && (
+            <div className="space-y-6">
+              <div className="text-center space-y-2">
+                <h3 className="text-xl font-semibold">How will items arrive at the shop?</h3>
+                <p className="text-sm text-muted-foreground">Choose the appropriate path to continue</p>
+              </div>
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Direct Shop Check-in Card */}
+                <Card 
+                  className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] border-2 hover:border-[var(--ecs-primary)]"
+                  onClick={() => {
+                    setArrivalPath('direct');
+                    setCurrentStep(2);
+                  }}
+                  data-testid="card-arrival-direct"
+                >
+                  <CardContent className="pt-6 pb-6 text-center space-y-4">
+                    <div className="flex justify-center">
+                      <div className="p-4 bg-[var(--ecs-primary)]/10 rounded-full">
+                        <Store className="h-10 w-10 text-[var(--ecs-primary)]" />
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold mb-2">Direct Shop Check-in</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Items are already at the shop or will be dropped off directly by the customer
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
 
-          {/* Arrival Path Selection */}
-          <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
-            <div>
-              <h3 className="font-semibold text-sm mb-2">How will items arrive at the shop? *</h3>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    value="direct"
-                    checked={arrivalPath === 'direct'}
-                    onChange={(e) => setArrivalPath(e.target.value as 'direct' | 'pickup')}
-                    className="w-4 h-4"
-                    data-testid="radio-arrival-direct"
-                  />
-                  <span>Direct Shop Check-in</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    value="pickup"
-                    checked={arrivalPath === 'pickup'}
-                    onChange={(e) => setArrivalPath(e.target.value as 'direct' | 'pickup')}
-                    className="w-4 h-4"
-                    data-testid="radio-arrival-pickup"
-                  />
-                  <span>Dispatch Pickup</span>
-                </label>
+                {/* Dispatch Pickup Card */}
+                <Card 
+                  className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] border-2 hover:border-[var(--ecs-primary)]"
+                  onClick={() => {
+                    setArrivalPath('pickup');
+                    setCurrentStep(2);
+                  }}
+                  data-testid="card-arrival-pickup"
+                >
+                  <CardContent className="pt-6 pb-6 text-center space-y-4">
+                    <div className="flex justify-center">
+                      <div className="p-4 bg-[var(--ecs-primary)]/10 rounded-full">
+                        <Truck className="h-10 w-10 text-[var(--ecs-primary)]" />
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold mb-2">Dispatch Pickup</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Send a driver to pick up items from customer location
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
+          )}
 
-            {/* Pickup Fields - Show only when pickup path is selected */}
-            {arrivalPath === 'pickup' && (
-              <div className="space-y-4 pt-4 border-t">
-                <h4 className="font-medium text-sm">Pickup Information</h4>
-                
-                <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Driver Selection */}
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Driver *</label>
-                    <Select value={pickupDriver} onValueChange={(value) => {
-                      setPickupDriver(value);
-                      setPickupFieldErrors(prev => ({ ...prev, driver: undefined }));
-                    }}>
-                      <SelectTrigger data-testid="select-pickup-driver" className={pickupFieldErrors.driver ? "border-red-500" : ""}>
-                        <SelectValue placeholder="Select driver" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {isLoadingDrivers ? (
-                          <SelectItem value="_loading">Loading drivers...</SelectItem>
-                        ) : (
-                          drivers.map((driver) => (
-                            <SelectItem key={driver} value={driver} data-testid={`option-driver-${driver}`}>
-                              {driver}
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
-                    {pickupFieldErrors.driver && (
-                      <p className="text-sm text-red-500 mt-1" data-testid="error-pickup-driver">{pickupFieldErrors.driver}</p>
-                    )}
-                  </div>
-
-                  {/* Pickup Address */}
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Pickup Address *</label>
-                    <Input
-                      placeholder="Enter pickup address"
-                      value={pickupAddress}
-                      onChange={(e) => {
-                        setPickupAddress(e.target.value);
-                        setPickupFieldErrors(prev => ({ ...prev, address: undefined }));
-                      }}
-                      className={pickupFieldErrors.address ? "border-red-500" : ""}
-                      data-testid="input-pickup-address"
-                    />
-                    {pickupFieldErrors.address && (
-                      <p className="text-sm text-red-500 mt-1" data-testid="error-pickup-address">{pickupFieldErrors.address}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Pickup Notes */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">Pickup Notes (Optional)</label>
-                  <Textarea
-                    placeholder="Any special instructions for pickup..."
-                    value={pickupNotes}
-                    onChange={(e) => setPickupNotes(e.target.value)}
-                    rows={2}
-                    data-testid="input-pickup-notes"
-                  />
-                </div>
+          {/* Step 2: Form */}
+          {currentStep === 2 && (
+            <>
+              {/* Back Button */}
+              <div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setCurrentStep(1)}
+                  className="text-sm"
+                  data-testid="button-back-to-step1"
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Change Path Selection
+                </Button>
               </div>
-            )}
-          </div>
 
-          <Form {...form}>
+              {/* Path Indicator */}
+              <Alert className="bg-[var(--ecs-primary)]/10 border-[var(--ecs-primary)]">
+                <Info className="h-4 w-4 text-[var(--ecs-primary)]" />
+                <AlertDescription className="text-[var(--ecs-dark)]">
+                  <strong>Selected Path:</strong> {arrivalPath === 'direct' ? 'Direct Shop Check-in' : 'Dispatch Pickup'}
+                </AlertDescription>
+              </Alert>
+
+              {/* Job ID and Timestamp Display */}
+              <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-4">
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>Job ID:</strong> <span className="job-id">{generatedJobId}</span>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Automatically generated on form submission
+                    </div>
+                  </AlertDescription>
+                </Alert>
+                <Alert>
+                  <Clock className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>Initiated:</strong> Time recorded upon check-in form submission
+                  </AlertDescription>
+                </Alert>
+              </div>
+
+              {/* Pickup Fields - Show only when pickup path is selected */}
+              {arrivalPath === 'pickup' && (
+                <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                  <h4 className="font-semibold text-base">Pickup Information</h4>
+                  
+                  <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Driver Selection */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Driver *</label>
+                      <Select value={pickupDriver} onValueChange={(value) => {
+                        setPickupDriver(value);
+                        setPickupFieldErrors(prev => ({ ...prev, driver: undefined }));
+                      }}>
+                        <SelectTrigger data-testid="select-pickup-driver" className={pickupFieldErrors.driver ? "border-red-500" : ""}>
+                          <SelectValue placeholder="Select driver" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {isLoadingDrivers ? (
+                            <SelectItem value="_loading">Loading drivers...</SelectItem>
+                          ) : (
+                            drivers.map((driver) => (
+                              <SelectItem key={driver} value={driver} data-testid={`option-driver-${driver}`}>
+                                {driver}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      {pickupFieldErrors.driver && (
+                        <p className="text-sm text-red-500 mt-1" data-testid="error-pickup-driver">{pickupFieldErrors.driver}</p>
+                      )}
+                    </div>
+
+                    {/* Pickup Address */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Pickup Address *</label>
+                      <Input
+                        placeholder="Enter pickup address"
+                        value={pickupAddress}
+                        onChange={(e) => {
+                          setPickupAddress(e.target.value);
+                          setPickupFieldErrors(prev => ({ ...prev, address: undefined }));
+                        }}
+                        className={pickupFieldErrors.address ? "border-red-500" : ""}
+                        data-testid="input-pickup-address"
+                      />
+                      {pickupFieldErrors.address && (
+                        <p className="text-sm text-red-500 mt-1" data-testid="error-pickup-address">{pickupFieldErrors.address}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Pickup Notes */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Pickup Notes (Optional)</label>
+                    <Textarea
+                      placeholder="Any special instructions for pickup..."
+                      value={pickupNotes}
+                      onChange={(e) => setPickupNotes(e.target.value)}
+                      rows={2}
+                      data-testid="input-pickup-notes"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* P21 Order Number */}
               <FormField
@@ -1162,6 +1217,8 @@ export default function CSRForm() {
               </div>
             </form>
           </Form>
+          </>
+        )}
         </CardContent>
       </Card>
     </div>
