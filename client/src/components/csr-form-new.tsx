@@ -89,9 +89,8 @@ export default function CSRForm() {
   // Pickup fields state
   const [pickupDriver, setPickupDriver] = useState<string>("");
   const [pickupDriverEmail, setPickupDriverEmail] = useState<string>("");
-  const [pickupAddress, setPickupAddress] = useState<string>("");
   const [pickupNotes, setPickupNotes] = useState<string>("");
-  const [pickupFieldErrors, setPickupFieldErrors] = useState<{ driver?: string; address?: string }>({});
+  const [pickupFieldErrors, setPickupFieldErrors] = useState<{ driver?: string }>({});
 
   // Auto-populate permission when user changes
   useEffect(() => {
@@ -192,9 +191,8 @@ export default function CSRForm() {
     mutationFn: async (data: FormData) => {
       // Step 1: Validate pickup fields BEFORE creating job
       if (arrivalPath === 'pickup') {
-        const errors: { driver?: string; address?: string } = {};
+        const errors: { driver?: string } = {};
         if (!pickupDriver) errors.driver = "Driver is required for pickup dispatch";
-        if (!pickupAddress) errors.address = "Pickup address is required";
         
         if (Object.keys(errors).length > 0) {
           setPickupFieldErrors(errors);
@@ -212,7 +210,6 @@ export default function CSRForm() {
         // Dispatch pickup - use driver email for GoCanvas assignment
         await apiRequest("POST", `/api/jobs/${job.id}/dispatch-pickup`, {
           driverEmail: pickupDriverEmail,
-          pickupAddress,
           pickupNotes,
         });
       } else {
@@ -234,7 +231,6 @@ export default function CSRForm() {
       form.reset();
       setPickupDriver("");
       setPickupDriverEmail("");
-      setPickupAddress("");
       setPickupNotes("");
       setPickupFieldErrors({});
       setArrivalPath('direct');
@@ -308,7 +304,6 @@ export default function CSRForm() {
     form.reset();
     setPickupDriver("");
     setPickupDriverEmail("");
-    setPickupAddress("");
     setPickupNotes("");
     setGeneratedJobId(() => {
       const now = new Date();
@@ -720,24 +715,6 @@ export default function CSRForm() {
                           placeholder="Auto-populated when driver is selected"
                           data-testid="input-driver-email"
                         />
-                      </div>
-
-                      {/* Pickup Address */}
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Pickup Address *</label>
-                        <Input
-                          placeholder="Enter pickup address"
-                          value={pickupAddress}
-                          onChange={(e) => {
-                            setPickupAddress(e.target.value);
-                            setPickupFieldErrors(prev => ({ ...prev, address: undefined }));
-                          }}
-                          className={pickupFieldErrors.address ? "border-red-500" : ""}
-                          data-testid="input-pickup-address"
-                        />
-                        {pickupFieldErrors.address && (
-                          <p className="text-sm text-red-500 mt-1" data-testid="error-pickup-address">{pickupFieldErrors.address}</p>
-                        )}
                       </div>
 
                       {/* Notes to Driver */}
