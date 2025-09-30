@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertJobSchema } from "@shared/schema";
+import { insertJobSchema, pickupJobSchema } from "@shared/schema";
 import { goCanvasService } from "./services/gocanvas";
 import { fieldMapper } from "@shared/fieldMapper";
 import { googleSheetsService } from "./services/googleSheets";
