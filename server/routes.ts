@@ -337,17 +337,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/jobs/:jobId/dispatch-pickup", requireAuth, async (req, res) => {
     try {
       const { jobId } = req.params;
-      const { driverEmail, pickupAddress, pickupNotes } = req.body;
+      const { driverEmail, pickupNotes } = req.body;
       
-      if (!driverEmail || !pickupAddress) {
-        return res.status(400).json({ message: "Driver email and pickup address are required" });
+      if (!driverEmail) {
+        return res.status(400).json({ message: "Driver email is required" });
       }
 
       const updatedJob = await jobEventsService.dispatchPickup(
         jobId,
         {
           driverEmail,
-          pickupAddress,
           pickupNotes,
         }
       );

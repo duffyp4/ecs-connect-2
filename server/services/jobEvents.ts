@@ -185,7 +185,6 @@ export class JobEventsService {
     jobId: string,
     params: {
       driverEmail: string;
-      pickupAddress: string;
       pickupNotes?: string;
     },
     options: StateChangeOptions = {}
@@ -211,7 +210,6 @@ export class JobEventsService {
         shopName: job.shopName,
         contactName: job.contactName,
         contactNumber: job.contactNumber,
-        pickupAddress: params.pickupAddress,
         pickupNotes: params.pickupNotes || '',
       },
       params.driverEmail // Use the actual driver email for GoCanvas assignment
@@ -221,7 +219,6 @@ export class JobEventsService {
     await storage.updateJob(jobId, {
       pickupDispatchId: dispatchId,
       pickupDriverEmail: params.driverEmail,
-      pickupAddress: params.pickupAddress,
       pickupNotes: params.pickupNotes || '',
       updatedAt: new Date(),
     });
@@ -230,13 +227,12 @@ export class JobEventsService {
     await this.recordEvent(
       jobId,
       'pickup_dispatched',
-      `Pickup dispatched to ${params.driverEmail} at ${params.pickupAddress}`,
+      `Pickup dispatched to ${params.driverEmail}`,
       {
         ...options,
         metadata: {
           ...options.metadata,
           driverEmail: params.driverEmail,
-          pickupAddress: params.pickupAddress,
           pickupNotes: params.pickupNotes,
           dispatchId,
           formType: 'PICKUP',
