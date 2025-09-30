@@ -11,6 +11,7 @@ export interface ReferenceDataService {
   getCustomerInstructions(customerName: string): Promise<string>;
   getTechComments(): Promise<string[]>;
   getDrivers(): Promise<string[]>;
+  getDriverDetails(): Promise<{ name: string; email: string }[]>;
   getLocations(): Promise<string[]>;
 }
 
@@ -397,13 +398,28 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getDrivers(): Promise<string[]> {
     await this.ensureDataLoaded();
     
-    // Extract driver emails from column 0 of drivers reference data (ID: 343087)
+    // Extract driver names from column 0 of drivers reference data (ID: 343087)
     const drivers = Array.from(new Set(this.driversData
       .map(row => row[0])
       .filter(value => this.isValidValue(value))
     ));
     
     return drivers.sort();
+  }
+
+  async getDriverDetails(): Promise<{ name: string; email: string }[]> {
+    await this.ensureDataLoaded();
+    
+    // Return driver name and email from columns 0 and 2 of drivers reference data (ID: 343087)
+    // Structure: [Driver Name, Shop, Email]
+    const driverDetails = this.driversData
+      .map(row => ({
+        name: row[0],
+        email: row[2] || ''
+      }))
+      .filter(driver => this.isValidValue(driver.name));
+    
+    return driverDetails;
   }
 
   async getLocations(): Promise<string[]> {

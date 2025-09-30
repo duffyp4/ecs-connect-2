@@ -285,6 +285,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get driver details (name + email) for pickup/delivery
+  app.get("/api/reference/driver-details", async (req, res) => {
+    try {
+      const driverDetails = await referenceDataService.getDriverDetails();
+      res.json(driverDetails);
+    } catch (error) {
+      console.error("Failed to get driver details:", error);
+      res.status(500).json({ error: "Failed to fetch driver details" });
+    }
+  });
+
   // Get locations from ECS Locations - Drivers reference data
   app.get("/api/reference/locations", async (req, res) => {
     try {

@@ -213,6 +213,19 @@ export function useDrivers() {
   });
 }
 
+// Get driver details (name + email) for pickup/delivery
+export function useDriverDetails() {
+  return useQuery({
+    queryKey: ['reference', 'driver-details'],
+    queryFn: async () => {
+      const response = await fetch('/api/reference/driver-details');
+      if (!response.ok) throw new Error('Failed to fetch driver details');
+      return response.json() as Promise<{ name: string; email: string }[]>;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 // Get locations from ECS Locations - Drivers reference data
 export function useLocations() {
   return useQuery({

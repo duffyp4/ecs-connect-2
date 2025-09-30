@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { insertJobSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useShopUsers, useShopsForUser, usePermissionForUser, useCustomerNames, useShipToForCustomer, useShip2Ids, useTechComments, useSendClampsGaskets, usePreferredProcesses, useCustomerInstructions, useCustomerNotes, useCustomerSpecificData, useAllShops, useUsersForShop, useDrivers, useLocations } from "@/hooks/use-reference-data";
+import { useShopUsers, useShopsForUser, usePermissionForUser, useCustomerNames, useShipToForCustomer, useShip2Ids, useTechComments, useSendClampsGaskets, usePreferredProcesses, useCustomerInstructions, useCustomerNotes, useCustomerSpecificData, useAllShops, useUsersForShop, useDrivers, useDriverDetails, useLocations } from "@/hooks/use-reference-data";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -83,10 +83,12 @@ export default function CSRForm() {
   const { data: customerInstructionsData } = useCustomerInstructions(customerName || undefined, customerShipTo || undefined);
   const { data: customerNotes = [], isLoading: isLoadingNotes } = useCustomerNotes();
   const { data: customerSpecificData } = useCustomerSpecificData(customerName || undefined, customerShipTo || undefined);
-  const { data: drivers = [], isLoading: isLoadingDrivers } = useDrivers();
+  const { data: driverDetails = [], isLoading: isLoadingDrivers } = useDriverDetails();
+  const drivers = driverDetails.map(d => d.name);
 
   // Pickup fields state
   const [pickupDriver, setPickupDriver] = useState<string>("");
+  const [pickupDriverEmail, setPickupDriverEmail] = useState<string>("");
   const [pickupAddress, setPickupAddress] = useState<string>("");
   const [pickupNotes, setPickupNotes] = useState<string>("");
   const [pickupFieldErrors, setPickupFieldErrors] = useState<{ driver?: string; address?: string }>({});
@@ -207,9 +209,9 @@ export default function CSRForm() {
       
       // Step 3: Handle arrival path
       if (arrivalPath === 'pickup') {
-        // Dispatch pickup
+        // Dispatch pickup - use driver email for GoCanvas assignment
         await apiRequest("POST", `/api/jobs/${job.id}/dispatch-pickup`, {
-          driverEmail: pickupDriver,
+          driverEmail: pickupDriverEmail,
           pickupAddress,
           pickupNotes,
         });
@@ -231,6 +233,7 @@ export default function CSRForm() {
       });
       form.reset();
       setPickupDriver("");
+      setPickupDriverEmail("");
       setPickupAddress("");
       setPickupNotes("");
       setPickupFieldErrors({});
@@ -283,50 +286,15 @@ export default function CSRForm() {
   }, []);
 
   const onSubmit = (data: FormData) => {
-    console.log("Form submitted with data:", data);
-    console.log("Arrival path:", arrivalPath);
-    
-    // For pickup path, add default values for fields that will be filled later
-    if (arrivalPath === 'pickup') {
-      const pickupData = {
-        ...data,
-        contactName: data.contactName || "TBD - Will be provided at check-in",
-        contactNumber: data.contactNumber || "0000000000", // Placeholder 10-digit number
-        poNumber: data.poNumber || "TBD",
-        serialNumbers: data.serialNumbers || "TBD - Will be provided at check-in",
-        shopHandoff: data.shopHandoff || "TBD",
-        userId: data.userId || "pickup@ecspart.com",
-      };
-      createJobMutation.mutate(pickupData);
-    } else {
-      createJobMutation.mutate(data);
-    }
-  };
-
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // For pickup path, set default values BEFORE validation
-    if (arrivalPath === 'pickup') {
-      if (!form.getValues("contactName")) form.setValue("contactName", "TBD - Will be provided at check-in");
-      if (!form.getValues("contactNumber")) form.setValue("contactNumber", "0000000000");
-      if (!form.getValues("poNumber")) form.setValue("poNumber", "TBD");
-      if (!form.getValues("serialNumbers")) form.setValue("serialNumbers", "TBD - Will be provided at check-in");
-      if (!form.getValues("shopHandoff")) form.setValue("shopHandoff", "TBD");
-      if (!form.getValues("userId")) form.setValue("userId", "pickup@ecspart.com");
-    }
-    
-    // Log any form errors for debugging
-    const errors = form.formState.errors;
-    if (Object.keys(errors).length > 0) {
-      console.error("Form validation errors:", errors);
-    }
-    
-    form.handleSubmit(onSubmit)(e);
+    createJobMutation.mutate(data);
   };
 
   const clearForm = () => {
     form.reset();
+    setPickupDriver("");
+    setPickupDriverEmail("");
+    setPickupAddress("");
+    setPickupNotes("");
     setGeneratedJobId(() => {
       const now = new Date();
       const timestamp = now.toISOString().replace(/[-T:\.Z]/g, '').slice(0, 14);
@@ -461,7 +429,7 @@ export default function CSRForm() {
 
 
               <Form {...form}>
-                <form onSubmit={handleFormSubmit} className="space-y-6">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   
                   {/* PICKUP PATH - Match GoCanvas field order */}
                   {arrivalPath === 'pickup' && (
@@ -701,6 +669,9 @@ export default function CSRForm() {
                         <label className="block text-sm font-medium mb-2">Driver *</label>
                         <Select value={pickupDriver} onValueChange={(value) => {
                           setPickupDriver(value);
+                          // Auto-populate driver email when driver is selected
+                          const selectedDriver = driverDetails.find(d => d.name === value);
+                          setPickupDriverEmail(selectedDriver?.email || "");
                           setPickupFieldErrors(prev => ({ ...prev, driver: undefined }));
                         }}>
                           <SelectTrigger data-testid="select-pickup-driver" className={pickupFieldErrors.driver ? "border-red-500" : ""}>
@@ -708,7 +679,7 @@ export default function CSRForm() {
                           </SelectTrigger>
                           <SelectContent>
                             {isLoadingDrivers ? (
-                              <SelectItem value="_loading">Loading drivers...</SelectItem>
+                              <SelectItem value="_loading" disabled>Loading drivers...</SelectItem>
                             ) : (
                               drivers.map((driver) => (
                                 <SelectItem key={driver} value={driver} data-testid={`option-driver-${driver}`}>
@@ -721,6 +692,19 @@ export default function CSRForm() {
                         {pickupFieldErrors.driver && (
                           <p className="text-sm text-red-500 mt-1" data-testid="error-pickup-driver">{pickupFieldErrors.driver}</p>
                         )}
+                      </div>
+
+                      {/* Driver Email (read-only, auto-populated) */}
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-muted-foreground">Driver Email</label>
+                        <Input
+                          value={pickupDriverEmail}
+                          readOnly
+                          disabled
+                          className="bg-muted text-muted-foreground cursor-not-allowed"
+                          placeholder="Auto-populated when driver is selected"
+                          data-testid="input-driver-email"
+                        />
                       </div>
 
                       {/* Pickup Address */}
