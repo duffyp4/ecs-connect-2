@@ -310,14 +310,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new job
   app.post("/api/jobs", requireAuth, async (req, res) => {
     try {
-      const validatedData = insertJobSchema.parse(req.body);
+      const { arrivalPath, ...jobData } = req.body;
+      
+      // Validate using appropriate schema based on arrival path
+      const schema = arrivalPath === 'pickup' ? pickupJobSchema : insertJobSchema;
+      const validatedData = schema.parse(jobData);
       
       // Create job in storage (starts in queued_for_pickup state)
       const job = await storage.createJob(validatedData);
       
       // NOTE: Emissions Service Log will be created at check-in time, not here
       // This prevents duplicate dispatches for pickup jobs
-      console.log(`Job ${job.jobId} created in ${job.state} state`);
+      console.log(`Job ${job.jobId} created in ${job.state} state (arrival path: ${arrivalPath})`);
 
       const updatedJob = await storage.getJob(job.id);
       res.json(updatedJob);

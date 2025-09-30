@@ -201,8 +201,8 @@ export default function CSRForm() {
         setPickupFieldErrors({});
       }
       
-      // Step 2: Create the job
-      const response = await apiRequest("POST", "/api/jobs", data);
+      // Step 2: Create the job with arrivalPath
+      const response = await apiRequest("POST", "/api/jobs", { ...data, arrivalPath });
       const job = await response.json();
       
       // Step 3: Handle arrival path
