@@ -81,3 +81,26 @@ Includes diagnostic scripts in `/scripts/` for GoCanvas integration debugging, s
 - Error handling and success notifications
 
 **Status**: Phase 5 complete. Full pickup and delivery lifecycle now manageable through UI. Ready for integration testing (Phase 6).
+
+### Phase 6 (September 30, 2025) - GoCanvas Assignment & Workflow Refinement
+**Fixed GoCanvas Assignment and Workflow Separation**:
+- **Driver Email Lookup**: Added auto-populated read-only email field in pickup form
+  - When driver is selected, email automatically populates from GoCanvas reference data (table 343087)
+  - New backend endpoint: `/api/reference/driver-details` returns driver name-email pairs
+  - Frontend hook: `useDriverDetails` provides driver details with loading states
+- **GoCanvas Assignment Fix**: Pickup dispatches now use actual driver emails for GoCanvas assignment
+  - Updated `dispatchPickup()` to accept driver email, pickup address, and notes
+  - GoCanvas Pickup Log (form 5628229) properly assigned to driver via email
+- **Workflow Separation**: Fixed duplicate GoCanvas form creation
+  - Pickup path now only creates Pickup Log at dispatch time (not Emissions Service Log)
+  - Direct check-in path creates Emissions Service Log at check-in time
+  - Eliminated TBD placeholder logic that was causing validation issues
+- **Field Mapping**: Pickup form maintains GoCanvas field order for consistency
+
+**Technical Implementation**:
+- Backend: `server/services/referenceData.ts` - `getDriverDetails()` method
+- Frontend: `client/src/hooks/use-reference-data.ts` - `useDriverDetails()` hook  
+- API: `GET /api/reference/driver-details` - returns `[{name, email}]`
+- GoCanvas field map: `gocanvas_field_map_5628229.json` for Pickup Log form
+
+**Status**: Phase 6 complete. Driver assignment now uses actual emails, workflow properly separated.
