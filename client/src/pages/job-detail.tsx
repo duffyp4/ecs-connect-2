@@ -326,7 +326,7 @@ export default function JobDetail() {
             <div>
               <div className="text-sm text-muted-foreground">Initiated At</div>
               <div className="font-medium">
-                {format(new Date(job.initiatedAt), 'PPpp')}
+                {job.initiatedAt ? format(new Date(job.initiatedAt), 'PPpp') : 'N/A'}
               </div>
             </div>
           </CardContent>
@@ -397,7 +397,7 @@ export default function JobDetail() {
                   <div className="flex-1 pb-8">
                     <div className="font-medium">{formatEventType(event.eventType)}</div>
                     <div className="text-sm text-muted-foreground">
-                      {format(new Date(event.timestamp), 'PPpp')}
+                      {event.timestamp ? format(new Date(event.timestamp), 'PPpp') : 'N/A'}
                     </div>
                     {event.fromState && (
                       <div className="text-sm text-muted-foreground mt-1">
