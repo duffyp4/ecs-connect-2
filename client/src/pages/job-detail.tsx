@@ -1,4 +1,5 @@
 import { useParams, useLocation } from "wouter";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import {
   Clock
 } from "lucide-react";
 import JobStatusBadge from "@/components/job-status-badge";
+import { CheckInModal } from "@/components/check-in-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -36,6 +38,7 @@ export default function JobDetail() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const jobId = params.id;
+  const [checkInModalOpen, setCheckInModalOpen] = useState(false);
 
   const { data: job, isLoading: jobLoading } = useQuery<any>({
     queryKey: ["/api/jobs", jobId],
@@ -109,7 +112,7 @@ export default function JobDetail() {
       case 'picked_up':
         return (
           <Button 
-            onClick={() => actionMutation.mutate({ action: 'check-in' })}
+            onClick={() => setCheckInModalOpen(true)}
             disabled={isPending}
             className="btn-primary"
             data-testid="button-check-in"
@@ -417,6 +420,21 @@ export default function JobDetail() {
           )}
         </CardContent>
       </Card>
+
+      {/* Check In Modal */}
+      {job && (
+        <CheckInModal
+          open={checkInModalOpen}
+          onOpenChange={setCheckInModalOpen}
+          job={job}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ["/api/jobs", jobId] });
+            queryClient.invalidateQueries({ queryKey: ["/api/jobs", jobId, "events"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/metrics"] });
+          }}
+        />
+      )}
     </div>
   );
 }

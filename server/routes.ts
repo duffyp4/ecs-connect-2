@@ -380,6 +380,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/jobs/:jobId/check-in", requireAuth, async (req, res) => {
     try {
       const { jobId } = req.params;
+      const jobData = req.body;
+      
+      // If additional job data is provided, update the job first
+      if (Object.keys(jobData).length > 0) {
+        await storage.updateJob(jobId, jobData);
+      }
+      
       const updatedJob = await jobEventsService.checkInAtShop(jobId);
       
       // Create Emissions Service Log dispatch when job is checked in at shop

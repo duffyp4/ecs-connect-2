@@ -104,3 +104,25 @@ Includes diagnostic scripts in `/scripts/` for GoCanvas integration debugging, s
 - GoCanvas field map: `gocanvas_field_map_5628229.json` for Pickup Log form
 
 **Status**: Phase 6 complete. Driver assignment now uses actual emails, workflow properly separated.
+
+### Phase 7 (September 30, 2025) - Check-In Modal for Pickup Jobs
+**In Progress**: Creating Check-In Modal with Full Emissions Service Log Fields
+- **Problem**: Pickup jobs only collect 3 fields (shopName, customerName, customerShipTo) initially
+- **Solution**: When CSR clicks "Check In at Shop", open modal with ALL Emissions Service Log fields
+- **Pre-populated Fields**: Job ID, Shop Name, Customer Name, Customer Ship To
+- **Requires CSR Input**: ~47 additional fields (contact info, PO, serial numbers, etc.)
+- **Backend Changes**:
+  - Modified `/api/jobs/:jobId/check-in` endpoint to accept additional job data
+  - Updates job with all fields before creating GoCanvas Emissions Service Log
+  - Removes pickupAddress field per user requirements (now 9 pickup fields total)
+- **Frontend Changes** (in progress):
+  - Creating CheckInModal component with reusable form fields
+  - Extracting form logic for reusability between main form and modal
+  - Pre-population of known fields from job data
+
+**Technical Implementation**:
+- Backend: Updated check-in endpoint to accept and merge job data before GoCanvas submission
+- Frontend: Building modal component with react-hook-form and Zod validation
+- Pickup workflow: Create (9 fields) → Dispatch → Mark Picked Up → Check In (+ 47 fields) → Complete Service
+
+**Status**: Phase 7 in progress. Backend updated, modal component being built.
