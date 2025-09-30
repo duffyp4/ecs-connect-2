@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { insertJobSchema } from "@shared/schema";
+import { insertJobSchema, pickupJobSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useShopUsers, useShopsForUser, usePermissionForUser, useCustomerNames, useShipToForCustomer, useShip2Ids, useTechComments, useSendClampsGaskets, usePreferredProcesses, useCustomerInstructions, useCustomerNotes, useCustomerSpecificData, useAllShops, useUsersForShop, useDrivers, useDriverDetails, useLocations } from "@/hooks/use-reference-data";
@@ -37,7 +37,7 @@ export default function CSRForm() {
   });
 
   const form = useForm<FormData>({
-    resolver: zodResolver(insertJobSchema),
+    // No resolver - we'll validate manually based on arrivalPath
     defaultValues: {
       p21OrderNumber: "",
       userId: "",
@@ -285,22 +285,23 @@ export default function CSRForm() {
     setGeneratedJobId(generateJobId());
   }, []);
 
-  const onSubmit = (data: FormData) => {
-    // For pickup path, some fields will be provided later at check-in
-    // Set reasonable defaults for those fields
-    if (arrivalPath === 'pickup') {
-      const pickupData = {
-        ...data,
-        contactName: data.contactName || "To be provided at check-in",
-        contactNumber: data.contactNumber || "0000000000", // Valid 10-digit placeholder
-        poNumber: data.poNumber || "TBD",
-        serialNumbers: data.serialNumbers || "To be provided at check-in",
-        shopHandoff: data.shopHandoff || "TBD",
-      };
-      createJobMutation.mutate(pickupData);
-    } else {
-      createJobMutation.mutate(data);
+  const onSubmit = async (data: FormData) => {
+    // Validate using the appropriate schema
+    const schema = arrivalPath === 'pickup' ? pickupJobSchema : insertJobSchema;
+    const result = schema.safeParse(data);
+    
+    if (!result.success) {
+      // Show validation errors
+      const errors = result.error.flatten().fieldErrors;
+      Object.entries(errors).forEach(([field, messages]) => {
+        if (messages && messages.length > 0) {
+          form.setError(field as any, { message: messages[0] });
+        }
+      });
+      return;
     }
+    
+    createJobMutation.mutate(data);
   };
 
   const clearForm = () => {
@@ -443,21 +444,7 @@ export default function CSRForm() {
 
 
               <Form {...form}>
-                <form onSubmit={(e) => {
-                  e.preventDefault();
-                  
-                  // For pickup path, set placeholder values before validation
-                  if (arrivalPath === 'pickup') {
-                    if (!form.getValues("contactName")) form.setValue("contactName", "To be provided at check-in");
-                    if (!form.getValues("contactNumber")) form.setValue("contactNumber", "0000000000");
-                    if (!form.getValues("poNumber")) form.setValue("poNumber", "TBD");
-                    if (!form.getValues("serialNumbers")) form.setValue("serialNumbers", "To be provided at check-in");
-                    if (!form.getValues("shopHandoff")) form.setValue("shopHandoff", "TBD");
-                  }
-                  
-                  // Now trigger form validation and submission
-                  form.handleSubmit(onSubmit)(e);
-                }} className="space-y-6">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   
                   {/* PICKUP PATH - Match GoCanvas field order */}
                   {arrivalPath === 'pickup' && (
