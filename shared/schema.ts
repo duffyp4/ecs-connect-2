@@ -208,6 +208,46 @@ export const pickupJobSchema = createInsertSchema(jobs).omit({
   gocanvasDispatchId: z.string().optional(),
 });
 
+// Check-in schema - for completing pickup jobs at check-in with essential fields
+// Use .partial() to make all fields optional, then explicitly require only essential ones
+export const checkInJobSchema = createInsertSchema(jobs)
+  .omit({
+    id: true,
+    jobId: true,
+    initiatedAt: true,
+    state: true,
+    possessionStart: true,
+    handoffAt: true,
+    readyForPickupDeliveryAt: true,
+    deliveredAt: true,
+    completedAt: true,
+    startedWithPickup: true,
+    selfPickup: true,
+    timeToPickup: true,
+    timeAtShop: true,
+    timeWithTech: true,
+    totalTurnaround: true,
+    turnaroundTime: true,
+    gocanvasSubmissionId: true,
+    gocanvasDispatchId: true,
+    pickupDispatchId: true,
+    deliveryDispatchId: true,
+    gocanvasSynced: true,
+    googleSheetsSynced: true,
+  })
+  .partial() // Make all fields optional first
+  .extend({
+    // Pre-populated fields (disabled in UI, already known)
+    shopName: z.string().min(1, "Shop Name is required"),
+    customerName: z.string().min(1, "Customer Name is required"),
+    // Essential required fields for check-in
+    userId: z.string().min(1, "User ID is required"),
+    permissionToStart: z.string().min(1, "Permission to Start is required"),
+    shopHandoff: z.string().min(1, "Shop Handoff is required"),
+    contactName: z.string().min(1, "Contact Name is required"),
+    contactNumber: z.string().min(1, "Contact Number is required"),
+  });
+
 export const insertTechnicianSchema = createInsertSchema(technicians).omit({
   id: true,
 });
@@ -219,6 +259,7 @@ export const insertJobEventSchema = createInsertSchema(jobEvents).omit({
 
 export type InsertJob = z.infer<typeof insertJobSchema>;
 export type PickupJob = z.infer<typeof pickupJobSchema>;
+export type CheckInJob = z.infer<typeof checkInJobSchema>;
 export type Job = typeof jobs.$inferSelect;
 export type InsertTechnician = z.infer<typeof insertTechnicianSchema>;
 export type Technician = typeof technicians.$inferSelect;

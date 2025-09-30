@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertJobSchema, pickupJobSchema } from "@shared/schema";
+import { insertJobSchema, pickupJobSchema, checkInJobSchema } from "@shared/schema";
 import { goCanvasService } from "./services/gocanvas";
 import { fieldMapper } from "@shared/fieldMapper";
 import { googleSheetsService } from "./services/googleSheets";
@@ -380,9 +380,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/jobs/:jobId/check-in", requireAuth, async (req, res) => {
     try {
       const { jobId } = req.params;
-      const jobData = req.body;
       
-      // If additional job data is provided, update the job first
+      // Validate request body with checkInJobSchema
+      const validationResult = checkInJobSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({
+          message: "Validation failed",
+          errors: validationResult.error.errors
+        });
+      }
+      
+      const jobData = validationResult.data;
+      
+      // Update the job with the validated data
       if (Object.keys(jobData).length > 0) {
         await storage.updateJob(jobId, jobData);
       }
