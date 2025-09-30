@@ -29,8 +29,8 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
     try {
       console.log('Loading reference data from GoCanvas...');
       
-      // Load Workflow Shops (ID: 608300)
-      const shopsResponse = await goCanvasService.getReferenceDataById('608300');
+      // Load Location reference data (ID: 947586)
+      const shopsResponse = await goCanvasService.getReferenceDataById('947586');
       this.shopData = shopsResponse.rows || [];
       
       // Load Workflow Customer Name (ID: 608480)
