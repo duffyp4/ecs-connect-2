@@ -227,6 +227,7 @@ export default function JobDetail() {
   };
 
   const formatEventType = (eventType: string) => {
+    if (!eventType) return 'N/A';
     return eventType
       .split('_')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
