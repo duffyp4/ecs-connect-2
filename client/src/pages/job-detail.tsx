@@ -400,7 +400,7 @@ export default function JobDetail() {
                     <div className="text-sm text-muted-foreground">
                       {event.timestamp ? format(new Date(event.timestamp), 'PPpp') : 'N/A'}
                     </div>
-                    {event.fromState && (
+                    {event.fromState && event.toState && (
                       <div className="text-sm text-muted-foreground mt-1">
                         {formatEventType(event.fromState)} → {formatEventType(event.toState)}
                       </div>
