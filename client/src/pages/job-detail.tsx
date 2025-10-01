@@ -161,16 +161,6 @@ export default function JobDetail() {
         <CardContent className="p-6">
           <div className="flex flex-wrap gap-4 items-center">
             <Button 
-              onClick={() => actionMutation.mutate({ action: 'mark-picked-up' })}
-              disabled={currentState !== 'queued_for_pickup' || isPending}
-              className="btn-primary"
-              data-testid="button-mark-picked-up"
-            >
-              <CheckCircle className="mr-2 h-4 w-4" />
-              Mark as Picked Up
-            </Button>
-
-            <Button 
               onClick={() => setCheckInModalOpen(true)}
               disabled={currentState !== 'picked_up' || isPending}
               className="btn-primary"
@@ -178,16 +168,6 @@ export default function JobDetail() {
             >
               <Store className="mr-2 h-4 w-4" />
               Check In at Shop
-            </Button>
-
-            <Button 
-              onClick={() => actionMutation.mutate({ action: 'start-service' })}
-              disabled={currentState !== 'at_shop' || isPending}
-              className="btn-primary"
-              data-testid="button-start-service"
-            >
-              <Wrench className="mr-2 h-4 w-4" />
-              Start Service
             </Button>
 
             <Button 
@@ -218,16 +198,6 @@ export default function JobDetail() {
             >
               <Send className="mr-2 h-4 w-4" />
               Dispatch for Delivery
-            </Button>
-
-            <Button 
-              onClick={() => actionMutation.mutate({ action: 'mark-delivered' })}
-              disabled={currentState !== 'out_for_delivery' || isPending}
-              className="btn-primary"
-              data-testid="button-mark-delivered"
-            >
-              <CheckCircle className="mr-2 h-4 w-4" />
-              Mark as Delivered
             </Button>
 
             <Button
