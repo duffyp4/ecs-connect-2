@@ -319,7 +319,7 @@ export default function JobDetail() {
           <CardContent className="p-6 space-y-3">
             <div>
               <div className="text-sm text-muted-foreground">Shop Location</div>
-              <div className="font-medium">{job.shopLocation || 'N/A'}</div>
+              <div className="font-medium">{job.shopName || 'N/A'}</div>
             </div>
             <div>
               <div className="text-sm text-muted-foreground">Technician</div>
