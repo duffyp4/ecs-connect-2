@@ -91,119 +91,8 @@ export default function JobDetail() {
     );
   }
 
-  const getActionButtons = () => {
-    const currentState = job.currentState;
-    const isPending = actionMutation.isPending;
-
-    switch (currentState) {
-      case 'queued_for_pickup':
-        return (
-          <Button 
-            onClick={() => actionMutation.mutate({ action: 'mark-picked-up' })}
-            disabled={isPending}
-            className="btn-primary"
-            data-testid="button-mark-picked-up"
-          >
-            <CheckCircle className="mr-2 h-4 w-4" />
-            Mark as Picked Up
-          </Button>
-        );
-      
-      case 'picked_up':
-        return (
-          <Button 
-            onClick={() => setCheckInModalOpen(true)}
-            disabled={isPending}
-            className="btn-primary"
-            data-testid="button-check-in"
-          >
-            <Store className="mr-2 h-4 w-4" />
-            Check In at Shop
-          </Button>
-        );
-      
-      case 'at_shop':
-        return (
-          <Button 
-            onClick={() => actionMutation.mutate({ action: 'start-service' })}
-            disabled={isPending}
-            className="btn-primary"
-            data-testid="button-start-service"
-          >
-            <Wrench className="mr-2 h-4 w-4" />
-            Start Service
-          </Button>
-        );
-      
-      case 'in_service':
-        return (
-          <div className="flex gap-2">
-            <Button 
-              onClick={() => actionMutation.mutate({ action: 'mark-ready', data: { readyFor: 'pickup' } })}
-              disabled={isPending}
-              className="btn-primary"
-              data-testid="button-ready-pickup"
-            >
-              <Package className="mr-2 h-4 w-4" />
-              Ready for Pickup
-            </Button>
-            <Button 
-              onClick={() => actionMutation.mutate({ action: 'mark-ready', data: { readyFor: 'delivery' } })}
-              disabled={isPending}
-              className="btn-primary"
-              data-testid="button-ready-delivery"
-            >
-              <Truck className="mr-2 h-4 w-4" />
-              Ready for Delivery
-            </Button>
-          </div>
-        );
-      
-      case 'ready_for_pickup':
-        return (
-          <Badge className="bg-orange-100 text-orange-800 text-base px-4 py-2">
-            Waiting for customer pickup
-          </Badge>
-        );
-      
-      case 'ready_for_delivery':
-        return (
-          <Button 
-            onClick={() => actionMutation.mutate({ action: 'dispatch-delivery' })}
-            disabled={isPending}
-            className="btn-primary"
-            data-testid="button-dispatch-delivery"
-          >
-            <Send className="mr-2 h-4 w-4" />
-            Dispatch for Delivery
-          </Button>
-        );
-      
-      case 'out_for_delivery':
-        return (
-          <Button 
-            onClick={() => actionMutation.mutate({ action: 'mark-delivered' })}
-            disabled={isPending}
-            className="btn-primary"
-            data-testid="button-mark-delivered"
-          >
-            <CheckCircle className="mr-2 h-4 w-4" />
-            Mark as Delivered
-          </Button>
-        );
-      
-      case 'delivered':
-      case 'cancelled':
-        return (
-          <Badge className="bg-gray-100 text-gray-800 text-base px-4 py-2">
-            Job {currentState}
-          </Badge>
-        );
-      
-      default:
-        return null;
-    }
-  };
+  const currentState = job.currentState;
+  const isPending = actionMutation.isPending;
 
   const getEventIcon = (eventType: string) => {
     switch (eventType) {
@@ -265,29 +154,94 @@ export default function JobDetail() {
       </div>
 
       {/* Action Buttons */}
-      {job.currentState !== 'delivered' && job.currentState !== 'cancelled' && (
-        <Card>
-          <CardHeader className="card-header">
-            <CardTitle className="text-white">Available Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="flex flex-wrap gap-4 items-center">
-              {getActionButtons()}
-              {job.currentState !== 'delivered' && job.currentState !== 'cancelled' && (
-                <Button
-                  variant="destructive"
-                  onClick={() => actionMutation.mutate({ action: 'cancel' })}
-                  disabled={actionMutation.isPending}
-                  data-testid="button-cancel"
-                >
-                  <XCircle className="mr-2 h-4 w-4" />
-                  Cancel Job
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <Card>
+        <CardHeader className="card-header">
+          <CardTitle className="text-white">Available Actions</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="flex flex-wrap gap-4 items-center">
+            <Button 
+              onClick={() => actionMutation.mutate({ action: 'mark-picked-up' })}
+              disabled={currentState !== 'queued_for_pickup' || isPending}
+              className="btn-primary"
+              data-testid="button-mark-picked-up"
+            >
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Mark as Picked Up
+            </Button>
+
+            <Button 
+              onClick={() => setCheckInModalOpen(true)}
+              disabled={currentState !== 'picked_up' || isPending}
+              className="btn-primary"
+              data-testid="button-check-in"
+            >
+              <Store className="mr-2 h-4 w-4" />
+              Check In at Shop
+            </Button>
+
+            <Button 
+              onClick={() => actionMutation.mutate({ action: 'start-service' })}
+              disabled={currentState !== 'at_shop' || isPending}
+              className="btn-primary"
+              data-testid="button-start-service"
+            >
+              <Wrench className="mr-2 h-4 w-4" />
+              Start Service
+            </Button>
+
+            <Button 
+              onClick={() => actionMutation.mutate({ action: 'mark-ready', data: { readyFor: 'pickup' } })}
+              disabled={currentState !== 'in_service' || isPending}
+              className="btn-primary"
+              data-testid="button-ready-pickup"
+            >
+              <Package className="mr-2 h-4 w-4" />
+              Ready for Pickup
+            </Button>
+
+            <Button 
+              onClick={() => actionMutation.mutate({ action: 'mark-ready', data: { readyFor: 'delivery' } })}
+              disabled={currentState !== 'in_service' || isPending}
+              className="btn-primary"
+              data-testid="button-ready-delivery"
+            >
+              <Truck className="mr-2 h-4 w-4" />
+              Ready for Delivery
+            </Button>
+
+            <Button 
+              onClick={() => actionMutation.mutate({ action: 'dispatch-delivery' })}
+              disabled={currentState !== 'ready_for_delivery' || isPending}
+              className="btn-primary"
+              data-testid="button-dispatch-delivery"
+            >
+              <Send className="mr-2 h-4 w-4" />
+              Dispatch for Delivery
+            </Button>
+
+            <Button 
+              onClick={() => actionMutation.mutate({ action: 'mark-delivered' })}
+              disabled={currentState !== 'out_for_delivery' || isPending}
+              className="btn-primary"
+              data-testid="button-mark-delivered"
+            >
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Mark as Delivered
+            </Button>
+
+            <Button
+              variant="destructive"
+              onClick={() => actionMutation.mutate({ action: 'cancel' })}
+              disabled={currentState === 'delivered' || currentState === 'cancelled' || isPending}
+              data-testid="button-cancel"
+            >
+              <XCircle className="mr-2 h-4 w-4" />
+              Cancel Job
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Job Information */}
       <div className="grid md:grid-cols-2 gap-4">
