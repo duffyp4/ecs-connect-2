@@ -207,6 +207,7 @@ export class JobEventsService {
       {
         jobId: job.jobId,
         customerName: job.customerName,
+        customerShipTo: job.customerShipTo,
         shopName: job.shopName,
         contactName: job.contactName,
         contactNumber: job.contactNumber,
