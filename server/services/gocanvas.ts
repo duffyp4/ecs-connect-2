@@ -1189,16 +1189,22 @@ export class GoCanvasService {
   }
 
   async checkSubmissionStatus(jobId: string): Promise<{status: 'pending' | 'completed' | 'in_progress', submittedAt?: string, submissionId?: string}> {
+    return this.checkSubmissionStatusForForm(jobId, this.formId!);
+  }
+
+  /**
+   * Check submission status for a specific form
+   */
+  async checkSubmissionStatusForForm(jobId: string, formId: string): Promise<{status: 'pending' | 'completed' | 'in_progress', submittedAt?: string, submissionId?: string}> {
     if (!this.username || !this.password) {
       console.log('GoCanvas not configured, returning mock status');
       return {status: 'pending'};
     }
 
     try {
-
-      // Fallback: Query ALL submissions for the form
-      console.log(`Searching for job ${jobId} in all form submissions...`);
-      const response = await fetch(`${this.baseUrl}/submissions?form_id=${this.formId}`, {
+      // Query ALL submissions for the specific form
+      console.log(`Searching for job ${jobId} in form ${formId} submissions...`);
+      const response = await fetch(`${this.baseUrl}/submissions?form_id=${formId}`, {
         headers: {
           'Authorization': this.getAuthHeader(),
           'Content-Type': 'application/json',
@@ -1220,7 +1226,7 @@ export class GoCanvasService {
         return {status: 'pending'};
       }
 
-      console.log(`Found ${submissions.length} submissions`);
+      console.log(`Found ${submissions.length} submissions for form ${formId}`);
       
       // Search for submission containing our Job ID
       let targetSubmission = null;
@@ -1247,7 +1253,7 @@ export class GoCanvasService {
                 );
                 
                 if (jobIdField) {
-                  console.log(`🎯 Found submission with matching Job ID: ${jobId}`);
+                  console.log(`🎯 Found submission with matching Job ID: ${jobId} in form ${formId}`);
                   targetSubmission = submission;
                   break;
                 }

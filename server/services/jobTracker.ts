@@ -43,16 +43,54 @@ export class JobTrackerService {
 
   private async checkPendingJobs(): Promise<void> {
     try {
+      // Check for pickup form completions (queued_for_pickup -> picked_up)
+      const queuedForPickupJobs = await storage.getJobsByState('queued_for_pickup');
+      for (const job of queuedForPickupJobs) {
+        await this.checkPickupCompletion(job);
+      }
+      
+      // Check for service form completions (at_shop/in_service -> completed)
       const pendingJobs = await storage.getJobsByStatus('pending');
       const inProgressJobs = await storage.getJobsByStatus('in_progress');
-      
       const jobsToCheck = [...pendingJobs, ...inProgressJobs];
-
+      
       for (const job of jobsToCheck) {
         await this.checkJobCompletion(job);
       }
     } catch (error) {
       console.error('Error checking pending jobs:', error);
+    }
+  }
+
+  /**
+   * Check if pickup form has been completed and transition to picked_up
+   */
+  private async checkPickupCompletion(job: any): Promise<void> {
+    try {
+      // Check for pickup form submission (form 5631022)
+      const result = await goCanvasService.checkSubmissionStatusForForm(job.jobId, '5631022');
+      
+      if (!result || result.status !== 'completed') {
+        return;
+      }
+
+      console.log(`✅ Pickup form completed for job ${job.jobId}, transitioning to picked_up state`);
+      
+      // Transition job to picked_up state using jobEvents service
+      const { jobEventsService } = await import('./jobEvents');
+      await jobEventsService.markPickedUp(
+        job.id,
+        1, // Default item count (actual count not available from form)
+        {
+          metadata: {
+            submittedAt: result.submittedAt ? new Date(result.submittedAt) : new Date(),
+            autoDetected: true,
+          },
+        }
+      );
+      
+    } catch (error) {
+      console.error(`Error checking pickup completion for job ${job.jobId}:`, error);
     }
   }
 
