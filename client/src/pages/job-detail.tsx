@@ -41,12 +41,12 @@ export default function JobDetail() {
   const [checkInModalOpen, setCheckInModalOpen] = useState(false);
 
   const { data: job, isLoading: jobLoading } = useQuery<any>({
-    queryKey: ["/api/jobs", jobId],
+    queryKey: [`/api/jobs/${jobId}`],
     enabled: !!jobId,
   });
 
   const { data: events = [], isLoading: eventsLoading } = useQuery<JobEvent[]>({
-    queryKey: ["/api/jobs", jobId, "events"],
+    queryKey: [`/api/jobs/${jobId}/events`],
     enabled: !!jobId,
   });
 
@@ -57,8 +57,8 @@ export default function JobDetail() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/jobs", jobId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/jobs", jobId, "events"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}/events`] });
       queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
       queryClient.invalidateQueries({ queryKey: ["/api/metrics"] });
       toast({
