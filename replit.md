@@ -105,24 +105,31 @@ Includes diagnostic scripts in `/scripts/` for GoCanvas integration debugging, s
 
 **Status**: Phase 6 complete. Driver assignment now uses actual emails, workflow properly separated.
 
-### Phase 7 (September 30, 2025) - Check-In Modal for Pickup Jobs
-**In Progress**: Creating Check-In Modal with Full Emissions Service Log Fields
+### Phase 7 (October 1, 2025) - Check-In Modal for Pickup Jobs
+**Completed Check-In Modal with Full Emissions Service Log Fields**:
 - **Problem**: Pickup jobs only collect 3 fields (shopName, customerName, customerShipTo) initially
-- **Solution**: When CSR clicks "Check In at Shop", open modal with ALL Emissions Service Log fields
-- **Pre-populated Fields**: Job ID, Shop Name, Customer Name, Customer Ship To
-- **Requires CSR Input**: ~47 additional fields (contact info, PO, serial numbers, etc.)
+- **Solution**: When CSR clicks "Check In at Shop", opens modal with ALL Emissions Service Log fields
+- **Pre-populated Fields**: Job ID, Shop Name, Customer Name, Customer Ship To (disabled/read-only)
+- **Required Fields**: userId, permissionToStart, shopHandoff, contactName, contactNumber
+- **Optional Fields**: All other Emissions Service Log fields (PO, serial numbers, instructions, etc.)
+- **Validation Approach**: Uses `insertJobSchema` with manual validation (same as original CSR form)
+  - Removed `zodResolver` to match original form pattern
+  - Validates manually in onSubmit using `insertJobSchema.safeParse()`
+  - Handles optional fields properly with empty string defaults
 - **Backend Changes**:
-  - Modified `/api/jobs/:jobId/check-in` endpoint to accept additional job data
-  - Updates job with all fields before creating GoCanvas Emissions Service Log
-  - Removes pickupAddress field per user requirements (now 9 pickup fields total)
-- **Frontend Changes** (in progress):
-  - Creating CheckInModal component with reusable form fields
-  - Extracting form logic for reusability between main form and modal
-  - Pre-population of known fields from job data
+  - Modified `/api/jobs/:jobId/check-in` endpoint to validate with `insertJobSchema`
+  - Updates job with validated data before creating GoCanvas Emissions Service Log
+  - Removed unused `checkInJobSchema` (no longer needed)
+- **Frontend Changes**:
+  - Created `CheckInModal` component in `client/src/components/check-in-modal.tsx`
+  - Integrated modal into job detail page - triggered by "Check In at Shop" button
+  - Pre-populates known fields from pickup job data
+  - Uses same form structure and validation as original CSR form
 
 **Technical Implementation**:
-- Backend: Updated check-in endpoint to accept and merge job data before GoCanvas submission
-- Frontend: Building modal component with react-hook-form and Zod validation
+- Backend: `server/routes.ts` - check-in endpoint validates with `insertJobSchema`
+- Frontend: `client/src/components/check-in-modal.tsx` - modal with manual validation
+- Schema: Removed `checkInJobSchema`, uses `insertJobSchema` for consistency
 - Pickup workflow: Create (9 fields) → Dispatch → Mark Picked Up → Check In (+ 47 fields) → Complete Service
 
-**Status**: Phase 7 in progress. Backend updated, modal component being built.
+**Status**: Phase 7 complete. Check-in modal works identically to original CSR form but appears in job detail page with pre-populated pickup data.

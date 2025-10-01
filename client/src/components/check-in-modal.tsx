@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { checkInJobSchema } from "@shared/schema";
+import { insertJobSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useShopUsers, usePermissionForUser, useUsersForShop } from "@/hooks/use-reference-data";
@@ -16,7 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import type { z } from "zod";
 import type { Job } from "@shared/schema";
 
-type FormData = z.infer<typeof checkInJobSchema>;
+type FormData = z.infer<typeof insertJobSchema>;
 
 interface CheckInModalProps {
   open: boolean;
@@ -30,7 +29,7 @@ export function CheckInModal({ open, onOpenChange, job, onSuccess }: CheckInModa
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<FormData>({
-    resolver: zodResolver(checkInJobSchema),
+    // No resolver - validate manually like the original form
     defaultValues: {
       p21OrderNumber: job.p21OrderNumber || "",
       userId: job.userId || "",
@@ -67,25 +66,31 @@ export function CheckInModal({ open, onOpenChange, job, onSuccess }: CheckInModa
     try {
       setIsSubmitting(true);
       
-      // Filter out empty optional fields to avoid violating NOT NULL constraints
-      // Convert empty strings to undefined and remove them from the payload
-      const cleanedData = Object.entries(data).reduce((acc, [key, value]) => {
-        // Keep the value if it's truthy, or if it's explicitly empty and required
-        if (value !== "" && value !== null && value !== undefined) {
-          acc[key] = value;
-        } else {
-          // For required fields, keep empty values as they are
-          const requiredFields = ['shopName', 'customerName', 'userId', 'permissionToStart', 'shopHandoff', 'contactName', 'contactNumber'];
-          if (requiredFields.includes(key)) {
-            acc[key] = value;
-          }
-          // For optional fields, omit empty values entirely
-        }
-        return acc;
-      }, {} as Record<string, any>);
+      // Validate using insertJobSchema like the original form does
+      const result = insertJobSchema.safeParse(data);
       
-      // Submit to check-in endpoint with cleaned data
-      await apiRequest("POST", `/api/jobs/${job.jobId}/check-in`, cleanedData);
+      if (!result.success) {
+        // Show validation errors
+        const errors = result.error.flatten().fieldErrors;
+        Object.entries(errors).forEach(([field, messages]) => {
+          if (messages && messages.length > 0) {
+            form.setError(field as any, {
+              type: "manual",
+              message: messages[0],
+            });
+          }
+        });
+        toast({
+          title: "Validation Error",
+          description: "Please check the form for errors and try again.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Submit to check-in endpoint with validated data
+      await apiRequest("POST", `/api/jobs/${job.jobId}/check-in`, result.data);
 
       toast({
         title: "Job Checked In",

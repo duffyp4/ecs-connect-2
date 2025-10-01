@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertJobSchema, pickupJobSchema, checkInJobSchema } from "@shared/schema";
+import { insertJobSchema, pickupJobSchema } from "@shared/schema";
 import { goCanvasService } from "./services/gocanvas";
 import { fieldMapper } from "@shared/fieldMapper";
 import { googleSheetsService } from "./services/googleSheets";
@@ -381,8 +381,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { jobId } = req.params;
       
-      // Validate request body with checkInJobSchema
-      const validationResult = checkInJobSchema.safeParse(req.body);
+      // Validate request body with insertJobSchema (same as original form)
+      const validationResult = insertJobSchema.safeParse(req.body);
       if (!validationResult.success) {
         return res.status(400).json({
           message: "Validation failed",
