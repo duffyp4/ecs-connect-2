@@ -6,8 +6,8 @@ import { fieldMapper } from '@shared/fieldMapper';
 // GoCanvas Form IDs
 export const FORM_IDS = {
   EMISSIONS: '5594156',      // Emissions Service Log
-  PICKUP: '5628229',         // Pickup Log
-  DELIVERY: '5604777',       // Delivery Log
+  PICKUP: '5631022',         // Pickup Log (updated)
+  DELIVERY: '5631023',       // Delivery Log (updated)
 } as const;
 
 export type FormType = keyof typeof FORM_IDS;
