@@ -304,11 +304,6 @@ export default function JobDetail() {
               <div className="text-sm text-muted-foreground">Ship To</div>
               <div className="font-medium">{job.customerShipTo || 'N/A'}</div>
             </div>
-            <div>
-              <div className="text-sm text-muted-foreground">Contact</div>
-              <div className="font-medium">{job.contactName || 'N/A'}</div>
-              <div className="text-sm">{job.contactNumber || 'N/A'}</div>
-            </div>
           </CardContent>
         </Card>
 
@@ -320,12 +315,6 @@ export default function JobDetail() {
             <div>
               <div className="text-sm text-muted-foreground">Shop Location</div>
               <div className="font-medium">{job.shopName || 'N/A'}</div>
-            </div>
-            <div>
-              <div className="text-sm text-muted-foreground">Technician</div>
-              <div className="font-medium">
-                {job.shopHandoff ? job.shopHandoff.split('@')[0] : 'Unassigned'}
-              </div>
             </div>
             <div>
               <div className="text-sm text-muted-foreground">Initiated At</div>
