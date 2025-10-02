@@ -36,7 +36,6 @@ import { useQuery } from "@tanstack/react-query";
 import type { Job } from "@shared/schema";
 
 const deliveryDispatchSchema = z.object({
-  driverEmail: z.string().min(1, "Driver is required"),
   location: z.string(),
   customerName: z.string(),
   customerShipTo: z.string(),
@@ -45,6 +44,8 @@ const deliveryDispatchSchema = z.object({
   invoiceNumber3: z.string().optional(),
   invoiceNumber4: z.string().optional(),
   invoiceNumber5: z.string().optional(),
+  driver: z.string().min(1, "Driver is required"),
+  driverEmail: z.string(),
   deliveryNotes: z.string().optional(),
 });
 
@@ -76,7 +77,6 @@ export function DeliveryDispatchModal({
   const form = useForm<DeliveryDispatchFormData>({
     resolver: zodResolver(deliveryDispatchSchema),
     defaultValues: {
-      driverEmail: "",
       location: job.shopName || "",
       customerName: job.customerName || "",
       customerShipTo: job.customerShipTo || "",
@@ -85,6 +85,8 @@ export function DeliveryDispatchModal({
       invoiceNumber3: job.invoiceNumber3 || "",
       invoiceNumber4: job.invoiceNumber4 || "",
       invoiceNumber5: job.invoiceNumber5 || "",
+      driver: "",
+      driverEmail: "",
       deliveryNotes: job.deliveryNotes || "",
     },
   });
@@ -97,7 +99,7 @@ export function DeliveryDispatchModal({
 
       toast({
         title: "Delivery Dispatched",
-        description: `Delivery dispatched to ${data.driverEmail}`,
+        description: `Delivery dispatched to ${data.driver}`,
       });
 
       onSuccess();
@@ -130,38 +132,6 @@ export function DeliveryDispatchModal({
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-4">
-                {/* Driver Selection */}
-                <FormField
-                  control={form.control}
-                  name="driverEmail"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Driver *</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger data-testid="select-driver">
-                            <SelectValue placeholder="Select driver" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {drivers.map((driver: any) => (
-                            <SelectItem
-                              key={driver.entryId}
-                              value={driver.email || driver.entryId}
-                            >
-                              {driver.name || driver.email || driver.entryId}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
                 {/* Location (pre-populated) */}
                 <FormField
                   control={form.control}
@@ -307,6 +277,65 @@ export function DeliveryDispatchModal({
                           {...field}
                           placeholder="Enter invoice number #5"
                           data-testid="input-invoice-number-5"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Driver */}
+                <FormField
+                  control={form.control}
+                  name="driver"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Driver *</FormLabel>
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          // Auto-populate driver email when driver is selected
+                          const selectedDriver = drivers.find((d: any) => d.name === value);
+                          form.setValue("driverEmail", selectedDriver?.email || "");
+                        }}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger data-testid="select-driver">
+                            <SelectValue placeholder="Select driver" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {drivers.map((driver: any) => (
+                            <SelectItem
+                              key={driver.entryId}
+                              value={driver.name || driver.entryId}
+                            >
+                              {driver.name || driver.email || driver.entryId}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Driver Email (read-only, auto-populated) */}
+                <FormField
+                  control={form.control}
+                  name="driverEmail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-muted-foreground">Driver Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          readOnly
+                          disabled
+                          className="bg-muted text-muted-foreground cursor-not-allowed"
+                          placeholder="Auto-populated when driver is selected"
+                          data-testid="input-driver-email"
                         />
                       </FormControl>
                       <FormMessage />
