@@ -49,13 +49,13 @@ export class JobTrackerService {
         await this.checkPickupCompletion(job);
       }
       
-      // Check for service form completions (at_shop/in_service -> completed)
-      const pendingJobs = await storage.getJobsByStatus('pending');
-      const inProgressJobs = await storage.getJobsByStatus('in_progress');
-      const jobsToCheck = [...pendingJobs, ...inProgressJobs];
+      // Check for service form completions (at_shop/in_service -> delivered/ready state)
+      const atShopJobs = await storage.getJobsByState('at_shop');
+      const inServiceJobs = await storage.getJobsByState('in_service');
+      const jobsToCheck = [...atShopJobs, ...inServiceJobs];
       
       for (const job of jobsToCheck) {
-        await this.checkJobCompletion(job);
+        await this.checkServiceCompletion(job);
       }
     } catch (error) {
       console.error('Error checking pending jobs:', error);
@@ -94,176 +94,70 @@ export class JobTrackerService {
     }
   }
 
-  private async checkJobCompletion(job: any): Promise<void> {
+  /**
+   * Check if Emissions Service Log has been completed and transition to ready state
+   */
+  private async checkServiceCompletion(job: any): Promise<void> {
     try {
-      const result = await goCanvasService.checkSubmissionStatus(job.jobId);
+      // Check for Emissions Service Log submission (form 5594156)
+      const result = await goCanvasService.checkSubmissionStatusForForm(job.jobId, '5594156');
       
       if (!result) {
-        console.warn(`Could not get status for job ${job.jobId}`);
-        return;
+        return; // No submission found yet
       }
 
       const { status, submittedAt, submissionId } = result;
-      console.log(`🔍 DEBUG: checkSubmissionStatus returned: status=${status}, submittedAt=${submittedAt}, submissionId=${submissionId}`);
-      let updates: any = {};
+      console.log(`🔍 Service completion check for ${job.jobId}: status=${status}, submittedAt=${submittedAt}`);
 
-      // Update job status based on GoCanvas submission status
-      if (status === 'completed' && job.status !== 'completed') {
-        // Use the actual GoCanvas submission time instead of our detection time
-        const completedTime = submittedAt ? new Date(submittedAt) : new Date();
+      // If service is in progress, mark as in_service state (tech is working on it)
+      if (status === 'in_progress' && job.state === 'at_shop') {
+        console.log(`✅ Service started for job ${job.jobId}, transitioning to in_service state`);
         
-        // Calculate Full Turnaround Time (Initiated to Completed)
-        const turnaroundTime = job.initiatedAt ? 
-          Math.round((completedTime.getTime() - new Date(job.initiatedAt).getTime()) / (1000 * 60)) : 
-          null;
-
-        // Get handoff time data and calculate Time with Tech
-        let handoffTime = null;
-        let timeWithTech = null;
+        const { jobEventsService } = await import('./jobEvents');
+        await jobEventsService.markInService(job.id, {
+          metadata: {
+            submittedAt: submittedAt ? new Date(submittedAt) : new Date(),
+            autoDetected: true,
+          },
+        });
+        return; // Exit early after state transition
+      }
+      
+      // If service form is completed
+      if (status === 'completed') {
+        const { jobEventsService } = await import('./jobEvents');
         
-        try {
-          console.log(`\n🕒 CHECKING FOR WORKFLOW TIMESTAMPS IN REVISION HISTORY...`);
+        // If still at_shop, first transition to in_service, then to ready
+        if (job.state === 'at_shop') {
+          console.log(`✅ Service completed for job ${job.jobId} (at_shop), transitioning through in_service to ready`);
           
-          // FIRST: Try to get workflow timestamps from revision history (more accurate)
-          let handoffDateTime: Date | null = null;
-          const submissionId = result.submissionId;
+          // First transition to in_service using transitionJobState
+          await jobEventsService.transitionJobState(job.id, 'in_service', {
+            actor: 'System',
+            metadata: {
+              autoDetected: true,
+              skipped: true, // Indicate this was auto-skipped
+            },
+          });
           
-          console.log(`🔍 DEBUG: About to check revision history with submissionId: ${submissionId}`);
-          if (submissionId) {
-            console.log(`✅ SubmissionId exists, calling getSubmissionRevisions...`);
-            const revisionData = await goCanvasService.getSubmissionRevisions(submissionId);
-            if (revisionData && revisionData.workflow_revisions?.length > 0) {
-              console.log(`🎯 Found ${revisionData.workflow_revisions.length} workflow revisions - checking for handoff timestamps...`);
-              
-              // Look for handoff or check-in related revisions with timestamps
-              const handoffRevision = revisionData.workflow_revisions.find((rev: any) => 
-                rev.value?.toLowerCase().includes('check') || 
-                rev.value?.toLowerCase().includes('handoff')
-              );
-              
-              if (handoffRevision && handoffRevision.created_at) {
-                handoffDateTime = new Date(handoffRevision.created_at);
-                console.log(`✅ FOUND WORKFLOW TIMESTAMP: ${handoffDateTime.toISOString()} from revision history`);
-              }
-            }
-          }
+          // Then mark as ready
+          await jobEventsService.markReady(job.id, 'pickup', {
+            metadata: {
+              completedAt: submittedAt ? new Date(submittedAt) : new Date(),
+              autoDetected: true,
+            },
+          });
+        } 
+        // If already in_service, just mark as ready
+        else if (job.state === 'in_service') {
+          console.log(`✅ Emissions Service Log completed for job ${job.jobId}, marking as ready for pickup`);
           
-          // FALLBACK: If no revision data, try the handoff form fields approach
-          if (!handoffDateTime) {
-            console.log(`⚠️ No workflow timestamp found from revision history, falling back to form field parsing...`);
-            const handoffData = await goCanvasService.getHandoffTimeData(job.jobId);
-            if (handoffData && handoffData.handoffFields) {
-              const handoffDateField = handoffData.handoffFields.find((f: any) => f.label === 'Handoff Date');
-              const handoffTimeField = handoffData.handoffFields.find((f: any) => f.label === 'Handoff Time');
-              
-              // NEW: Check for GPS field for accurate timezone conversion
-              const gpsField = handoffData.responses?.find((f: any) => 
-                f.label === 'New GPS' || f.entry_id === 714491454
-              );
-              if (handoffDateField && handoffTimeField) {
-                const handoffDateStr = handoffDateField.value; // e.g., "08/26/2025"
-                const handoffTimeStr = handoffTimeField.value; // e.g., "02:50 PM"
-                console.log(`🔄 Processing handoff fields: Date="${handoffDateStr}", Time="${handoffTimeStr}"`);
-                
-                if (gpsField && gpsField.value) {
-                  console.log(`📍 GPS field available: "${gpsField.value}"`);
-                  
-                  // PRIORITY 1: Try GPS timestamp first (most accurate, already UTC)
-                  const gpsTimestamp = timezoneService.extractGPSTimestamp(gpsField.value);
-                  if (gpsTimestamp) {
-                    console.log(`✅ Using GPS timestamp: ${gpsTimestamp.toISOString()}`);
-                    handoffDateTime = gpsTimestamp;
-                  } else {
-                    console.log(`⚠️ GPS timestamp extraction failed, trying timezone conversion...`);
-                    
-                    // PRIORITY 2: GPS-based timezone conversion of manual times
-                    try {
-                      handoffDateTime = await timezoneService.convertHandoffTimeWithGPS(
-                        gpsField.value,
-                        handoffDateStr,
-                        handoffTimeStr
-                      );
-                      
-                      if (handoffDateTime) {
-                        console.log(`✅ GPS timezone conversion successful: ${handoffDateTime.toISOString()}`);
-                      } else {
-                        console.log(`❌ GPS timezone conversion failed`);
-                      }
-                    } catch (gpsError) {
-                      console.error(`❌ GPS timezone conversion error:`, gpsError);
-                    }
-                  }
-                } else {
-                  console.log(`❌ No GPS field found - cannot determine accurate handoff time`);
-                }
-              } else {
-                console.log(`❌ Missing handoff date or time fields`);
-              }
-            } else {
-              console.log(`❌ No handoff date/time fields found in form responses`);
-            }
-          }
-          
-          // Final processing - set handoffTime from whichever method worked
-          if (handoffDateTime && !isNaN(handoffDateTime.getTime())) {
-            handoffTime = handoffDateTime;
-            
-            // Calculate Time with Tech (Handoff to Completed)
-            timeWithTech = Math.round((completedTime.getTime() - handoffTime.getTime()) / (1000 * 60));
-            
-            console.log(`✅ FINAL HANDOFF TIME CALCULATION:`);
-            console.log(`  - Handoff timestamp: ${handoffTime.toISOString()}`);
-            console.log(`  - Completion timestamp: ${completedTime.toISOString()}`);
-            console.log(`  - Time with Tech: ${timeWithTech} minutes (${Math.round(timeWithTech / 60 * 10) / 10} hours)`);
-          } else {
-            console.warn(`❌ Could not determine handoff time for job ${job.jobId}`);
-          }
-          
-        } catch (handoffError) {
-          console.warn(`Could not retrieve handoff time for job ${job.jobId}:`, handoffError);
-        }
-
-        updates = {
-          status: 'completed',
-          completedAt: completedTime,
-          turnaroundTime, // Full Turnaround Time (Initiated to Completed)
-          handoffAt: handoffTime,
-          timeWithTech, // Time with Tech (Handoff to Completed)
-        };
-
-        console.log(`Job ${job.jobId} completed:
-          - Full Turnaround Time: ${turnaroundTime} minutes (${Math.round(turnaroundTime / 60 * 10) / 10} hours)
-          - Time with Tech: ${timeWithTech || 'N/A'} minutes${timeWithTech ? ` (${Math.round(timeWithTech / 60 * 10) / 10} hours)` : ''}`);
-      } else if (status === 'in_progress' && job.status === 'pending') {
-        updates = {
-          status: 'in_progress',
-        };
-
-        console.log(`Job ${job.jobId} moved to in-progress`);
-      }
-
-      // Check for overdue jobs (more than 6 hours)
-      if (job.status === 'in_progress' && job.initiatedAt) {
-        const currentTime = new Date();
-        const hoursElapsed = (currentTime.getTime() - new Date(job.initiatedAt).getTime()) / (1000 * 60 * 60);
-        if (hoursElapsed > 6) {
-          updates.status = 'overdue';
-          console.log(`Job ${job.jobId} marked as overdue (${hoursElapsed.toFixed(1)} hours)`);
-        }
-      }
-
-      if (Object.keys(updates).length > 0) {
-        await storage.updateJob(job.id, updates);
-
-        // Sync to Google Sheets if job is completed
-        if (updates.status === 'completed') {
-          const updatedJob = await storage.getJob(job.id);
-          if (updatedJob) {
-            const syncSuccess = await googleSheetsService.syncJobToSheet(updatedJob);
-            if (syncSuccess) {
-              await storage.updateJob(job.id, { googleSheetsSynced: "true" });
-            }
-          }
+          await jobEventsService.markReady(job.id, 'pickup', {
+            metadata: {
+              completedAt: submittedAt ? new Date(submittedAt) : new Date(),
+              autoDetected: true,
+            },
+          });
         }
       }
     } catch (error) {
