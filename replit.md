@@ -133,3 +133,34 @@ Includes diagnostic scripts in `/scripts/` for GoCanvas integration debugging, s
 - Pickup workflow: Create (9 fields) → Dispatch → Mark Picked Up → Check In (+ 47 fields) → Complete Service
 
 **Status**: Phase 7 complete. Check-in modal works identically to original CSR form but appears in job detail page with pre-populated pickup data.
+
+### Phase 8 (October 2, 2025) - Shared CSR Check-In Form Architecture
+**Unified Form Logic Across CSR Form and Check-In Modal**:
+- **Problem**: CSR form page and check-in modal had duplicate form logic, reference data hooks, and auto-population code
+- **Solution**: Created shared `useCsrCheckInForm` hook that both components now use
+- **Hook Features**:
+  - Encapsulates react-hook-form setup with insertJobSchema validation
+  - Fetches all reference data from GoCanvas (shops, users, customers, ship-to locations, drivers, etc.)
+  - Handles all auto-population logic (permissions, customer instructions, ship-to IDs, etc.)
+  - Accepts `initialValues` to pre-populate forms (used by check-in modal)
+  - Returns form instance, reference data, and watched field values
+- **Benefits**:
+  - Single source of truth for form logic
+  - Updates to hook automatically apply to both CSR form page and check-in modal
+  - Eliminates code duplication (~100 lines of duplicate logic removed)
+  - Ensures identical behavior and GoCanvas submission across both forms
+- **Implementation**:
+  - Hook: `client/src/hooks/use-csr-check-in-form.ts`
+  - CSR Form: `client/src/components/csr-form-new.tsx` (refactored to use hook)
+  - Check-In Modal: `client/src/components/check-in-modal.tsx` (refactored to use hook)
+  - Both components maintain their unique submission logic while sharing form setup
+
+**Technical Details**:
+- Hook exports: `{ form, referenceData, watchedFields }`
+- Reference data includes all GoCanvas lookups with loading states
+- Watched fields: userId, shopName, customerName, customerShipTo, shopHandoff
+- Auto-population preserved: permissions, customer data, ship-to IDs, handoff emails
+- CSR form keeps pickup-specific state and two-path flow (pickup vs direct)
+- Check-in modal uses hook with `disableAutoPopulation: true` to preserve pre-populated job data without clearing effects
+
+**Status**: Phase 8 complete. Both forms now share identical logic through useCsrCheckInForm hook. Any updates to the hook automatically apply to both the CSR form page and check-in modal.

@@ -27,8 +27,10 @@ export function CheckInModal({ open, onOpenChange, job, onSuccess }: CheckInModa
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Use the shared CSR Check-In form hook
+  // Use the shared CSR Check-In form hook with auto-population disabled
+  // since we're pre-populating from existing job data
   const { form, referenceData, watchedFields } = useCsrCheckInForm({
+    disableAutoPopulation: true,
     initialValues: {
       p21OrderNumber: job.p21OrderNumber || "",
       userId: job.userId || "",
