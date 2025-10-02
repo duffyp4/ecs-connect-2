@@ -67,7 +67,7 @@ export function DeliveryDispatchModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch drivers from reference data
-  const { data: driversData } = useQuery({
+  const { data: driversData } = useQuery<{ entries: any[] }>({
     queryKey: ['/api/reference-data/drivers'],
   });
 
@@ -93,10 +93,7 @@ export function DeliveryDispatchModal({
     try {
       setIsSubmitting(true);
 
-      await apiRequest(`/api/jobs/${job.jobId}/dispatch-delivery`, {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      await apiRequest("POST", `/api/jobs/${job.jobId}/dispatch-delivery`, data);
 
       toast({
         title: "Delivery Dispatched",
@@ -129,9 +126,9 @@ export function DeliveryDispatchModal({
           </DialogDescription>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <ScrollArea className="max-h-[60vh] pr-4">
+        <ScrollArea className="h-[calc(90vh-200px)] pr-4">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-4">
                 {/* Driver Selection */}
                 <FormField
@@ -337,28 +334,29 @@ export function DeliveryDispatchModal({
                   )}
                 />
               </div>
-            </ScrollArea>
+            </form>
+          </Form>
+        </ScrollArea>
 
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={isSubmitting}
-                data-testid="button-cancel-delivery"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                data-testid="button-confirm-delivery"
-              >
-                {isSubmitting ? "Dispatching..." : "Dispatch Delivery"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+            data-testid="button-cancel-delivery"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            data-testid="button-confirm-delivery"
+            onClick={form.handleSubmit(onSubmit)}
+          >
+            {isSubmitting ? "Dispatching..." : "Dispatch Delivery"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
