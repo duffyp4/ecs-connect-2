@@ -397,7 +397,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updateJob(jobId, jobData);
       }
       
-      const updatedJob = await jobEventsService.checkInAtShop(jobId);
+      // Pass userId and shopHandoff (technician) to event metadata
+      const updatedJob = await jobEventsService.checkInAtShop(jobId, {
+        metadata: {
+          userId: jobData.userId,
+          shopHandoff: jobData.shopHandoff,
+        },
+      });
       
       // Create Emissions Service Log dispatch when job is checked in at shop
       try {

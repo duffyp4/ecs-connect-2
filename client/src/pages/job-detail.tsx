@@ -126,6 +126,71 @@ export default function JobDetail() {
       .join(' ');
   };
 
+  const getEventLabel = (event: JobEvent) => {
+    // For state_change events, show what actually happened
+    if (event.eventType === 'state_change' && event.metadata?.newState) {
+      switch (event.metadata.newState) {
+        case 'picked_up':
+          return 'Picked Up';
+        case 'at_shop':
+          return 'Checked In at Shop';
+        case 'in_service':
+          return 'Service Started';
+        case 'ready_for_pickup':
+          return 'Ready for Pickup';
+        case 'ready_for_delivery':
+          return 'Ready for Delivery';
+        case 'out_for_delivery':
+          return 'Out for Delivery';
+        case 'delivered':
+          return 'Delivered';
+        case 'cancelled':
+          return 'Cancelled';
+        default:
+          return formatEventType(event.metadata.newState);
+      }
+    }
+    return formatEventType(event.eventType);
+  };
+
+  const getEventDetails = (event: JobEvent) => {
+    const details: string[] = [];
+
+    // For pickup dispatched, show driver
+    if (event.eventType === 'pickup_dispatched' && event.metadata?.driverEmail) {
+      const driverEmail = event.metadata.driverEmail;
+      const driverName = driverEmail.split('@')[0].replace('.', ' ').split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      details.push(`Driver: ${driverName}`);
+    }
+
+    // For state changes, show assignment details
+    if (event.eventType === 'state_change' && event.metadata) {
+      const { newState, userId, shopHandoff } = event.metadata;
+
+      // Picked up - show who picked it up (from submission or direct check-in)
+      if (newState === 'picked_up') {
+        if (event.metadata.submittedAt) {
+          details.push('Auto-detected from GoCanvas submission');
+        } else if (event.metadata.directCheckIn) {
+          details.push('Direct shop check-in (no pickup)');
+        }
+      }
+
+      // Checked in at shop - show user ID and technician
+      if (newState === 'at_shop') {
+        if (userId) {
+          details.push(`User: ${userId}`);
+        }
+        if (shopHandoff) {
+          const techName = shopHandoff.split('@')[0].replace('.', ' ').split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+          details.push(`Technician: ${techName}`);
+        }
+      }
+    }
+
+    return details;
+  };
+
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
@@ -312,18 +377,15 @@ export default function JobDetail() {
                     )}
                   </div>
                   <div className="flex-1 pb-8">
-                    <div className="font-medium">{formatEventType(event.eventType)}</div>
+                    <div className="font-medium">{getEventLabel(event)}</div>
                     <div className="text-sm text-muted-foreground">
                       {event.timestamp ? format(new Date(event.timestamp), 'PPpp') : 'N/A'}
                     </div>
-                    {event.fromState && event.toState && (
+                    {getEventDetails(event).length > 0 && (
                       <div className="text-sm text-muted-foreground mt-1">
-                        {formatEventType(event.fromState)} → {formatEventType(event.toState)}
-                      </div>
-                    )}
-                    {event.metadata && Object.keys(event.metadata).length > 0 && (
-                      <div className="text-sm text-muted-foreground mt-1">
-                        {JSON.stringify(event.metadata)}
+                        {getEventDetails(event).map((detail, idx) => (
+                          <div key={idx}>{detail}</div>
+                        ))}
                       </div>
                     )}
                   </div>

@@ -5,8 +5,22 @@ import { useToast } from "@/hooks/use-toast";
 import { useCsrCheckInForm } from "@/hooks/use-csr-check-in-form";
 import { CsrCheckInFormFields } from "@/components/csr-check-in-form-fields";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { ClipboardList } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -22,7 +36,12 @@ interface CheckInModalProps {
   onSuccess: () => void;
 }
 
-export function CheckInModal({ open, onOpenChange, job, onSuccess }: CheckInModalProps) {
+export function CheckInModal({
+  open,
+  onOpenChange,
+  job,
+  onSuccess,
+}: CheckInModalProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
@@ -51,7 +70,8 @@ export function CheckInModal({ open, onOpenChange, job, onSuccess }: CheckInModa
       contactNumber: job.contactNumber || "",
       poNumber: job.poNumber || "",
       serialNumbers: job.serialNumbers || "",
-      techCustomerQuestionInquiry: job.techCustomerQuestionInquiry || "sales@ecspart.com",
+      techCustomerQuestionInquiry:
+        job.techCustomerQuestionInquiry || "sales@ecspart.com",
       shopHandoff: job.shopHandoff || "",
       handoffEmailWorkflow: job.handoffEmailWorkflow || "",
     },
@@ -60,10 +80,10 @@ export function CheckInModal({ open, onOpenChange, job, onSuccess }: CheckInModa
   const onSubmit = async (data: FormData) => {
     try {
       setIsSubmitting(true);
-      
+
       // Validate using insertJobSchema (same as original CSR form)
       const result = insertJobSchema.safeParse(data);
-      
+
       if (!result.success) {
         // Show validation errors
         const errors = result.error.flatten().fieldErrors;
@@ -83,7 +103,7 @@ export function CheckInModal({ open, onOpenChange, job, onSuccess }: CheckInModa
         setIsSubmitting(false);
         return;
       }
-      
+
       // Submit to check-in endpoint with validated data
       await apiRequest("POST", `/api/jobs/${job.id}/check-in`, result.data);
 
@@ -98,7 +118,8 @@ export function CheckInModal({ open, onOpenChange, job, onSuccess }: CheckInModa
       console.error("Check-in error:", error);
       toast({
         title: "Check-In Failed",
-        description: error instanceof Error ? error.message : "Failed to check in job",
+        description:
+          error instanceof Error ? error.message : "Failed to check in job",
         variant: "destructive",
       });
     } finally {
@@ -115,7 +136,7 @@ export function CheckInModal({ open, onOpenChange, job, onSuccess }: CheckInModa
             Check In at Shop - Complete Job Details
           </DialogTitle>
           <DialogDescription>
-            Complete the remaining job information for Job {job.jobId}. Fields marked with * are required.
+            Complete the remaining job information for Job {job.jobId}.
           </DialogDescription>
         </DialogHeader>
 
@@ -125,7 +146,12 @@ export function CheckInModal({ open, onOpenChange, job, onSuccess }: CheckInModa
               {/* Job ID (Read-only) */}
               <div className="p-4 bg-muted/50 rounded-lg">
                 <label className="text-sm font-medium">Job ID</label>
-                <Input value={job.jobId} disabled className="bg-muted mt-2" data-testid="input-job-id" />
+                <Input
+                  value={job.jobId}
+                  disabled
+                  className="bg-muted mt-2"
+                  data-testid="input-job-id"
+                />
               </div>
 
               {/* All Form Fields */}
@@ -139,7 +165,6 @@ export function CheckInModal({ open, onOpenChange, job, onSuccess }: CheckInModa
                 setShipToSearchOpen={setShipToSearchOpen}
                 disabledFields={["customerName", "customerShipTo"]}
               />
-
             </form>
           </Form>
         </ScrollArea>
