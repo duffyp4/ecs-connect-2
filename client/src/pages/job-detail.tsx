@@ -375,7 +375,7 @@ export default function JobDetail() {
               {events.map((event, index) => (
                 <div key={event.id} className="flex gap-4">
                   <div className="flex flex-col items-center">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--ecs-primary)] text-white">
+                    <div className="flex items-center justify-center w-8 h-8 min-w-8 min-h-8 rounded-full bg-[var(--ecs-primary)] text-white flex-shrink-0">
                       {getEventIcon(event.eventType)}
                     </div>
                     {index < events.length - 1 && (
