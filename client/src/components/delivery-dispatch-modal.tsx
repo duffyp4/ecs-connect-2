@@ -37,13 +37,15 @@ import type { Job } from "@shared/schema";
 
 const deliveryDispatchSchema = z.object({
   driverEmail: z.string().min(1, "Driver is required"),
-  deliveryAddress: z.string().min(1, "Delivery address is required"),
-  deliveryNotes: z.string().optional(),
+  location: z.string(),
+  customerName: z.string(),
+  customerShipTo: z.string(),
   invoiceNumber: z.string().optional(),
   invoiceNumber2: z.string().optional(),
   invoiceNumber3: z.string().optional(),
   invoiceNumber4: z.string().optional(),
   invoiceNumber5: z.string().optional(),
+  deliveryNotes: z.string().optional(),
 });
 
 type DeliveryDispatchFormData = z.infer<typeof deliveryDispatchSchema>;
@@ -75,13 +77,15 @@ export function DeliveryDispatchModal({
     resolver: zodResolver(deliveryDispatchSchema),
     defaultValues: {
       driverEmail: "",
-      deliveryAddress: job.customerShipTo || "",
-      deliveryNotes: job.deliveryNotes || "",
+      location: job.shopName || "",
+      customerName: job.customerName || "",
+      customerShipTo: job.customerShipTo || "",
       invoiceNumber: job.invoiceNumber || "",
       invoiceNumber2: job.invoiceNumber2 || "",
       invoiceNumber3: job.invoiceNumber3 || "",
       invoiceNumber4: job.invoiceNumber4 || "",
       invoiceNumber5: job.invoiceNumber5 || "",
+      deliveryNotes: job.deliveryNotes || "",
     },
   });
 
@@ -161,18 +165,18 @@ export function DeliveryDispatchModal({
                   )}
                 />
 
-                {/* Delivery Address */}
+                {/* Location (pre-populated) */}
                 <FormField
                   control={form.control}
-                  name="deliveryAddress"
+                  name="location"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Delivery Address *</FormLabel>
+                      <FormLabel>Location</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="Enter delivery address"
-                          data-testid="input-delivery-address"
+                          disabled
+                          data-testid="input-location"
                         />
                       </FormControl>
                       <FormMessage />
@@ -180,102 +184,140 @@ export function DeliveryDispatchModal({
                   )}
                 />
 
-                {/* Invoice Numbers */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-medium">Invoice Numbers</h3>
-                  
-                  <FormField
-                    control={form.control}
-                    name="invoiceNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Invoice Number</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Enter invoice number"
-                            data-testid="input-invoice-number"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                {/* Customer Name (pre-populated) */}
+                <FormField
+                  control={form.control}
+                  name="customerName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Customer Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          disabled
+                          data-testid="input-customer-name"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <FormField
-                    control={form.control}
-                    name="invoiceNumber2"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Invoice Number #2</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Enter invoice number #2"
-                            data-testid="input-invoice-number-2"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                {/* Customer Ship-To (pre-populated) */}
+                <FormField
+                  control={form.control}
+                  name="customerShipTo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Customer Ship-To</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          disabled
+                          data-testid="input-customer-ship-to"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <FormField
-                    control={form.control}
-                    name="invoiceNumber3"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Invoice Number #3</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Enter invoice number #3"
-                            data-testid="input-invoice-number-3"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                {/* Invoice Number */}
+                <FormField
+                  control={form.control}
+                  name="invoiceNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Invoice Number</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Enter invoice number"
+                          data-testid="input-invoice-number"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <FormField
-                    control={form.control}
-                    name="invoiceNumber4"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Invoice Number #4</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Enter invoice number #4"
-                            data-testid="input-invoice-number-4"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                {/* Invoice Number - #2 */}
+                <FormField
+                  control={form.control}
+                  name="invoiceNumber2"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Invoice Number - #2</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Enter invoice number #2"
+                          data-testid="input-invoice-number-2"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <FormField
-                    control={form.control}
-                    name="invoiceNumber5"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Invoice Number #5</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Enter invoice number #5"
-                            data-testid="input-invoice-number-5"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                {/* Invoice Number - #3 */}
+                <FormField
+                  control={form.control}
+                  name="invoiceNumber3"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Invoice Number - #3</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Enter invoice number #3"
+                          data-testid="input-invoice-number-3"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                {/* Delivery Notes */}
+                {/* Invoice Number - #4 */}
+                <FormField
+                  control={form.control}
+                  name="invoiceNumber4"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Invoice Number - #4</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Enter invoice number #4"
+                          data-testid="input-invoice-number-4"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Invoice Number - #5 */}
+                <FormField
+                  control={form.control}
+                  name="invoiceNumber5"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Invoice Number - #5</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Enter invoice number #5"
+                          data-testid="input-invoice-number-5"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Notes to Driver */}
                 <FormField
                   control={form.control}
                   name="deliveryNotes"
