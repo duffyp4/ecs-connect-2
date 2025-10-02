@@ -265,7 +265,7 @@ export class JobEventsService {
       updatedAt: new Date(),
     });
 
-    // Transition to picked_up state
+    // Transition to picked_up state (this creates the event)
     const updatedJob = await this.transitionJobState(jobId, 'picked_up', {
       ...options,
       metadata: {
@@ -273,14 +273,6 @@ export class JobEventsService {
         itemCount,
       },
     });
-
-    // Record additional event
-    await this.recordEvent(
-      jobId,
-      'pickup_completed',
-      `Items picked up (count: ${itemCount})`,
-      options
-    );
 
     return updatedJob;
   }
@@ -318,16 +310,8 @@ export class JobEventsService {
       });
     }
 
-    // Transition to at_shop
+    // Transition to at_shop (this creates the event)
     updatedJob = await this.transitionJobState(jobId, 'at_shop', options);
-
-    // Record event
-    await this.recordEvent(
-      jobId,
-      'shop_checkin',
-      'Job checked in at shop',
-      options
-    );
 
     return updatedJob;
   }
@@ -346,7 +330,7 @@ export class JobEventsService {
       updatedAt: new Date(),
     });
 
-    // Transition state
+    // Transition state (this creates the event)
     const updatedJob = await this.transitionJobState(jobId, 'in_service', {
       ...options,
       actor: 'Technician',
@@ -356,18 +340,6 @@ export class JobEventsService {
         technicianName,
       },
     });
-
-    // Record event
-    await this.recordEvent(
-      jobId,
-      'service_started',
-      `Service started by ${technicianName}`,
-      {
-        ...options,
-        actor: 'Technician',
-        actorEmail: technicianName,
-      }
-    );
 
     return updatedJob;
   }
@@ -388,7 +360,7 @@ export class JobEventsService {
       updatedAt: new Date(),
     });
 
-    // Transition state
+    // Transition state (this creates the event)
     const updatedJob = await this.transitionJobState(jobId, targetState, {
       ...options,
       metadata: {
@@ -396,14 +368,6 @@ export class JobEventsService {
         deliveryMethod,
       },
     });
-
-    // Record event
-    await this.recordEvent(
-      jobId,
-      'service_completed',
-      `Job marked as ready for ${deliveryMethod}`,
-      options
-    );
 
     return updatedJob;
   }
@@ -480,16 +444,8 @@ export class JobEventsService {
     jobId: string,
     options: StateChangeOptions = {}
   ): Promise<Job> {
-    // Transition state
+    // Transition state (this creates the event)
     const updatedJob = await this.transitionJobState(jobId, 'delivered', options);
-
-    // Record event
-    await this.recordEvent(
-      jobId,
-      'delivery_completed',
-      'Job delivered to customer',
-      options
-    );
 
     return updatedJob;
   }
@@ -502,22 +458,11 @@ export class JobEventsService {
     reason: string,
     options: StateChangeOptions = {}
   ): Promise<Job> {
-    // Transition state
+    // Transition state (this creates the event)
     const updatedJob = await this.transitionJobState(jobId, 'cancelled', {
       ...options,
       notes: reason,
     });
-
-    // Record event
-    await this.recordEvent(
-      jobId,
-      'cancelled',
-      `Job cancelled: ${reason}`,
-      {
-        ...options,
-        notes: reason,
-      }
-    );
 
     return updatedJob;
   }
