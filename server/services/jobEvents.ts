@@ -97,6 +97,7 @@ export class JobEventsService {
       actor: options.actor || 'System',
       actorEmail: options.actorEmail,
       metadata: options.metadata ? options.metadata : null,
+      ...(options.timestamp && { timestamp: options.timestamp }), // Use custom timestamp if provided
     };
     
     await storage.createJobEvent(eventData);
