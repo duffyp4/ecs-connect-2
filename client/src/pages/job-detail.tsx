@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import JobStatusBadge from "@/components/job-status-badge";
 import { CheckInModal } from "@/components/check-in-modal";
+import { DeliveryDispatchModal } from "@/components/delivery-dispatch-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -39,6 +40,7 @@ export default function JobDetail() {
   const { toast } = useToast();
   const jobId = params.id;
   const [checkInModalOpen, setCheckInModalOpen] = useState(false);
+  const [deliveryDispatchModalOpen, setDeliveryDispatchModalOpen] = useState(false);
 
   const { data: job, isLoading: jobLoading } = useQuery<any>({
     queryKey: [`/api/jobs/${jobId}`],
@@ -265,7 +267,7 @@ export default function JobDetail() {
             </Button>
 
             <Button 
-              onClick={() => actionMutation.mutate({ action: 'dispatch-delivery' })}
+              onClick={() => setDeliveryDispatchModalOpen(true)}
               disabled={currentState !== 'service_complete' || isPending}
               className="btn-primary"
               data-testid="button-dispatch-delivery"
@@ -414,6 +416,21 @@ export default function JobDetail() {
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ["/api/jobs", jobId] });
             queryClient.invalidateQueries({ queryKey: ["/api/jobs", jobId, "events"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/metrics"] });
+          }}
+        />
+      )}
+
+      {/* Delivery Dispatch Modal */}
+      {job && (
+        <DeliveryDispatchModal
+          open={deliveryDispatchModalOpen}
+          onOpenChange={setDeliveryDispatchModalOpen}
+          job={job}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}`] });
+            queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}/events`] });
             queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
             queryClient.invalidateQueries({ queryKey: ["/api/metrics"] });
           }}

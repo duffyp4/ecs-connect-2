@@ -1,0 +1,323 @@
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Truck } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import type { Job } from "@shared/schema";
+
+const deliveryDispatchSchema = z.object({
+  driverEmail: z.string().min(1, "Driver is required"),
+  deliveryAddress: z.string().min(1, "Delivery address is required"),
+  deliveryNotes: z.string().optional(),
+  invoiceNumber: z.string().optional(),
+  invoiceNumber2: z.string().optional(),
+  invoiceNumber3: z.string().optional(),
+  invoiceNumber4: z.string().optional(),
+  invoiceNumber5: z.string().optional(),
+});
+
+type DeliveryDispatchFormData = z.infer<typeof deliveryDispatchSchema>;
+
+interface DeliveryDispatchModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  job: Job;
+  onSuccess: () => void;
+}
+
+export function DeliveryDispatchModal({
+  open,
+  onOpenChange,
+  job,
+  onSuccess,
+}: DeliveryDispatchModalProps) {
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Fetch drivers from reference data
+  const { data: driversData } = useQuery({
+    queryKey: ['/api/reference-data/drivers'],
+  });
+
+  const drivers = driversData?.entries || [];
+
+  const form = useForm<DeliveryDispatchFormData>({
+    resolver: zodResolver(deliveryDispatchSchema),
+    defaultValues: {
+      driverEmail: "",
+      deliveryAddress: job.customerShipTo || "",
+      deliveryNotes: job.deliveryNotes || "",
+      invoiceNumber: job.invoiceNumber || "",
+      invoiceNumber2: job.invoiceNumber2 || "",
+      invoiceNumber3: job.invoiceNumber3 || "",
+      invoiceNumber4: job.invoiceNumber4 || "",
+      invoiceNumber5: job.invoiceNumber5 || "",
+    },
+  });
+
+  const onSubmit = async (data: DeliveryDispatchFormData) => {
+    try {
+      setIsSubmitting(true);
+
+      await apiRequest(`/api/jobs/${job.jobId}/dispatch-delivery`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+
+      toast({
+        title: "Delivery Dispatched",
+        description: `Delivery dispatched to ${data.driverEmail}`,
+      });
+
+      onSuccess();
+      onOpenChange(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to dispatch delivery",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Truck className="h-5 w-5" />
+            Dispatch for Delivery
+          </DialogTitle>
+          <DialogDescription>
+            Select driver and provide delivery details for Job {job.jobId}
+          </DialogDescription>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <ScrollArea className="max-h-[60vh] pr-4">
+              <div className="space-y-4">
+                {/* Driver Selection */}
+                <FormField
+                  control={form.control}
+                  name="driverEmail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Driver *</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger data-testid="select-driver">
+                            <SelectValue placeholder="Select driver" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {drivers.map((driver: any) => (
+                            <SelectItem
+                              key={driver.entryId}
+                              value={driver.email || driver.entryId}
+                            >
+                              {driver.name || driver.email || driver.entryId}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Delivery Address */}
+                <FormField
+                  control={form.control}
+                  name="deliveryAddress"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Delivery Address *</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Enter delivery address"
+                          data-testid="input-delivery-address"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Invoice Numbers */}
+                <div className="space-y-3">
+                  <h3 className="text-sm font-medium">Invoice Numbers</h3>
+                  
+                  <FormField
+                    control={form.control}
+                    name="invoiceNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Invoice Number</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Enter invoice number"
+                            data-testid="input-invoice-number"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="invoiceNumber2"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Invoice Number #2</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Enter invoice number #2"
+                            data-testid="input-invoice-number-2"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="invoiceNumber3"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Invoice Number #3</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Enter invoice number #3"
+                            data-testid="input-invoice-number-3"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="invoiceNumber4"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Invoice Number #4</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Enter invoice number #4"
+                            data-testid="input-invoice-number-4"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="invoiceNumber5"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Invoice Number #5</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Enter invoice number #5"
+                            data-testid="input-invoice-number-5"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Delivery Notes */}
+                <FormField
+                  control={form.control}
+                  name="deliveryNotes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Notes to Driver</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          placeholder="Enter any notes for the driver"
+                          rows={3}
+                          data-testid="input-delivery-notes"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </ScrollArea>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
+                data-testid="button-cancel-delivery"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                data-testid="button-confirm-delivery"
+              >
+                {isSubmitting ? "Dispatching..." : "Dispatch Delivery"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}

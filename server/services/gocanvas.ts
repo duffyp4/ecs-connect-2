@@ -705,6 +705,10 @@ export class GoCanvasService {
           { data: jobData.customerName, labels: ['Customer Name'] },
           { data: jobData.customerShipTo, labels: ['Customer Ship-To'] },
           { data: jobData.invoiceNumber, labels: ['Invoice Number'] },
+          { data: jobData.invoiceNumber2, labels: ['Invoice Number - #2'] },
+          { data: jobData.invoiceNumber3, labels: ['Invoice Number - #3'] },
+          { data: jobData.invoiceNumber4, labels: ['Invoice Number - #4'] },
+          { data: jobData.invoiceNumber5, labels: ['Invoice Number - #5'] },
           { data: jobData.deliveryNotes, labels: ['Notes to Driver'] },
         ];
       

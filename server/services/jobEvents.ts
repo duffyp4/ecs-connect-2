@@ -385,7 +385,16 @@ export class JobEventsService {
    */
   async dispatchDelivery(
     jobId: string,
-    driverEmail: string,
+    deliveryData: {
+      driverEmail: string;
+      deliveryAddress: string;
+      deliveryNotes?: string;
+      invoiceNumber?: string;
+      invoiceNumber2?: string;
+      invoiceNumber3?: string;
+      invoiceNumber4?: string;
+      invoiceNumber5?: string;
+    },
     options: StateChangeOptions = {}
   ): Promise<{ job: Job; dispatchId: string }> {
     // Get job
@@ -406,20 +415,33 @@ export class JobEventsService {
       {
         jobId: job.jobId,
         customerName: job.customerName,
+        customerShipTo: job.customerShipTo,
         shopName: job.shopName,
         contactName: job.contactName,
         contactNumber: job.contactNumber,
-        deliveryAddress: job.deliveryAddress,
-        deliveryNotes: job.deliveryNotes,
+        deliveryAddress: deliveryData.deliveryAddress,
+        deliveryNotes: deliveryData.deliveryNotes,
         itemCount: job.itemCount,
+        invoiceNumber: deliveryData.invoiceNumber,
+        invoiceNumber2: deliveryData.invoiceNumber2,
+        invoiceNumber3: deliveryData.invoiceNumber3,
+        invoiceNumber4: deliveryData.invoiceNumber4,
+        invoiceNumber5: deliveryData.invoiceNumber5,
       },
-      driverEmail
+      deliveryData.driverEmail
     );
 
-    // Update job with dispatch info
+    // Update job with dispatch info and invoice numbers
     await storage.updateJob(jobId, {
       deliveryDispatchId: dispatchId,
-      deliveryDriverEmail: driverEmail,
+      deliveryDriverEmail: deliveryData.driverEmail,
+      deliveryAddress: deliveryData.deliveryAddress,
+      deliveryNotes: deliveryData.deliveryNotes,
+      invoiceNumber: deliveryData.invoiceNumber,
+      invoiceNumber2: deliveryData.invoiceNumber2,
+      invoiceNumber3: deliveryData.invoiceNumber3,
+      invoiceNumber4: deliveryData.invoiceNumber4,
+      invoiceNumber5: deliveryData.invoiceNumber5,
       updatedAt: new Date(),
     });
 
@@ -428,7 +450,7 @@ export class JobEventsService {
       ...options,
       metadata: {
         ...options.metadata,
-        driverEmail,
+        driverEmail: deliveryData.driverEmail,
         dispatchId,
         formType: 'DELIVERY',
       },
@@ -438,7 +460,7 @@ export class JobEventsService {
     await this.recordEvent(
       jobId,
       'delivery_dispatched',
-      `Delivery dispatched to ${driverEmail}`,
+      `Delivery dispatched to ${deliveryData.driverEmail}`,
       options
     );
 

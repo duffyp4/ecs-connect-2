@@ -60,6 +60,13 @@ export const jobs = pgTable("jobs", {
   deliveryMethod: text("delivery_method"), // 'pickup' or 'delivery'
   itemCount: integer("item_count"),
   
+  // Invoice Numbers (for delivery)
+  invoiceNumber: text("invoice_number"),
+  invoiceNumber2: text("invoice_number_2"),
+  invoiceNumber3: text("invoice_number_3"),
+  invoiceNumber4: text("invoice_number_4"),
+  invoiceNumber5: text("invoice_number_5"),
+  
   // Technician Assignment
   assignedTechnician: text("assigned_technician"),
   

@@ -468,7 +468,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/jobs/:jobId/dispatch-delivery", requireAuth, async (req, res) => {
     try {
       const { jobId } = req.params;
-      const { driverEmail, deliveryAddress, deliveryNotes } = req.body;
+      const { 
+        driverEmail, 
+        deliveryAddress, 
+        deliveryNotes,
+        invoiceNumber,
+        invoiceNumber2,
+        invoiceNumber3,
+        invoiceNumber4,
+        invoiceNumber5
+      } = req.body;
       
       if (!driverEmail || !deliveryAddress) {
         return res.status(400).json({ message: "Driver email and delivery address are required" });
@@ -478,6 +487,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         driverEmail,
         deliveryAddress,
         deliveryNotes,
+        invoiceNumber,
+        invoiceNumber2,
+        invoiceNumber3,
+        invoiceNumber4,
+        invoiceNumber5,
       });
       
       res.json(updatedJob);
