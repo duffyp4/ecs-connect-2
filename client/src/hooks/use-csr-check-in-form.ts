@@ -118,14 +118,14 @@ export function useCsrCheckInForm(options: UseCsrCheckInFormOptions = {}): CsrCh
 
   // Auto-populate permission when user changes
   useEffect(() => {
-    if (!disableAutoPopulation && permissionData?.permission) {
+    if (permissionData?.permission) {
       form.setValue("permissionToStart", permissionData.permission);
     }
-  }, [permissionData, form, disableAutoPopulation]);
+  }, [permissionData, form]);
 
   // Auto-populate customer instructions when customer changes
   useEffect(() => {
-    if (!disableAutoPopulation && customerInstructionsData && customerName) {
+    if (customerInstructionsData && customerName) {
       if (customerInstructionsData.instructions === '#N/A' || 
           customerInstructionsData.instructions === '' || 
           !customerInstructionsData.instructions) {
@@ -134,11 +134,11 @@ export function useCsrCheckInForm(options: UseCsrCheckInFormOptions = {}): CsrCh
         form.setValue("customerSpecificInstructions", customerInstructionsData.instructions);
       }
     }
-  }, [customerInstructionsData, customerName, form, disableAutoPopulation]);
+  }, [customerInstructionsData, customerName, form]);
 
   // Auto-populate reference data fields when customer changes
   useEffect(() => {
-    if (!disableAutoPopulation && customerSpecificData && customerName) {
+    if (customerSpecificData && customerName) {
       // Auto-populate preferred process from reference data
       if (customerSpecificData.preferredProcess === '#N/A' || 
           customerSpecificData.preferredProcess === '' || 
@@ -175,7 +175,7 @@ export function useCsrCheckInForm(options: UseCsrCheckInFormOptions = {}): CsrCh
         form.setValue("noteToTechAboutCustomer", customerSpecificData.customerNotes);
       }
     }
-  }, [customerSpecificData, customerName, form, disableAutoPopulation]);
+  }, [customerSpecificData, customerName, form]);
 
   // Clear shop name when user changes (only for new form, not modal)
   useEffect(() => {
@@ -193,21 +193,19 @@ export function useCsrCheckInForm(options: UseCsrCheckInFormOptions = {}): CsrCh
 
   // Auto-populate handoff email when shop handoff changes
   useEffect(() => {
-    if (!disableAutoPopulation && shopHandoff) {
+    if (shopHandoff) {
       form.setValue("handoffEmailWorkflow", shopHandoff);
     }
-  }, [shopHandoff, form, disableAutoPopulation]);
+  }, [shopHandoff, form]);
 
   // Auto-populate Ship2 ID when customer and ship-to are selected
   useEffect(() => {
-    if (!disableAutoPopulation) {
-      if (ship2Ids.length > 0) {
-        form.setValue("p21ShipToId", ship2Ids[0]);
-      } else if (customerName && customerShipTo) {
-        form.setValue("p21ShipToId", "");
-      }
+    if (ship2Ids.length > 0) {
+      form.setValue("p21ShipToId", ship2Ids[0]);
+    } else if (customerName && customerShipTo) {
+      form.setValue("p21ShipToId", "");
     }
-  }, [ship2Ids, customerName, customerShipTo, form, disableAutoPopulation]);
+  }, [ship2Ids, customerName, customerShipTo, form]);
 
   return {
     form,
