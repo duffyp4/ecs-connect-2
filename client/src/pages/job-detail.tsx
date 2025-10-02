@@ -156,16 +156,24 @@ export default function JobDetail() {
   const getEventDetails = (event: JobEvent) => {
     const details: string[] = [];
 
-    // For pickup dispatched, show driver
-    if (event.eventType === 'pickup_dispatched' && event.metadata?.driverEmail) {
-      const driverEmail = event.metadata.driverEmail;
-      const driverName = driverEmail.split('@')[0].replace('.', ' ').split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-      details.push(`Driver: ${driverName}`);
+    // For pickup dispatched, show user who assigned it and driver
+    if (event.eventType === 'pickup_dispatched') {
+      // Show user who created/assigned the pickup
+      if (job.userId) {
+        details.push(`Assigned by: ${job.userId}`);
+      }
+      
+      // Show driver
+      if (event.metadata?.driverEmail) {
+        const driverEmail = event.metadata.driverEmail;
+        const driverName = driverEmail.split('@')[0].replace('.', ' ').split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        details.push(`Driver: ${driverName}`);
+      }
     }
 
     // For state changes, show assignment details
     if (event.eventType === 'state_change' && event.metadata) {
-      const { newState, userId, shopHandoff } = event.metadata;
+      const { newState } = event.metadata;
 
       // Picked up - show who picked it up (from submission or direct check-in)
       if (newState === 'picked_up') {
@@ -178,6 +186,10 @@ export default function JobDetail() {
 
       // Checked in at shop - show user ID and technician
       if (newState === 'at_shop') {
+        // Try to get from event metadata first, fallback to job data
+        const userId = event.metadata.userId || job.userId;
+        const shopHandoff = event.metadata.shopHandoff || job.shopHandoff;
+        
         if (userId) {
           details.push(`User: ${userId}`);
         }
