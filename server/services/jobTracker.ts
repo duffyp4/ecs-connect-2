@@ -127,34 +127,40 @@ export class JobTrackerService {
       if (status === 'completed') {
         const { jobEventsService } = await import('./jobEvents');
         
-        // Get handoff time from the submission for accurate "Service Started" timestamp
+        // Get handoff time from GPS field for accurate "Service Started" timestamp in UTC
         let handoffTime: Date | null = null;
         
         try {
           const handoffData = await goCanvasService.getHandoffTimeData(job.jobId);
           if (handoffData?.handoffFields) {
-            const handoffTimeField = handoffData.handoffFields.find((f: any) => f.label === 'Handoff Time');
-            const handoffDateField = handoffData.handoffFields.find((f: any) => f.label === 'Handoff Date');
+            // Look for the GPS field which has a UTC timestamp
+            const gpsField = handoffData.handoffFields.find((f: any) => f.label === 'New GPS');
             
-            if (handoffTimeField && handoffDateField) {
-              // Parse handoff date and time into a proper timestamp
-              const dateStr = handoffDateField.value; // e.g., "10/02/2025"
-              const timeStr = handoffTimeField.value; // e.g., "10:52 AM"
+            if (gpsField?.value) {
+              // GPS format: "Lat:41.908562,Lon:-87.677940,Acc:5.000000,Alt:190.268737,Bear:-1.000000,Speed:-1.000000,Time:1759423565.073100"
+              // Extract the Time value (Unix timestamp)
+              const timeMatch = gpsField.value.match(/Time:(\d+\.?\d*)/);
               
-              // Combine date and time into a Date object
-              const combinedStr = `${dateStr} ${timeStr}`;
-              handoffTime = new Date(combinedStr);
-              
-              if (isNaN(handoffTime.getTime())) {
-                console.warn(`Invalid handoff time parsed: "${combinedStr}"`);
-                handoffTime = null;
+              if (timeMatch && timeMatch[1]) {
+                const unixTimestamp = parseFloat(timeMatch[1]);
+                // Convert Unix timestamp (seconds) to milliseconds and create Date
+                handoffTime = new Date(unixTimestamp * 1000);
+                
+                if (isNaN(handoffTime.getTime())) {
+                  console.warn(`Invalid GPS timestamp parsed: "${timeMatch[1]}"`);
+                  handoffTime = null;
+                } else {
+                  console.log(`✅ Found handoff time from GPS field: ${handoffTime.toISOString()}`);
+                }
               } else {
-                console.log(`✅ Found handoff time from form: ${handoffTime.toISOString()}`);
+                console.warn(`Could not extract timestamp from GPS field: "${gpsField.value}"`);
               }
+            } else {
+              console.warn('GPS field not found in handoff data');
             }
           }
         } catch (error) {
-          console.warn(`Could not retrieve handoff time: ${error}`);
+          console.warn(`Could not retrieve handoff time from GPS: ${error}`);
         }
         
         // If still at_shop, first transition to in_service, then to ready

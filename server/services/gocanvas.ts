@@ -1148,16 +1148,30 @@ export class GoCanvasService {
         console.log('❌ "Handoff Time" field not found');
       }
       
-      // Search for GPS field
+      // Search for GPS field and add to handoffFields
       const exactGpsField = targetSubmission.responses?.find((r: any) => r.label === 'New GPS');
       
       if (exactGpsField) {
         console.log(`📍 FOUND GPS FIELD: "${exactGpsField.label}" = "${exactGpsField.value}" (type: ${exactGpsField.type}, entry_id: ${exactGpsField.entry_id})`);
+        handoffData.handoffFields.push({
+          label: exactGpsField.label,
+          value: exactGpsField.value,
+          entry_id: exactGpsField.entry_id,
+          type: exactGpsField.type,
+          index: 'exact_match'
+        });
       } else {
         console.log('📍 "New GPS" field not found - checking by entry_id...');
         const gpsById = targetSubmission.responses?.find((r: any) => r.entry_id === 714491454);
         if (gpsById) {
           console.log(`📍 FOUND GPS BY ID: "${gpsById.label}" = "${gpsById.value}" (type: ${gpsById.type}, entry_id: ${gpsById.entry_id})`);
+          handoffData.handoffFields.push({
+            label: gpsById.label,
+            value: gpsById.value,
+            entry_id: gpsById.entry_id,
+            type: gpsById.type,
+            index: 'by_entry_id'
+          });
         } else {
           console.log('❌ GPS field not found by label or entry_id');
         }
