@@ -504,7 +504,6 @@ export function CheckInModal({ open, onOpenChange, job, onSuccess }: CheckInModa
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">None</SelectItem>
                           {referenceData.techComments.map((comment) => (
                             <SelectItem key={comment} value={comment}>
                               {comment}
