@@ -97,7 +97,17 @@ export function DeliveryDispatchModal({
     try {
       setIsSubmitting(true);
 
-      await apiRequest("POST", `/api/jobs/${job.jobId}/dispatch-delivery`, data);
+      // Map form data to API format
+      await apiRequest("POST", `/api/jobs/${job.jobId}/dispatch-delivery`, {
+        driverEmail: data.driverEmail,
+        deliveryAddress: data.customerShipTo,
+        deliveryNotes: data.deliveryNotes,
+        invoiceNumber: data.invoiceNumber,
+        invoiceNumber2: data.invoiceNumber2,
+        invoiceNumber3: data.invoiceNumber3,
+        invoiceNumber4: data.invoiceNumber4,
+        invoiceNumber5: data.invoiceNumber5,
+      });
 
       toast({
         title: "Delivery Dispatched",
