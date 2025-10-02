@@ -114,7 +114,7 @@ export class JobEventsService {
     options: StateChangeOptions = {}
   ): Promise<Job> {
     // Get current job
-    const job = await storage.getJob(jobId);
+    const job = await storage.getJobByJobId(jobId);
     
     if (!job) {
       throw new Error(`Job ${jobId} not found`);
@@ -162,7 +162,7 @@ export class JobEventsService {
     }
 
     // Update job state
-    const updatedJob = await storage.updateJob(jobId, updateData);
+    const updatedJob = await storage.updateJob(job.id, updateData);
     
     if (!updatedJob) {
       throw new Error(`Failed to update job ${jobId}`);
@@ -198,7 +198,7 @@ export class JobEventsService {
     options: StateChangeOptions = {}
   ): Promise<Job> {
     // Get job
-    const job = await storage.getJob(jobId);
+    const job = await storage.getJobByJobId(jobId);
     
     if (!job) {
       throw new Error(`Job ${jobId} not found`);
@@ -225,7 +225,7 @@ export class JobEventsService {
     );
 
     // Update job with dispatch info
-    await storage.updateJob(jobId, {
+    await storage.updateJob(job.id, {
       pickupDispatchId: dispatchId,
       pickupDriverEmail: params.driverEmail,
       pickupNotes: params.pickupNotes || '',
@@ -250,7 +250,7 @@ export class JobEventsService {
     );
 
     // Get updated job
-    const updatedJob = await storage.getJob(jobId);
+    const updatedJob = await storage.getJobByJobId(jobId);
     
     if (!updatedJob) {
       throw new Error(`Failed to get updated job ${jobId}`);
@@ -267,8 +267,14 @@ export class JobEventsService {
     itemCount: number,
     options: StateChangeOptions = {}
   ): Promise<Job> {
+    // Get job to retrieve UUID
+    const job = await storage.getJobByJobId(jobId);
+    if (!job) {
+      throw new Error(`Job ${jobId} not found`);
+    }
+
     // Update job with pickup data
-    await storage.updateJob(jobId, {
+    await storage.updateJob(job.id, {
       itemCount,
       updatedAt: new Date(),
     });
@@ -292,7 +298,7 @@ export class JobEventsService {
     jobId: string,
     options: StateChangeOptions = {}
   ): Promise<Job> {
-    const job = await storage.getJob(jobId);
+    const job = await storage.getJobByJobId(jobId);
     
     if (!job) {
       throw new Error(`Job ${jobId} not found`);
@@ -332,8 +338,14 @@ export class JobEventsService {
     technicianName: string,
     options: StateChangeOptions = {}
   ): Promise<Job> {
+    // Get job to retrieve UUID
+    const job = await storage.getJobByJobId(jobId);
+    if (!job) {
+      throw new Error(`Job ${jobId} not found`);
+    }
+
     // Update technician info
-    await storage.updateJob(jobId, {
+    await storage.updateJob(job.id, {
       assignedTechnician: technicianName,
       updatedAt: new Date(),
     });
@@ -362,8 +374,14 @@ export class JobEventsService {
   ): Promise<Job> {
     const targetState: JobState = deliveryMethod === 'pickup' ? 'ready_for_pickup' : 'ready_for_delivery';
     
+    // Get job to retrieve UUID
+    const job = await storage.getJobByJobId(jobId);
+    if (!job) {
+      throw new Error(`Job ${jobId} not found`);
+    }
+
     // Update delivery method
-    await storage.updateJob(jobId, {
+    await storage.updateJob(job.id, {
       deliveryMethod,
       updatedAt: new Date(),
     });
@@ -398,7 +416,7 @@ export class JobEventsService {
     options: StateChangeOptions = {}
   ): Promise<{ job: Job; dispatchId: string }> {
     // Get job
-    const job = await storage.getJob(jobId);
+    const job = await storage.getJobByJobId(jobId);
     
     if (!job) {
       throw new Error(`Job ${jobId} not found`);
@@ -432,7 +450,7 @@ export class JobEventsService {
     );
 
     // Update job with dispatch info and invoice numbers
-    await storage.updateJob(jobId, {
+    await storage.updateJob(job.id, {
       deliveryDispatchId: dispatchId,
       deliveryDriverEmail: deliveryData.driverEmail,
       deliveryAddress: deliveryData.deliveryAddress,
