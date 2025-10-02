@@ -33,10 +33,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Truck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocations } from "@/hooks/use-reference-data";
 import type { Job } from "@shared/schema";
 
 const deliveryDispatchSchema = z.object({
-  location: z.string(),
+  location: z.string().min(1, "Location is required"),
   customerName: z.string(),
   customerShipTo: z.string(),
   invoiceNumber: z.string().optional(),
@@ -71,6 +72,9 @@ export function DeliveryDispatchModal({
   const { data: drivers = [] } = useQuery<{ name: string; email: string }[]>({
     queryKey: ['/api/reference/driver-details'],
   });
+
+  // Fetch locations from reference data
+  const { data: locations = [], isLoading: isLoadingLocations } = useLocations();
 
   const form = useForm<DeliveryDispatchFormData>({
     resolver: zodResolver(deliveryDispatchSchema),
@@ -130,20 +134,31 @@ export function DeliveryDispatchModal({
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-4">
-                {/* Location (pre-populated) */}
+                {/* Location */}
                 <FormField
                   control={form.control}
                   name="location"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Location</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          disabled
-                          data-testid="input-location"
-                        />
-                      </FormControl>
+                      <FormLabel>Location *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-location">
+                            <SelectValue placeholder="Select location" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {isLoadingLocations ? (
+                            <SelectItem value="loading" disabled>Loading locations...</SelectItem>
+                          ) : (
+                            locations.map((location) => (
+                              <SelectItem key={location} value={location}>
+                                {location}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
