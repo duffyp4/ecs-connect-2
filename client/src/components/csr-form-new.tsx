@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { insertJobSchema, pickupJobSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useShopUsers, useShopsForUser, usePermissionForUser, useCustomerNames, useShipToForCustomer, useShip2Ids, useTechComments, useSendClampsGaskets, usePreferredProcesses, useCustomerInstructions, useCustomerNotes, useCustomerSpecificData, useAllShops, useUsersForShop, useDrivers, useDriverDetails, useLocations } from "@/hooks/use-reference-data";
+import { useCsrCheckInForm } from "@/hooks/use-csr-check-in-form";
+import { useLocations } from "@/hooks/use-reference-data";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -36,54 +35,40 @@ export default function CSRForm() {
     queryKey: ["/api/technicians"],
   });
 
-  const form = useForm<FormData>({
-    // No resolver - we'll validate manually based on arrivalPath
-    defaultValues: {
-      p21OrderNumber: "",
-      userId: "",
-      permissionToStart: "",
-      permissionDeniedStop: "",
-      shopName: "",
-      customerName: "",
-      customerShipTo: "",
-      p21ShipToId: "",
-      customerSpecificInstructions: "",
-      sendClampsGaskets: "",
-      preferredProcess: "",
-      anyOtherSpecificInstructions: "",
-      anyCommentsForTech: "",
-      noteToTechAboutCustomer: "",
-      contactName: "",
-      contactNumber: "",
-      poNumber: "",
-      serialNumbers: "",
-      techCustomerQuestionInquiry: "sales@ecspart.com",
-      shopHandoff: "",
-      handoffEmailWorkflow: "",
-    },
-  });
-
-  // Reference data hooks - now that form is defined
-  const { data: shopUsers = [], isLoading: isLoadingShopUsers } = useShopUsers();
-  const userId = form.watch("userId") || "";
-  const { data: shopsForUser = [], isLoading: isLoadingShops } = useShopsForUser(userId || undefined);
-  const { data: allShops = [], isLoading: isLoadingAllShops } = useAllShops();
+  // Use shared CSR Check-In form hook
+  const { form, referenceData, watchedFields } = useCsrCheckInForm();
+  
+  // Destructure reference data for easier access
+  const {
+    shopUsers,
+    isLoadingShopUsers,
+    allShops,
+    isLoadingAllShops,
+    customerNames,
+    isLoadingCustomers,
+    shipToOptions,
+    isLoadingShipTo,
+    usersForSelectedShop,
+    isLoadingShopHandoffUsers,
+    ship2Ids,
+    isLoadingShip2Ids,
+    techComments,
+    isLoadingComments,
+    sendClampsOptions,
+    isLoadingSendClamps,
+    preferredProcesses,
+    isLoadingProcesses,
+    driverDetails,
+    isLoadingDrivers,
+  } = referenceData;
+  
+  // Extract watched fields
+  const { userId, shopName, customerName, customerShipTo, shopHandoff } = watchedFields;
+  
+  // Locations is still needed separately for this form
   const { data: locations = [], isLoading: isLoadingLocations } = useLocations();
-  const { data: permissionData } = usePermissionForUser(userId || undefined);
-  const shopName = form.watch("shopName") || "";
-  const { data: usersForSelectedShop = [], isLoading: isLoadingShopHandoffUsers } = useUsersForShop(shopName || undefined);
-  const { data: customerNames = [], isLoading: isLoadingCustomers } = useCustomerNames();
-  const customerName = form.watch("customerName") || "";
-  const customerShipTo = form.watch("customerShipTo") || "";
-  const { data: shipToOptions = [], isLoading: isLoadingShipTo } = useShipToForCustomer(customerName || undefined);
-  const { data: ship2Ids = [], isLoading: isLoadingShip2Ids } = useShip2Ids(customerName || undefined, customerShipTo || undefined);
-  const { data: techComments = [], isLoading: isLoadingComments } = useTechComments();
-  const { data: sendClampsOptions = [], isLoading: isLoadingSendClamps } = useSendClampsGaskets();
-  const { data: preferredProcesses = [], isLoading: isLoadingProcesses } = usePreferredProcesses();
-  const { data: customerInstructionsData } = useCustomerInstructions(customerName || undefined, customerShipTo || undefined);
-  const { data: customerNotes = [], isLoading: isLoadingNotes } = useCustomerNotes();
-  const { data: customerSpecificData } = useCustomerSpecificData(customerName || undefined, customerShipTo || undefined);
-  const { data: driverDetails = [], isLoading: isLoadingDrivers } = useDriverDetails();
+  
+  // Map drivers for the driver select dropdown
   const drivers = driverDetails.map(d => d.name);
 
   // Pickup fields state
@@ -92,100 +77,7 @@ export default function CSRForm() {
   const [pickupNotes, setPickupNotes] = useState<string>("");
   const [pickupFieldErrors, setPickupFieldErrors] = useState<{ driver?: string }>({});
 
-  // Auto-populate permission when user changes
-  useEffect(() => {
-    if (permissionData?.permission) {
-      form.setValue("permissionToStart", permissionData.permission);
-    }
-  }, [permissionData, form]);
-
-  // Auto-populate customer instructions when customer changes
-  useEffect(() => {
-    if (customerInstructionsData && customerName) {
-      if (customerInstructionsData.instructions === '#N/A' || 
-          customerInstructionsData.instructions === '' || 
-          !customerInstructionsData.instructions) {
-        form.setValue("customerSpecificInstructions", "N/A");
-      } else {
-        form.setValue("customerSpecificInstructions", customerInstructionsData.instructions);
-      }
-    }
-  }, [customerInstructionsData, customerName, form]);
-
-  // Auto-populate reference data fields when customer changes
-  useEffect(() => {
-
-    if (customerSpecificData && customerName) {
-      // Auto-populate preferred process from reference data
-      if (customerSpecificData.preferredProcess === '#N/A' || 
-          customerSpecificData.preferredProcess === '' || 
-          !customerSpecificData.preferredProcess) {
-        form.setValue("preferredProcess", "N/A");
-      } else {
-        form.setValue("preferredProcess", customerSpecificData.preferredProcess);
-      }
-      
-      // Auto-populate send clamps/gaskets from reference data
-      if (customerSpecificData.sendClampsGaskets === '#N/A' || 
-          customerSpecificData.sendClampsGaskets === '' || 
-          !customerSpecificData.sendClampsGaskets) {
-        form.setValue("sendClampsGaskets", "N/A");
-      } else {
-        form.setValue("sendClampsGaskets", customerSpecificData.sendClampsGaskets);
-      }
-      
-      // Auto-populate "Any Other Specific Instructions?" from reference data (column 11)
-      if (customerSpecificData.customerNotes === '#N/A' || 
-          customerSpecificData.customerNotes === '' || 
-          !customerSpecificData.customerNotes) {
-        form.setValue("anyOtherSpecificInstructions", "N/A");
-      } else {
-        form.setValue("anyOtherSpecificInstructions", customerSpecificData.customerNotes);
-      }
-      
-      // Auto-populate customer notes from reference data
-      if (customerSpecificData.customerNotes === '#N/A' || 
-          customerSpecificData.customerNotes === '' || 
-          !customerSpecificData.customerNotes) {
-        form.setValue("noteToTechAboutCustomer", "N/A");
-      } else {
-        form.setValue("noteToTechAboutCustomer", customerSpecificData.customerNotes);
-      }
-    }
-  }, [customerSpecificData, customerName, form]);
-
-  // Clear shop name when user changes (let user manually select from all shops)
-  useEffect(() => {
-    if (userId) {
-      // Clear shop name when user changes so they can select manually from all available shops
-      form.setValue("shopName", "");
-    }
-  }, [userId, form]);
-
-  // Clear shop handoff when shop name changes
-  useEffect(() => {
-    form.setValue("shopHandoff", "");
-  }, [shopName, form]);
-
-  // Auto-populate handoff email when shop handoff changes
-  const shopHandoff = form.watch("shopHandoff") || "";
-  useEffect(() => {
-    if (shopHandoff) {
-      // Use the shop handoff user ID as the handoff email workflow
-      form.setValue("handoffEmailWorkflow", shopHandoff);
-    }
-  }, [shopHandoff, form]);
-
-  // Auto-populate Ship2 ID when customer and ship-to are selected
-  useEffect(() => {
-    if (ship2Ids.length > 0) {
-      // Use the first (and typically only) ship2 ID for this customer/ship-to combination
-      form.setValue("p21ShipToId", ship2Ids[0]);
-    } else if (customerName && customerShipTo) {
-      // Clear field if customer and ship-to are selected but no ship2 ID found
-      form.setValue("p21ShipToId", "");
-    }
-  }, [ship2Ids, customerName, customerShipTo, form]);
+  // All auto-population logic is now handled by the shared useCsrCheckInForm hook
 
   const createJobMutation = useMutation({
     mutationFn: async (data: FormData) => {
