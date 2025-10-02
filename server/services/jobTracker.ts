@@ -127,21 +127,53 @@ export class JobTrackerService {
       if (status === 'completed') {
         const { jobEventsService } = await import('./jobEvents');
         
+        // Get handoff time from the submission for accurate "Service Started" timestamp
+        let handoffTime: Date | null = null;
+        
+        try {
+          const handoffData = await goCanvasService.getHandoffTimeData(job.jobId);
+          if (handoffData?.handoffFields) {
+            const handoffTimeField = handoffData.handoffFields.find((f: any) => f.label === 'Handoff Time');
+            const handoffDateField = handoffData.handoffFields.find((f: any) => f.label === 'Handoff Date');
+            
+            if (handoffTimeField && handoffDateField) {
+              // Parse handoff date and time into a proper timestamp
+              const dateStr = handoffDateField.value; // e.g., "10/02/2025"
+              const timeStr = handoffTimeField.value; // e.g., "10:52 AM"
+              
+              // Combine date and time into a Date object
+              const combinedStr = `${dateStr} ${timeStr}`;
+              handoffTime = new Date(combinedStr);
+              
+              if (isNaN(handoffTime.getTime())) {
+                console.warn(`Invalid handoff time parsed: "${combinedStr}"`);
+                handoffTime = null;
+              } else {
+                console.log(`✅ Found handoff time from form: ${handoffTime.toISOString()}`);
+              }
+            }
+          }
+        } catch (error) {
+          console.warn(`Could not retrieve handoff time: ${error}`);
+        }
+        
         // If still at_shop, first transition to in_service, then to ready
         if (job.state === 'at_shop') {
           console.log(`✅ Service completed for job ${job.jobId} (at_shop), transitioning through in_service to ready`);
           
-          // First transition to in_service using transitionJobState
+          // First transition to in_service using the handoff time
           await jobEventsService.transitionJobState(job.id, 'in_service', {
-            actor: 'System',
+            actor: 'Technician',
+            timestamp: handoffTime || undefined, // Use handoff time if available
             metadata: {
               autoDetected: true,
-              skipped: true, // Indicate this was auto-skipped
+              handoffTime: handoffTime?.toISOString(),
             },
           });
           
-          // Then mark as ready
+          // Then mark as ready using submission time
           await jobEventsService.markReady(job.id, 'pickup', {
+            timestamp: submittedAt ? new Date(submittedAt) : undefined,
             metadata: {
               completedAt: submittedAt ? new Date(submittedAt) : new Date(),
               autoDetected: true,
@@ -153,6 +185,7 @@ export class JobTrackerService {
           console.log(`✅ Emissions Service Log completed for job ${job.jobId}, marking as ready for pickup`);
           
           await jobEventsService.markReady(job.id, 'pickup', {
+            timestamp: submittedAt ? new Date(submittedAt) : undefined,
             metadata: {
               completedAt: submittedAt ? new Date(submittedAt) : new Date(),
               autoDetected: true,

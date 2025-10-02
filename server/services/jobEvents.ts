@@ -55,6 +55,7 @@ interface StateChangeOptions {
   actorEmail?: string;
   notes?: string;
   metadata?: Record<string, any>;
+  timestamp?: Date; // Optional custom timestamp (defaults to current time)
 }
 
 export class JobEventsService {
@@ -125,31 +126,32 @@ export class JobEventsService {
     }
 
     // Prepare update data
+    const timestamp = options.timestamp || new Date();
     const updateData: any = {
       state: newState,
-      updatedAt: new Date(),
+      updatedAt: timestamp,
     };
 
     // Set timestamps based on state
     switch (newState) {
       case 'picked_up':
-        updateData.pickedUpAt = new Date();
+        updateData.pickedUpAt = timestamp;
         break;
       case 'at_shop':
-        updateData.atShopAt = new Date();
+        updateData.atShopAt = timestamp;
         break;
       case 'in_service':
-        updateData.inServiceAt = new Date();
+        updateData.inServiceAt = timestamp;
         break;
       case 'ready_for_pickup':
       case 'ready_for_delivery':
-        updateData.readyAt = new Date();
+        updateData.readyAt = timestamp;
         break;
       case 'out_for_delivery':
-        updateData.outForDeliveryAt = new Date();
+        updateData.outForDeliveryAt = timestamp;
         break;
       case 'delivered':
-        updateData.deliveredAt = new Date();
+        updateData.deliveredAt = timestamp;
         break;
     }
 
