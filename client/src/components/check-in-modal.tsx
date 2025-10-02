@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useState } from "react";
 import { insertJobSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useShopUsers, usePermissionForUser, useUsersForShop, useShip2Ids, useTechComments, useSendClampsGaskets, usePreferredProcesses, useCustomerInstructions, useCustomerSpecificData } from "@/hooks/use-reference-data";
+import { useCsrCheckInForm } from "@/hooks/use-csr-check-in-form";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -28,9 +27,9 @@ export function CheckInModal({ open, onOpenChange, job, onSuccess }: CheckInModa
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<FormData>({
-    // No resolver - validate manually like the original form
-    defaultValues: {
+  // Use the shared CSR Check-In form hook
+  const { form, referenceData, watchedFields } = useCsrCheckInForm({
+    initialValues: {
       p21OrderNumber: job.p21OrderNumber || "",
       userId: job.userId || "",
       permissionToStart: job.permissionToStart || "",
@@ -55,104 +54,11 @@ export function CheckInModal({ open, onOpenChange, job, onSuccess }: CheckInModa
     },
   });
 
-  // Reference data hooks
-  const { data: shopUsers = [], isLoading: isLoadingShopUsers } = useShopUsers();
-  const userId = form.watch("userId") || "";
-  const { data: permissionData } = usePermissionForUser(userId || undefined);
-  const shopName = form.watch("shopName") || "";
-  const { data: usersForSelectedShop = [], isLoading: isLoadingShopHandoffUsers } = useUsersForShop(shopName || undefined);
-  const customerName = form.watch("customerName") || "";
-  const customerShipTo = form.watch("customerShipTo") || "";
-  const { data: ship2Ids = [] } = useShip2Ids(customerName || undefined, customerShipTo || undefined);
-  const { data: techComments = [], isLoading: isLoadingComments } = useTechComments();
-  const { data: sendClampsOptions = [], isLoading: isLoadingSendClamps } = useSendClampsGaskets();
-  const { data: preferredProcesses = [], isLoading: isLoadingProcesses } = usePreferredProcesses();
-  const { data: customerInstructionsData } = useCustomerInstructions(customerName || undefined, customerShipTo || undefined);
-  const { data: customerSpecificData } = useCustomerSpecificData(customerName || undefined, customerShipTo || undefined);
-
-  // Auto-populate permission when user changes
-  useEffect(() => {
-    if (permissionData?.permission) {
-      form.setValue("permissionToStart", permissionData.permission);
-    }
-  }, [permissionData, form]);
-
-  // Auto-populate customer instructions when customer changes
-  useEffect(() => {
-    if (customerInstructionsData && customerName) {
-      if (customerInstructionsData.instructions === '#N/A' || 
-          customerInstructionsData.instructions === '' || 
-          !customerInstructionsData.instructions) {
-        form.setValue("customerSpecificInstructions", "N/A");
-      } else {
-        form.setValue("customerSpecificInstructions", customerInstructionsData.instructions);
-      }
-    }
-  }, [customerInstructionsData, customerName, form]);
-
-  // Auto-populate reference data fields when customer changes
-  useEffect(() => {
-    if (customerSpecificData && customerName) {
-      // Auto-populate preferred process from reference data
-      if (customerSpecificData.preferredProcess === '#N/A' || 
-          customerSpecificData.preferredProcess === '' || 
-          !customerSpecificData.preferredProcess) {
-        form.setValue("preferredProcess", "N/A");
-      } else {
-        form.setValue("preferredProcess", customerSpecificData.preferredProcess);
-      }
-      
-      // Auto-populate send clamps/gaskets from reference data
-      if (customerSpecificData.sendClampsGaskets === '#N/A' || 
-          customerSpecificData.sendClampsGaskets === '' || 
-          !customerSpecificData.sendClampsGaskets) {
-        form.setValue("sendClampsGaskets", "N/A");
-      } else {
-        form.setValue("sendClampsGaskets", customerSpecificData.sendClampsGaskets);
-      }
-      
-      // Auto-populate "Any Other Specific Instructions?" from reference data
-      if (customerSpecificData.customerNotes === '#N/A' || 
-          customerSpecificData.customerNotes === '' || 
-          !customerSpecificData.customerNotes) {
-        form.setValue("anyOtherSpecificInstructions", "N/A");
-      } else {
-        form.setValue("anyOtherSpecificInstructions", customerSpecificData.customerNotes);
-      }
-      
-      // Auto-populate customer notes from reference data
-      if (customerSpecificData.customerNotes === '#N/A' || 
-          customerSpecificData.customerNotes === '' || 
-          !customerSpecificData.customerNotes) {
-        form.setValue("noteToTechAboutCustomer", "N/A");
-      } else {
-        form.setValue("noteToTechAboutCustomer", customerSpecificData.customerNotes);
-      }
-    }
-  }, [customerSpecificData, customerName, form]);
-
-  // Auto-populate handoff email when shop handoff changes
-  const shopHandoff = form.watch("shopHandoff") || "";
-  useEffect(() => {
-    if (shopHandoff) {
-      form.setValue("handoffEmailWorkflow", shopHandoff);
-    }
-  }, [shopHandoff, form]);
-
-  // Auto-populate Ship2 ID when customer and ship-to are selected
-  useEffect(() => {
-    if (ship2Ids.length > 0) {
-      form.setValue("p21ShipToId", ship2Ids[0]);
-    } else if (customerName && customerShipTo) {
-      form.setValue("p21ShipToId", "");
-    }
-  }, [ship2Ids, customerName, customerShipTo, form]);
-
   const onSubmit = async (data: FormData) => {
     try {
       setIsSubmitting(true);
       
-      // Validate using insertJobSchema like the original form does
+      // Validate using insertJobSchema (same as original CSR form)
       const result = insertJobSchema.safeParse(data);
       
       if (!result.success) {
@@ -291,10 +197,10 @@ export function CheckInModal({ open, onOpenChange, job, onSuccess }: CheckInModa
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {isLoadingShopUsers ? (
+                        {referenceData.isLoadingShopUsers ? (
                           <SelectItem value="loading" disabled>Loading users...</SelectItem>
                         ) : (
-                          shopUsers.map((user) => (
+                          referenceData.shopUsers.map((user) => (
                             <SelectItem key={user} value={user}>
                               {user}
                             </SelectItem>
@@ -320,7 +226,7 @@ export function CheckInModal({ open, onOpenChange, job, onSuccess }: CheckInModa
                       <FormControl>
                         <Input 
                           {...field} 
-                          value={field.value || (userId ? "Loading..." : "First select User ID")}
+                          value={field.value || (watchedFields.userId ? "Loading..." : "First select User ID")}
                           readOnly
                           disabled
                           className="bg-muted cursor-not-allowed"
@@ -451,11 +357,11 @@ export function CheckInModal({ open, onOpenChange, job, onSuccess }: CheckInModa
                     <Select onValueChange={field.onChange} value={field.value || ""}>
                       <FormControl>
                         <SelectTrigger data-testid="select-shop-handoff">
-                          <SelectValue placeholder={isLoadingShopHandoffUsers ? "Loading..." : "Select handoff user"} />
+                          <SelectValue placeholder={referenceData.isLoadingShopHandoffUsers ? "Loading..." : "Select handoff user"} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {usersForSelectedShop.map((user) => (
+                        {referenceData.usersForSelectedShop.map((user) => (
                           <SelectItem key={user} value={user}>
                             {user}
                           </SelectItem>
@@ -592,12 +498,12 @@ export function CheckInModal({ open, onOpenChange, job, onSuccess }: CheckInModa
                       <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger data-testid="select-tech-comments">
-                            <SelectValue placeholder={isLoadingComments ? "Loading..." : "Select or leave blank"} />
+                            <SelectValue placeholder={referenceData.isLoadingComments ? "Loading..." : "Select or leave blank"} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="">None</SelectItem>
-                          {techComments.map((comment) => (
+                          {referenceData.techComments.map((comment) => (
                             <SelectItem key={comment} value={comment}>
                               {comment}
                             </SelectItem>
