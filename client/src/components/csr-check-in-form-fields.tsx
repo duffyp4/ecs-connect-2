@@ -103,6 +103,7 @@ export function CsrCheckInFormFields({
                 data-testid="input-p21-order"
                 disabled={isFieldDisabled('p21OrderNumber')}
                 className={isFieldDisabled('p21OrderNumber') ? "bg-muted" : ""}
+                autoFocus={false}
               />
             </FormControl>
             <FormMessage />
@@ -125,7 +126,7 @@ export function CsrCheckInFormFields({
               disabled={isFieldDisabled('userId')}
             >
               <FormControl>
-                <SelectTrigger data-testid="select-user-id" className={isFieldDisabled('userId') ? "bg-muted" : ""}>
+                <SelectTrigger data-testid="select-user-id" className={isFieldDisabled('userId') ? "bg-muted" : ""} autoFocus={true}>
                   <SelectValue placeholder="Select user ID" />
                 </SelectTrigger>
               </FormControl>
