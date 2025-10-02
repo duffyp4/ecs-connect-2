@@ -37,7 +37,7 @@ export function CheckInModal({ open, onOpenChange, job, onSuccess }: CheckInModa
       userId: job.userId || "",
       permissionToStart: job.permissionToStart || "",
       permissionDeniedStop: job.permissionDeniedStop || "",
-      shopName: job.shopName || "",
+      // shopName is NOT pre-populated - user selects it during check-in
       customerName: job.customerName || "",
       customerShipTo: job.customerShipTo || "",
       p21ShipToId: job.p21ShipToId || "",
@@ -137,7 +137,7 @@ export function CheckInModal({ open, onOpenChange, job, onSuccess }: CheckInModa
                 setCustomerSearchOpen={setCustomerSearchOpen}
                 shipToSearchOpen={shipToSearchOpen}
                 setShipToSearchOpen={setShipToSearchOpen}
-                disabledFields={["shopName", "customerName", "customerShipTo"]}
+                disabledFields={["customerName", "customerShipTo"]}
               />
 
             </form>
