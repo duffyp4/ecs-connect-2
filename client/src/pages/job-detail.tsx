@@ -177,6 +177,15 @@ export default function JobDetail() {
       }
     }
 
+    // For delivery dispatched, show driver
+    if (event.eventType === 'delivery_dispatched') {
+      if (event.metadata?.driverEmail) {
+        const driverEmail = event.metadata.driverEmail;
+        const driverName = driverEmail.split('@')[0].replace('.', ' ').split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        details.push(`Driver: ${driverName}`);
+      }
+    }
+
     // For state changes, show assignment details
     if (event.eventType === 'state_change' && event.metadata) {
       const { newState } = event.metadata;

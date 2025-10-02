@@ -479,7 +479,15 @@ export class JobEventsService {
       jobId,
       'delivery_dispatched',
       `Delivery dispatched to ${deliveryData.driverEmail}`,
-      options
+      {
+        ...options,
+        metadata: {
+          ...options.metadata,
+          driverEmail: deliveryData.driverEmail,
+          dispatchId,
+          formType: 'DELIVERY',
+        },
+      }
     );
 
     return { job: updatedJob, dispatchId };
