@@ -1,9 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { BarChart3, Activity, CheckCircle, Clock, AlertTriangle } from "lucide-react";
-import JobStatusBadge from "@/components/job-status-badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { BarChart3, Activity, CheckCircle, Clock } from "lucide-react";
 
 export default function Dashboard() {
   const { data: metrics, isLoading: metricsLoading } = useQuery<{
@@ -17,11 +14,7 @@ export default function Dashboard() {
     refetchInterval: 30000, // Refetch every 30 seconds
   });
 
-  const { data: recentJobs = [], isLoading: jobsLoading } = useQuery<any[]>({
-    queryKey: ["/api/jobs", { limit: 10 }],
-  });
-
-  if (metricsLoading || jobsLoading) {
+  if (metricsLoading) {
     return (
       <div className="space-y-6">
         <div className="flex items-center space-x-2">
@@ -108,97 +101,6 @@ export default function Dashboard() {
         </Card>
 
       </div>
-
-      {/* Recent Jobs */}
-      <Card>
-        <CardHeader className="card-header">
-          <CardTitle className="text-white">Recent Jobs</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b bg-[var(--ecs-light)]">
-                  <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Job ID</th>
-                  <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Customer</th>
-                  <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Technician</th>
-                  <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Status</th>
-                  <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Initiated</th>
-                  <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Handoff</th>
-                  <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Completed</th>
-                  <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Turnaround</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentJobs.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="text-center p-8 text-muted-foreground">
-                      No jobs found. Create your first job to get started.
-                    </td>
-                  </tr>
-                ) : (
-                  recentJobs.map((job: any) => (
-                    <tr key={job.id} className="border-b hover:bg-gray-50">
-                      <td className="p-4">
-                        <Link href={`/jobs/${job.id}`}>
-                          <span className="job-id cursor-pointer hover:underline" data-testid={`link-job-${job.id}`}>{job.jobId}</span>
-                        </Link>
-                      </td>
-                      <td className="p-4">
-                        <div className="space-y-1">
-                          <div className="font-medium">{job.customerName || 'N/A'}</div>
-                          <div className="text-sm text-muted-foreground">{job.customerShipTo || 'N/A'}</div>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        {job.shopHandoff ? job.shopHandoff.split('@')[0] : 'Unassigned'}
-                      </td>
-                      <td className="p-4">
-                        <JobStatusBadge status={job.currentState} />
-                      </td>
-                      <td className="p-4">
-                        {new Date(job.initiatedAt).toLocaleString()}
-                      </td>
-                      <td className="p-4">
-                        {job.handoffAt 
-                          ? new Date(job.handoffAt).toLocaleString()
-                          : job.currentState === 'delivered' 
-                          ? 'N/A'
-                          : '---'}
-                      </td>
-                      <td className="p-4">
-                        {job.completedAt 
-                          ? new Date(job.completedAt).toLocaleString()
-                          : job.currentState === 'delivered' 
-                          ? 'N/A'
-                          : '---'}
-                      </td>
-                      <td className="p-4">
-                        {job.currentState === 'delivered' ? (
-                          <div className="space-y-1">
-                            <div className="text-sm">
-                              <span className="text-muted-foreground">Full:</span>{' '}
-                              {formatTurnaroundTime(job.turnaroundTime)}
-                            </div>
-                            <div className="text-sm">
-                              <span className="text-muted-foreground">Tech:</span>{' '}
-                              {formatTurnaroundTime(job.timeWithTech)}
-                            </div>
-                          </div>
-                        ) : job.currentState !== 'delivered' && job.currentState !== 'cancelled' ? (
-                          `${Math.round((Date.now() - new Date(job.initiatedAt).getTime()) / (1000 * 60))}m elapsed`
-                        ) : (
-                          'N/A'
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
