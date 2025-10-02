@@ -7,7 +7,7 @@ import { fieldMapper } from '@shared/fieldMapper';
 export const FORM_IDS = {
   EMISSIONS: '5594156',      // Emissions Service Log
   PICKUP: '5631022',         // Pickup Log (updated)
-  DELIVERY: '5631023',       // Delivery Log (updated)
+  DELIVERY: '5632656',       // Delivery Log (updated)
 } as const;
 
 export type FormType = keyof typeof FORM_IDS;
@@ -692,11 +692,20 @@ export class GoCanvasService {
         ];
       
       case 'DELIVERY':
+        // Generate dispatch date/time for delivery
+        const deliveryDispatchNow = new Date();
+        const deliveryDispatchDate = deliveryDispatchNow.toISOString().split('T')[0]; // YYYY-MM-DD
+        const deliveryDispatchTime = deliveryDispatchNow.toTimeString().split(' ')[0].substring(0, 5); // HH:MM
+        
         return [
-          ...commonMappings,
-          { data: jobData.deliveryAddress, labels: ['Delivery Address', 'Address'] },
-          { data: jobData.deliveryNotes, labels: ['Delivery Notes', 'Notes'] },
-          { data: jobData.itemCount, labels: ['Item Count', 'Number of Items'] },
+          { data: jobData.jobId, labels: ['Job ID'] },
+          { data: deliveryDispatchDate, labels: ['Dispatch Date'] },
+          { data: deliveryDispatchTime, labels: ['Dispatch Time'] },
+          { data: jobData.shopName, labels: ['Location'] },
+          { data: jobData.customerName, labels: ['Customer Name'] },
+          { data: jobData.customerShipTo, labels: ['Customer Ship-To'] },
+          { data: jobData.invoiceNumber, labels: ['Invoice Number'] },
+          { data: jobData.deliveryNotes, labels: ['Notes to Driver'] },
         ];
       
       case 'EMISSIONS':
