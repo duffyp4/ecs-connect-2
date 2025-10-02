@@ -23,7 +23,7 @@ const STATE_MACHINE = {
     'picked_up': ['at_shop', 'cancelled'],
     'at_shop': ['in_service', 'cancelled'],
     'in_service': ['service_complete', 'cancelled'],
-    'service_complete': ['ready_for_pickup', 'ready_for_delivery', 'cancelled'],
+    'service_complete': ['ready_for_pickup', 'ready_for_delivery', 'out_for_delivery', 'delivered', 'cancelled'],
     'ready_for_pickup': ['delivered', 'cancelled'],
     'ready_for_delivery': ['out_for_delivery', 'cancelled'],
     'out_for_delivery': ['delivered', 'cancelled'],
@@ -422,9 +422,9 @@ export class JobEventsService {
       throw new Error(`Job ${jobId} not found`);
     }
 
-    // Validate state (must be in ready_for_delivery)
-    if (job.state !== 'ready_for_delivery') {
-      throw new Error(`Cannot dispatch delivery: job is in ${job.state} state, must be in ready_for_delivery`);
+    // Validate state (must be in service_complete or ready_for_delivery)
+    if (job.state !== 'service_complete' && job.state !== 'ready_for_delivery') {
+      throw new Error(`Cannot dispatch delivery: job is in ${job.state} state, must be in service_complete or ready_for_delivery`);
     }
 
     // Create GoCanvas delivery dispatch
