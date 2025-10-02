@@ -19,6 +19,8 @@ export default function JobStatusBadge({ status }: JobStatusBadgeProps) {
         return 'bg-purple-100 text-purple-800 hover:bg-purple-200';
       case 'in_service':
         return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200';
+      case 'service_complete':
+        return 'bg-lime-100 text-lime-800 hover:bg-lime-200';
       case 'ready_for_pickup':
       case 'ready_for_delivery':
         return 'bg-orange-100 text-orange-800 hover:bg-orange-200';
@@ -43,6 +45,8 @@ export default function JobStatusBadge({ status }: JobStatusBadgeProps) {
         return 'At Shop';
       case 'in_service':
         return 'In Service';
+      case 'service_complete':
+        return 'Service Complete';
       case 'ready_for_pickup':
         return 'Ready for Pickup';
       case 'ready_for_delivery':

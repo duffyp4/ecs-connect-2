@@ -104,6 +104,8 @@ export default function JobDetail() {
         return <Store className="h-4 w-4" />;
       case 'service_started':
         return <Wrench className="h-4 w-4" />;
+      case 'service_complete':
+        return <Check className="h-4 w-4" />;
       case 'ready_for_pickup':
       case 'ready_for_delivery':
         return <Package className="h-4 w-4" />;
@@ -136,6 +138,8 @@ export default function JobDetail() {
           return 'Checked In at Shop';
         case 'in_service':
           return 'Service Started';
+        case 'service_complete':
+          return 'Service Complete';
         case 'ready_for_pickup':
           return 'Ready for Pickup';
         case 'ready_for_delivery':
@@ -249,7 +253,7 @@ export default function JobDetail() {
 
             <Button 
               onClick={() => actionMutation.mutate({ action: 'mark-ready', data: { readyFor: 'pickup' } })}
-              disabled={currentState !== 'in_service' || isPending}
+              disabled={currentState !== 'service_complete' || isPending}
               className="btn-primary"
               data-testid="button-ready-pickup"
             >
@@ -258,18 +262,8 @@ export default function JobDetail() {
             </Button>
 
             <Button 
-              onClick={() => actionMutation.mutate({ action: 'mark-ready', data: { readyFor: 'delivery' } })}
-              disabled={currentState !== 'in_service' || isPending}
-              className="btn-primary"
-              data-testid="button-ready-delivery"
-            >
-              <Truck className="mr-2 h-4 w-4" />
-              Ready for Delivery
-            </Button>
-
-            <Button 
               onClick={() => actionMutation.mutate({ action: 'dispatch-delivery' })}
-              disabled={currentState !== 'ready_for_delivery' || isPending}
+              disabled={currentState !== 'service_complete' || isPending}
               className="btn-primary"
               data-testid="button-dispatch-delivery"
             >

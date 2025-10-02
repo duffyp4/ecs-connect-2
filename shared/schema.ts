@@ -39,6 +39,7 @@ export const jobs = pgTable("jobs", {
   pickedUpAt: timestamp("picked_up_at"),
   atShopAt: timestamp("at_shop_at"),
   inServiceAt: timestamp("in_service_at"),
+  serviceCompleteAt: timestamp("service_complete_at"), // when emissions service log is completed
   readyAt: timestamp("ready_at"), // when marked ready_for_pickup or ready_for_delivery
   outForDeliveryAt: timestamp("out_for_delivery_at"),
   deliveredAt: timestamp("delivered_at"),

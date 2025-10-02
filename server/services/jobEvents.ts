@@ -8,6 +8,7 @@ export type JobState =
   | 'picked_up'
   | 'at_shop'
   | 'in_service'
+  | 'service_complete'
   | 'ready_for_pickup'
   | 'ready_for_delivery'
   | 'out_for_delivery'
@@ -21,7 +22,8 @@ const STATE_MACHINE = {
     'queued_for_pickup': ['picked_up', 'cancelled'],
     'picked_up': ['at_shop', 'cancelled'],
     'at_shop': ['in_service', 'cancelled'],
-    'in_service': ['ready_for_pickup', 'ready_for_delivery', 'cancelled'],
+    'in_service': ['service_complete', 'cancelled'],
+    'service_complete': ['ready_for_pickup', 'ready_for_delivery', 'cancelled'],
     'ready_for_pickup': ['delivered', 'cancelled'],
     'ready_for_delivery': ['out_for_delivery', 'cancelled'],
     'out_for_delivery': ['delivered', 'cancelled'],
@@ -143,6 +145,9 @@ export class JobEventsService {
         break;
       case 'in_service':
         updateData.inServiceAt = timestamp;
+        break;
+      case 'service_complete':
+        updateData.serviceCompleteAt = timestamp;
         break;
       case 'ready_for_pickup':
       case 'ready_for_delivery':

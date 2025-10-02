@@ -163,9 +163,9 @@ export class JobTrackerService {
           console.warn(`Could not retrieve handoff time from GPS: ${error}`);
         }
         
-        // If still at_shop, first transition to in_service, then to ready
+        // If still at_shop, first transition to in_service, then to service_complete
         if (job.state === 'at_shop') {
-          console.log(`✅ Service completed for job ${job.jobId} (at_shop), transitioning through in_service to ready`);
+          console.log(`✅ Service completed for job ${job.jobId} (at_shop), transitioning through in_service to service_complete`);
           
           // First transition to in_service using the handoff time
           await jobEventsService.transitionJobState(job.id, 'in_service', {
@@ -177,8 +177,9 @@ export class JobTrackerService {
             },
           });
           
-          // Then mark as ready using submission time
-          await jobEventsService.markReady(job.id, 'pickup', {
+          // Then transition to service_complete using submission time
+          await jobEventsService.transitionJobState(job.id, 'service_complete', {
+            actor: 'System',
             timestamp: submittedAt ? new Date(submittedAt) : undefined,
             metadata: {
               completedAt: submittedAt ? new Date(submittedAt) : new Date(),
@@ -186,11 +187,12 @@ export class JobTrackerService {
             },
           });
         } 
-        // If already in_service, just mark as ready
+        // If already in_service, transition to service_complete
         else if (job.state === 'in_service') {
-          console.log(`✅ Emissions Service Log completed for job ${job.jobId}, marking as ready for pickup`);
+          console.log(`✅ Emissions Service Log completed for job ${job.jobId}, transitioning to service_complete`);
           
-          await jobEventsService.markReady(job.id, 'pickup', {
+          await jobEventsService.transitionJobState(job.id, 'service_complete', {
+            actor: 'System',
             timestamp: submittedAt ? new Date(submittedAt) : undefined,
             metadata: {
               completedAt: submittedAt ? new Date(submittedAt) : new Date(),
