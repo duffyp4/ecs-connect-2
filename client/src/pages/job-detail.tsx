@@ -91,7 +91,7 @@ export default function JobDetail() {
     );
   }
 
-  const currentState = job.currentState;
+  const currentState = job.state;
   const isPending = actionMutation.isPending;
 
   const getEventIcon = (eventType: string) => {
