@@ -68,11 +68,9 @@ export function DeliveryDispatchModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch drivers from reference data
-  const { data: driversData } = useQuery<{ entries: any[] }>({
-    queryKey: ['/api/reference-data/drivers'],
+  const { data: drivers = [] } = useQuery<{ name: string; email: string }[]>({
+    queryKey: ['/api/reference/driver-details'],
   });
-
-  const drivers = driversData?.entries || [];
 
   const form = useForm<DeliveryDispatchFormData>({
     resolver: zodResolver(deliveryDispatchSchema),
@@ -295,7 +293,7 @@ export function DeliveryDispatchModal({
                         onValueChange={(value) => {
                           field.onChange(value);
                           // Auto-populate driver email when driver is selected
-                          const selectedDriver = drivers.find((d: any) => d.name === value);
+                          const selectedDriver = drivers.find((d) => d.name === value);
                           form.setValue("driverEmail", selectedDriver?.email || "");
                         }}
                         value={field.value}
@@ -306,12 +304,12 @@ export function DeliveryDispatchModal({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {drivers.map((driver: any) => (
+                          {drivers.map((driver) => (
                             <SelectItem
-                              key={driver.entryId}
-                              value={driver.name || driver.entryId}
+                              key={driver.name}
+                              value={driver.name}
                             >
-                              {driver.name || driver.email || driver.entryId}
+                              {driver.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
