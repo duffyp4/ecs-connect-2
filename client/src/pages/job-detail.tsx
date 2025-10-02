@@ -227,7 +227,7 @@ export default function JobDetail() {
             </p>
           </div>
         </div>
-        <JobStatusBadge status={job.currentState} />
+        <JobStatusBadge status={job.state} />
       </div>
 
       {/* Action Buttons */}
