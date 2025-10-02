@@ -181,9 +181,7 @@ export default function JobDetail() {
 
       // Picked up - show who picked it up (from submission or direct check-in)
       if (newState === 'picked_up') {
-        if (event.metadata.submittedAt) {
-          details.push('Auto-detected from GoCanvas submission');
-        } else if (event.metadata.directCheckIn) {
+        if (event.metadata.directCheckIn) {
           details.push('Direct shop check-in (no pickup)');
         }
       }
@@ -201,6 +199,11 @@ export default function JobDetail() {
           const techName = shopHandoff.split('@')[0].replace('.', ' ').split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
           details.push(`Technician: ${techName}`);
         }
+      }
+
+      // Show auto-detected for any state change detected from GoCanvas
+      if (event.metadata.autoDetected) {
+        details.push('Auto-detected from GoCanvas submission');
       }
     }
 
