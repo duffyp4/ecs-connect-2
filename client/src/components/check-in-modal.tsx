@@ -105,7 +105,7 @@ export function CheckInModal({
       }
 
       // Submit to check-in endpoint with validated data
-      await apiRequest("POST", `/api/jobs/${job.id}/check-in`, result.data);
+      await apiRequest("POST", `/api/jobs/${job.jobId}/check-in`, result.data);
 
       toast({
         title: "Job Checked In",
