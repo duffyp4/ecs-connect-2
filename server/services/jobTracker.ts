@@ -49,13 +49,19 @@ export class JobTrackerService {
         await this.checkPickupCompletion(job);
       }
       
-      // Check for service form completions (at_shop/in_service -> delivered/ready state)
+      // Check for service form completions (at_shop/in_service -> service_complete)
       const atShopJobs = await storage.getJobsByState('at_shop');
       const inServiceJobs = await storage.getJobsByState('in_service');
       const jobsToCheck = [...atShopJobs, ...inServiceJobs];
       
       for (const job of jobsToCheck) {
         await this.checkServiceCompletion(job);
+      }
+      
+      // Check for delivery form completions (out_for_delivery -> delivered)
+      const outForDeliveryJobs = await storage.getJobsByState('out_for_delivery');
+      for (const job of outForDeliveryJobs) {
+        await this.checkDeliveryCompletion(job);
       }
     } catch (error) {
       console.error('Error checking pending jobs:', error);
@@ -203,6 +209,34 @@ export class JobTrackerService {
       }
     } catch (error) {
       console.error(`Error checking job completion for ${job.jobId}:`, error);
+    }
+  }
+
+  /**
+   * Check if delivery form has been completed and transition to delivered
+   */
+  private async checkDeliveryCompletion(job: any): Promise<void> {
+    try {
+      // Check for Delivery Log submission (form 5632656)
+      const result = await goCanvasService.checkSubmissionStatusForForm(job.jobId, '5632656');
+      
+      if (!result || result.status !== 'completed') {
+        return; // No completed submission found yet
+      }
+
+      console.log(`✅ Delivery form completed for job ${job.jobId}, transitioning to delivered state`);
+      
+      // Transition job to delivered state using jobEvents service
+      const { jobEventsService } = await import('./jobEvents');
+      await jobEventsService.markDelivered(job.jobId, {
+        metadata: {
+          submittedAt: result.submittedAt ? new Date(result.submittedAt) : new Date(),
+          autoDetected: true,
+        },
+      });
+      
+    } catch (error) {
+      console.error(`Error checking delivery completion for job ${job.jobId}:`, error);
     }
   }
 
