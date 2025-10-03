@@ -229,6 +229,7 @@ export class JobTrackerService {
       // Transition job to delivered state using jobEvents service
       const { jobEventsService } = await import('./jobEvents');
       await jobEventsService.markDelivered(job.jobId, {
+        timestamp: result.submittedAt ? new Date(result.submittedAt) : undefined,
         metadata: {
           submittedAt: result.submittedAt ? new Date(result.submittedAt) : new Date(),
           autoDetected: true,
