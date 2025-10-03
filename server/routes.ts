@@ -310,7 +310,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new job
   app.post("/api/jobs", requireAuth, async (req, res) => {
     try {
-      const { arrivalPath, ...jobData } = req.body;
+      const { arrivalPath, pickupDriverEmail, pickupNotes, ...jobData } = req.body;
       
       // Validate using appropriate schema based on arrival path
       const schema = arrivalPath === 'pickup' ? pickupJobSchema : insertJobSchema;
@@ -319,9 +319,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create job in storage (starts in queued_for_pickup state)
       const job = await storage.createJob(validatedData);
       
-      // NOTE: Emissions Service Log will be created at check-in time, not here
-      // This prevents duplicate dispatches for pickup jobs
       console.log(`Job ${job.jobId} created in ${job.state} state (arrival path: ${arrivalPath})`);
+
+      // For pickup jobs, dispatch immediately and rollback if it fails
+      if (arrivalPath === 'pickup') {
+        try {
+          if (!pickupDriverEmail) {
+            throw new Error("Driver email is required for pickup dispatch");
+          }
+
+          await jobEventsService.dispatchPickup(
+            job.jobId,
+            {
+              driverEmail: pickupDriverEmail,
+              pickupNotes,
+            }
+          );
+          console.log(`Pickup dispatched successfully for job ${job.jobId}`);
+        } catch (dispatchError) {
+          // Dispatch failed - rollback the job creation
+          console.error(`Pickup dispatch failed for job ${job.jobId}, rolling back job creation:`, dispatchError);
+          await storage.deleteJob(job.id);
+          throw new Error(`Failed to dispatch pickup: ${dispatchError instanceof Error ? dispatchError.message : 'Unknown error'}`);
+        }
+      }
 
       const updatedJob = await storage.getJob(job.id);
       res.json(updatedJob);
@@ -330,7 +351,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof Error && error.name === 'ZodError') {
         res.status(400).json({ message: "Invalid job data", errors: error });
       } else {
-        res.status(500).json({ message: "Failed to create job" });
+        res.status(500).json({ message: error instanceof Error ? error.message : "Failed to create job" });
       }
     }
   });

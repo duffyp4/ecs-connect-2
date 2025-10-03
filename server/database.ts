@@ -40,6 +40,10 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
+  async deleteJob(id: string): Promise<void> {
+    await this.db.delete(jobs).where(eq(jobs.id, id));
+  }
+
   async getAllJobs(): Promise<Job[]> {
     const result = await this.db.select().from(jobs).orderBy(desc(jobs.initiatedAt));
     return result;

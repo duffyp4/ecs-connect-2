@@ -7,6 +7,7 @@ export interface IStorage {
   getJobByJobId(jobId: string): Promise<Job | undefined>;
   createJob(job: InsertJob): Promise<Job>;
   updateJob(id: string, updates: Partial<Job>): Promise<Job | undefined>;
+  deleteJob(id: string): Promise<void>;
   getAllJobs(): Promise<Job[]>;
   getJobsByStatus(status: string): Promise<Job[]>;
   getJobsByState(state: string): Promise<Job[]>;

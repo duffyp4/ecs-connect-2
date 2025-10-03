@@ -94,18 +94,16 @@ export default function CSRForm() {
         setPickupFieldErrors({});
       }
       
-      // Step 2: Create the job with arrivalPath
-      const response = await apiRequest("POST", "/api/jobs", { ...data, arrivalPath });
+      // Step 2: Create the job with arrivalPath (and pickup details for pickup jobs)
+      const jobPayload = arrivalPath === 'pickup'
+        ? { ...data, arrivalPath, pickupDriverEmail, pickupNotes }
+        : { ...data, arrivalPath };
+        
+      const response = await apiRequest("POST", "/api/jobs", jobPayload);
       const job = await response.json();
       
-      // Step 3: Handle arrival path
-      if (arrivalPath === 'pickup') {
-        // Dispatch pickup - use driver email for GoCanvas assignment
-        await apiRequest("POST", `/api/jobs/${job.id}/dispatch-pickup`, {
-          driverEmail: pickupDriverEmail,
-          pickupNotes,
-        });
-      } else {
+      // Step 3: Handle direct arrival path (pickup dispatch is now handled in job creation)
+      if (arrivalPath === 'direct') {
         // Direct check-in at shop
         await apiRequest("POST", `/api/jobs/${job.id}/check-in`, {});
       }
