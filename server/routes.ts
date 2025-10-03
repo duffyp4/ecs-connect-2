@@ -419,27 +419,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Job not found" });
       }
       
-      // Validate request body with insertJobSchema (same as original form)
-      const validationResult = insertJobSchema.safeParse(req.body);
-      if (!validationResult.success) {
-        return res.status(400).json({
-          message: "Validation failed",
-          errors: validationResult.error.errors
-        });
-      }
+      // For direct arrivals, only userId and shopHandoff are needed for event metadata
+      // For pickup arrivals (check-in modal), full job data is provided to update the job
+      const { userId, shopHandoff, ...updateData } = req.body;
       
-      const jobData = validationResult.data;
-      
-      // Update the job with the validated data
-      if (Object.keys(jobData).length > 0) {
-        await storage.updateJob(job.id, jobData);
+      // Update the job with any additional data provided (for pickup check-ins from modal)
+      if (Object.keys(updateData).length > 0) {
+        // Validate the update data against insertJobSchema
+        const validationResult = insertJobSchema.partial().safeParse(updateData);
+        if (!validationResult.success) {
+          return res.status(400).json({
+            message: "Validation failed",
+            errors: validationResult.error.errors
+          });
+        }
+        await storage.updateJob(job.id, validationResult.data);
       }
       
       // Pass userId and shopHandoff (technician) to event metadata
       const updatedJob = await jobEventsService.checkInAtShop(job.jobId, {
         metadata: {
-          userId: jobData.userId,
-          shopHandoff: jobData.shopHandoff,
+          userId: userId || job.userId,
+          shopHandoff: shopHandoff || job.shopHandoff,
         },
       });
       
