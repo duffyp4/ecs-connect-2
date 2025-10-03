@@ -272,7 +272,7 @@ export default function JobDetail() {
             </Button>
 
             <Button 
-              onClick={() => actionMutation.mutate({ action: 'mark-ready', data: { readyFor: 'pickup' } })}
+              onClick={() => actionMutation.mutate({ action: 'mark-ready', data: { deliveryMethod: 'pickup' } })}
               disabled={currentState !== 'service_complete' || isPending}
               className="btn-primary"
               data-testid="button-ready-pickup"
