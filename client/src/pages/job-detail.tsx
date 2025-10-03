@@ -114,6 +114,14 @@ export default function JobDetail() {
       event.eventType === 'ready_for_delivery' ||
       (event.eventType === 'state_change' && event.metadata?.newState && completionStates.includes(event.metadata.newState));
 
+    console.log('Event icon color debug:', { 
+      index, 
+      eventType: event.eventType, 
+      newState: event.metadata?.newState,
+      isCompletionEvent, 
+      isJobCompleted 
+    });
+
     if (isCompletionEvent) {
       return "bg-green-500";
     }
