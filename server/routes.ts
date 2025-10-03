@@ -567,7 +567,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get job by ID
   app.get("/api/jobs/:id", async (req, res) => {
     try {
-      const job = await storage.getJob(req.params.id);
+      const job = await storage.getJobByJobId(req.params.id);
       if (!job) {
         res.status(404).json({ message: "Job not found" });
         return;

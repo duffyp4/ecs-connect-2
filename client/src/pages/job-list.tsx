@@ -131,8 +131,8 @@ export default function JobList() {
                   jobs.map((job: any) => (
                     <tr key={job.id} className="border-b hover:bg-gray-50">
                       <td className="p-4">
-                        <Link href={`/jobs/${job.id}`}>
-                          <span className="job-id cursor-pointer hover:underline" data-testid={`link-job-${job.id}`}>{job.jobId}</span>
+                        <Link href={`/jobs/${job.jobId}`}>
+                          <span className="job-id cursor-pointer hover:underline" data-testid={`link-job-${job.jobId}`}>{job.jobId}</span>
                         </Link>
                       </td>
                       <td className="p-4">
