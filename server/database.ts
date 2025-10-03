@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { jobs, technicians, jobEvents, type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, or } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { IStorage } from "./storage";
 
@@ -71,7 +71,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getJobEvents(jobId: string): Promise<JobEvent[]> {
-    const result = await this.db.select().from(jobEvents).where(eq(jobEvents.jobId, jobId)).orderBy(jobEvents.timestamp);
+    // First, get the job to find its UUID
+    const job = await this.getJobByJobId(jobId);
+    
+    if (!job) {
+      // If job not found, just query with the provided jobId
+      const result = await this.db.select().from(jobEvents).where(eq(jobEvents.jobId, jobId)).orderBy(jobEvents.timestamp);
+      return result;
+    }
+    
+    // Query events using both UUID and ECS-formatted jobId to handle legacy data
+    const result = await this.db.select().from(jobEvents).where(
+      or(
+        eq(jobEvents.jobId, jobId),           // ECS-formatted ID (new format)
+        eq(jobEvents.jobId, job.id)           // UUID (legacy format)
+      )
+    ).orderBy(jobEvents.timestamp);
     return result;
   }
 
