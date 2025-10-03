@@ -105,7 +105,7 @@ export default function CSRForm() {
       // Step 3: Handle direct arrival path (pickup dispatch is now handled in job creation)
       if (arrivalPath === 'direct') {
         // Direct check-in at shop
-        await apiRequest("POST", `/api/jobs/${job.id}/check-in`, {});
+        await apiRequest("POST", `/api/jobs/${job.jobId}/check-in`, {});
       }
       
       // Return the original job object for success handling
