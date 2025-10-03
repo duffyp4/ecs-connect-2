@@ -73,6 +73,8 @@ export const jobs = pgTable("jobs", {
   // Scenario Tracking
   startedWithPickup: text("started_with_pickup").default("false"), // did job start with pickup dispatch?
   selfPickup: text("self_pickup").default("false"), // is customer picking up vs ECS delivery?
+  startMode: text("start_mode"), // 'pickup_dispatch' or 'shop_checkin' - how job was initiated
+  completionMode: text("completion_mode"), // 'delivered' or 'ready_for_pickup' - how job was completed
   
   // Pre-calculated KPI Fields (in minutes)
   timeToPickup: integer("time_to_pickup"), // pickup_dispatched to picked_up
