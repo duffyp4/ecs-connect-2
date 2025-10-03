@@ -655,6 +655,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete job by ID (for rollback on failed operations)
+  app.delete("/api/jobs/:jobId", requireAuth, async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      
+      const job = await storage.getJobByJobId(jobId);
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+      
+      await storage.deleteJob(job.id);
+      res.json({ message: "Job deleted successfully", jobId });
+    } catch (error) {
+      console.error("Error deleting job:", error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to delete job" });
+    }
+  });
+
   // Get dashboard metrics
   app.get("/api/metrics", async (req, res) => {
     try {

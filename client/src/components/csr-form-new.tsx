@@ -104,8 +104,21 @@ export default function CSRForm() {
       
       // Step 3: Handle direct arrival path (pickup dispatch is now handled in job creation)
       if (arrivalPath === 'direct') {
-        // Direct check-in at shop
-        await apiRequest("POST", `/api/jobs/${job.jobId}/check-in`, {});
+        try {
+          // Direct check-in at shop
+          await apiRequest("POST", `/api/jobs/${job.jobId}/check-in`, {});
+        } catch (checkInError) {
+          // If check-in fails, delete the job to prevent stuck jobs
+          console.error("Check-in failed, rolling back job creation:", checkInError);
+          try {
+            await apiRequest("DELETE", `/api/jobs/${job.jobId}`, {});
+            console.log(`Job ${job.jobId} deleted after failed check-in`);
+          } catch (deleteError) {
+            console.error("Failed to delete job during rollback:", deleteError);
+          }
+          // Re-throw the original error
+          throw checkInError;
+        }
       }
       
       // Return the original job object for success handling
