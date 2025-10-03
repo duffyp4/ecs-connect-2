@@ -347,8 +347,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Driver email is required" });
       }
 
+      // Get job to extract the ECS-formatted jobId
+      const job = await storage.getJob(jobId);
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+
       const updatedJob = await jobEventsService.dispatchPickup(
-        jobId,
+        job.jobId,
         {
           driverEmail,
           pickupNotes,
@@ -368,7 +374,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { jobId } = req.params;
       const { itemCount } = req.body;
 
-      const updatedJob = await jobEventsService.markPickedUp(jobId, itemCount);
+      const job = await storage.getJob(jobId);
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+
+      const updatedJob = await jobEventsService.markPickedUp(job.jobId, itemCount);
       res.json(updatedJob);
     } catch (error) {
       console.error("Error marking job as picked up:", error);
@@ -380,6 +391,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/jobs/:jobId/check-in", requireAuth, async (req, res) => {
     try {
       const { jobId } = req.params;
+      
+      // Get job to extract the ECS-formatted jobId
+      const job = await storage.getJob(jobId);
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
       
       // Validate request body with insertJobSchema (same as original form)
       const validationResult = insertJobSchema.safeParse(req.body);
@@ -398,7 +415,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Pass userId and shopHandoff (technician) to event metadata
-      const updatedJob = await jobEventsService.checkInAtShop(jobId, {
+      const updatedJob = await jobEventsService.checkInAtShop(job.jobId, {
         metadata: {
           userId: jobData.userId,
           shopHandoff: jobData.shopHandoff,
@@ -438,7 +455,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Technician name is required" });
       }
 
-      const updatedJob = await jobEventsService.startService(jobId, technicianName);
+      const job = await storage.getJob(jobId);
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+
+      const updatedJob = await jobEventsService.startService(job.jobId, technicianName);
       res.json(updatedJob);
     } catch (error) {
       console.error("Error starting service:", error);
@@ -456,7 +478,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Valid delivery method (pickup or delivery) is required" });
       }
 
-      const updatedJob = await jobEventsService.markReady(jobId, deliveryMethod);
+      const job = await storage.getJob(jobId);
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+
+      const updatedJob = await jobEventsService.markReady(job.jobId, deliveryMethod);
       res.json(updatedJob);
     } catch (error) {
       console.error("Error marking job as ready:", error);
@@ -483,7 +510,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Driver email and delivery address are required" });
       }
 
-      const updatedJob = await jobEventsService.dispatchDelivery(jobId, {
+      const job = await storage.getJob(jobId);
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+
+      const updatedJob = await jobEventsService.dispatchDelivery(job.jobId, {
         driverEmail,
         deliveryAddress,
         deliveryNotes,
@@ -505,7 +537,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/jobs/:jobId/mark-delivered", requireAuth, async (req, res) => {
     try {
       const { jobId } = req.params;
-      const updatedJob = await jobEventsService.markDelivered(jobId);
+      
+      const job = await storage.getJob(jobId);
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+      
+      const updatedJob = await jobEventsService.markDelivered(job.jobId);
       res.json(updatedJob);
     } catch (error) {
       console.error("Error marking job as delivered:", error);
@@ -518,7 +556,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { jobId } = req.params;
       const { reason } = req.body;
-      const updatedJob = await jobEventsService.cancelJob(jobId, reason);
+      
+      const job = await storage.getJob(jobId);
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+      
+      const updatedJob = await jobEventsService.cancelJob(job.jobId, reason);
       res.json(updatedJob);
     } catch (error) {
       console.error("Error cancelling job:", error);
@@ -530,7 +574,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/jobs/:jobId/events", requireAuth, async (req, res) => {
     try {
       const { jobId } = req.params;
-      const events = await storage.getJobEvents(jobId);
+      
+      // Get job to extract the ECS-formatted jobId
+      const job = await storage.getJob(jobId);
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+      
+      const events = await storage.getJobEvents(job.jobId);
       res.json(events);
     } catch (error) {
       console.error("Error fetching job events:", error);
