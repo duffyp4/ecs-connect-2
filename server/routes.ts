@@ -596,8 +596,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { jobId } = req.params;
       
-      // Get job to extract the ECS-formatted jobId
-      const job = await storage.getJob(jobId);
+      // Try to get job by UUID first, then by ECS-formatted jobId
+      let job = await storage.getJob(jobId);
+      if (!job) {
+        job = await storage.getJobByJobId(jobId);
+      }
+      
       if (!job) {
         return res.status(404).json({ message: "Job not found" });
       }
