@@ -120,7 +120,7 @@ export class JobTrackerService {
         console.log(`✅ Service started for job ${job.jobId}, transitioning to in_service state`);
         
         const { jobEventsService } = await import('./jobEvents');
-        await jobEventsService.markInService(job.id, {
+        await jobEventsService.transitionJobState(job.jobId, 'in_service', {
           metadata: {
             submittedAt: submittedAt ? new Date(submittedAt) : new Date(),
             autoDetected: true,

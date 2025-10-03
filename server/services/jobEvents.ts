@@ -135,6 +135,18 @@ export class JobEventsService {
       updatedAt: timestamp,
     };
 
+    // Set startMode and initiatedAt if job is in an initial state but doesn't have them set yet
+    // This handles jobs created directly in initial states (not transitioned to them)
+    if (!job.startMode) {
+      if (job.state === 'queued_for_pickup') {
+        updateData.startMode = 'pickup_dispatch';
+        updateData.initiatedAt = timestamp;
+      } else if (job.state === 'at_shop') {
+        updateData.startMode = 'shop_checkin';
+        updateData.initiatedAt = timestamp;
+      }
+    }
+
     // Set timestamps based on state
     switch (newState) {
       case 'picked_up':
@@ -162,7 +174,7 @@ export class JobEventsService {
     }
 
     // Set initiatedAt and startMode on first qualifying entry event (guard against overwrites)
-    if (!job.initiatedAt) {
+    if (!job.startMode) {
       if (newState === 'queued_for_pickup') {
         updateData.initiatedAt = timestamp;
         updateData.startMode = 'pickup_dispatch';
@@ -173,7 +185,7 @@ export class JobEventsService {
     }
 
     // Set completedAt and completionMode on terminal state transitions (guard against overwrites)
-    if (!job.completedAt) {
+    if (!job.completionMode) {
       if (newState === 'delivered') {
         updateData.completedAt = timestamp;
         updateData.completionMode = 'delivered';

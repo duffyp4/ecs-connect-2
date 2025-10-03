@@ -107,7 +107,7 @@ export default function JobDetail() {
       case 'service_started':
         return <Wrench className="h-4 w-4" />;
       case 'service_complete':
-        return <Check className="h-4 w-4" />;
+        return <CheckCircle className="h-4 w-4" />;
       case 'ready_for_pickup':
       case 'ready_for_delivery':
         return <Package className="h-4 w-4" />;
