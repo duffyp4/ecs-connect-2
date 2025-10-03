@@ -174,7 +174,7 @@ export default function JobDetail() {
       }
       
       // Show driver
-      if (event.metadata?.driverEmail) {
+      if (event.metadata?.driverEmail && typeof event.metadata.driverEmail === 'string') {
         const driverEmail = event.metadata.driverEmail;
         const driverName = driverEmail.split('@')[0].replace('.', ' ').split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
         details.push(`Driver: ${driverName}`);
@@ -183,7 +183,7 @@ export default function JobDetail() {
 
     // For delivery dispatched, show driver
     if (event.eventType === 'delivery_dispatched') {
-      if (event.metadata?.driverEmail) {
+      if (event.metadata?.driverEmail && typeof event.metadata.driverEmail === 'string') {
         const driverEmail = event.metadata.driverEmail;
         const driverName = driverEmail.split('@')[0].replace('.', ' ').split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
         details.push(`Driver: ${driverName}`);
