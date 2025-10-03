@@ -253,35 +253,37 @@ export class JobTrackerService {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
+      // Active jobs: any state that's not terminal (delivered or cancelled)
       const activeJobs = allJobs.filter(job => 
-        job.status === 'pending' || job.status === 'in_progress'
+        job.state !== 'delivered' && job.state !== 'cancelled'
       ).length;
 
+      // Completed jobs: have completedAt timestamp set (ready_for_pickup or delivered)
       const completedToday = allJobs.filter(job => 
-        job.status === 'completed' && 
         job.completedAt && 
         new Date(job.completedAt) >= today
       ).length;
 
-      // Jobs with Full Turnaround Time data
+      // Jobs with Full Turnaround Time data (completed jobs with turnaroundTime)
       const completedJobsWithTurnaround = allJobs.filter(job => 
-        job.status === 'completed' && job.turnaroundTime
+        job.completedAt && job.turnaroundTime
       );
 
       const averageTurnaround = completedJobsWithTurnaround.length > 0 ? 
         completedJobsWithTurnaround.reduce((sum, job) => sum + (job.turnaroundTime || 0), 0) / completedJobsWithTurnaround.length :
         0;
 
-      // Jobs with Time with Tech data
+      // Jobs with Time with Tech data (completed jobs with timeWithTech)
       const completedJobsWithTechTime = allJobs.filter(job => 
-        job.status === 'completed' && job.timeWithTech
+        job.completedAt && job.timeWithTech
       );
 
       const averageTimeWithTech = completedJobsWithTechTime.length > 0 ? 
         completedJobsWithTechTime.reduce((sum, job) => sum + (job.timeWithTech || 0), 0) / completedJobsWithTechTime.length :
         0;
 
-      const overdueJobs = allJobs.filter(job => job.status === 'overdue').length;
+      // Overdue jobs (active jobs past some threshold - placeholder for now)
+      const overdueJobs = 0; // TODO: Define overdue logic based on job.state and timestamps
 
       return {
         activeJobs,
