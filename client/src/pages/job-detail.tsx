@@ -386,7 +386,15 @@ export default function JobDetail() {
             <p className="text-muted-foreground text-center py-4">No events recorded yet</p>
           ) : (
             <div className="space-y-4">
-              {events.map((event, index) => (
+              {events
+                .filter(event => {
+                  // Hide "out_for_delivery" state change since we show "delivery_dispatched" instead
+                  if (event.eventType === 'state_change' && event.metadata?.newState === 'out_for_delivery') {
+                    return false;
+                  }
+                  return true;
+                })
+                .map((event, index) => (
                 <div key={event.id} className="flex gap-4">
                   <div className="flex flex-col items-center">
                     <div className="flex items-center justify-center w-8 h-8 min-w-8 min-h-8 rounded-full bg-[var(--ecs-primary)] text-white flex-shrink-0">
