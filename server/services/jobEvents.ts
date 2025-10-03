@@ -172,6 +172,17 @@ export class JobEventsService {
       }
     }
 
+    // Set completedAt and completionMode on terminal state transitions (guard against overwrites)
+    if (!job.completedAt) {
+      if (newState === 'delivered') {
+        updateData.completedAt = timestamp;
+        updateData.completionMode = 'delivered';
+      } else if (newState === 'ready_for_pickup') {
+        updateData.completedAt = timestamp;
+        updateData.completionMode = 'ready_for_pickup';
+      }
+    }
+
     // Update job state
     const updatedJob = await storage.updateJob(job.id, updateData);
     
