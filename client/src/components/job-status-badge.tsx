@@ -23,11 +23,10 @@ export default function JobStatusBadge({ status }: JobStatusBadgeProps) {
         return 'bg-lime-100 text-lime-800 hover:bg-lime-200';
       case 'ready_for_pickup':
       case 'ready_for_delivery':
-        return 'bg-orange-100 text-orange-800 hover:bg-orange-200';
-      case 'out_for_delivery':
-        return 'bg-cyan-100 text-cyan-800 hover:bg-cyan-200';
       case 'delivered':
         return 'bg-green-100 text-green-800 hover:bg-green-200';
+      case 'out_for_delivery':
+        return 'bg-cyan-100 text-cyan-800 hover:bg-cyan-200';
       case 'cancelled':
         return 'bg-red-100 text-red-800 hover:bg-red-200';
       default:
