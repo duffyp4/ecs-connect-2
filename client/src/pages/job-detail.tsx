@@ -97,29 +97,33 @@ export default function JobDetail() {
   const isPending = actionMutation.isPending;
 
   const getEventIcon = (eventType: string) => {
-    switch (eventType) {
-      case 'pickup_dispatched':
-        return <Truck className="h-4 w-4" />;
-      case 'picked_up':
-        return <CheckCircle className="h-4 w-4" />;
-      case 'checked_in':
-        return <Store className="h-4 w-4" />;
-      case 'service_started':
-        return <Wrench className="h-4 w-4" />;
-      case 'service_complete':
-        return <CheckCircle className="h-4 w-4" />;
-      case 'ready_for_pickup':
-      case 'ready_for_delivery':
-        return <Package className="h-4 w-4" />;
-      case 'delivery_dispatched':
-        return <Send className="h-4 w-4" />;
-      case 'delivered':
-        return <CheckCircle className="h-4 w-4" />;
-      case 'cancelled':
-        return <XCircle className="h-4 w-4" />;
-      default:
-        return <Clock className="h-4 w-4" />;
+    return <Clock className="h-4 w-4" />;
+  };
+
+  const getEventIconColor = (event: JobEvent, index: number, isJobCompleted: boolean) => {
+    // Only apply special coloring to the most recent event (index 0)
+    if (index !== 0) {
+      return "bg-[var(--ecs-primary)]";
     }
+
+    // Check if this event is completing the job
+    const completionStates = ['delivered', 'ready_for_pickup', 'ready_for_delivery'];
+    const isCompletionEvent = 
+      event.eventType === 'delivered' || 
+      event.eventType === 'ready_for_pickup' ||
+      event.eventType === 'ready_for_delivery' ||
+      (event.eventType === 'state_change' && event.metadata?.newState && completionStates.includes(event.metadata.newState));
+
+    if (isCompletionEvent) {
+      return "bg-green-500";
+    }
+
+    // Yellow for in-progress/pending jobs
+    if (!isJobCompleted) {
+      return "bg-yellow-500";
+    }
+
+    return "bg-[var(--ecs-primary)]";
   };
 
   const formatEventType = (eventType: string) => {
@@ -394,31 +398,36 @@ export default function JobDetail() {
                   }
                   return true;
                 })
-                .map((event, index) => (
-                <div key={event.id} className="flex gap-4">
-                  <div className="flex flex-col items-center">
-                    <div className="flex items-center justify-center w-8 h-8 min-w-8 min-h-8 rounded-full bg-[var(--ecs-primary)] text-white flex-shrink-0">
-                      {getEventIcon(event.eventType)}
-                    </div>
-                    {index < events.length - 1 && (
-                      <div className="w-0.5 h-full bg-gray-300 mt-2" />
-                    )}
-                  </div>
-                  <div className="flex-1 pb-8">
-                    <div className="font-medium">{getEventLabel(event)}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {event.timestamp ? format(new Date(event.timestamp), 'PPpp') : 'N/A'}
-                    </div>
-                    {getEventDetails(event).length > 0 && (
-                      <div className="text-sm text-muted-foreground mt-1">
-                        {getEventDetails(event).map((detail, idx) => (
-                          <div key={idx}>{detail}</div>
-                        ))}
+                .map((event, index) => {
+                  const isJobCompleted = job.state === 'delivered' || job.state === 'cancelled';
+                  const iconColorClass = getEventIconColor(event, index, isJobCompleted);
+                  
+                  return (
+                    <div key={event.id} className="flex gap-4">
+                      <div className="flex flex-col items-center">
+                        <div className={`flex items-center justify-center w-8 h-8 min-w-8 min-h-8 rounded-full ${iconColorClass} text-white flex-shrink-0`}>
+                          {getEventIcon(event.eventType)}
+                        </div>
+                        {index < events.length - 1 && (
+                          <div className="w-0.5 h-full bg-gray-300 mt-2" />
+                        )}
                       </div>
-                    )}
-                  </div>
-                </div>
-              ))}
+                      <div className="flex-1 pb-8">
+                        <div className="font-medium">{getEventLabel(event)}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {event.timestamp ? format(new Date(event.timestamp), 'PPpp') : 'N/A'}
+                        </div>
+                        {getEventDetails(event).length > 0 && (
+                          <div className="text-sm text-muted-foreground mt-1">
+                            {getEventDetails(event).map((detail, idx) => (
+                              <div key={idx}>{detail}</div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
             </div>
           )}
         </CardContent>
