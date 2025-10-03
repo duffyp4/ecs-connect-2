@@ -369,7 +369,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get job to extract the ECS-formatted jobId
-      const job = await storage.getJob(jobId);
+      const job = await storage.getJobByJobId(jobId);
       if (!job) {
         return res.status(404).json({ message: "Job not found" });
       }
@@ -395,7 +395,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { jobId } = req.params;
       const { itemCount } = req.body;
 
-      const job = await storage.getJob(jobId);
+      const job = await storage.getJobByJobId(jobId);
       if (!job) {
         return res.status(404).json({ message: "Job not found" });
       }
@@ -414,7 +414,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { jobId } = req.params;
       
       // Get job to extract the ECS-formatted jobId
-      const job = await storage.getJob(jobId);
+      const job = await storage.getJobByJobId(jobId);
       if (!job) {
         return res.status(404).json({ message: "Job not found" });
       }
@@ -432,7 +432,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Update the job with the validated data
       if (Object.keys(jobData).length > 0) {
-        await storage.updateJob(jobId, jobData);
+        await storage.updateJob(job.id, jobData);
       }
       
       // Pass userId and shopHandoff (technician) to event metadata
@@ -476,7 +476,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Technician name is required" });
       }
 
-      const job = await storage.getJob(jobId);
+      const job = await storage.getJobByJobId(jobId);
       if (!job) {
         return res.status(404).json({ message: "Job not found" });
       }
@@ -499,7 +499,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Valid delivery method (pickup or delivery) is required" });
       }
 
-      const job = await storage.getJob(jobId);
+      const job = await storage.getJobByJobId(jobId);
       if (!job) {
         return res.status(404).json({ message: "Job not found" });
       }
@@ -531,7 +531,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Driver email and delivery address are required" });
       }
 
-      const job = await storage.getJob(jobId);
+      const job = await storage.getJobByJobId(jobId);
       if (!job) {
         return res.status(404).json({ message: "Job not found" });
       }
@@ -559,7 +559,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { jobId } = req.params;
       
-      const job = await storage.getJob(jobId);
+      const job = await storage.getJobByJobId(jobId);
       if (!job) {
         return res.status(404).json({ message: "Job not found" });
       }
@@ -578,7 +578,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { jobId } = req.params;
       const { reason } = req.body;
       
-      const job = await storage.getJob(jobId);
+      const job = await storage.getJobByJobId(jobId);
       if (!job) {
         return res.status(404).json({ message: "Job not found" });
       }
