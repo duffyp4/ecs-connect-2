@@ -100,9 +100,11 @@ export default function JobDetail() {
     return <Clock className="h-4 w-4" />;
   };
 
-  const getEventIconColor = (event: JobEvent, index: number, isJobCompleted: boolean) => {
-    // Only apply special coloring to the most recent event (index 0)
-    if (index !== 0) {
+  const getEventIconColor = (event: JobEvent, index: number, isJobCompleted: boolean, totalEvents: number) => {
+    // Only apply special coloring to the most recent event (last in timeline)
+    const isLastEvent = index === totalEvents - 1;
+    
+    if (!isLastEvent) {
       return "bg-[var(--ecs-primary)]";
     }
 
@@ -113,14 +115,6 @@ export default function JobDetail() {
       event.eventType === 'ready_for_pickup' ||
       event.eventType === 'ready_for_delivery' ||
       (event.eventType === 'state_change' && event.metadata?.newState && completionStates.includes(event.metadata.newState));
-
-    console.log('Event icon color debug:', { 
-      index, 
-      eventType: event.eventType, 
-      newState: event.metadata?.newState,
-      isCompletionEvent, 
-      isJobCompleted 
-    });
 
     if (isCompletionEvent) {
       return "bg-green-500";
@@ -398,17 +392,18 @@ export default function JobDetail() {
             <p className="text-muted-foreground text-center py-4">No events recorded yet</p>
           ) : (
             <div className="space-y-4">
-              {events
-                .filter(event => {
+              {(() => {
+                const filteredEvents = events.filter(event => {
                   // Hide "out_for_delivery" state change since we show "delivery_dispatched" instead
                   if (event.eventType === 'state_change' && event.metadata?.newState === 'out_for_delivery') {
                     return false;
                   }
                   return true;
-                })
-                .map((event, index) => {
+                });
+                
+                return filteredEvents.map((event, index) => {
                   const isJobCompleted = job.state === 'delivered' || job.state === 'cancelled';
-                  const iconColorClass = getEventIconColor(event, index, isJobCompleted);
+                  const iconColorClass = getEventIconColor(event, index, isJobCompleted, filteredEvents.length);
                   
                   return (
                     <div key={event.id} className="flex gap-4">
@@ -416,7 +411,7 @@ export default function JobDetail() {
                         <div className={`flex items-center justify-center w-8 h-8 min-w-8 min-h-8 rounded-full ${iconColorClass} text-white flex-shrink-0`}>
                           {getEventIcon(event.eventType)}
                         </div>
-                        {index < events.length - 1 && (
+                        {index < filteredEvents.length - 1 && (
                           <div className="w-0.5 h-full bg-gray-300 mt-2" />
                         )}
                       </div>
@@ -435,7 +430,8 @@ export default function JobDetail() {
                       </div>
                     </div>
                   );
-                })}
+                });
+              })()}
             </div>
           )}
         </CardContent>
