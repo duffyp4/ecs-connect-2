@@ -161,6 +161,17 @@ export class JobEventsService {
         break;
     }
 
+    // Set initiatedAt and startMode on first qualifying entry event (guard against overwrites)
+    if (!job.initiatedAt) {
+      if (newState === 'queued_for_pickup') {
+        updateData.initiatedAt = timestamp;
+        updateData.startMode = 'pickup_dispatch';
+      } else if (newState === 'at_shop') {
+        updateData.initiatedAt = timestamp;
+        updateData.startMode = 'shop_checkin';
+      }
+    }
+
     // Update job state
     const updatedJob = await storage.updateJob(job.id, updateData);
     
