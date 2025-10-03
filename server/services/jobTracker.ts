@@ -85,7 +85,7 @@ export class JobTrackerService {
       // Transition job to picked_up state using jobEvents service
       const { jobEventsService } = await import('./jobEvents');
       await jobEventsService.markPickedUp(
-        job.id,
+        job.jobId, // Use ECS-formatted job ID, not UUID
         1, // Default item count (actual count not available from form)
         {
           metadata: {
@@ -174,7 +174,7 @@ export class JobTrackerService {
           console.log(`✅ Service completed for job ${job.jobId} (at_shop), transitioning through in_service to service_complete`);
           
           // First transition to in_service using the handoff time
-          await jobEventsService.transitionJobState(job.id, 'in_service', {
+          await jobEventsService.transitionJobState(job.jobId, 'in_service', {
             actor: 'Technician',
             timestamp: handoffTime || undefined, // Use handoff time if available
             metadata: {
@@ -184,7 +184,7 @@ export class JobTrackerService {
           });
           
           // Then transition to service_complete using submission time
-          await jobEventsService.transitionJobState(job.id, 'service_complete', {
+          await jobEventsService.transitionJobState(job.jobId, 'service_complete', {
             actor: 'System',
             timestamp: submittedAt ? new Date(submittedAt) : undefined,
             metadata: {
@@ -197,7 +197,7 @@ export class JobTrackerService {
         else if (job.state === 'in_service') {
           console.log(`✅ Emissions Service Log completed for job ${job.jobId}, transitioning to service_complete`);
           
-          await jobEventsService.transitionJobState(job.id, 'service_complete', {
+          await jobEventsService.transitionJobState(job.jobId, 'service_complete', {
             actor: 'System',
             timestamp: submittedAt ? new Date(submittedAt) : undefined,
             metadata: {
