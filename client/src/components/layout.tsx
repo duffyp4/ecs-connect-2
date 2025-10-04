@@ -46,8 +46,7 @@ export default function Layout({ children }: LayoutProps) {
             </Button>
             <Bolt className="h-5 w-5 lg:h-6 lg:w-6 text-[var(--ecs-primary)]" />
             <span className="font-semibold text-[var(--ecs-primary)] text-sm sm:text-base lg:text-lg">
-              <span className="hidden sm:inline">CSR Check-in Portal</span>
-              <span className="sm:hidden">CSR Portal</span>
+              ECS Connect
             </span>
           </div>
           

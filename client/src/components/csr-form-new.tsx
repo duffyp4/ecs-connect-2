@@ -225,7 +225,7 @@ export default function CSRForm() {
       <div>
         <h1 className="text-xl sm:text-2xl font-bold text-[var(--ecs-dark)] flex items-center">
           <ClipboardList className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
-          <span className="hidden sm:inline">CSR Check-in Portal</span>
+          <span className="hidden sm:inline">ECS Connect</span>
           <span className="sm:hidden">New Service Job</span>
         </h1>
         <p className="text-sm sm:text-base text-muted-foreground">Complete all required fields to initiate a new service job</p>

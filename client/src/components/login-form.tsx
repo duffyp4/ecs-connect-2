@@ -28,7 +28,7 @@ export function LoginForm() {
       onSuccess: () => {
         toast({
           title: "Success",
-          description: "Welcome to the CSR Portal!",
+          description: "Welcome to ECS Connect!",
         });
       },
       onError: () => {
@@ -50,7 +50,7 @@ export function LoginForm() {
               <Lock className="h-8 w-8 text-blue-600 dark:text-blue-400" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">ECS CSR Portal</CardTitle>
+          <CardTitle className="text-2xl font-bold">ECS Connect</CardTitle>
           <CardDescription>
             Enter your password to access the job tracking system
           </CardDescription>
