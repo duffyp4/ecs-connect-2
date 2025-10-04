@@ -51,7 +51,7 @@ export default function JobStatusBadge({ status }: JobStatusBadgeProps) {
       case 'ready_for_delivery':
         return 'Ready for Delivery';
       case 'out_for_delivery':
-        return 'Out for Delivery';
+        return 'Queued for Delivery';
       case 'delivered':
         return 'Delivered';
       case 'cancelled':
