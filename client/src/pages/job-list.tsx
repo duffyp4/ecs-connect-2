@@ -99,7 +99,7 @@ export default function JobList() {
       actionMutation.mutate({ 
         jobId: job.jobId, 
         action: 'mark-ready', 
-        data: { readyFor: 'pickup' } 
+        data: { deliveryMethod: 'pickup' } 
       });
     }
   };
