@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import {
@@ -108,6 +108,10 @@ export function DeliveryDispatchModal({
         invoiceNumber4: data.invoiceNumber4,
         invoiceNumber5: data.invoiceNumber5,
       });
+
+      // Invalidate queries to refresh data immediately
+      queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/metrics"] });
 
       toast({
         title: "Delivery Dispatched",

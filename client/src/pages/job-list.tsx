@@ -27,7 +27,7 @@ export default function JobList() {
   const [selectedJob, setSelectedJob] = useState<any | null>(null);
   const { toast } = useToast();
 
-  const { data: jobs = [], isLoading } = useQuery<any[]>({
+  const { data: jobs = [], isLoading, isFetching } = useQuery<any[]>({
     queryKey: ["/api/jobs", { status: statusFilter, technician: technicianFilter }],
     refetchInterval: 30000,
   });
@@ -239,7 +239,7 @@ export default function JobList() {
                             <Button
                               size="sm"
                               onClick={() => handleAction(job, availableActions[0])}
-                              disabled={actionMutation.isPending}
+                              disabled={actionMutation.isPending || isFetching}
                               className="btn-primary"
                               data-testid={`button-${availableActions[0].id}-${job.jobId}`}
                             >
@@ -252,7 +252,7 @@ export default function JobList() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  disabled={actionMutation.isPending}
+                                  disabled={actionMutation.isPending || isFetching}
                                   data-testid={`dropdown-actions-${job.jobId}`}
                                 >
                                   Actions
