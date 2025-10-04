@@ -52,7 +52,7 @@ export function LoginForm() {
           </div>
           <CardTitle className="text-2xl font-bold">ECS Connect</CardTitle>
           <CardDescription>
-            Enter your password to access the job tracking system
+            Enter your password
           </CardDescription>
         </CardHeader>
         <CardContent>
