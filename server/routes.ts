@@ -413,6 +413,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { jobId } = req.params;
       
+      // DEBUG: Log incoming request body
+      console.log('=== CHECK-IN REQUEST DEBUG ===');
+      console.log('Job ID:', jobId);
+      console.log('Request body keys:', Object.keys(req.body));
+      console.log('shopHandoff value:', req.body.shopHandoff);
+      console.log('userId value:', req.body.userId);
+      console.log('handoffEmailWorkflow value:', req.body.handoffEmailWorkflow);
+      console.log('=============================');
+      
       // Get job to extract the ECS-formatted jobId
       const job = await storage.getJobByJobId(jobId);
       if (!job) {
