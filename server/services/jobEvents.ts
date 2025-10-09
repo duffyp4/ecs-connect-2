@@ -253,6 +253,7 @@ export class JobEventsService {
         shopName: job.shopName,
         contactName: job.contactName,
         contactNumber: job.contactNumber,
+        poNumber: job.poNumber,
         pickupNotes: params.pickupNotes || '',
       },
       params.driverEmail // Use the actual driver email for GoCanvas assignment
