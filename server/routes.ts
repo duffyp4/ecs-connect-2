@@ -853,7 +853,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const jobId = req.params.jobId;
       
       // Get all submissions for the form
-      const response = await fetch(`https://api.gocanvas.com/api/v3/submissions?form_id=${process.env.GOCANVAS_FORM_ID || '5594156'}`, {
+      const response = await fetch(`https://api.gocanvas.com/api/v3/submissions?form_id=${process.env.GOCANVAS_FORM_ID || '5628226'}`, {
         headers: {
           'Authorization': `Basic ${Buffer.from(`${process.env.GOCANVAS_USERNAME}:${process.env.GOCANVAS_PASSWORD}`).toString('base64')}`,
           'Content-Type': 'application/json',
@@ -973,7 +973,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Test direct submissions access
   app.get("/api/gocanvas/submissions", async (req, res) => {
     try {
-      const formId = req.query.form_id || process.env.GOCANVAS_FORM_ID || '5594156';
+      const formId = req.query.form_id || process.env.GOCANVAS_FORM_ID || '5628226';
       console.log(`Testing submissions API for form: ${formId}`);
       const response = await fetch(`https://api.gocanvas.com/api/v3/submissions?form_id=${formId}`, {
         headers: {
