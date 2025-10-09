@@ -448,8 +448,8 @@ export default function JobDetail() {
           onOpenChange={setCheckInModalOpen}
           job={job}
           onSuccess={() => {
-            queryClient.invalidateQueries({ queryKey: ["/api/jobs", jobId] });
-            queryClient.invalidateQueries({ queryKey: ["/api/jobs", jobId, "events"] });
+            queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}`] });
+            queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}/events`] });
             queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
             queryClient.invalidateQueries({ queryKey: ["/api/metrics"] });
           }}
