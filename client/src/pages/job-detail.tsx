@@ -398,6 +398,10 @@ export default function JobDetail() {
                   if (event.eventType === 'state_change' && event.metadata?.newState === 'out_for_delivery') {
                     return false;
                   }
+                  // Hide "picked_up" event for direct check-ins (no actual pickup occurred)
+                  if (event.eventType === 'state_change' && event.metadata?.newState === 'picked_up' && event.metadata?.directCheckIn) {
+                    return false;
+                  }
                   return true;
                 });
                 
