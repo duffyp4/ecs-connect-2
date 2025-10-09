@@ -231,19 +231,6 @@ export default function JobList() {
               <SelectItem value="completedAt-desc">Recently Completed</SelectItem>
             </SelectContent>
           </Select>
-
-          <Select value={String(pageSize)} onValueChange={(value) => {
-            setPageSize(parseInt(value));
-            setCurrentPage(1);
-          }}>
-            <SelectTrigger className="w-full sm:w-40" data-testid="select-page-size">
-              <SelectValue placeholder="Per page" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="25">25 per page</SelectItem>
-              <SelectItem value="50">50 per page</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
       </div>
 
@@ -345,8 +332,22 @@ export default function JobList() {
 
       {/* Pagination Controls */}
       <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
-          Showing {jobs.length > 0 ? ((currentPage - 1) * pageSize) + 1 : 0} to {Math.min(currentPage * pageSize, total)} of {total} jobs
+        <div className="flex items-center gap-4">
+          <div className="text-sm text-muted-foreground">
+            Showing {jobs.length > 0 ? ((currentPage - 1) * pageSize) + 1 : 0} to {Math.min(currentPage * pageSize, total)} of {total} jobs
+          </div>
+          <Select value={String(pageSize)} onValueChange={(value) => {
+            setPageSize(parseInt(value));
+            setCurrentPage(1);
+          }}>
+            <SelectTrigger className="w-32 h-9" data-testid="select-page-size">
+              <SelectValue placeholder="Per page" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="25">25 per page</SelectItem>
+              <SelectItem value="50">50 per page</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         {totalPages > 1 && (
           <Pagination>
