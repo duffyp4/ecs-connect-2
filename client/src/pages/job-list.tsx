@@ -143,7 +143,7 @@ export default function JobList() {
               <SelectItem value="in_service">In Service</SelectItem>
               <SelectItem value="ready_for_pickup">Ready for Pickup</SelectItem>
               <SelectItem value="ready_for_delivery">Ready for Delivery</SelectItem>
-              <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
+              <SelectItem value="queued_for_delivery">Queued for Delivery</SelectItem>
               <SelectItem value="delivered">Delivered</SelectItem>
               <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>

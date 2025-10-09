@@ -11,7 +11,7 @@ export type JobState =
   | 'service_complete'
   | 'ready_for_pickup'
   | 'ready_for_delivery'
-  | 'out_for_delivery'
+  | 'queued_for_delivery'
   | 'delivered'
   | 'cancelled';
 
@@ -23,10 +23,10 @@ const STATE_MACHINE = {
     'picked_up': ['at_shop', 'cancelled'],
     'at_shop': ['in_service', 'cancelled'],
     'in_service': ['service_complete', 'cancelled'],
-    'service_complete': ['ready_for_pickup', 'ready_for_delivery', 'out_for_delivery', 'delivered', 'cancelled'],
+    'service_complete': ['ready_for_pickup', 'ready_for_delivery', 'queued_for_delivery', 'delivered', 'cancelled'],
     'ready_for_pickup': ['delivered', 'cancelled'],
-    'ready_for_delivery': ['out_for_delivery', 'cancelled'],
-    'out_for_delivery': ['delivered', 'cancelled'],
+    'ready_for_delivery': ['queued_for_delivery', 'cancelled'],
+    'queued_for_delivery': ['delivered', 'cancelled'],
     'delivered': [], // Terminal state
     'cancelled': [], // Terminal state
   } as Record<JobState, JobState[]>,
@@ -165,8 +165,8 @@ export class JobEventsService {
       case 'ready_for_delivery':
         updateData.readyAt = timestamp;
         break;
-      case 'out_for_delivery':
-        updateData.outForDeliveryAt = timestamp;
+      case 'queued_for_delivery':
+        updateData.queuedForDeliveryAt = timestamp;
         break;
       case 'delivered':
         updateData.deliveredAt = timestamp;
@@ -498,8 +498,8 @@ export class JobEventsService {
       updatedAt: new Date(),
     });
 
-    // Transition to out_for_delivery
-    const updatedJob = await this.transitionJobState(jobId, 'out_for_delivery', {
+    // Transition to queued_for_delivery
+    const updatedJob = await this.transitionJobState(jobId, 'queued_for_delivery', {
       ...options,
       metadata: {
         ...options.metadata,

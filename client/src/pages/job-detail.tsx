@@ -152,8 +152,8 @@ export default function JobDetail() {
           return 'Ready for Pickup';
         case 'ready_for_delivery':
           return 'Ready for Delivery';
-        case 'out_for_delivery':
-          return 'Out for Delivery';
+        case 'queued_for_delivery':
+          return 'Queued for Delivery';
         case 'delivered':
           return 'Delivered';
         case 'cancelled':
@@ -394,8 +394,8 @@ export default function JobDetail() {
             <div className="space-y-4">
               {(() => {
                 const filteredEvents = events.filter(event => {
-                  // Hide "out_for_delivery" state change since we show "delivery_dispatched" instead
-                  if (event.eventType === 'state_change' && event.metadata?.newState === 'out_for_delivery') {
+                  // Hide "queued_for_delivery" state change since we show "delivery_dispatched" instead
+                  if (event.eventType === 'state_change' && event.metadata?.newState === 'queued_for_delivery') {
                     return false;
                   }
                   // Hide "picked_up" event for direct check-ins (no actual pickup occurred)

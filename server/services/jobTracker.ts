@@ -58,9 +58,9 @@ export class JobTrackerService {
         await this.checkServiceCompletion(job);
       }
       
-      // Check for delivery form completions (out_for_delivery -> delivered)
-      const outForDeliveryJobs = await storage.getJobsByState('out_for_delivery');
-      for (const job of outForDeliveryJobs) {
+      // Check for delivery form completions (queued_for_delivery -> delivered)
+      const queuedForDeliveryJobs = await storage.getJobsByState('queued_for_delivery');
+      for (const job of queuedForDeliveryJobs) {
         await this.checkDeliveryCompletion(job);
       }
     } catch (error) {
