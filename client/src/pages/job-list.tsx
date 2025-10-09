@@ -31,6 +31,7 @@ type PaginatedResponse = {
 export default function JobList() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>("");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("initiatedAt");
@@ -42,15 +43,25 @@ export default function JobList() {
   const [selectedJob, setSelectedJob] = useState<any | null>(null);
   const { toast } = useToast();
 
+  // Debounce search query - wait 500ms after user stops typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
+
+    // Clean up the timer if user types again before 500ms
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [statusFilter, searchQuery, dateFrom, dateTo, sortBy, sortOrder]);
+  }, [statusFilter, debouncedSearchQuery, dateFrom, dateTo, sortBy, sortOrder]);
 
   const { data: response, isLoading, isFetching } = useQuery<PaginatedResponse>({
     queryKey: ["/api/jobs", {
       ...(statusFilter !== 'all' && { status: statusFilter }),
-      ...(searchQuery && { search: searchQuery }),
+      ...(debouncedSearchQuery && { search: debouncedSearchQuery }),
       ...(dateFrom && { dateFrom }),
       ...(dateTo && { dateTo }),
       sortBy,
