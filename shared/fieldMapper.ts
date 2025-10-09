@@ -40,7 +40,7 @@ export class FieldMapper {
     const formIds = [
       '5640674', // Emissions Service Log (updated 2025-10-09)
       '5640587', // Pickup Log (updated with Contact Name, Contact Number, PO Number)
-      '5632656', // Delivery Log
+      '5640686', // Delivery Log (updated 2025-10-09)
     ];
 
     formIds.forEach(formId => {

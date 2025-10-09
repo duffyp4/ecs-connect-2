@@ -7,7 +7,7 @@ import { fieldMapper } from '@shared/fieldMapper';
 export const FORM_IDS = {
   EMISSIONS: '5640674',      // Emissions Service Log (updated 2025-10-09)
   PICKUP: '5640587',         // Pickup Log (updated with Contact Name, Contact Number, PO Number)
-  DELIVERY: '5632656',       // Delivery Log
+  DELIVERY: '5640686',       // Delivery Log (updated 2025-10-09)
 } as const;
 
 export type FormType = keyof typeof FORM_IDS;
