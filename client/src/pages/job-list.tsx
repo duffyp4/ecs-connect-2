@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { List, Store, Package, Send, ChevronDown, Search, ArrowUpDown } from "lucide-react";
 import JobStatusBadge from "@/components/job-status-badge";
 import { CheckInModal } from "@/components/check-in-modal";
@@ -20,6 +21,13 @@ type ActionType = {
   requiresModal?: boolean;
 };
 
+type PaginatedResponse = {
+  data: any[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
 export default function JobList() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -27,12 +35,19 @@ export default function JobList() {
   const [dateTo, setDateTo] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("initiatedAt");
   const [sortOrder, setSortOrder] = useState<string>("desc");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(25);
   const [checkInModalOpen, setCheckInModalOpen] = useState(false);
   const [deliveryDispatchModalOpen, setDeliveryDispatchModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<any | null>(null);
   const { toast } = useToast();
 
-  const { data: jobs = [], isLoading, isFetching } = useQuery<any[]>({
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, searchQuery, dateFrom, dateTo, sortBy, sortOrder]);
+
+  const { data: response, isLoading, isFetching } = useQuery<PaginatedResponse>({
     queryKey: ["/api/jobs", {
       ...(statusFilter !== 'all' && { status: statusFilter }),
       ...(searchQuery && { search: searchQuery }),
@@ -40,9 +55,15 @@ export default function JobList() {
       ...(dateTo && { dateTo }),
       sortBy,
       sortOrder,
+      page: currentPage,
+      pageSize,
     }],
     refetchInterval: 30000,
   });
+
+  const jobs = response?.data ?? [];
+  const total = response?.total ?? 0;
+  const totalPages = Math.ceil(total / pageSize);
 
   // Mutation for job actions
   const actionMutation = useMutation({
@@ -210,6 +231,19 @@ export default function JobList() {
               <SelectItem value="completedAt-desc">Recently Completed</SelectItem>
             </SelectContent>
           </Select>
+
+          <Select value={String(pageSize)} onValueChange={(value) => {
+            setPageSize(parseInt(value));
+            setCurrentPage(1);
+          }}>
+            <SelectTrigger className="w-full sm:w-40" data-testid="select-page-size">
+              <SelectValue placeholder="Per page" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="25">25 per page</SelectItem>
+              <SelectItem value="50">50 per page</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -308,6 +342,60 @@ export default function JobList() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Pagination Controls */}
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">
+          Showing {jobs.length > 0 ? ((currentPage - 1) * pageSize) + 1 : 0} to {Math.min(currentPage * pageSize, total)} of {total} jobs
+        </div>
+        {totalPages > 1 && (
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  data-testid="pagination-previous"
+                />
+              </PaginationItem>
+              
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNumber;
+                if (totalPages <= 5) {
+                  pageNumber = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNumber = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNumber = totalPages - 4 + i;
+                } else {
+                  pageNumber = currentPage - 2 + i;
+                }
+                
+                return (
+                  <PaginationItem key={pageNumber}>
+                    <PaginationLink
+                      onClick={() => setCurrentPage(pageNumber)}
+                      isActive={currentPage === pageNumber}
+                      className="cursor-pointer"
+                      data-testid={`pagination-page-${pageNumber}`}
+                    >
+                      {pageNumber}
+                    </PaginationLink>
+                  </PaginationItem>
+                );
+              })}
+              
+              <PaginationItem>
+                <PaginationNext 
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  data-testid="pagination-next"
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        )}
+      </div>
       
       {/* Modals */}
       {selectedJob && (

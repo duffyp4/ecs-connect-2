@@ -625,7 +625,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all jobs
   app.get("/api/jobs", requireAuth, async (req, res) => {
     try {
-      const { status, search, dateFrom, dateTo, sortBy, sortOrder, limit } = req.query;
+      const { status, search, dateFrom, dateTo, sortBy, sortOrder, page, pageSize } = req.query;
       
       let jobs = await storage.getAllJobs();
       
@@ -697,11 +697,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      if (limit) {
-        jobs = jobs.slice(0, parseInt(limit as string));
-      }
+      // Calculate total before pagination
+      const total = jobs.length;
       
-      res.json(jobs);
+      // Apply pagination
+      const currentPage = page ? parseInt(page as string) : 1;
+      const itemsPerPage = pageSize ? parseInt(pageSize as string) : 25;
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      
+      const paginatedJobs = jobs.slice(startIndex, endIndex);
+      
+      // Return paginated response
+      res.json({
+        data: paginatedJobs,
+        total,
+        page: currentPage,
+        pageSize: itemsPerPage,
+      });
     } catch (error) {
       console.error("Error fetching jobs:", error);
       res.status(500).json({ message: "Failed to fetch jobs" });
