@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { List, Download, Store, Package, Send, ChevronDown } from "lucide-react";
+import { List, Store, Package, Send, ChevronDown } from "lucide-react";
 import JobStatusBadge from "@/components/job-status-badge";
 import { CheckInModal } from "@/components/check-in-modal";
 import { DeliveryDispatchModal } from "@/components/delivery-dispatch-modal";
@@ -21,19 +21,14 @@ type ActionType = {
 
 export default function JobList() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [technicianFilter, setTechnicianFilter] = useState<string>("all");
   const [checkInModalOpen, setCheckInModalOpen] = useState(false);
   const [deliveryDispatchModalOpen, setDeliveryDispatchModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<any | null>(null);
   const { toast } = useToast();
 
   const { data: jobs = [], isLoading, isFetching } = useQuery<any[]>({
-    queryKey: ["/api/jobs", { status: statusFilter, technician: technicianFilter }],
+    queryKey: ["/api/jobs", { status: statusFilter }],
     refetchInterval: 30000,
-  });
-
-  const { data: technicians = [] } = useQuery<any[]>({
-    queryKey: ["/api/technicians"],
   });
 
   // Mutation for job actions
@@ -111,19 +106,6 @@ export default function JobList() {
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
   };
 
-  const handleExport = async () => {
-    try {
-      const response = await fetch("/api/jobs/export", { method: "POST" });
-      const result = await response.json();
-      console.log("Export result:", result);
-      // In a real implementation, this would trigger a file download
-      alert(`Export completed: ${result.success} jobs exported successfully`);
-    } catch (error) {
-      console.error("Export failed:", error);
-      alert("Export failed. Please try again.");
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -166,25 +148,6 @@ export default function JobList() {
               <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
-          
-          <Select value={technicianFilter} onValueChange={setTechnicianFilter}>
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="Filter by technician" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Technicians</SelectItem>
-              {technicians.map((tech: any) => (
-                <SelectItem key={tech.id} value={tech.email}>
-                  {tech.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          <Button variant="outline" onClick={handleExport} className="flex items-center space-x-2">
-            <Download className="h-4 w-4" />
-            <span>Export</span>
-          </Button>
         </div>
       </div>
 
