@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,6 +42,10 @@ export default function JobList() {
   const [deliveryDispatchModalOpen, setDeliveryDispatchModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<any | null>(null);
   const { toast } = useToast();
+  
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const wasFetchingRef = useRef<boolean>(false);
+  const hadFocusRef = useRef<boolean>(false);
 
   // Debounce search query - wait 500ms after user stops typing
   useEffect(() => {
@@ -75,6 +79,21 @@ export default function JobList() {
   const jobs = response?.data ?? [];
   const total = response?.total ?? 0;
   const totalPages = Math.ceil(total / pageSize);
+
+  // Track focus state and restore after API completes
+  useEffect(() => {
+    // Save focus state before fetch
+    if (isFetching && !wasFetchingRef.current) {
+      hadFocusRef.current = document.activeElement === searchInputRef.current;
+    }
+    
+    // Restore focus after fetch completes
+    if (!isFetching && wasFetchingRef.current && hadFocusRef.current && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+    
+    wasFetchingRef.current = isFetching;
+  }, [isFetching]);
 
   // Mutation for job actions
   const actionMutation = useMutation({
@@ -181,7 +200,7 @@ export default function JobList() {
           <div className="relative flex-1 sm:max-w-xs">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              key="search-input"
+              ref={searchInputRef}
               placeholder="Search by Job ID or Customer..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
