@@ -6,7 +6,7 @@ import { fieldMapper } from '@shared/fieldMapper';
 // GoCanvas Form IDs
 export const FORM_IDS = {
   EMISSIONS: '5628226',      // Emissions Service Log (updated)
-  PICKUP: '5631022',         // Pickup Log
+  PICKUP: '5640587',         // Pickup Log (updated with Contact Name, Contact Number, PO Number)
   DELIVERY: '5632656',       // Delivery Log
 } as const;
 
@@ -688,6 +688,9 @@ export class GoCanvasService {
           { data: jobData.shopName, labels: ['Location'] }, // Connected to reference_data_id=947586
           { data: jobData.customerName, labels: ['Customer Name'] }, // Connected to Workflow Customer Name table
           { data: jobData.customerShipTo, labels: ['Customer Ship-To'] }, // Connected to same table, "ship to combined" field
+          { data: jobData.contactName, labels: ['Contact Name'] },
+          { data: jobData.contactNumber, labels: ['Contact Number'] },
+          { data: jobData.poNumber, labels: ['PO Number (Check In)'] },
           { data: jobData.pickupNotes, labels: ['Notes to Driver'] },
         ];
       

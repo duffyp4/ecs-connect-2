@@ -39,7 +39,7 @@ export class FieldMapper {
     // Try to load all known field maps
     const formIds = [
       '5628226', // Emissions Service Log (updated)
-      '5631022', // Pickup Log
+      '5640587', // Pickup Log (updated with Contact Name, Contact Number, PO Number)
       '5632656', // Delivery Log
     ];
 
