@@ -76,6 +76,9 @@ export default function CSRForm() {
   const [pickupDriver, setPickupDriver] = useState<string>("");
   const [pickupDriverEmail, setPickupDriverEmail] = useState<string>("");
   const [pickupNotes, setPickupNotes] = useState<string>("");
+  const [pickupContactName, setPickupContactName] = useState<string>("");
+  const [pickupContactNumber, setPickupContactNumber] = useState<string>("");
+  const [pickupPoNumber, setPickupPoNumber] = useState<string>("");
   const [pickupFieldErrors, setPickupFieldErrors] = useState<{ driver?: string }>({});
 
   // All auto-population logic is now handled by the shared useCsrCheckInForm hook
@@ -96,7 +99,15 @@ export default function CSRForm() {
       
       // Step 2: Create the job with arrivalPath (and pickup details for pickup jobs)
       const jobPayload = arrivalPath === 'pickup'
-        ? { ...data, arrivalPath, pickupDriverEmail, pickupNotes }
+        ? { 
+            ...data, 
+            arrivalPath, 
+            pickupDriverEmail, 
+            pickupNotes,
+            contactName: pickupContactName,
+            contactNumber: pickupContactNumber,
+            poNumber: pickupPoNumber
+          }
         : { ...data, arrivalPath };
         
       const response = await apiRequest("POST", "/api/jobs", jobPayload);
@@ -139,6 +150,9 @@ export default function CSRForm() {
       setPickupDriver("");
       setPickupDriverEmail("");
       setPickupNotes("");
+      setPickupContactName("");
+      setPickupContactNumber("");
+      setPickupPoNumber("");
       setPickupFieldErrors({});
       setArrivalPath('direct');
       queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
@@ -212,6 +226,9 @@ export default function CSRForm() {
     setPickupDriver("");
     setPickupDriverEmail("");
     setPickupNotes("");
+    setPickupContactName("");
+    setPickupContactNumber("");
+    setPickupPoNumber("");
     setGeneratedJobId(() => {
       const now = new Date();
       const timestamp = now.toISOString().replace(/[-T:\.Z]/g, '').slice(0, 14);
@@ -580,6 +597,50 @@ export default function CSRForm() {
                           </FormItem>
                         )}
                       />
+
+                      {/* Contact Name */}
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Contact Name</label>
+                        <Input
+                          placeholder="Contact person"
+                          value={pickupContactName}
+                          onChange={(e) => setPickupContactName(e.target.value)}
+                          data-testid="input-pickup-contact-name"
+                        />
+                      </div>
+
+                      {/* Contact Number */}
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Contact Number</label>
+                        <Input
+                          placeholder="(555) 555-5555"
+                          value={pickupContactNumber}
+                          onChange={(e) => {
+                            const digits = e.target.value.replace(/\D/g, '');
+                            const limitedDigits = digits.substring(0, 10);
+                            
+                            let formatted = '';
+                            if (limitedDigits.length === 0) formatted = '';
+                            else if (limitedDigits.length <= 3) formatted = `(${limitedDigits}`;
+                            else if (limitedDigits.length <= 6) formatted = `(${limitedDigits.substring(0, 3)}) ${limitedDigits.substring(3)}`;
+                            else formatted = `(${limitedDigits.substring(0, 3)}) ${limitedDigits.substring(3, 6)}-${limitedDigits.substring(6)}`;
+                            
+                            setPickupContactNumber(formatted);
+                          }}
+                          data-testid="input-pickup-contact-number"
+                        />
+                      </div>
+
+                      {/* PO Number */}
+                      <div>
+                        <label className="block text-sm font-medium mb-2">PO Number</label>
+                        <Input
+                          placeholder="Purchase order number"
+                          value={pickupPoNumber}
+                          onChange={(e) => setPickupPoNumber(e.target.value)}
+                          data-testid="input-pickup-po-number"
+                        />
+                      </div>
 
                       {/* Driver */}
                       <div>
