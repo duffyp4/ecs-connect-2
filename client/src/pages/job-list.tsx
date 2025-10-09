@@ -85,11 +85,19 @@ export default function JobList() {
     // Save focus state before fetch
     if (isFetching && !wasFetchingRef.current) {
       hadFocusRef.current = document.activeElement === searchInputRef.current;
+      console.log('API starting, had focus:', hadFocusRef.current);
     }
     
     // Restore focus after fetch completes
     if (!isFetching && wasFetchingRef.current && hadFocusRef.current && searchInputRef.current) {
-      searchInputRef.current.focus();
+      console.log('API completed, restoring focus');
+      // Use requestAnimationFrame to ensure React has finished rendering
+      requestAnimationFrame(() => {
+        if (searchInputRef.current) {
+          searchInputRef.current.focus();
+          console.log('Focus restored');
+        }
+      });
     }
     
     wasFetchingRef.current = isFetching;
