@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,8 +42,6 @@ export default function JobList() {
   const [deliveryDispatchModalOpen, setDeliveryDispatchModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<any | null>(null);
   const { toast } = useToast();
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const hadFocusRef = useRef<boolean>(false);
 
   // Debounce search query - wait 500ms after user stops typing
   useEffect(() => {
@@ -59,16 +57,6 @@ export default function JobList() {
   useEffect(() => {
     setCurrentPage(1);
   }, [statusFilter, debouncedSearchQuery, dateFrom, dateTo, sortBy, sortOrder]);
-
-  // Track focus state before re-renders
-  useEffect(() => {
-    const checkFocus = () => {
-      hadFocusRef.current = document.activeElement === searchInputRef.current;
-    };
-    
-    const intervalId = setInterval(checkFocus, 50);
-    return () => clearInterval(intervalId);
-  }, []);
 
   const { data: response, isLoading, isFetching } = useQuery<PaginatedResponse>({
     queryKey: ["/api/jobs", {
@@ -87,13 +75,6 @@ export default function JobList() {
   const jobs = response?.data ?? [];
   const total = response?.total ?? 0;
   const totalPages = Math.ceil(total / pageSize);
-
-  // Restore focus after data updates if input had focus before
-  useEffect(() => {
-    if (hadFocusRef.current && searchInputRef.current && document.activeElement !== searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  }, [jobs]);
 
   // Mutation for job actions
   const actionMutation = useMutation({
@@ -200,12 +181,13 @@ export default function JobList() {
           <div className="relative flex-1 sm:max-w-xs">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              ref={searchInputRef}
+              key="search-input"
               placeholder="Search by Job ID or Customer..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
               data-testid="input-search"
+              autoComplete="off"
             />
           </div>
           
