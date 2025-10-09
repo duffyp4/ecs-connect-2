@@ -45,7 +45,7 @@ export default function JobList() {
   
   const searchInputRef = useRef<HTMLInputElement>(null);
   const wasFetchingRef = useRef<boolean>(false);
-  const hadFocusRef = useRef<boolean>(false);
+  const isUserTypingRef = useRef<boolean>(false);
 
   // Debounce search query - wait 500ms after user stops typing
   useEffect(() => {
@@ -80,16 +80,10 @@ export default function JobList() {
   const total = response?.total ?? 0;
   const totalPages = Math.ceil(total / pageSize);
 
-  // Track focus state and restore after API completes
+  // Restore focus after API completes if user was typing
   useEffect(() => {
-    // Save focus state before fetch
-    if (isFetching && !wasFetchingRef.current) {
-      hadFocusRef.current = document.activeElement === searchInputRef.current;
-      console.log('API starting, had focus:', hadFocusRef.current);
-    }
-    
-    // Restore focus after fetch completes
-    if (!isFetching && wasFetchingRef.current && hadFocusRef.current && searchInputRef.current) {
+    // Restore focus after fetch completes if user was typing
+    if (!isFetching && wasFetchingRef.current && isUserTypingRef.current && searchInputRef.current) {
       console.log('API completed, restoring focus');
       // Use requestAnimationFrame to ensure React has finished rendering
       requestAnimationFrame(() => {
@@ -212,6 +206,14 @@ export default function JobList() {
               placeholder="Search by Job ID or Customer..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => {
+                isUserTypingRef.current = true;
+                console.log('Search input focused, isUserTyping: true');
+              }}
+              onBlur={() => {
+                isUserTypingRef.current = false;
+                console.log('Search input blurred, isUserTyping: false');
+              }}
               className="pl-10"
               data-testid="input-search"
               autoComplete="off"
