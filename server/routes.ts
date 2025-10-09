@@ -625,16 +625,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all jobs
   app.get("/api/jobs", requireAuth, async (req, res) => {
     try {
-      const { status, technician, limit } = req.query;
+      const { status, search, dateFrom, dateTo, sortBy, sortOrder, limit } = req.query;
       
       let jobs = await storage.getAllJobs();
       
+      // Filter by status
       if (status && status !== 'all') {
-        jobs = jobs.filter(job => job.status === status);
+        jobs = jobs.filter(job => job.state === status);
       }
       
-      if (technician && technician !== 'all') {
-        jobs = jobs.filter(job => job.shopHandoff === technician);
+      // Filter by search query (Job ID or Customer Name)
+      if (search && typeof search === 'string' && search.trim()) {
+        const searchLower = search.toLowerCase().trim();
+        jobs = jobs.filter(job => 
+          String(job.jobId ?? '').toLowerCase().includes(searchLower) ||
+          String(job.customerName ?? '').toLowerCase().includes(searchLower)
+        );
+      }
+      
+      // Filter by date range (initiated date)
+      if (dateFrom && typeof dateFrom === 'string' && dateFrom.trim()) {
+        const fromDate = new Date(dateFrom);
+        fromDate.setHours(0, 0, 0, 0);
+        jobs = jobs.filter(job => {
+          if (!job.initiatedAt) return false;
+          const jobDate = new Date(job.initiatedAt);
+          return jobDate >= fromDate;
+        });
+      }
+      
+      if (dateTo && typeof dateTo === 'string' && dateTo.trim()) {
+        const toDate = new Date(dateTo);
+        toDate.setHours(23, 59, 59, 999);
+        jobs = jobs.filter(job => {
+          if (!job.initiatedAt) return false;
+          const jobDate = new Date(job.initiatedAt);
+          return jobDate <= toDate;
+        });
+      }
+      
+      // Sort jobs
+      if (sortBy && typeof sortBy === 'string') {
+        const order = sortOrder === 'asc' ? 1 : -1;
+        jobs.sort((a, b) => {
+          let aVal: any = a[sortBy as keyof typeof a];
+          let bVal: any = b[sortBy as keyof typeof b];
+          
+          // Handle null/undefined values - push them to the end
+          if (aVal == null && bVal == null) return 0;
+          if (aVal == null) return 1;
+          if (bVal == null) return -1;
+          
+          // Handle dates
+          if (sortBy.includes('At')) {
+            aVal = new Date(aVal).getTime();
+            bVal = new Date(bVal).getTime();
+          }
+          
+          // Handle strings
+          if (typeof aVal === 'string' && typeof bVal === 'string') {
+            return order * aVal.localeCompare(bVal);
+          }
+          
+          // Handle numbers
+          if (typeof aVal === 'number' && typeof bVal === 'number') {
+            return order * (aVal - bVal);
+          }
+          
+          // Fallback: convert to strings and compare
+          return order * String(aVal).localeCompare(String(bVal));
+        });
       }
       
       if (limit) {
