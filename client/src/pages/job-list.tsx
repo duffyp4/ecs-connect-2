@@ -32,6 +32,8 @@ type PaginatedResponse = {
 
 export default function JobList() {
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [tempStatusFilter, setTempStatusFilter] = useState<string[]>([]);
+  const [statusFilterOpen, setStatusFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>("");
   const [dateFrom, setDateFrom] = useState<string>("");
@@ -235,7 +237,16 @@ export default function JobList() {
             />
           </div>
           
-          <Popover>
+          <Popover 
+            open={statusFilterOpen} 
+            onOpenChange={(open) => {
+              setStatusFilterOpen(open);
+              if (open) {
+                // Initialize temp filter with current filter when opening
+                setTempStatusFilter(statusFilter);
+              }
+            }}
+          >
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
@@ -256,12 +267,12 @@ export default function JobList() {
               <div className="p-2 border-b">
                 <div className="flex items-center justify-between">
                   <h4 className="font-semibold text-sm">Filter by Status</h4>
-                  {statusFilter.length > 0 && (
+                  {tempStatusFilter.length > 0 && (
                     <Button
                       variant="ghost"
                       size="sm"
                       className="h-auto p-1 text-xs"
-                      onClick={() => setStatusFilter([])}
+                      onClick={() => setTempStatusFilter([])}
                     >
                       Clear
                     </Button>
@@ -274,21 +285,21 @@ export default function JobList() {
                     key={option.value}
                     className="flex items-center space-x-2 px-2 py-1.5 rounded hover:bg-accent cursor-pointer"
                     onClick={() => {
-                      if (statusFilter.includes(option.value)) {
-                        setStatusFilter(statusFilter.filter(s => s !== option.value));
+                      if (tempStatusFilter.includes(option.value)) {
+                        setTempStatusFilter(tempStatusFilter.filter(s => s !== option.value));
                       } else {
-                        setStatusFilter([...statusFilter, option.value]);
+                        setTempStatusFilter([...tempStatusFilter, option.value]);
                       }
                     }}
                     data-testid={`checkbox-status-${option.value}`}
                   >
                     <Checkbox
-                      checked={statusFilter.includes(option.value)}
+                      checked={tempStatusFilter.includes(option.value)}
                       onCheckedChange={(checked) => {
                         if (checked) {
-                          setStatusFilter([...statusFilter, option.value]);
+                          setTempStatusFilter([...tempStatusFilter, option.value]);
                         } else {
-                          setStatusFilter(statusFilter.filter(s => s !== option.value));
+                          setTempStatusFilter(tempStatusFilter.filter(s => s !== option.value));
                         }
                       }}
                     />
@@ -297,6 +308,18 @@ export default function JobList() {
                     </label>
                   </div>
                 ))}
+              </div>
+              <div className="p-2 border-t">
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    setStatusFilter(tempStatusFilter);
+                    setStatusFilterOpen(false);
+                  }}
+                  data-testid="button-apply-status-filter"
+                >
+                  Apply
+                </Button>
               </div>
             </PopoverContent>
           </Popover>
