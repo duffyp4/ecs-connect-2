@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { List, Store, Package, Send, ChevronDown, Search, ArrowUpDown } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { List, Store, Package, Send, ChevronDown, Search, ArrowUpDown, Check } from "lucide-react";
 import JobStatusBadge from "@/components/job-status-badge";
 import { CheckInModal } from "@/components/check-in-modal";
 import { DeliveryDispatchModal } from "@/components/delivery-dispatch-modal";
@@ -29,7 +31,7 @@ type PaginatedResponse = {
 };
 
 export default function JobList() {
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>("");
   const [dateFrom, setDateFrom] = useState<string>("");
@@ -46,6 +48,19 @@ export default function JobList() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const wasFetchingRef = useRef<boolean>(false);
   const isUserTypingRef = useRef<boolean>(false);
+  
+  // Available status options
+  const statusOptions = [
+    { value: "queued_for_pickup", label: "Queued for Pickup" },
+    { value: "picked_up", label: "Picked Up" },
+    { value: "at_shop", label: "At Shop" },
+    { value: "in_service", label: "In Service" },
+    { value: "service_complete", label: "Service Complete" },
+    { value: "ready_for_pickup", label: "Ready for Pickup" },
+    { value: "ready_for_delivery", label: "Ready for Delivery" },
+    { value: "queued_for_delivery", label: "Queued for Delivery" },
+    { value: "delivered", label: "Delivered" },
+  ];
 
   // Debounce search query - wait 500ms after user stops typing
   useEffect(() => {
@@ -64,7 +79,7 @@ export default function JobList() {
 
   const { data: response, isLoading, isFetching } = useQuery<PaginatedResponse>({
     queryKey: ["/api/jobs", {
-      ...(statusFilter !== 'all' && { status: statusFilter }),
+      ...(statusFilter.length > 0 && { status: statusFilter.join(',') }),
       ...(debouncedSearchQuery && { search: debouncedSearchQuery }),
       ...(dateFrom && { dateFrom }),
       ...(dateTo && { dateTo }),
@@ -220,22 +235,71 @@ export default function JobList() {
             />
           </div>
           
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-48" data-testid="select-status-filter">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="queued_for_pickup">Queued for Pickup</SelectItem>
-              <SelectItem value="picked_up">Picked Up</SelectItem>
-              <SelectItem value="at_shop">At Shop</SelectItem>
-              <SelectItem value="in_service">In Service</SelectItem>
-              <SelectItem value="service_complete">Service Complete</SelectItem>
-              <SelectItem value="ready_for_pickup">Ready for Pickup</SelectItem>
-              <SelectItem value="queued_for_delivery">Queued for Delivery</SelectItem>
-              <SelectItem value="delivered">Delivered</SelectItem>
-            </SelectContent>
-          </Select>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full sm:w-48 justify-between"
+                data-testid="button-status-filter"
+              >
+                <span className="truncate">
+                  {statusFilter.length === 0
+                    ? "All Statuses"
+                    : statusFilter.length === 1
+                    ? statusOptions.find(opt => opt.value === statusFilter[0])?.label
+                    : `${statusFilter.length} statuses`}
+                </span>
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-0" align="start">
+              <div className="p-2 border-b">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-sm">Filter by Status</h4>
+                  {statusFilter.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto p-1 text-xs"
+                      onClick={() => setStatusFilter([])}
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <div className="max-h-64 overflow-y-auto p-2">
+                {statusOptions.map((option) => (
+                  <div
+                    key={option.value}
+                    className="flex items-center space-x-2 px-2 py-1.5 rounded hover:bg-accent cursor-pointer"
+                    onClick={() => {
+                      if (statusFilter.includes(option.value)) {
+                        setStatusFilter(statusFilter.filter(s => s !== option.value));
+                      } else {
+                        setStatusFilter([...statusFilter, option.value]);
+                      }
+                    }}
+                    data-testid={`checkbox-status-${option.value}`}
+                  >
+                    <Checkbox
+                      checked={statusFilter.includes(option.value)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setStatusFilter([...statusFilter, option.value]);
+                        } else {
+                          setStatusFilter(statusFilter.filter(s => s !== option.value));
+                        }
+                      }}
+                    />
+                    <label className="text-sm cursor-pointer flex-1">
+                      {option.label}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
 
           <Input
             type="date"
