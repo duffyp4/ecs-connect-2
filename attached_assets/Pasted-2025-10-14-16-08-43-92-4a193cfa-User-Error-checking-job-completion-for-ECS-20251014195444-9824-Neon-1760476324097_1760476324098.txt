@@ -1,0 +1,104 @@
+2025-10-14 16:08:43.92
+4a193cfa
+User
+Error checking job completion for ECS-20251014195444-9824: NeonDbError: time zone displacement out of range: "+057757-02-27T07:26:48.000Z"
+2025-10-14 16:08:43.92
+4a193cfa
+User
+at execute (file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1556:55)
+2025-10-14 16:08:43.92
+4a193cfa
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-10-14 16:08:43.92
+4a193cfa
+User
+at async NeonHttpPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-http/session.js:40:20)
+2025-10-14 16:08:43.92
+4a193cfa
+User
+at async DatabaseStorage.updateJob (file:///home/runner/workspace/dist/index.js:345:24)
+2025-10-14 16:08:43.92
+4a193cfa
+User
+at async JobEventsService.transitionJobState (file:///home/runner/workspace/dist/index.js:2011:28)
+2025-10-14 16:08:43.92
+4a193cfa
+User
+at async JobTrackerService.checkServiceCompletion (file:///home/runner/workspace/dist/index.js:2482:11)
+2025-10-14 16:08:43.92
+4a193cfa
+User
+at async JobTrackerService.checkPendingJobs (file:///home/runner/workspace/dist/index.js:2393:9) {
+2025-10-14 16:08:43.92
+4a193cfa
+User
+severity: 'ERROR',
+2025-10-14 16:08:43.92
+4a193cfa
+User
+code: '22009',
+2025-10-14 16:08:43.92
+4a193cfa
+User
+detail: undefined,
+2025-10-14 16:08:43.92
+4a193cfa
+User
+hint: undefined,
+2025-10-14 16:08:43.92
+4a193cfa
+User
+position: undefined,
+2025-10-14 16:08:43.92
+4a193cfa
+User
+internalPosition: undefined,
+2025-10-14 16:08:43.92
+4a193cfa
+User
+internalQuery: undefined,
+2025-10-14 16:08:43.92
+4a193cfa
+User
+where: "unnamed portal parameter $2 = '...'",
+2025-10-14 16:08:43.92
+4a193cfa
+User
+schema: undefined,
+2025-10-14 16:08:43.92
+4a193cfa
+User
+table: undefined,
+2025-10-14 16:08:43.92
+4a193cfa
+User
+column: undefined,
+2025-10-14 16:08:43.92
+4a193cfa
+User
+dataType: undefined,
+2025-10-14 16:08:43.92
+4a193cfa
+User
+constraint: undefined,
+2025-10-14 16:08:43.92
+4a193cfa
+User
+file: 'datetime.c',
+2025-10-14 16:08:43.92
+4a193cfa
+User
+line: '4005',
+2025-10-14 16:08:43.92
+4a193cfa
+User
+routine: 'DateTimeParseError',
+2025-10-14 16:08:43.92
+4a193cfa
+User
+sourceError: undefined
+2025-10-14 16:08:43.92
+4a193cfa
+User
+}

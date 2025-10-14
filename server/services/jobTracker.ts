@@ -149,14 +149,21 @@ export class JobTrackerService {
               
               if (timeMatch && timeMatch[1]) {
                 const unixTimestamp = parseFloat(timeMatch[1]);
-                // Convert Unix timestamp (seconds) to milliseconds and create Date
-                handoffTime = new Date(unixTimestamp * 1000);
                 
-                if (isNaN(handoffTime.getTime())) {
-                  console.warn(`Invalid GPS timestamp parsed: "${timeMatch[1]}"`);
+                // Handle both seconds and milliseconds formats
+                // If timestamp > 10000000000, it's in milliseconds (13 digits)
+                // If timestamp < 10000000000, it's in seconds (10 digits)
+                const timestampMs = unixTimestamp > 10000000000 ? unixTimestamp : unixTimestamp * 1000;
+                handoffTime = new Date(timestampMs);
+                
+                // Validate timestamp is reasonable (between 2020-2100)
+                if (isNaN(handoffTime.getTime()) || 
+                    handoffTime.getFullYear() < 2020 || 
+                    handoffTime.getFullYear() > 2100) {
+                  console.warn(`Invalid GPS timestamp parsed: "${timeMatch[1]}" → year ${handoffTime.getFullYear()}`);
                   handoffTime = null;
                 } else {
-                  console.log(`✅ Found handoff time from GPS field: ${handoffTime.toISOString()}`);
+                  console.log(`✅ Found handoff time from GPS field: ${handoffTime.toISOString()} (${unixTimestamp > 10000000000 ? 'ms' : 's'} format)`);
                 }
               } else {
                 console.warn(`Could not extract timestamp from GPS field: "${gpsField.value}"`);

@@ -132,9 +132,22 @@ export class TimezoneService {
       }
       
       const unixTimestamp = parseFloat(timeMatch[1]);
-      const utcDate = new Date(unixTimestamp * 1000); // Convert seconds to milliseconds
       
-      console.log(`✅ Extracted GPS timestamp: ${unixTimestamp} → ${utcDate.toISOString()}`);
+      // Handle both seconds and milliseconds formats
+      // If timestamp > 10000000000, it's in milliseconds (13 digits)
+      // If timestamp < 10000000000, it's in seconds (10 digits)
+      const timestampMs = unixTimestamp > 10000000000 ? unixTimestamp : unixTimestamp * 1000;
+      const utcDate = new Date(timestampMs);
+      
+      // Validate timestamp is reasonable (between 2020-2100)
+      if (isNaN(utcDate.getTime()) || 
+          utcDate.getFullYear() < 2020 || 
+          utcDate.getFullYear() > 2100) {
+        console.error(`❌ Invalid GPS timestamp: "${timeMatch[1]}" → year ${utcDate.getFullYear()}`);
+        return null;
+      }
+      
+      console.log(`✅ Extracted GPS timestamp: ${unixTimestamp} → ${utcDate.toISOString()} (${unixTimestamp > 10000000000 ? 'ms' : 's'} format)`);
       return utcDate;
       
     } catch (error) {
