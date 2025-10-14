@@ -629,9 +629,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       let jobs = await storage.getAllJobs();
       
-      // Filter by status
-      if (status && status !== 'all') {
-        jobs = jobs.filter(job => job.state === status);
+      // Filter by status (supports comma-separated values for multi-select)
+      if (status && typeof status === 'string' && status.trim()) {
+        const statuses = status.split(',').map(s => s.trim()).filter(s => s);
+        if (statuses.length > 0) {
+          jobs = jobs.filter(job => statuses.includes(job.state));
+        }
       }
       
       // Filter by search query (Job ID or Customer Name)
