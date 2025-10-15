@@ -260,9 +260,9 @@ export class JobTrackerService {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      // Active jobs: any state that's not terminal (delivered or cancelled)
+      // Active jobs: not completed and not cancelled
       const activeJobs = allJobs.filter(job => 
-        job.state !== 'delivered' && job.state !== 'cancelled'
+        !job.completedAt && job.state !== 'cancelled'
       ).length;
 
       // Completed jobs: have completedAt timestamp set (ready_for_pickup or delivered)
