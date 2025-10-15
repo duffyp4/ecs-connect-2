@@ -10,7 +10,6 @@ export type JobState =
   | 'in_service'
   | 'service_complete'
   | 'ready_for_pickup'
-  | 'ready_for_delivery'
   | 'queued_for_delivery'
   | 'delivered'
   | 'cancelled';
@@ -23,9 +22,8 @@ const STATE_MACHINE = {
     'picked_up': ['at_shop', 'cancelled'],
     'at_shop': ['in_service', 'cancelled'],
     'in_service': ['service_complete', 'cancelled'],
-    'service_complete': ['ready_for_pickup', 'ready_for_delivery', 'queued_for_delivery', 'delivered', 'cancelled'],
+    'service_complete': ['ready_for_pickup', 'queued_for_delivery', 'delivered', 'cancelled'],
     'ready_for_pickup': ['delivered', 'cancelled'],
-    'ready_for_delivery': ['queued_for_delivery', 'cancelled'],
     'queued_for_delivery': ['delivered', 'cancelled'],
     'delivered': [], // Terminal state
     'cancelled': [], // Terminal state
@@ -162,7 +160,6 @@ export class JobEventsService {
         updateData.serviceCompleteAt = timestamp;
         break;
       case 'ready_for_pickup':
-      case 'ready_for_delivery':
         updateData.readyAt = timestamp;
         break;
       case 'queued_for_delivery':
@@ -407,7 +404,7 @@ export class JobEventsService {
     deliveryMethod: 'pickup' | 'delivery',
     options: StateChangeOptions = {}
   ): Promise<Job> {
-    const targetState: JobState = deliveryMethod === 'pickup' ? 'ready_for_pickup' : 'ready_for_delivery';
+    const targetState: JobState = deliveryMethod === 'pickup' ? 'ready_for_pickup' : 'queued_for_delivery';
     
     // Get job to retrieve UUID
     const job = await storage.getJobByJobId(jobId);
@@ -457,9 +454,9 @@ export class JobEventsService {
       throw new Error(`Job ${jobId} not found`);
     }
 
-    // Validate state (must be in service_complete or ready_for_delivery)
-    if (job.state !== 'service_complete' && job.state !== 'ready_for_delivery') {
-      throw new Error(`Cannot dispatch delivery: job is in ${job.state} state, must be in service_complete or ready_for_delivery`);
+    // Validate state (must be in service_complete)
+    if (job.state !== 'service_complete') {
+      throw new Error(`Cannot dispatch delivery: job is in ${job.state} state, must be in service_complete`);
     }
 
     // Create GoCanvas delivery dispatch
