@@ -31,7 +31,7 @@ export const jobs = pgTable("jobs", {
   handoffEmailWorkflow: text("handoff_email_workflow"),
   
   // Tracking Fields - New State System (7 states)
-  state: text("state").notNull().default("queued_for_pickup"), // queued_for_pickup, picked_up, at_shop, in_service, ready_for_pickup, ready_for_delivery, queued_for_delivery, delivered
+  state: text("state").notNull().default("queued_for_pickup"), // queued_for_pickup, picked_up, at_shop, in_service, service_complete, ready_for_pickup, queued_for_delivery, delivered
   initiatedAt: timestamp("initiated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at"),
   
@@ -40,7 +40,7 @@ export const jobs = pgTable("jobs", {
   atShopAt: timestamp("at_shop_at"),
   inServiceAt: timestamp("in_service_at"),
   serviceCompleteAt: timestamp("service_complete_at"), // when emissions service log is completed
-  readyAt: timestamp("ready_at"), // when marked ready_for_pickup or ready_for_delivery
+  readyAt: timestamp("ready_at"), // when marked ready_for_pickup
   queuedForDeliveryAt: timestamp("queued_for_delivery_at"),
   deliveredAt: timestamp("delivered_at"),
   
