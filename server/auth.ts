@@ -38,7 +38,13 @@ export function setupAuth(app: Express) {
     if (password === APP_PASSWORD) {
       const session = req.session as any;
       session.authenticated = true;
-      res.json({ success: true, message: "Login successful" });
+      req.session.save((err: any) => {
+        if (err) {
+          console.error('Session save error:', err);
+          return res.status(500).json({ success: false, message: "Session save failed" });
+        }
+        res.json({ success: true, message: "Login successful" });
+      });
     } else {
       res.status(401).json({ success: false, message: "Invalid password" });
     }
