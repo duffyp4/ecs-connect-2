@@ -288,6 +288,16 @@ export default function JobDetail() {
               Dispatch for Delivery
             </Button>
 
+            <Button 
+              onClick={() => actionMutation.mutate({ action: 'mark-picked-up-from-shop' })}
+              disabled={currentState !== 'ready_for_pickup' || isPending}
+              className="btn-primary"
+              data-testid="button-mark-picked-up"
+            >
+              <Package className="mr-2 h-4 w-4" />
+              Mark as Picked Up
+            </Button>
+
             <Button
               variant="destructive"
               onClick={() => actionMutation.mutate({ action: 'cancel' })}

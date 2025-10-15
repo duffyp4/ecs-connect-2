@@ -10,6 +10,7 @@ export type JobState =
   | 'in_service'
   | 'service_complete'
   | 'ready_for_pickup'
+  | 'picked_up_from_shop'
   | 'queued_for_delivery'
   | 'delivered'
   | 'cancelled';
@@ -23,7 +24,8 @@ const STATE_MACHINE = {
     'at_shop': ['in_service', 'cancelled'],
     'in_service': ['service_complete', 'cancelled'],
     'service_complete': ['ready_for_pickup', 'queued_for_delivery', 'delivered', 'cancelled'],
-    'ready_for_pickup': ['delivered', 'cancelled'],
+    'ready_for_pickup': ['picked_up_from_shop', 'delivered', 'cancelled'],
+    'picked_up_from_shop': ['delivered', 'cancelled'],
     'queued_for_delivery': ['delivered', 'cancelled'],
     'delivered': [], // Terminal state
     'cancelled': [], // Terminal state
@@ -534,6 +536,19 @@ export class JobEventsService {
   ): Promise<Job> {
     // Transition state (this creates the event)
     const updatedJob = await this.transitionJobState(jobId, 'delivered', options);
+
+    return updatedJob;
+  }
+
+  /**
+   * Mark job as picked up from shop (post-completion tracking)
+   */
+  async markPickedUpFromShop(
+    jobId: string,
+    options: StateChangeOptions = {}
+  ): Promise<Job> {
+    // Transition state (this creates the event)
+    const updatedJob = await this.transitionJobState(jobId, 'picked_up_from_shop', options);
 
     return updatedJob;
   }

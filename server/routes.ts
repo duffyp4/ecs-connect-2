@@ -580,6 +580,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Mark job as picked up from shop (post-completion tracking)
+  app.post("/api/jobs/:jobId/mark-picked-up-from-shop", requireAuth, async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      
+      const job = await storage.getJobByJobId(jobId);
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+      
+      const updatedJob = await jobEventsService.markPickedUpFromShop(job.jobId);
+      res.json(updatedJob);
+    } catch (error) {
+      console.error("Error marking job as picked up from shop:", error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to mark job as picked up from shop" });
+    }
+  });
+
   // Cancel job
   app.post("/api/jobs/:jobId/cancel", requireAuth, async (req, res) => {
     try {

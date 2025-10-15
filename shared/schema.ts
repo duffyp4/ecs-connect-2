@@ -30,8 +30,8 @@ export const jobs = pgTable("jobs", {
   shopHandoff: text("shop_handoff").notNull(), // technician email
   handoffEmailWorkflow: text("handoff_email_workflow"),
   
-  // Tracking Fields - New State System (7 states)
-  state: text("state").notNull().default("queued_for_pickup"), // queued_for_pickup, picked_up, at_shop, in_service, service_complete, ready_for_pickup, queued_for_delivery, delivered
+  // Tracking Fields - New State System (8 states including post-completion tracking)
+  state: text("state").notNull().default("queued_for_pickup"), // queued_for_pickup, picked_up, at_shop, in_service, service_complete, ready_for_pickup, picked_up_from_shop, queued_for_delivery, delivered
   initiatedAt: timestamp("initiated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at"),
   
