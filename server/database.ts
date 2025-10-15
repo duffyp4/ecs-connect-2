@@ -1,16 +1,19 @@
-import { drizzle } from "drizzle-orm/neon-http";
-import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-serverless";
+import { Pool, neonConfig } from "@neondatabase/serverless";
 import { jobs, technicians, jobEvents, type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { IStorage } from "./storage";
+import ws from "ws";
+
+neonConfig.webSocketConstructor = ws;
 
 export class DatabaseStorage implements IStorage {
   private db: ReturnType<typeof drizzle>;
 
   constructor() {
-    const sql = neon(process.env.DATABASE_URL!);
-    this.db = drizzle(sql);
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL! });
+    this.db = drizzle(pool);
   }
 
   // Job methods
