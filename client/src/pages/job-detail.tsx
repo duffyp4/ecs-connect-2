@@ -109,10 +109,11 @@ export default function JobDetail() {
     }
 
     // Check if this event is completing the job
-    const completionStates = ['delivered', 'ready_for_pickup'];
+    const completionStates = ['delivered', 'ready_for_pickup', 'picked_up_from_shop'];
     const isCompletionEvent = 
       event.eventType === 'delivered' || 
       event.eventType === 'ready_for_pickup' ||
+      event.eventType === 'picked_up_from_shop' ||
       (event.eventType === 'state_change' && event.metadata?.newState && completionStates.includes(event.metadata.newState));
 
     if (isCompletionEvent) {
