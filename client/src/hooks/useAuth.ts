@@ -21,6 +21,7 @@ export function useAuth() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ password }),
+        credentials: "include",
       });
       
       if (!response.ok) {
@@ -39,6 +40,7 @@ export function useAuth() {
     mutationFn: async () => {
       const response = await fetch("/api/logout", {
         method: "POST",
+        credentials: "include",
       });
       
       if (!response.ok) {
