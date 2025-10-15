@@ -22,7 +22,6 @@ export default function JobStatusBadge({ status }: JobStatusBadgeProps) {
       case 'service_complete':
         return 'bg-lime-100 text-lime-800 hover:bg-lime-200';
       case 'ready_for_pickup':
-      case 'ready_for_delivery':
       case 'delivered':
         return 'bg-green-100 text-green-800 hover:bg-green-200';
       case 'queued_for_delivery':
@@ -48,8 +47,6 @@ export default function JobStatusBadge({ status }: JobStatusBadgeProps) {
         return 'Service Complete';
       case 'ready_for_pickup':
         return 'Ready for Pickup';
-      case 'ready_for_delivery':
-        return 'Ready for Delivery';
       case 'queued_for_delivery':
         return 'Queued for Delivery';
       case 'delivered':
