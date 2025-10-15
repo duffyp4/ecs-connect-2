@@ -35,6 +35,9 @@ export function setupAuth(app: Express) {
   app.post("/api/login", (req, res) => {
     const { password } = req.body;
     
+    console.log('Login attempt - Headers:', req.headers.cookie);
+    console.log('Login attempt - Session ID:', req.sessionID);
+    
     if (password === APP_PASSWORD) {
       const session = req.session as any;
       session.authenticated = true;
@@ -43,6 +46,7 @@ export function setupAuth(app: Express) {
           console.error('Session save error:', err);
           return res.status(500).json({ success: false, message: "Session save failed" });
         }
+        console.log('Session saved - ID:', req.sessionID, 'Authenticated:', session.authenticated);
         res.json({ success: true, message: "Login successful" });
       });
     } else {
@@ -65,6 +69,9 @@ export function setupAuth(app: Express) {
   // Check auth status
   app.get("/api/auth/status", (req, res) => {
     const session = req.session as any;
+    console.log('Auth check - Headers:', req.headers.cookie);
+    console.log('Auth check - Session ID:', req.sessionID);
+    console.log('Auth check - Session authenticated:', session?.authenticated);
     res.json({ 
       authenticated: !!(session && session.authenticated),
     });
