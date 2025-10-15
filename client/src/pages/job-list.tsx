@@ -59,7 +59,6 @@ export default function JobList() {
     { value: "in_service", label: "In Service" },
     { value: "service_complete", label: "Service Complete" },
     { value: "ready_for_pickup", label: "Ready for Pickup" },
-    { value: "ready_for_delivery", label: "Ready for Delivery" },
     { value: "queued_for_delivery", label: "Queued for Delivery" },
     { value: "delivered", label: "Delivered" },
   ];
