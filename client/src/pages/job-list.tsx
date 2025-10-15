@@ -163,6 +163,14 @@ export default function JobList() {
       });
     }
 
+    if (state === 'ready_for_pickup') {
+      actions.push({
+        id: 'mark-picked-up',
+        label: 'Mark as Picked Up',
+        icon: <Package className="mr-2 h-4 w-4" />,
+      });
+    }
+
     return actions;
   };
 
@@ -178,6 +186,11 @@ export default function JobList() {
         jobId: job.jobId, 
         action: 'mark-ready', 
         data: { deliveryMethod: 'pickup' } 
+      });
+    } else if (action.id === 'mark-picked-up') {
+      actionMutation.mutate({ 
+        jobId: job.jobId, 
+        action: 'mark-picked-up-from-shop'
       });
     }
   };
