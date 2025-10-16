@@ -1,0 +1,116 @@
+2025-10-16 07:22:55.96
+96ee12f2
+User
+12:22:55 PM [express] GET /api/jobs 401 in 1ms :: {"message":"Authentication required"}
+2025-10-16 07:29:45.47
+96ee12f2
+User
+12:29:45 PM [express] GET /api/jobs 401 in 2ms :: {"message":"Authentication required"}
+2025-10-16 07:30:15.64
+96ee12f2
+User
+12:30:15 PM [express] GET /api/jobs 401 in 1ms :: {"message":"Authentication required"}
+2025-10-16 07:30:45.79
+96ee12f2
+User
+12:30:45 PM [express] GET /api/jobs 401 in 1ms :: {"message":"Authentication required"}
+2025-10-16 07:31:15.95
+96ee12f2
+User
+12:31:15 PM [express] GET /api/jobs 401 in 1ms :: {"message":"Authentication required"}
+2025-10-16 07:31:46.12
+96ee12f2
+User
+12:31:46 PM [express] GET /api/jobs 401 in 2ms :: {"message":"Authentication required"}
+2025-10-16 07:32:16.31
+96ee12f2
+User
+12:32:16 PM [express] GET /api/jobs 401 in 2ms :: {"message":"Authentication required"}
+2025-10-16 07:32:46.48
+96ee12f2
+User
+12:32:46 PM [express] GET /api/jobs 401 in 1ms :: {"message":"Authentication required"}
+2025-10-16 07:33:16.65
+96ee12f2
+User
+12:33:16 PM [express] GET /api/jobs 401 in 1ms :: {"message":"Authentication required"}
+2025-10-16 07:33:46.80
+96ee12f2
+User
+12:33:46 PM [express] GET /api/jobs 401 in 1ms :: {"message":"Authentication required"}
+2025-10-16 07:34:16.99
+96ee12f2
+User
+12:34:16 PM [express] GET /api/jobs 401 in 1ms :: {"message":"Authentication required"}
+2025-10-16 07:34:47.50
+96ee12f2
+User
+12:34:47 PM [express] GET /api/jobs 401 in 1ms :: {"message":"Authentication required"}
+2025-10-16 07:35:17.80
+96ee12f2
+User
+12:35:17 PM [express] GET /api/jobs 401 in 1ms :: {"message":"Authentication required"}
+2025-10-16 07:38:48.00
+96ee12f2
+User
+12:38:48 PM [express] GET /api/jobs 401 in 1ms :: {"message":"Authentication required"}
+2025-10-16 07:39:18.87
+96ee12f2
+User
+12:39:18 PM [express] GET /api/jobs 401 in 1ms :: {"message":"Authentication required"}
+2025-10-16 07:39:49.07
+96ee12f2
+User
+12:39:49 PM [express] GET /api/jobs 401 in 1ms :: {"message":"Authentication required"}
+2025-10-16 07:40:19.30
+96ee12f2
+User
+12:40:19 PM [express] GET /api/jobs 401 in 1ms :: {"message":"Authentication required"}
+2025-10-16 07:40:49.45
+96ee12f2
+User
+12:40:49 PM [express] GET /api/jobs 401 in 2ms :: {"message":"Authentication required"}
+2025-10-16 07:41:19.60
+96ee12f2
+User
+12:41:19 PM [express] GET /api/jobs 401 in 1ms :: {"message":"Authentication required"}
+2025-10-16 07:41:49.73
+96ee12f2
+User
+12:41:49 PM [express] GET /api/jobs 401 in 2ms :: {"message":"Authentication required"}
+2025-10-16 07:45:28.59
+96ee12f2
+User
+12:45:28 PM [express] GET /api/jobs 401 in 1ms :: {"message":"Authentication required"}
+2025-10-16 07:45:58.77
+96ee12f2
+User
+12:45:58 PM [express] GET /api/jobs 401 in 1ms :: {"message":"Authentication required"}
+2025-10-16 08:01:07.69
+96ee12f2
+System
+system: received signal terminated
+2025-10-16 08:05:21.70
+96ee12f2
+System
+starting up user application
+2025-10-16 08:05:21.70
+96ee12f2
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-10-16 08:05:22.50
+96ee12f2
+User
+> rest-express@1.0.0 start
+2025-10-16 08:05:22.50
+96ee12f2
+User
+> NODE_ENV=production node dist/index.js
+2025-10-16 08:05:23.33
+96ee12f2
+User
+✅ GoCanvas initialized: Field mapping is current (Form: 5640674, 164 fields)
+2025-10-16 08:05:23.33
+96ee12f2
+User
+📋 Loaded field maps for 3 forms: 5640674, 5640587, 5640686
