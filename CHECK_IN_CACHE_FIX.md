@@ -27,17 +27,17 @@ onSuccess={() => {
 ---
 
 ### 2. ⚠️ Old Form ID Being Used (REQUIRES SECRET UPDATE)
-**Problem**: Check-in dispatches are using old Emissions form ID **5628226** instead of new **5640674**
+**Problem**: Check-in dispatches are using old Emissions form ID **5628226** instead of new **5651956**
 
 **Root Cause**: Replit secret `GOCANVAS_FORM_ID` is set to `5628226`
 
 **Solution**: Update the Replit secret:
 1. Go to Replit Secrets (Tools → Secrets)
 2. Find `GOCANVAS_FORM_ID`
-3. Update value from `5628226` → `5640674`
+3. Update value from `5628226` → `5651956`
 4. Restart the application
 
-**Alternatively**: Delete the `GOCANVAS_FORM_ID` secret entirely - the system will default to 5640674
+**Alternatively**: Delete the `GOCANVAS_FORM_ID` secret entirely - the system will default to 5651956
 
 **Status**: ⚠️ Requires manual secret update
 
@@ -53,7 +53,7 @@ onSuccess={() => {
    - **Verify**: Page updates immediately (no manual refresh needed)
    - **Verify**: Event timeline shows check-in event
    - **Verify**: "Check in at shop" button is disabled
-   - **Verify**: GoCanvas dispatch uses form ID 5640674
+   - **Verify**: GoCanvas dispatch uses form ID 5651956
 
 ---
 
@@ -62,5 +62,5 @@ onSuccess={() => {
 | Issue | Status | Action Required |
 |-------|--------|----------------|
 | Cache invalidation bug | ✅ Fixed | None - already applied |
-| Old form ID (5628226) | ⚠️ Pending | Update `GOCANVAS_FORM_ID` secret to 5640674 |
+| Old form ID (5628226) | ⚠️ Pending | Update `GOCANVAS_FORM_ID` secret to 5651956 |
 
