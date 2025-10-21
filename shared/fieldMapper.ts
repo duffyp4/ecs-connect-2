@@ -38,7 +38,7 @@ export class FieldMapper {
   private initializeFieldMaps(): void {
     // Try to load all known field maps
     const formIds = [
-      '5651956', // Emissions Service Log (updated 2025-10-16)
+      '5654184', // Emissions Service Log (updated 2025-10-20)
       '5640587', // Pickup Log (updated with Contact Name, Contact Number, PO Number)
       '5640686', // Delivery Log (updated 2025-10-09)
     ];
@@ -81,7 +81,7 @@ export class FieldMapper {
 
   private loadFieldMap(): FieldMap {
     // For backward compatibility - load default emissions form
-    const defaultFormId = process.env.GOCANVAS_FORM_ID || '5651956';
+    const defaultFormId = process.env.GOCANVAS_FORM_ID || '5654184';
     return this.loadFieldMapForForm(defaultFormId);
   }
 

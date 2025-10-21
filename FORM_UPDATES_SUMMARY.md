@@ -6,15 +6,15 @@
 
 | Form Name | Old ID | New ID | Total Fields |
 |-----------|--------|--------|--------------|
-| **Emissions Service Log** | 5640674 | **5651956** | 165 fields |
+| **Emissions Service Log** | 5651956 | **5654184** | 167 fields |
 | **Pickup Log** | 5631022 | **5640587** | 15 fields |
 | **Delivery Log** | 5632656 | **5640686** | 18 fields |
 
 ---
 
-## ✅ Emissions Service Log (5651956)
-- **Total Fields**: 165 fields
-- **Form Version**: 6
+## ✅ Emissions Service Log (5654184)
+- **Total Fields**: 167 fields
+- **Form Version**: 8
 - **Key Fields**: Job ID (726434772), Contact Name (726434787), Contact Number (726434788), PO Number (726434789)
 - **Usage**: Shop check-ins and direct dispatches
 
@@ -39,13 +39,14 @@
 2. ✅ `shared/fieldMapper.ts` - Configured to load all three forms
 
 ### Field Mapping Files
-1. ✅ `gocanvas_field_map_5651956.json` - Emissions (165 fields)
+1. ✅ `gocanvas_field_map_5654184.json` - Emissions (167 fields)
 2. ✅ `gocanvas_field_map_5640587.json` - Pickup (15 fields)
 3. ✅ `gocanvas_field_map_5640686.json` - Delivery (18 fields)
 
 ### Legacy Files (Can be Removed)
 - ℹ️ `gocanvas_field_map_5628226.json` - Old Emissions
 - ℹ️ `gocanvas_field_map_5640674.json` - Old Emissions
+- ℹ️ `gocanvas_field_map_5651956.json` - Old Emissions
 - ℹ️ `gocanvas_field_map_5631022.json` - Old Pickup
 - ℹ️ `gocanvas_field_map_5632656.json` - Old Delivery
 
@@ -57,8 +58,8 @@
 
 **1. Emissions Service Log (Direct Check-In)**
 - Create a new job via "Direct Shop Check-in"
-- Verify dispatch uses form ID 5651956
-- Check all 165 fields map correctly
+- Verify dispatch uses form ID 5654184
+- Check all 167 fields map correctly
 
 **2. Pickup Log**
 - Create a job via "Dispatch Pickup"
