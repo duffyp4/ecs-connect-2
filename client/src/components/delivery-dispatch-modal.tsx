@@ -216,17 +216,17 @@ export function DeliveryDispatchModal({
                   )}
                 />
 
-                {/* Invoice Number */}
+                {/* Order Number */}
                 <FormField
                   control={form.control}
                   name="invoiceNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Invoice Number</FormLabel>
+                      <FormLabel>Order Number</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="Enter invoice number"
+                          placeholder="Enter order number"
                           data-testid="input-invoice-number"
                         />
                       </FormControl>
@@ -235,17 +235,17 @@ export function DeliveryDispatchModal({
                   )}
                 />
 
-                {/* Invoice Number - #2 */}
+                {/* Order Number - #2 */}
                 <FormField
                   control={form.control}
                   name="invoiceNumber2"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Invoice Number - #2</FormLabel>
+                      <FormLabel>Order Number - #2</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="Enter invoice number #2"
+                          placeholder="Enter order number #2"
                           data-testid="input-invoice-number-2"
                         />
                       </FormControl>
@@ -254,17 +254,17 @@ export function DeliveryDispatchModal({
                   )}
                 />
 
-                {/* Invoice Number - #3 */}
+                {/* Order Number - #3 */}
                 <FormField
                   control={form.control}
                   name="invoiceNumber3"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Invoice Number - #3</FormLabel>
+                      <FormLabel>Order Number - #3</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="Enter invoice number #3"
+                          placeholder="Enter order number #3"
                           data-testid="input-invoice-number-3"
                         />
                       </FormControl>
@@ -273,17 +273,17 @@ export function DeliveryDispatchModal({
                   )}
                 />
 
-                {/* Invoice Number - #4 */}
+                {/* Order Number - #4 */}
                 <FormField
                   control={form.control}
                   name="invoiceNumber4"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Invoice Number - #4</FormLabel>
+                      <FormLabel>Order Number - #4</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="Enter invoice number #4"
+                          placeholder="Enter order number #4"
                           data-testid="input-invoice-number-4"
                         />
                       </FormControl>
@@ -292,17 +292,17 @@ export function DeliveryDispatchModal({
                   )}
                 />
 
-                {/* Invoice Number - #5 */}
+                {/* Order Number - #5 */}
                 <FormField
                   control={form.control}
                   name="invoiceNumber5"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Invoice Number - #5</FormLabel>
+                      <FormLabel>Order Number - #5</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="Enter invoice number #5"
+                          placeholder="Enter order number #5"
                           data-testid="input-invoice-number-5"
                         />
                       </FormControl>
