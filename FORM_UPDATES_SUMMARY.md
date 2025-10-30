@@ -8,7 +8,7 @@
 |-----------|--------|--------|--------------|
 | **Emissions Service Log** | 5651956 | **5654184** | 167 fields |
 | **Pickup Log** | 5631022 | **5640587** | 15 fields |
-| **Delivery Log** | 5632656 | **5640686** | 18 fields |
+| **Delivery Log** | 5640686 | **5657146** | 18 fields |
 
 ---
 
@@ -24,11 +24,12 @@
 - **Key Fields**: Job ID (726424691), Contact Name (726424702), Contact Number (726424703), PO Number (726424704)
 - **Usage**: Pickup dispatches
 
-## ✅ Delivery Log (5640686)
+## ✅ Delivery Log (5657146)
 - **Total Fields**: 18 fields
-- **Form Version**: 4
-- **Key Fields**: Job ID (726436756), Contact Name (726436763), Contact Number (726436764), Driver (726436766)
+- **Form Version**: 5
+- **Key Fields**: Job ID (730945723), Customer Name (730945727), Order Numbers (730945728-730945732)
 - **Usage**: Delivery dispatches
+- **Updated**: 2025-10-30 - Changed "Invoice Number" fields to "Order Number"
 
 ---
 
@@ -41,7 +42,7 @@
 ### Field Mapping Files
 1. ✅ `gocanvas_field_map_5654184.json` - Emissions (167 fields)
 2. ✅ `gocanvas_field_map_5640587.json` - Pickup (15 fields)
-3. ✅ `gocanvas_field_map_5640686.json` - Delivery (18 fields)
+3. ✅ `gocanvas_field_map_5657146.json` - Delivery (18 fields)
 
 ### Legacy Files (Can be Removed)
 - ℹ️ `gocanvas_field_map_5628226.json` - Old Emissions
@@ -49,6 +50,7 @@
 - ℹ️ `gocanvas_field_map_5651956.json` - Old Emissions
 - ℹ️ `gocanvas_field_map_5631022.json` - Old Pickup
 - ℹ️ `gocanvas_field_map_5632656.json` - Old Delivery
+- ℹ️ `gocanvas_field_map_5640686.json` - Old Delivery
 
 ---
 
@@ -68,8 +70,9 @@
 
 **3. Delivery Log**
 - Complete a job to "Ready for Delivery"
-- Click "Mark for Delivery"
-- Verify dispatch uses form ID 5640686
+- Click "Dispatch for Delivery"
+- Verify dispatch uses form ID 5657146
+- Verify "Order Number" fields (not "Invoice Number")
 - Check all 18 fields map correctly
 
 ---
