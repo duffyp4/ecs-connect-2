@@ -23,6 +23,7 @@ import { DeliveryDispatchModal } from "@/components/delivery-dispatch-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { useDevMode } from "@/contexts/DevModeContext";
 
 type JobEvent = {
   id: string;
@@ -38,6 +39,7 @@ export default function JobDetail() {
   const params = useParams();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { isDevMode } = useDevMode();
   const jobId = params.id;
   const [checkInModalOpen, setCheckInModalOpen] = useState(false);
   const [deliveryDispatchModalOpen, setDeliveryDispatchModalOpen] = useState(false);
@@ -261,7 +263,7 @@ export default function JobDetail() {
           <div className="flex flex-wrap gap-4 items-center">
             <Button 
               onClick={() => setCheckInModalOpen(true)}
-              disabled={currentState !== 'picked_up' || isPending}
+              disabled={!isDevMode && (currentState !== 'picked_up' || isPending)}
               className="btn-primary"
               data-testid="button-check-in"
             >
@@ -271,7 +273,7 @@ export default function JobDetail() {
 
             <Button 
               onClick={() => actionMutation.mutate({ action: 'mark-ready', data: { deliveryMethod: 'pickup' } })}
-              disabled={currentState !== 'service_complete' || isPending}
+              disabled={!isDevMode && (currentState !== 'service_complete' || isPending)}
               className="btn-primary"
               data-testid="button-ready-pickup"
             >
@@ -281,7 +283,7 @@ export default function JobDetail() {
 
             <Button 
               onClick={() => setDeliveryDispatchModalOpen(true)}
-              disabled={currentState !== 'service_complete' || isPending}
+              disabled={!isDevMode && (currentState !== 'service_complete' || isPending)}
               className="btn-primary"
               data-testid="button-dispatch-delivery"
             >
@@ -291,7 +293,7 @@ export default function JobDetail() {
 
             <Button 
               onClick={() => actionMutation.mutate({ action: 'mark-picked-up-from-shop' })}
-              disabled={currentState !== 'ready_for_pickup' || isPending}
+              disabled={!isDevMode && (currentState !== 'ready_for_pickup' || isPending)}
               className="btn-primary"
               data-testid="button-mark-picked-up"
             >
@@ -302,7 +304,7 @@ export default function JobDetail() {
             <Button
               variant="destructive"
               onClick={() => actionMutation.mutate({ action: 'cancel' })}
-              disabled={currentState === 'delivered' || currentState === 'cancelled' || isPending}
+              disabled={!isDevMode && (currentState === 'delivered' || currentState === 'cancelled' || isPending)}
               data-testid="button-cancel"
             >
               <XCircle className="mr-2 h-4 w-4" />
