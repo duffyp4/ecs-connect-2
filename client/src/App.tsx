@@ -11,6 +11,7 @@ import JobList from "@/pages/job-list";
 import JobDetail from "@/pages/job-detail";
 import { Landing } from "@/pages/landing";
 import Layout from "@/components/layout";
+import { DevModeProvider } from "@/contexts/DevModeContext";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -46,10 +47,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <DevModeProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </DevModeProvider>
     </QueryClientProvider>
   );
 }

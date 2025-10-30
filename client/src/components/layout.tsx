@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Bolt, Plus, BarChart3, List, FileText, User, LogOut, Menu, X } from "lucide-react";
+import { Bolt, Plus, BarChart3, List, FileText, User, LogOut, Menu, X, Code } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,6 +11,8 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { useDevMode } from "@/contexts/DevModeContext";
+import { Switch } from "@/components/ui/switch";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -21,6 +23,8 @@ export default function Layout({ children }: LayoutProps) {
   const { logout, isLoggingOut } = useAuth();
   const { toast } = useToast();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isDevMode, toggleDevMode } = useDevMode();
+  const isDevelopment = import.meta.env.MODE !== 'production';
 
   const navigationItems = [
     { href: "/", label: "New Job", icon: Plus },
@@ -93,6 +97,7 @@ export default function Layout({ children }: LayoutProps) {
           fixed lg:static lg:translate-x-0 top-14 left-0 z-50 
           w-64 h-[calc(100vh-3.5rem)] lg:h-auto 
           sidebar p-4 transition-transform duration-200 ease-in-out
+          flex flex-col
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}>
           <nav className="space-y-1">
@@ -113,6 +118,28 @@ export default function Layout({ children }: LayoutProps) {
               );
             })}
           </nav>
+
+          {/* Dev Mode Toggle - Only visible in development */}
+          {isDevelopment && (
+            <div className="mt-auto pt-4 border-t border-border">
+              <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                <div className="flex items-center space-x-2">
+                  <Code className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-xs font-medium text-muted-foreground">Dev Mode</span>
+                </div>
+                <Switch
+                  checked={isDevMode}
+                  onCheckedChange={toggleDevMode}
+                  data-testid="toggle-dev-mode"
+                />
+              </div>
+              {isDevMode && (
+                <p className="text-xs text-muted-foreground mt-2 px-2">
+                  All action buttons visible for preview
+                </p>
+              )}
+            </div>
+          )}
         </aside>
 
         {/* Main Content */}
