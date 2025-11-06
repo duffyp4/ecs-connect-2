@@ -113,6 +113,25 @@ export default function JobList() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  // Sync state to URL parameters
+  useEffect(() => {
+    const newSearch = updateQueryParams({
+      status: statusFilter.length > 0 ? statusFilter : null,
+      search: debouncedSearchQuery || null,
+      dateFrom: dateFrom || null,
+      dateTo: dateTo || null,
+      sortBy: sortBy !== 'initiatedAt' ? sortBy : null,
+      sortOrder: sortOrder !== 'desc' ? sortOrder : null,
+      page: currentPage !== 1 ? currentPage.toString() : null,
+      pageSize: pageSize !== 25 ? pageSize.toString() : null,
+    });
+    
+    // Update URL without triggering a navigation
+    const currentPath = window.location.pathname;
+    const newUrl = currentPath + newSearch;
+    window.history.replaceState({}, '', newUrl);
+  }, [statusFilter, debouncedSearchQuery, dateFrom, dateTo, sortBy, sortOrder, currentPage, pageSize]);
+
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
