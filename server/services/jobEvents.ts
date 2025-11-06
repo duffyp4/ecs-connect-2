@@ -441,11 +441,11 @@ export class JobEventsService {
       driverEmail: string;
       deliveryAddress: string;
       deliveryNotes?: string;
-      invoiceNumber?: string;
-      invoiceNumber2?: string;
-      invoiceNumber3?: string;
-      invoiceNumber4?: string;
-      invoiceNumber5?: string;
+      orderNumber?: string;
+      orderNumber2?: string;
+      orderNumber3?: string;
+      orderNumber4?: string;
+      orderNumber5?: string;
     },
     options: StateChangeOptions = {}
   ): Promise<{ job: Job; dispatchId: string }> {
@@ -474,26 +474,26 @@ export class JobEventsService {
         deliveryAddress: deliveryData.deliveryAddress,
         deliveryNotes: deliveryData.deliveryNotes,
         itemCount: job.itemCount,
-        invoiceNumber: deliveryData.invoiceNumber,
-        invoiceNumber2: deliveryData.invoiceNumber2,
-        invoiceNumber3: deliveryData.invoiceNumber3,
-        invoiceNumber4: deliveryData.invoiceNumber4,
-        invoiceNumber5: deliveryData.invoiceNumber5,
+        orderNumber: deliveryData.orderNumber,
+        orderNumber2: deliveryData.orderNumber2,
+        orderNumber3: deliveryData.orderNumber3,
+        orderNumber4: deliveryData.orderNumber4,
+        orderNumber5: deliveryData.orderNumber5,
       },
       deliveryData.driverEmail
     );
 
-    // Update job with dispatch info and invoice numbers
+    // Update job with dispatch info and order numbers
     await storage.updateJob(job.id, {
       deliveryDispatchId: dispatchId,
       deliveryDriverEmail: deliveryData.driverEmail,
       deliveryAddress: deliveryData.deliveryAddress,
       deliveryNotes: deliveryData.deliveryNotes,
-      invoiceNumber: deliveryData.invoiceNumber,
-      invoiceNumber2: deliveryData.invoiceNumber2,
-      invoiceNumber3: deliveryData.invoiceNumber3,
-      invoiceNumber4: deliveryData.invoiceNumber4,
-      invoiceNumber5: deliveryData.invoiceNumber5,
+      orderNumber: deliveryData.orderNumber,
+      orderNumber2: deliveryData.orderNumber2,
+      orderNumber3: deliveryData.orderNumber3,
+      orderNumber4: deliveryData.orderNumber4,
+      orderNumber5: deliveryData.orderNumber5,
       updatedAt: new Date(),
     });
 

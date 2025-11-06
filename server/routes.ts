@@ -528,11 +528,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         driverEmail, 
         deliveryAddress, 
         deliveryNotes,
-        invoiceNumber,
-        invoiceNumber2,
-        invoiceNumber3,
-        invoiceNumber4,
-        invoiceNumber5
+        orderNumber,
+        orderNumber2,
+        orderNumber3,
+        orderNumber4,
+        orderNumber5
       } = req.body;
       
       if (!driverEmail || !deliveryAddress) {
@@ -548,11 +548,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         driverEmail,
         deliveryAddress,
         deliveryNotes,
-        invoiceNumber,
-        invoiceNumber2,
-        invoiceNumber3,
-        invoiceNumber4,
-        invoiceNumber5,
+        orderNumber,
+        orderNumber2,
+        orderNumber3,
+        orderNumber4,
+        orderNumber5,
       });
       
       res.json(updatedJob);
