@@ -331,6 +331,18 @@ export default function JobDetail() {
               <div className="text-sm text-muted-foreground">Ship To</div>
               <div className="font-medium">{job.customerShipTo || 'N/A'}</div>
             </div>
+            <div>
+              <div className="text-sm text-muted-foreground">Ship to ID</div>
+              <div className="font-medium">{job.p21ShipToId || 'N/A'}</div>
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground">Contact Name</div>
+              <div className="font-medium">{job.contactName || 'N/A'}</div>
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground">Contact Number</div>
+              <div className="font-medium">{job.contactNumber || 'N/A'}</div>
+            </div>
           </CardContent>
         </Card>
 
