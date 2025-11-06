@@ -20,6 +20,7 @@ import {
 import JobStatusBadge from "@/components/job-status-badge";
 import { CheckInModal } from "@/components/check-in-modal";
 import { DeliveryDispatchModal } from "@/components/delivery-dispatch-modal";
+import { ReadyForPickupModal } from "@/components/ready-for-pickup-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -43,6 +44,7 @@ export default function JobDetail() {
   const jobId = params.id;
   const [checkInModalOpen, setCheckInModalOpen] = useState(false);
   const [deliveryDispatchModalOpen, setDeliveryDispatchModalOpen] = useState(false);
+  const [readyForPickupModalOpen, setReadyForPickupModalOpen] = useState(false);
 
   const { data: job, isLoading: jobLoading } = useQuery<any>({
     queryKey: [`/api/jobs/${jobId}`],
@@ -272,7 +274,7 @@ export default function JobDetail() {
             </Button>
 
             <Button 
-              onClick={() => actionMutation.mutate({ action: 'mark-ready', data: { deliveryMethod: 'pickup' } })}
+              onClick={() => setReadyForPickupModalOpen(true)}
               disabled={!isDevMode && (currentState !== 'service_complete' || isPending)}
               className="btn-primary"
               data-testid="button-ready-pickup"
@@ -486,6 +488,21 @@ export default function JobDetail() {
         <DeliveryDispatchModal
           open={deliveryDispatchModalOpen}
           onOpenChange={setDeliveryDispatchModalOpen}
+          job={job}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}`] });
+            queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}/events`] });
+            queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/metrics"] });
+          }}
+        />
+      )}
+
+      {/* Ready for Pickup Modal */}
+      {job && (
+        <ReadyForPickupModal
+          open={readyForPickupModalOpen}
+          onOpenChange={setReadyForPickupModalOpen}
           job={job}
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}`] });
