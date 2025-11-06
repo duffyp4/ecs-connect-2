@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useSearch, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,28 @@ import { CheckInModal } from "@/components/check-in-modal";
 import { DeliveryDispatchModal } from "@/components/delivery-dispatch-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+
+// Helper functions for URL query parameters
+function parseQueryParams(search: string): URLSearchParams {
+  return new URLSearchParams(search);
+}
+
+function updateQueryParams(params: Record<string, string | string[] | null>): string {
+  const searchParams = new URLSearchParams(window.location.search);
+  
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === null || value === '' || (Array.isArray(value) && value.length === 0)) {
+      searchParams.delete(key);
+    } else if (Array.isArray(value)) {
+      searchParams.set(key, value.join(','));
+    } else {
+      searchParams.set(key, value);
+    }
+  });
+  
+  const queryString = searchParams.toString();
+  return queryString ? `?${queryString}` : '';
+}
 
 type ActionType = {
   id: string;
