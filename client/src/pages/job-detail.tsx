@@ -392,48 +392,36 @@ export default function JobDetail() {
         </Card>
       )}
 
-      {/* Order Numbers if applicable */}
-      {(job.orderNumber || job.orderNumber2 || job.orderNumber3 || job.orderNumber4 || job.orderNumber5) && (
-        <Card>
-          <CardHeader className="card-header">
-            <CardTitle className="text-white">Order Numbers</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {job.orderNumber && (
-                <div>
-                  <div className="text-sm text-muted-foreground">Order Number</div>
-                  <div className="font-medium" data-testid="text-order-number">{job.orderNumber}</div>
-                </div>
-              )}
-              {job.orderNumber2 && (
-                <div>
-                  <div className="text-sm text-muted-foreground">Order Number - #2</div>
-                  <div className="font-medium" data-testid="text-order-number-2">{job.orderNumber2}</div>
-                </div>
-              )}
-              {job.orderNumber3 && (
-                <div>
-                  <div className="text-sm text-muted-foreground">Order Number - #3</div>
-                  <div className="font-medium" data-testid="text-order-number-3">{job.orderNumber3}</div>
-                </div>
-              )}
-              {job.orderNumber4 && (
-                <div>
-                  <div className="text-sm text-muted-foreground">Order Number - #4</div>
-                  <div className="font-medium" data-testid="text-order-number-4">{job.orderNumber4}</div>
-                </div>
-              )}
-              {job.orderNumber5 && (
-                <div>
-                  <div className="text-sm text-muted-foreground">Order Number - #5</div>
-                  <div className="font-medium" data-testid="text-order-number-5">{job.orderNumber5}</div>
-                </div>
-              )}
+      {/* Order Numbers */}
+      <Card>
+        <CardHeader className="card-header">
+          <CardTitle className="text-white">Order Numbers</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div>
+              <div className="text-sm text-muted-foreground">Order Number</div>
+              <div className="font-medium" data-testid="text-order-number">{job.orderNumber || '-'}</div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <div>
+              <div className="text-sm text-muted-foreground">Order Number - #2</div>
+              <div className="font-medium" data-testid="text-order-number-2">{job.orderNumber2 || '-'}</div>
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground">Order Number - #3</div>
+              <div className="font-medium" data-testid="text-order-number-3">{job.orderNumber3 || '-'}</div>
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground">Order Number - #4</div>
+              <div className="font-medium" data-testid="text-order-number-4">{job.orderNumber4 || '-'}</div>
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground">Order Number - #5</div>
+              <div className="font-medium" data-testid="text-order-number-5">{job.orderNumber5 || '-'}</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Event Timeline */}
       <Card>
