@@ -126,11 +126,9 @@ export default function JobList() {
       pageSize: pageSize !== 25 ? pageSize.toString() : null,
     });
     
-    // Update URL without triggering a navigation
-    const currentPath = window.location.pathname;
-    const newUrl = currentPath + newSearch;
-    window.history.replaceState({}, '', newUrl);
-  }, [statusFilter, debouncedSearchQuery, dateFrom, dateTo, sortBy, sortOrder, currentPage, pageSize]);
+    // Update URL using Wouter's setLocation with { replace: true } to avoid creating new history entries
+    setLocation('/jobs' + newSearch, { replace: true });
+  }, [statusFilter, debouncedSearchQuery, dateFrom, dateTo, sortBy, sortOrder, currentPage, pageSize, setLocation]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
