@@ -40,11 +40,11 @@ const deliveryDispatchSchema = z.object({
   location: z.string().min(1, "Location is required"),
   customerName: z.string(),
   customerShipTo: z.string(),
-  invoiceNumber: z.string().optional(),
-  invoiceNumber2: z.string().optional(),
-  invoiceNumber3: z.string().optional(),
-  invoiceNumber4: z.string().optional(),
-  invoiceNumber5: z.string().optional(),
+  orderNumber: z.string().optional(),
+  orderNumber2: z.string().optional(),
+  orderNumber3: z.string().optional(),
+  orderNumber4: z.string().optional(),
+  orderNumber5: z.string().optional(),
   driver: z.string().min(1, "Driver is required"),
   driverEmail: z.string(),
   deliveryNotes: z.string().optional(),
@@ -82,11 +82,11 @@ export function DeliveryDispatchModal({
       location: job.shopName || "",
       customerName: job.customerName || "",
       customerShipTo: job.customerShipTo || "",
-      invoiceNumber: job.invoiceNumber || "",
-      invoiceNumber2: job.invoiceNumber2 || "",
-      invoiceNumber3: job.invoiceNumber3 || "",
-      invoiceNumber4: job.invoiceNumber4 || "",
-      invoiceNumber5: job.invoiceNumber5 || "",
+      orderNumber: job.orderNumber || "",
+      orderNumber2: job.orderNumber2 || "",
+      orderNumber3: job.orderNumber3 || "",
+      orderNumber4: job.orderNumber4 || "",
+      orderNumber5: job.orderNumber5 || "",
       driver: "",
       driverEmail: "",
       deliveryNotes: job.deliveryNotes || "",
@@ -102,11 +102,11 @@ export function DeliveryDispatchModal({
         driverEmail: data.driverEmail,
         deliveryAddress: data.customerShipTo,
         deliveryNotes: data.deliveryNotes,
-        invoiceNumber: data.invoiceNumber,
-        invoiceNumber2: data.invoiceNumber2,
-        invoiceNumber3: data.invoiceNumber3,
-        invoiceNumber4: data.invoiceNumber4,
-        invoiceNumber5: data.invoiceNumber5,
+        orderNumber: data.orderNumber,
+        orderNumber2: data.orderNumber2,
+        orderNumber3: data.orderNumber3,
+        orderNumber4: data.orderNumber4,
+        orderNumber5: data.orderNumber5,
       });
 
       // Invalidate queries to refresh data immediately
@@ -219,7 +219,7 @@ export function DeliveryDispatchModal({
                 {/* Order Number */}
                 <FormField
                   control={form.control}
-                  name="invoiceNumber"
+                  name="orderNumber"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Order Number</FormLabel>
@@ -227,7 +227,7 @@ export function DeliveryDispatchModal({
                         <Input
                           {...field}
                           placeholder="Enter order number"
-                          data-testid="input-invoice-number"
+                          data-testid="input-order-number"
                         />
                       </FormControl>
                       <FormMessage />
@@ -238,7 +238,7 @@ export function DeliveryDispatchModal({
                 {/* Order Number - #2 */}
                 <FormField
                   control={form.control}
-                  name="invoiceNumber2"
+                  name="orderNumber2"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Order Number - #2</FormLabel>
@@ -246,7 +246,7 @@ export function DeliveryDispatchModal({
                         <Input
                           {...field}
                           placeholder="Enter order number #2"
-                          data-testid="input-invoice-number-2"
+                          data-testid="input-order-number-2"
                         />
                       </FormControl>
                       <FormMessage />
@@ -257,7 +257,7 @@ export function DeliveryDispatchModal({
                 {/* Order Number - #3 */}
                 <FormField
                   control={form.control}
-                  name="invoiceNumber3"
+                  name="orderNumber3"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Order Number - #3</FormLabel>
@@ -265,7 +265,7 @@ export function DeliveryDispatchModal({
                         <Input
                           {...field}
                           placeholder="Enter order number #3"
-                          data-testid="input-invoice-number-3"
+                          data-testid="input-order-number-3"
                         />
                       </FormControl>
                       <FormMessage />
@@ -276,7 +276,7 @@ export function DeliveryDispatchModal({
                 {/* Order Number - #4 */}
                 <FormField
                   control={form.control}
-                  name="invoiceNumber4"
+                  name="orderNumber4"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Order Number - #4</FormLabel>
@@ -284,7 +284,7 @@ export function DeliveryDispatchModal({
                         <Input
                           {...field}
                           placeholder="Enter order number #4"
-                          data-testid="input-invoice-number-4"
+                          data-testid="input-order-number-4"
                         />
                       </FormControl>
                       <FormMessage />
@@ -295,7 +295,7 @@ export function DeliveryDispatchModal({
                 {/* Order Number - #5 */}
                 <FormField
                   control={form.control}
-                  name="invoiceNumber5"
+                  name="orderNumber5"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Order Number - #5</FormLabel>
@@ -303,7 +303,7 @@ export function DeliveryDispatchModal({
                         <Input
                           {...field}
                           placeholder="Enter order number #5"
-                          data-testid="input-invoice-number-5"
+                          data-testid="input-order-number-5"
                         />
                       </FormControl>
                       <FormMessage />
