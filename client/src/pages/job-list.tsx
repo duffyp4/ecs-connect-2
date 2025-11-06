@@ -461,10 +461,10 @@ export default function JobList() {
                 <tr className="border-b bg-[var(--ecs-light)]">
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Ship To</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Customer Name</th>
-                  <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Order Number</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Current Status</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Initiated</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Completed</th>
+                  <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Order Number</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Actions</th>
                 </tr>
               </thead>
@@ -490,6 +490,15 @@ export default function JobList() {
                           <div className="font-medium">{job.customerName}</div>
                         </td>
                         <td className="p-4">
+                          <JobStatusBadge status={job.state} />
+                        </td>
+                        <td className="p-4">
+                          {job.initiatedAt ? new Date(job.initiatedAt).toLocaleString() : '-'}
+                        </td>
+                        <td className="p-4">
+                          {job.completedAt ? new Date(job.completedAt).toLocaleString() : '-'}
+                        </td>
+                        <td className="p-4">
                           <div className="font-medium" data-testid={`text-order-number-${job.jobId}`}>
                             {(() => {
                               const orderNumbers = [
@@ -504,15 +513,6 @@ export default function JobList() {
                               return `${orderNumbers[0]} +${orderNumbers.length - 1} more`;
                             })()}
                           </div>
-                        </td>
-                        <td className="p-4">
-                          <JobStatusBadge status={job.state} />
-                        </td>
-                        <td className="p-4">
-                          {job.initiatedAt ? new Date(job.initiatedAt).toLocaleString() : '-'}
-                        </td>
-                        <td className="p-4">
-                          {job.completedAt ? new Date(job.completedAt).toLocaleString() : '-'}
                         </td>
                         <td className="p-4">
                           {availableActions.length === 0 ? (
