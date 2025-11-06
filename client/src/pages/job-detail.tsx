@@ -352,6 +352,10 @@ export default function JobDetail() {
           </CardHeader>
           <CardContent className="p-6 space-y-3">
             <div>
+              <div className="text-sm text-muted-foreground">Job ID</div>
+              <div className="font-medium" data-testid="text-job-id">{job.jobId}</div>
+            </div>
+            <div>
               <div className="text-sm text-muted-foreground">Shop Location</div>
               <div className="font-medium">{job.shopName || 'N/A'}</div>
             </div>

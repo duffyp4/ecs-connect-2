@@ -459,7 +459,7 @@ export default function JobList() {
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-[var(--ecs-light)]">
-                  <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Job ID</th>
+                  <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Ship To</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Customer Name</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Current Status</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Initiated</th>
@@ -482,7 +482,7 @@ export default function JobList() {
                       <tr key={job.id} className="border-b hover:bg-gray-50">
                         <td className="p-4">
                           <Link href={`/jobs/${job.jobId}`}>
-                            <span className="job-id cursor-pointer hover:underline" data-testid={`link-job-${job.jobId}`}>{job.jobId}</span>
+                            <span className="job-id cursor-pointer hover:underline" data-testid={`link-job-${job.jobId}`}>{job.customerShipTo || 'N/A'}</span>
                           </Link>
                         </td>
                         <td className="p-4">
