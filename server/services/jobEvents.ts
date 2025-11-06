@@ -404,6 +404,13 @@ export class JobEventsService {
   async markReady(
     jobId: string,
     deliveryMethod: 'pickup' | 'delivery',
+    orderNumbers?: {
+      orderNumber?: string;
+      orderNumber2?: string;
+      orderNumber3?: string;
+      orderNumber4?: string;
+      orderNumber5?: string;
+    },
     options: StateChangeOptions = {}
   ): Promise<Job> {
     const targetState: JobState = deliveryMethod === 'pickup' ? 'ready_for_pickup' : 'queued_for_delivery';
@@ -414,9 +421,16 @@ export class JobEventsService {
       throw new Error(`Job ${jobId} not found`);
     }
 
-    // Update delivery method
+    // Update delivery method and order numbers (if provided)
     await storage.updateJob(job.id, {
       deliveryMethod,
+      ...(orderNumbers && {
+        orderNumber: orderNumbers.orderNumber,
+        orderNumber2: orderNumbers.orderNumber2,
+        orderNumber3: orderNumbers.orderNumber3,
+        orderNumber4: orderNumbers.orderNumber4,
+        orderNumber5: orderNumbers.orderNumber5,
+      }),
       updatedAt: new Date(),
     });
 
