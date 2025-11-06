@@ -501,7 +501,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/jobs/:jobId/mark-ready", requireAuth, async (req, res) => {
     try {
       const { jobId } = req.params;
-      const { deliveryMethod } = req.body;
+      const { 
+        deliveryMethod,
+        orderNumber,
+        orderNumber2,
+        orderNumber3,
+        orderNumber4,
+        orderNumber5
+      } = req.body;
       
       if (!deliveryMethod || !['pickup', 'delivery'].includes(deliveryMethod)) {
         return res.status(400).json({ message: "Valid delivery method (pickup or delivery) is required" });
@@ -512,7 +519,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Job not found" });
       }
 
-      const updatedJob = await jobEventsService.markReady(job.jobId, deliveryMethod);
+      const updatedJob = await jobEventsService.markReady(job.jobId, deliveryMethod, {
+        orderNumber,
+        orderNumber2,
+        orderNumber3,
+        orderNumber4,
+        orderNumber5,
+      });
       res.json(updatedJob);
     } catch (error) {
       console.error("Error marking job as ready:", error);
