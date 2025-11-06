@@ -53,17 +53,34 @@ type PaginatedResponse = {
 };
 
 export default function JobList() {
-  const [statusFilter, setStatusFilter] = useState<string[]>([]);
-  const [tempStatusFilter, setTempStatusFilter] = useState<string[]>([]);
+  const searchString = useSearch();
+  const [, setLocation] = useLocation();
+  
+  // Initialize state from URL parameters on mount
+  const params = parseQueryParams(searchString);
+  const [statusFilter, setStatusFilter] = useState<string[]>(() => {
+    const status = params.get('status');
+    return status ? status.split(',') : [];
+  });
+  const [tempStatusFilter, setTempStatusFilter] = useState<string[]>(() => {
+    const status = params.get('status');
+    return status ? status.split(',') : [];
+  });
   const [statusFilterOpen, setStatusFilterOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>("");
-  const [dateFrom, setDateFrom] = useState<string>("");
-  const [dateTo, setDateTo] = useState<string>("");
-  const [sortBy, setSortBy] = useState<string>("initiatedAt");
-  const [sortOrder, setSortOrder] = useState<string>("desc");
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(25);
+  const [searchQuery, setSearchQuery] = useState<string>(() => params.get('search') || '');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>(() => params.get('search') || '');
+  const [dateFrom, setDateFrom] = useState<string>(() => params.get('dateFrom') || '');
+  const [dateTo, setDateTo] = useState<string>(() => params.get('dateTo') || '');
+  const [sortBy, setSortBy] = useState<string>(() => params.get('sortBy') || 'initiatedAt');
+  const [sortOrder, setSortOrder] = useState<string>(() => params.get('sortOrder') || 'desc');
+  const [currentPage, setCurrentPage] = useState<number>(() => {
+    const page = params.get('page');
+    return page ? parseInt(page, 10) : 1;
+  });
+  const [pageSize, setPageSize] = useState<number>(() => {
+    const size = params.get('pageSize');
+    return size ? parseInt(size, 10) : 25;
+  });
   const [checkInModalOpen, setCheckInModalOpen] = useState(false);
   const [deliveryDispatchModalOpen, setDeliveryDispatchModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<any | null>(null);
