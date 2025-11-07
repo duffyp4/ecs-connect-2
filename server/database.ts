@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { Pool, neonConfig } from "@neondatabase/serverless";
-import { jobs, technicians, jobEvents, type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent } from "@shared/schema";
+import { jobs, technicians, jobEvents, users, type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent, type User, type UpsertUser } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { IStorage } from "./storage";
@@ -121,6 +121,27 @@ export class DatabaseStorage implements IStorage {
   async getActiveTechnicians(): Promise<Technician[]> {
     const result = await this.db.select().from(technicians).where(eq(technicians.active, "true"));
     return result;
+  }
+
+  // Replit Auth: User methods (required for authentication)
+  async getUser(id: string): Promise<User | undefined> {
+    const result = await this.db.select().from(users).where(eq(users.id, id));
+    return result[0];
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const result = await this.db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return result[0];
   }
 
   private generateJobId(): string {

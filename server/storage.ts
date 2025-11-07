@@ -1,7 +1,11 @@
-import { type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent } from "@shared/schema";
+import { type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent, type User, type UpsertUser } from "@shared/schema";
 import { DatabaseStorage } from "./database";
 
 export interface IStorage {
+  // Replit Auth: User methods (required for authentication)
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
+  
   // Job methods
   getJob(id: string): Promise<Job | undefined>;
   getJobByJobId(jobId: string): Promise<Job | undefined>;
