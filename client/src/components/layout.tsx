@@ -20,11 +20,27 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const [location] = useLocation();
-  const { logout, isLoggingOut } = useAuth();
-  const { toast } = useToast();
+  const { user } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isDevMode, toggleDevMode } = useDevMode();
   const isDevelopment = import.meta.env.MODE !== 'production';
+
+  const handleLogout = () => {
+    window.location.href = "/api/logout";
+  };
+
+  const getUserDisplayName = () => {
+    if (user?.firstName && user?.lastName) {
+      return `${user.firstName} ${user.lastName}`;
+    }
+    if (user?.firstName) {
+      return user.firstName;
+    }
+    if (user?.email) {
+      return user.email.split('@')[0];
+    }
+    return "User";
+  };
 
   const navigationItems = [
     { href: "/", label: "New Job", icon: Plus },
@@ -56,26 +72,34 @@ export default function Layout({ children }: LayoutProps) {
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center space-x-2">
-                <User className="h-4 w-4" />
-                <span className="hidden sm:inline">CSR User</span>
+              <Button variant="ghost" className="flex items-center space-x-2" data-testid="button-user-menu">
+                {user?.profileImageUrl ? (
+                  <img 
+                    src={user.profileImageUrl} 
+                    alt="Profile" 
+                    className="h-6 w-6 rounded-full object-cover"
+                  />
+                ) : (
+                  <User className="h-4 w-4" />
+                )}
+                <span className="hidden sm:inline">{getUserDisplayName()}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              {user?.email && (
+                <>
+                  <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                    {user.email}
+                  </div>
+                  <DropdownMenuSeparator />
+                </>
+              )}
               <DropdownMenuItem 
-                onClick={() => logout(undefined, {
-                  onSuccess: () => {
-                    toast({
-                      title: "Logged out",
-                      description: "You have been logged out successfully",
-                    });
-                  },
-                })}
-                disabled={isLoggingOut}
+                onClick={handleLogout}
                 data-testid="button-logout"
               >
                 <LogOut className="mr-2 h-4 w-4" />
-                {isLoggingOut ? "Logging out..." : "Logout"}
+                Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
