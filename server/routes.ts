@@ -8,17 +8,29 @@ import { googleSheetsService } from "./services/googleSheets";
 import { jobTrackerService } from "./services/jobTracker";
 import { referenceDataService } from "./services/referenceData";
 import { jobEventsService } from "./services/jobEvents";
-import { setupAuth, requireAuth } from "./auth";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup authentication
-  setupAuth(app);
+  // Setup Replit Auth
+  await setupAuth(app);
+
+  // Auth routes - get authenticated user info
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
 
   // Start job tracking polling
   jobTrackerService.startPolling();
 
   // Get all technicians - protected route
-  app.get("/api/technicians", requireAuth, async (req, res) => {
+  app.get("/api/technicians", isAuthenticated, async (req, res) => {
     try {
       const jobs = await storage.getAllJobs();
       // Extract unique shop handoff emails from jobs
@@ -308,7 +320,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create new job
-  app.post("/api/jobs", requireAuth, async (req, res) => {
+  app.post("/api/jobs", isAuthenticated, async (req, res) => {
     try {
       const { arrivalPath, pickupDriverEmail, pickupNotes, ...jobData } = req.body;
       
@@ -359,7 +371,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Job Action Endpoints - Pickup and Delivery Workflow
   
   // Dispatch pickup for a job
-  app.post("/api/jobs/:jobId/dispatch-pickup", requireAuth, async (req, res) => {
+  app.post("/api/jobs/:jobId/dispatch-pickup", isAuthenticated, async (req, res) => {
     try {
       const { jobId } = req.params;
       const { driverEmail, pickupNotes } = req.body;
@@ -390,7 +402,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Mark job as picked up
-  app.post("/api/jobs/:jobId/mark-picked-up", requireAuth, async (req, res) => {
+  app.post("/api/jobs/:jobId/mark-picked-up", isAuthenticated, async (req, res) => {
     try {
       const { jobId } = req.params;
       const { itemCount } = req.body;
@@ -409,7 +421,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Check in job at shop
-  app.post("/api/jobs/:jobId/check-in", requireAuth, async (req, res) => {
+  app.post("/api/jobs/:jobId/check-in", isAuthenticated, async (req, res) => {
     try {
       const { jobId } = req.params;
       
@@ -475,7 +487,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Start service on job
-  app.post("/api/jobs/:jobId/start-service", requireAuth, async (req, res) => {
+  app.post("/api/jobs/:jobId/start-service", isAuthenticated, async (req, res) => {
     try {
       const { jobId } = req.params;
       const { technicianName } = req.body;
@@ -498,7 +510,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Mark job as ready (for pickup or delivery)
-  app.post("/api/jobs/:jobId/mark-ready", requireAuth, async (req, res) => {
+  app.post("/api/jobs/:jobId/mark-ready", isAuthenticated, async (req, res) => {
     try {
       const { jobId } = req.params;
       const { 
@@ -534,7 +546,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dispatch delivery for a job
-  app.post("/api/jobs/:jobId/dispatch-delivery", requireAuth, async (req, res) => {
+  app.post("/api/jobs/:jobId/dispatch-delivery", isAuthenticated, async (req, res) => {
     try {
       const { jobId } = req.params;
       const { 
@@ -576,7 +588,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Mark job as delivered
-  app.post("/api/jobs/:jobId/mark-delivered", requireAuth, async (req, res) => {
+  app.post("/api/jobs/:jobId/mark-delivered", isAuthenticated, async (req, res) => {
     try {
       const { jobId } = req.params;
       
@@ -594,7 +606,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Mark job as picked up from shop (post-completion tracking)
-  app.post("/api/jobs/:jobId/mark-picked-up-from-shop", requireAuth, async (req, res) => {
+  app.post("/api/jobs/:jobId/mark-picked-up-from-shop", isAuthenticated, async (req, res) => {
     try {
       const { jobId } = req.params;
       
@@ -612,7 +624,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Cancel job
-  app.post("/api/jobs/:jobId/cancel", requireAuth, async (req, res) => {
+  app.post("/api/jobs/:jobId/cancel", isAuthenticated, async (req, res) => {
     try {
       const { jobId } = req.params;
       const { reason } = req.body;
@@ -631,7 +643,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get job events timeline
-  app.get("/api/jobs/:jobId/events", requireAuth, async (req, res) => {
+  app.get("/api/jobs/:jobId/events", isAuthenticated, async (req, res) => {
     try {
       const { jobId } = req.params;
       
@@ -654,7 +666,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all jobs
-  app.get("/api/jobs", requireAuth, async (req, res) => {
+  app.get("/api/jobs", isAuthenticated, async (req, res) => {
     try {
       const { status, search, dateFrom, dateTo, sortBy, sortOrder, page, pageSize } = req.query;
       
@@ -771,7 +783,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete job by ID (for rollback on failed operations)
-  app.delete("/api/jobs/:jobId", requireAuth, async (req, res) => {
+  app.delete("/api/jobs/:jobId", isAuthenticated, async (req, res) => {
     try {
       const { jobId } = req.params;
       
