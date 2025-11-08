@@ -9,7 +9,6 @@ import Home from "@/pages/home";
 import Dashboard from "@/pages/dashboard";
 import JobList from "@/pages/job-list";
 import JobDetail from "@/pages/job-detail";
-import AdminPage from "@/pages/admin";
 import Settings from "@/pages/settings";
 import { Landing } from "@/pages/landing";
 import { AccessDenied } from "@/pages/access-denied";
@@ -46,7 +45,6 @@ function Router() {
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/jobs" component={JobList} />
         <Route path="/jobs/:id" component={JobDetail} />
-        <Route path="/admin" component={AdminPage} />
         <Route path="/settings" component={Settings} />
         <Route component={NotFound} />
       </Switch>
