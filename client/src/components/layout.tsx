@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Bolt, Plus, BarChart3, List, FileText, User, LogOut, Menu, X, Code, Shield, Settings } from "lucide-react";
+import { Bolt, Plus, BarChart3, List, FileText, User, LogOut, Menu, X, Code, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -42,17 +42,11 @@ export default function Layout({ children }: LayoutProps) {
     return "User";
   };
 
-  const isAdmin = user?.role === 'admin';
-
   const navigationItems = [
     { href: "/", label: "New Job", icon: Plus },
     { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
     { href: "/jobs", label: "Job List", icon: List },
   ];
-
-  if (isAdmin) {
-    navigationItems.push({ href: "/admin", label: "Admin", icon: Shield });
-  }
 
   return (
     <div className="min-h-screen bg-[var(--ecs-light)]">
