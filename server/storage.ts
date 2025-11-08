@@ -1,10 +1,17 @@
-import { type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent, type User, type UpsertUser } from "@shared/schema";
+import { type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent, type User, type UpsertUser, type Whitelist, type InsertWhitelist } from "@shared/schema";
 import { DatabaseStorage } from "./database";
 
 export interface IStorage {
   // Replit Auth: User methods (required for authentication)
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  updateUserRole(userId: string, role: string): Promise<User | undefined>;
+  
+  // Whitelist methods
+  isEmailWhitelisted(email: string): Promise<boolean>;
+  addToWhitelist(whitelist: InsertWhitelist): Promise<Whitelist>;
+  removeFromWhitelist(email: string): Promise<void>;
+  getAllWhitelist(): Promise<Whitelist[]>;
   
   // Job methods
   getJob(id: string): Promise<Job | undefined>;

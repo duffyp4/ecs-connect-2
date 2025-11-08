@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { Pool, neonConfig } from "@neondatabase/serverless";
-import { jobs, technicians, jobEvents, users, type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent, type User, type UpsertUser } from "@shared/schema";
+import { jobs, technicians, jobEvents, users, whitelist, type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent, type User, type UpsertUser, type Whitelist, type InsertWhitelist } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { IStorage } from "./storage";
@@ -142,6 +142,46 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return result[0];
+  }
+
+  async updateUserRole(userId: string, role: string): Promise<User | undefined> {
+    const result = await this.db
+      .update(users)
+      .set({ role, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return result[0];
+  }
+
+  // Whitelist methods
+  async isEmailWhitelisted(email: string): Promise<boolean> {
+    const result = await this.db
+      .select()
+      .from(whitelist)
+      .where(eq(whitelist.email, email.toLowerCase()));
+    return result.length > 0;
+  }
+
+  async addToWhitelist(insertWhitelist: InsertWhitelist): Promise<Whitelist> {
+    const result = await this.db
+      .insert(whitelist)
+      .values({
+        ...insertWhitelist,
+        email: insertWhitelist.email.toLowerCase(),
+      })
+      .returning();
+    return result[0];
+  }
+
+  async removeFromWhitelist(email: string): Promise<void> {
+    await this.db
+      .delete(whitelist)
+      .where(eq(whitelist.email, email.toLowerCase()));
+  }
+
+  async getAllWhitelist(): Promise<Whitelist[]> {
+    const result = await this.db.select().from(whitelist);
+    return result;
   }
 
   private generateJobId(): string {
