@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { Pool, neonConfig } from "@neondatabase/serverless";
-import { jobs, technicians, jobEvents, users, whitelist, type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent, type User, type UpsertUser, type Whitelist, type InsertWhitelist } from "@shared/schema";
+import { jobs, technicians, jobEvents, users, whitelist, jobComments, type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent, type User, type UpsertUser, type Whitelist, type InsertWhitelist, type JobComment, type InsertJobComment } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { IStorage } from "./storage";
@@ -194,6 +194,20 @@ export class DatabaseStorage implements IStorage {
       })
       .from(whitelist)
       .leftJoin(users, eq(whitelist.email, users.email));
+    return result;
+  }
+
+  // Job Comment methods
+  async createJobComment(insertComment: InsertJobComment): Promise<JobComment> {
+    const result = await this.db.insert(jobComments).values({
+      id: randomUUID(),
+      ...insertComment,
+    }).returning();
+    return result[0];
+  }
+
+  async getJobComments(jobId: string): Promise<JobComment[]> {
+    const result = await this.db.select().from(jobComments).where(eq(jobComments.jobId, jobId)).orderBy(jobComments.createdAt);
     return result;
   }
 
