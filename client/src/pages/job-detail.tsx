@@ -25,7 +25,7 @@ import { DeliveryDispatchModal } from "@/components/delivery-dispatch-modal";
 import { ReadyForPickupModal } from "@/components/ready-for-pickup-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
+import { useTimezone } from "@/hooks/useTimezone";
 import { useDevMode } from "@/contexts/DevModeContext";
 
 type JobEvent = {
@@ -54,6 +54,7 @@ export default function JobDetail() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { isDevMode } = useDevMode();
+  const { formatDateTime } = useTimezone();
   const jobId = params.id;
   const [checkInModalOpen, setCheckInModalOpen] = useState(false);
   const [deliveryDispatchModalOpen, setDeliveryDispatchModalOpen] = useState(false);
@@ -410,7 +411,7 @@ export default function JobDetail() {
             <div>
               <div className="text-sm text-muted-foreground">Initiated At</div>
               <div className="font-medium">
-                {job.initiatedAt ? format(new Date(job.initiatedAt), 'PPpp') : 'N/A'}
+                {formatDateTime(job.initiatedAt, 'PPpp')}
               </div>
             </div>
             <div>
@@ -515,7 +516,7 @@ export default function JobDetail() {
                         <div className="flex-1 pb-8">
                           <div className="font-medium">{getEventLabel(event)}</div>
                           <div className="text-sm text-muted-foreground">
-                            {event.timestamp ? format(new Date(event.timestamp), 'PPpp') : 'N/A'}
+                            {formatDateTime(event.timestamp, 'PPpp')}
                           </div>
                           {getEventDetails(event).length > 0 && (
                             <div className="text-sm text-muted-foreground mt-1">
@@ -581,7 +582,7 @@ export default function JobDetail() {
                           {displayName}
                         </div>
                         <div className="text-xs text-muted-foreground" data-testid={`text-comment-time-${comment.id}`}>
-                          {format(new Date(comment.createdAt), 'PPp')}
+                          {formatDateTime(comment.createdAt, 'PPp')}
                         </div>
                       </div>
                       <div className="text-sm" data-testid={`text-comment-text-${comment.id}`}>
