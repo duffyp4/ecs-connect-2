@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Bolt, Plus, BarChart3, List, FileText, User, LogOut, Menu, X, Code, Shield } from "lucide-react";
+import { Bolt, Plus, BarChart3, List, FileText, User, LogOut, Menu, X, Code, Shield, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -100,6 +100,12 @@ export default function Layout({ children }: LayoutProps) {
                   <DropdownMenuSeparator />
                 </>
               )}
+              <DropdownMenuItem asChild>
+                <Link href="/settings" data-testid="link-settings">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem 
                 onClick={handleLogout}
                 data-testid="button-logout"
