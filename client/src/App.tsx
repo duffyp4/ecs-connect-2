@@ -9,7 +9,9 @@ import Home from "@/pages/home";
 import Dashboard from "@/pages/dashboard";
 import JobList from "@/pages/job-list";
 import JobDetail from "@/pages/job-detail";
+import AdminPage from "@/pages/admin";
 import { Landing } from "@/pages/landing";
+import { AccessDenied } from "@/pages/access-denied";
 import Layout from "@/components/layout";
 import { DevModeProvider } from "@/contexts/DevModeContext";
 
@@ -27,7 +29,12 @@ function Router() {
 
   // Show login page if not authenticated
   if (!isAuthenticated) {
-    return <Landing />;
+    return (
+      <Switch>
+        <Route path="/access-denied" component={AccessDenied} />
+        <Route component={Landing} />
+      </Switch>
+    );
   }
 
   // Show main app if authenticated
@@ -38,6 +45,7 @@ function Router() {
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/jobs" component={JobList} />
         <Route path="/jobs/:id" component={JobDetail} />
+        <Route path="/admin" component={AdminPage} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
