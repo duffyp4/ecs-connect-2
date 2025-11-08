@@ -21,12 +21,29 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
+  role: varchar("role").notNull().default("user"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+
+// Email Whitelist table
+export const whitelist = pgTable("whitelist", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: varchar("email").notNull().unique(),
+  addedBy: varchar("added_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertWhitelistSchema = createInsertSchema(whitelist).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertWhitelist = z.infer<typeof insertWhitelistSchema>;
+export type Whitelist = typeof whitelist.$inferSelect;
 
 export const jobs = pgTable("jobs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
