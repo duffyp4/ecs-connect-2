@@ -6,6 +6,10 @@ import { randomUUID } from "crypto";
 import { IStorage } from "./storage";
 import ws from "ws";
 
+export interface WhitelistWithRole extends Whitelist {
+  role?: string | null;
+}
+
 neonConfig.webSocketConstructor = ws;
 
 export class DatabaseStorage implements IStorage {
@@ -179,8 +183,17 @@ export class DatabaseStorage implements IStorage {
       .where(eq(whitelist.email, email.toLowerCase()));
   }
 
-  async getAllWhitelist(): Promise<Whitelist[]> {
-    const result = await this.db.select().from(whitelist);
+  async getAllWhitelist(): Promise<WhitelistWithRole[]> {
+    const result = await this.db
+      .select({
+        id: whitelist.id,
+        email: whitelist.email,
+        addedBy: whitelist.addedBy,
+        createdAt: whitelist.createdAt,
+        role: users.role,
+      })
+      .from(whitelist)
+      .leftJoin(users, eq(whitelist.email, users.email));
     return result;
   }
 

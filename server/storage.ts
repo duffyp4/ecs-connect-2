@@ -1,5 +1,5 @@
 import { type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent, type User, type UpsertUser, type Whitelist, type InsertWhitelist } from "@shared/schema";
-import { DatabaseStorage } from "./database";
+import { DatabaseStorage, type WhitelistWithRole } from "./database";
 
 export interface IStorage {
   // Replit Auth: User methods (required for authentication)
@@ -11,7 +11,7 @@ export interface IStorage {
   isEmailWhitelisted(email: string): Promise<boolean>;
   addToWhitelist(whitelist: InsertWhitelist): Promise<Whitelist>;
   removeFromWhitelist(email: string): Promise<void>;
-  getAllWhitelist(): Promise<Whitelist[]>;
+  getAllWhitelist(): Promise<WhitelistWithRole[]>;
   
   // Job methods
   getJob(id: string): Promise<Job | undefined>;

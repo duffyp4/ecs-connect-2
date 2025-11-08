@@ -5,15 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { Trash2, UserPlus, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Whitelist } from "@shared/schema";
+
+interface WhitelistWithRole extends Whitelist {
+  role?: string | null;
+}
 
 export default function AdminPage() {
   const [newEmail, setNewEmail] = useState("");
   const { toast } = useToast();
 
-  const { data: whitelistEntries, isLoading } = useQuery<Whitelist[]>({
+  const { data: whitelistEntries, isLoading } = useQuery<WhitelistWithRole[]>({
     queryKey: ['/api/admin/whitelist'],
   });
 
@@ -117,6 +122,7 @@ export default function AdminPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Email Address</TableHead>
+                    <TableHead>Role</TableHead>
                     <TableHead>Added</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -125,6 +131,18 @@ export default function AdminPage() {
                   {whitelistEntries.map((entry) => (
                     <TableRow key={entry.id} data-testid={`row-whitelist-${entry.email}`}>
                       <TableCell className="font-medium">{entry.email}</TableCell>
+                      <TableCell>
+                        {entry.role === 'admin' ? (
+                          <Badge variant="default" className="bg-[var(--ecs-primary)]">
+                            <Shield className="h-3 w-3 mr-1" />
+                            Admin
+                          </Badge>
+                        ) : entry.role === 'user' ? (
+                          <Badge variant="secondary">User</Badge>
+                        ) : (
+                          <Badge variant="outline">Not Signed In</Badge>
+                        )}
+                      </TableCell>
                       <TableCell className="text-muted-foreground">
                         {entry.createdAt ? new Date(entry.createdAt).toLocaleDateString() : 'N/A'}
                       </TableCell>
