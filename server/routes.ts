@@ -14,6 +14,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Replit Auth
   await setupAuth(app);
 
+  // Middleware to check if user is admin
+  const isAdmin = async (req: any, res: any, next: any) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      next();
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+      res.status(500).json({ message: "Failed to verify admin status" });
+    }
+  };
+
   // Auth routes - get authenticated user info
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
@@ -23,6 +43,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Admin: Whitelist management routes
+  app.get('/api/admin/whitelist', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const whitelistEntries = await storage.getAllWhitelist();
+      res.json(whitelistEntries);
+    } catch (error) {
+      console.error("Error fetching whitelist:", error);
+      res.status(500).json({ message: "Failed to fetch whitelist" });
+    }
+  });
+
+  app.post('/api/admin/whitelist', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      const userId = req.user.claims.sub;
+      const entry = await storage.addToWhitelist({ email, addedBy: userId });
+      res.json(entry);
+    } catch (error: any) {
+      console.error("Error adding to whitelist:", error);
+      if (error.code === '23505') {
+        return res.status(409).json({ message: "Email already whitelisted" });
+      }
+      res.status(500).json({ message: "Failed to add email to whitelist" });
+    }
+  });
+
+  app.delete('/api/admin/whitelist/:email', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { email } = req.params;
+      await storage.removeFromWhitelist(decodeURIComponent(email));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error removing from whitelist:", error);
+      res.status(500).json({ message: "Failed to remove email from whitelist" });
+    }
+  });
+
+  // Admin: Make user an admin
+  app.post('/api/admin/users/:userId/make-admin', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const user = await storage.updateUserRole(userId, 'admin');
+      res.json(user);
+    } catch (error) {
+      console.error("Error making user admin:", error);
+      res.status(500).json({ message: "Failed to update user role" });
     }
   });
 
