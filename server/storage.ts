@@ -6,6 +6,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserRole(userId: string, role: string): Promise<User | undefined>;
+  updateUserTimezone(userId: string, timezone: string): Promise<User | undefined>;
   
   // Whitelist methods
   isEmailWhitelisted(email: string): Promise<boolean>;

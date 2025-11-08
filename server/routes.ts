@@ -46,6 +46,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user timezone preference
+  app.patch('/api/auth/user/timezone', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { timezone } = req.body;
+      
+      if (!timezone) {
+        return res.status(400).json({ message: "Timezone is required" });
+      }
+      
+      const user = await storage.updateUserTimezone(userId, timezone);
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating user timezone:", error);
+      res.status(500).json({ message: "Failed to update timezone" });
+    }
+  });
+
   // Admin: Whitelist management routes
   app.get('/api/admin/whitelist', isAuthenticated, isAdmin, async (req, res) => {
     try {

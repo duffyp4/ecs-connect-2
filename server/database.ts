@@ -157,6 +157,15 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
+  async updateUserTimezone(userId: string, timezone: string): Promise<User | undefined> {
+    const result = await this.db
+      .update(users)
+      .set({ timezone, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return result[0];
+  }
+
   // Whitelist methods
   async isEmailWhitelisted(email: string): Promise<boolean> {
     const result = await this.db
