@@ -738,6 +738,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get job comments
+  app.get("/api/jobs/:jobId/comments", isAuthenticated, async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      
+      // Try to get job by UUID first, then by ECS-formatted jobId
+      let job = await storage.getJob(jobId);
+      if (!job) {
+        job = await storage.getJobByJobId(jobId);
+      }
+      
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+      
+      const comments = await storage.getJobComments(job.jobId);
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching job comments:", error);
+      res.status(500).json({ message: "Failed to fetch job comments" });
+    }
+  });
+
+  // Add job comment
+  app.post("/api/jobs/:jobId/comments", isAuthenticated, async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const { commentText } = req.body;
+      const userId = req.user.claims.sub;
+      
+      if (!commentText || !commentText.trim()) {
+        return res.status(400).json({ message: "Comment text is required" });
+      }
+      
+      // Try to get job by UUID first, then by ECS-formatted jobId
+      let job = await storage.getJob(jobId);
+      if (!job) {
+        job = await storage.getJobByJobId(jobId);
+      }
+      
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+      
+      const comment = await storage.createJobComment({
+        jobId: job.jobId,
+        userId,
+        commentText: commentText.trim(),
+      });
+      
+      res.json(comment);
+    } catch (error) {
+      console.error("Error adding job comment:", error);
+      res.status(500).json({ message: "Failed to add comment" });
+    }
+  });
+
   // Get all jobs
   app.get("/api/jobs", isAuthenticated, async (req, res) => {
     try {
