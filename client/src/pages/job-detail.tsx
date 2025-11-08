@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   FileText, 
   ArrowLeft, 
@@ -15,7 +16,8 @@ import {
   Package,
   Send,
   XCircle,
-  Clock
+  Clock,
+  MessageSquare
 } from "lucide-react";
 import JobStatusBadge from "@/components/job-status-badge";
 import { CheckInModal } from "@/components/check-in-modal";
@@ -36,6 +38,17 @@ type JobEvent = {
   metadata: any;
 };
 
+type JobComment = {
+  id: string;
+  jobId: string;
+  userId: string;
+  commentText: string;
+  createdAt: string;
+  userEmail?: string | null;
+  userFirstName?: string | null;
+  userLastName?: string | null;
+};
+
 export default function JobDetail() {
   const params = useParams();
   const [, setLocation] = useLocation();
@@ -45,6 +58,7 @@ export default function JobDetail() {
   const [checkInModalOpen, setCheckInModalOpen] = useState(false);
   const [deliveryDispatchModalOpen, setDeliveryDispatchModalOpen] = useState(false);
   const [readyForPickupModalOpen, setReadyForPickupModalOpen] = useState(false);
+  const [newComment, setNewComment] = useState("");
 
   const { data: job, isLoading: jobLoading } = useQuery<any>({
     queryKey: [`/api/jobs/${jobId}`],
@@ -55,6 +69,40 @@ export default function JobDetail() {
     queryKey: [`/api/jobs/${jobId}/events`],
     enabled: !!jobId,
   });
+
+  const { data: comments = [], isLoading: commentsLoading } = useQuery<JobComment[]>({
+    queryKey: [`/api/jobs/${jobId}/comments`],
+    enabled: !!jobId,
+  });
+
+  // Mutation for adding comments
+  const addCommentMutation = useMutation({
+    mutationFn: async (commentText: string) => {
+      const response = await apiRequest("POST", `/api/jobs/${jobId}/comments`, { commentText });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}/comments`] });
+      setNewComment("");
+      toast({
+        title: "Success",
+        description: "Comment added successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add comment",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleAddComment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+    addCommentMutation.mutate(newComment.trim());
+  };
 
   // Mutation for job actions
   const actionMutation = useMutation({
@@ -479,6 +527,67 @@ export default function JobDetail() {
                   );
                 });
               })()}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Comments */}
+      <Card>
+        <CardHeader className="card-header">
+          <CardTitle className="text-white flex items-center gap-2">
+            <MessageSquare className="w-5 h-5" />
+            Comments
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          {/* Add Comment Form */}
+          <form onSubmit={handleAddComment} className="mb-6">
+            <Textarea
+              data-testid="input-comment"
+              placeholder="Add a comment..."
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              className="mb-2"
+              rows={3}
+            />
+            <Button
+              data-testid="button-add-comment"
+              type="submit"
+              disabled={!newComment.trim() || addCommentMutation.isPending}
+            >
+              {addCommentMutation.isPending ? "Adding..." : "Add Comment"}
+            </Button>
+          </form>
+
+          {/* Comments List */}
+          {commentsLoading ? (
+            <p className="text-muted-foreground text-center py-4">Loading comments...</p>
+          ) : comments.length === 0 ? (
+            <p className="text-muted-foreground text-center py-4">No comments yet</p>
+          ) : (
+            <div className="space-y-4">
+              {comments.map((comment) => {
+                const displayName = comment.userFirstName || comment.userLastName
+                  ? `${comment.userFirstName || ''} ${comment.userLastName || ''}`.trim()
+                  : comment.userEmail || 'Unknown User';
+                
+                return (
+                  <div key={comment.id} className="border-b pb-4 last:border-0" data-testid={`comment-${comment.id}`}>
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="font-medium text-sm" data-testid={`text-comment-author-${comment.id}`}>
+                        {displayName}
+                      </div>
+                      <div className="text-xs text-muted-foreground" data-testid={`text-comment-time-${comment.id}`}>
+                        {format(new Date(comment.createdAt), 'PPp')}
+                      </div>
+                    </div>
+                    <div className="text-sm" data-testid={`text-comment-text-${comment.id}`}>
+                      {comment.commentText}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </CardContent>

@@ -206,8 +206,22 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async getJobComments(jobId: string): Promise<JobComment[]> {
-    const result = await this.db.select().from(jobComments).where(eq(jobComments.jobId, jobId)).orderBy(jobComments.createdAt);
+  async getJobComments(jobId: string): Promise<any[]> {
+    const result = await this.db
+      .select({
+        id: jobComments.id,
+        jobId: jobComments.jobId,
+        userId: jobComments.userId,
+        commentText: jobComments.commentText,
+        createdAt: jobComments.createdAt,
+        userEmail: users.email,
+        userFirstName: users.firstName,
+        userLastName: users.lastName,
+      })
+      .from(jobComments)
+      .leftJoin(users, eq(jobComments.userId, users.id))
+      .where(eq(jobComments.jobId, jobId))
+      .orderBy(jobComments.createdAt);
     return result;
   }
 
