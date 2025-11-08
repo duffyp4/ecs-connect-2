@@ -24,7 +24,7 @@ export default function AdminPage() {
 
   const addMutation = useMutation({
     mutationFn: async (email: string) => {
-      return apiRequest('/api/admin/whitelist', 'POST', { email });
+      return apiRequest('POST', '/api/admin/whitelist', { email });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/whitelist'] });
@@ -45,7 +45,7 @@ export default function AdminPage() {
 
   const removeMutation = useMutation({
     mutationFn: async (email: string) => {
-      return apiRequest(`/api/admin/whitelist/${encodeURIComponent(email)}`, 'DELETE');
+      return apiRequest('DELETE', `/api/admin/whitelist/${encodeURIComponent(email)}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/whitelist'] });
