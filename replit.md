@@ -19,7 +19,7 @@ The application uses a monorepo structure with `/client` (React frontend), `/ser
 ### Key Components
 - **Frontend**: Component-based React application supporting a two-path job creation UI ("Direct Shop Check-in" vs "Dispatch Pickup") with conditional fields and validation. It features a Job Detail Page with an Event Timeline and state-specific action buttons for managing the 7-state job lifecycle. Form logic is unified across job creation and check-in via a shared hook (`useCsrCheckInForm`) and a shared form fields component (`CsrCheckInFormFields`) to ensure consistency and reduce duplication.
 - **Backend**: REST API with Express.js, custom middleware, Drizzle ORM. Includes services for GoCanvas integration, reference data, job tracking, Google Sheets sync, and timezone handling. Background polling monitors GoCanvas submissions every 30 seconds.
-- **Database Schema**: PostgreSQL with `Jobs` (core job tracking), `Technicians`, `ReferenceDataEntries`, and `JobEvents`. The `JobEvents` table uses ECS-formatted job IDs exclusively (foreign key to `jobs.job_id`) for consistent event tracking across the system.
+- **Database Schema**: PostgreSQL with `Jobs` (core job tracking), `Technicians`, `ReferenceDataEntries`, `JobEvents`, `Users`, `Sessions`, and `Whitelist`. The `JobEvents` table uses ECS-formatted job IDs exclusively (foreign key to `jobs.job_id`) for consistent event tracking across the system. The `Users` table stores user profiles with role-based permissions. The `Whitelist` table controls application access by approved email addresses.
 - **Job Events Service**: Manages a 7-state job lifecycle (queued_for_pickup → picked_up → at_shop → in_service → ready_for_pickup/delivery → queued_for_delivery → delivered) with state-specific timestamps. All job events are stored using ECS-formatted job IDs (e.g., `ECS-20251001220953-3011`) for consistency with user-facing APIs and external integrations.
 - **GoCanvas Integration**: Supports three forms (Emissions Service Log, Pickup Log, Delivery Log) with dynamic field mapping and dispatches. Driver assignment uses actual driver emails from reference data.
 - **Job Tracking**: Records completion timestamps with GPS-based timezone accuracy, calculates turnaround times, and synchronizes completed jobs to Google Sheets.
@@ -44,7 +44,30 @@ Diagnostic scripts in `/scripts/` assist with GoCanvas integration debugging.
 - **PostgreSQL**: Neon serverless platform.
 
 ### Authentication System
-- **Session-based**: Express sessions.
+- **Replit Auth**: OpenID Connect-based authentication with Google, GitHub, Apple, and email login support.
+- **Session-based**: PostgreSQL-backed Express sessions for secure user session management.
+- **Email Whitelist**: Access control system restricting application access to pre-approved email addresses.
+- **Role-based Access**: Admin users can manage the whitelist and control user permissions.
 
 ### Timezone Services
 - **API**: TimeZone API for GPS coordinate to timezone conversion.
+
+## Access Control
+
+### Whitelist Management
+- Only users with whitelisted email addresses can access the application.
+- On login attempt, the system checks if the user's email is in the whitelist table.
+- Users without whitelisted emails are redirected to an "Access Denied" page.
+- Admin users can add/remove email addresses via the Admin Dashboard (`/admin`).
+
+### Admin Roles
+- Users with `role = 'admin'` can access the Admin Dashboard.
+- Admin features include:
+  - Managing the email whitelist (add/remove approved emails)
+  - Viewing all whitelisted users
+  - Future: Granting admin permissions to other users
+  
+### Initial Setup
+- To bootstrap the first admin user:
+  1. Add their email to the whitelist via direct database access
+  2. After their first login, update their role to 'admin' via SQL: `UPDATE users SET role = 'admin' WHERE email = 'admin@example.com'`
