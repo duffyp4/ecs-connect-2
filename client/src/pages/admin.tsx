@@ -132,16 +132,7 @@ export default function AdminPage() {
                     <TableRow key={entry.id} data-testid={`row-whitelist-${entry.email}`}>
                       <TableCell className="font-medium">{entry.email}</TableCell>
                       <TableCell>
-                        {entry.role === 'admin' ? (
-                          <Badge variant="default" className="bg-[var(--ecs-primary)]">
-                            <Shield className="h-3 w-3 mr-1" />
-                            Admin
-                          </Badge>
-                        ) : entry.role === 'user' ? (
-                          <Badge variant="secondary">User</Badge>
-                        ) : (
-                          <Badge variant="outline">Not Signed In</Badge>
-                        )}
+                        {entry.role === 'admin' ? 'admin' : entry.role === 'user' ? 'user' : 'Not Signed In'}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {entry.createdAt ? new Date(entry.createdAt).toLocaleDateString() : 'N/A'}
