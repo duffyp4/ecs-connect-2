@@ -52,7 +52,15 @@ function updateUserSession(
 
 async function upsertUser(
   claims: any,
-) {
+): Promise<{ allowed: boolean; message?: string }> {
+  const email = claims["email"];
+  
+  // Check if email is whitelisted
+  const isWhitelisted = await storage.isEmailWhitelisted(email);
+  if (!isWhitelisted) {
+    return { allowed: false, message: "Your email is not authorized to access this application." };
+  }
+  
   await storage.upsertUser({
     id: claims["sub"],
     email: claims["email"],
@@ -60,6 +68,8 @@ async function upsertUser(
     lastName: claims["last_name"],
     profileImageUrl: claims["profile_image_url"],
   });
+  
+  return { allowed: true };
 }
 
 export async function setupAuth(app: Express) {
@@ -74,9 +84,16 @@ export async function setupAuth(app: Express) {
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) => {
+    const result = await upsertUser(tokens.claims());
+    
+    if (!result.allowed) {
+      // Authentication failed due to whitelist check
+      verified(new Error(result.message || "Access denied"), null);
+      return;
+    }
+    
     const user = {};
     updateUserSession(user, tokens);
-    await upsertUser(tokens.claims());
     verified(null, user);
   };
 
@@ -116,7 +133,7 @@ export async function setupAuth(app: Express) {
     ensureStrategy(req.hostname);
     passport.authenticate(`replitauth:${req.hostname}`, {
       successReturnToOrRedirect: "/",
-      failureRedirect: "/api/login",
+      failureRedirect: "/access-denied",
     })(req, res, next);
   });
 
