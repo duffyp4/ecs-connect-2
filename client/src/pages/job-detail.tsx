@@ -473,125 +473,128 @@ export default function JobDetail() {
         </Card>
       )}
 
-      {/* Event Timeline */}
-      <Card>
-        <CardHeader className="card-header">
-          <CardTitle className="text-white">Event Timeline</CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          {events.length === 0 ? (
-            <p className="text-muted-foreground text-center py-4">No events recorded yet</p>
-          ) : (
-            <div className="space-y-4">
-              {(() => {
-                const filteredEvents = events.filter(event => {
-                  // Hide "queued_for_delivery" state change since we show "delivery_dispatched" instead
-                  if (event.eventType === 'state_change' && event.metadata?.newState === 'queued_for_delivery') {
-                    return false;
-                  }
-                  // Hide "picked_up" event for direct check-ins (no actual pickup occurred)
-                  if (event.eventType === 'state_change' && event.metadata?.newState === 'picked_up' && event.metadata?.directCheckIn) {
-                    return false;
-                  }
-                  return true;
-                });
-                
-                return filteredEvents.map((event, index) => {
-                  const isJobCompleted = job.state === 'delivered' || job.state === 'cancelled';
-                  const iconColorClass = getEventIconColor(event, index, isJobCompleted, filteredEvents.length);
+      {/* Event Timeline and Comments - Side by Side */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Event Timeline */}
+        <Card>
+          <CardHeader className="card-header">
+            <CardTitle className="text-white">Event Timeline</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            {events.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">No events recorded yet</p>
+            ) : (
+              <div className="space-y-4">
+                {(() => {
+                  const filteredEvents = events.filter(event => {
+                    // Hide "queued_for_delivery" state change since we show "delivery_dispatched" instead
+                    if (event.eventType === 'state_change' && event.metadata?.newState === 'queued_for_delivery') {
+                      return false;
+                    }
+                    // Hide "picked_up" event for direct check-ins (no actual pickup occurred)
+                    if (event.eventType === 'state_change' && event.metadata?.newState === 'picked_up' && event.metadata?.directCheckIn) {
+                      return false;
+                    }
+                    return true;
+                  });
+                  
+                  return filteredEvents.map((event, index) => {
+                    const isJobCompleted = job.state === 'delivered' || job.state === 'cancelled';
+                    const iconColorClass = getEventIconColor(event, index, isJobCompleted, filteredEvents.length);
+                    
+                    return (
+                      <div key={event.id} className="flex gap-4">
+                        <div className="flex flex-col items-center">
+                          <div className={`flex items-center justify-center w-8 h-8 min-w-8 min-h-8 rounded-full ${iconColorClass} text-white flex-shrink-0`}>
+                            {getEventIcon(event.eventType)}
+                          </div>
+                          {index < filteredEvents.length - 1 && (
+                            <div className="w-0.5 h-full bg-gray-300 mt-2" />
+                          )}
+                        </div>
+                        <div className="flex-1 pb-8">
+                          <div className="font-medium">{getEventLabel(event)}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {event.timestamp ? format(new Date(event.timestamp), 'PPpp') : 'N/A'}
+                          </div>
+                          {getEventDetails(event).length > 0 && (
+                            <div className="text-sm text-muted-foreground mt-1">
+                              {getEventDetails(event).map((detail, idx) => (
+                                <div key={idx}>{detail}</div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Comments */}
+        <Card>
+          <CardHeader className="card-header">
+            <CardTitle className="text-white flex items-center gap-2">
+              <MessageSquare className="w-5 h-5" />
+              Comments
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            {/* Add Comment Form */}
+            <form onSubmit={handleAddComment} className="mb-6">
+              <Textarea
+                data-testid="input-comment"
+                placeholder="Add a comment..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                className="mb-2"
+                rows={3}
+              />
+              <Button
+                data-testid="button-add-comment"
+                type="submit"
+                disabled={!newComment.trim() || addCommentMutation.isPending}
+              >
+                {addCommentMutation.isPending ? "Adding..." : "Add Comment"}
+              </Button>
+            </form>
+
+            {/* Comments List */}
+            {commentsLoading ? (
+              <p className="text-muted-foreground text-center py-4">Loading comments...</p>
+            ) : comments.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">No comments yet</p>
+            ) : (
+              <div className="space-y-4">
+                {comments.map((comment) => {
+                  const displayName = comment.userFirstName || comment.userLastName
+                    ? `${comment.userFirstName || ''} ${comment.userLastName || ''}`.trim()
+                    : comment.userEmail || 'Unknown User';
                   
                   return (
-                    <div key={event.id} className="flex gap-4">
-                      <div className="flex flex-col items-center">
-                        <div className={`flex items-center justify-center w-8 h-8 min-w-8 min-h-8 rounded-full ${iconColorClass} text-white flex-shrink-0`}>
-                          {getEventIcon(event.eventType)}
+                    <div key={comment.id} className="border-b pb-4 last:border-0" data-testid={`comment-${comment.id}`}>
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="font-medium text-sm" data-testid={`text-comment-author-${comment.id}`}>
+                          {displayName}
                         </div>
-                        {index < filteredEvents.length - 1 && (
-                          <div className="w-0.5 h-full bg-gray-300 mt-2" />
-                        )}
+                        <div className="text-xs text-muted-foreground" data-testid={`text-comment-time-${comment.id}`}>
+                          {format(new Date(comment.createdAt), 'PPp')}
+                        </div>
                       </div>
-                      <div className="flex-1 pb-8">
-                        <div className="font-medium">{getEventLabel(event)}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {event.timestamp ? format(new Date(event.timestamp), 'PPpp') : 'N/A'}
-                        </div>
-                        {getEventDetails(event).length > 0 && (
-                          <div className="text-sm text-muted-foreground mt-1">
-                            {getEventDetails(event).map((detail, idx) => (
-                              <div key={idx}>{detail}</div>
-                            ))}
-                          </div>
-                        )}
+                      <div className="text-sm" data-testid={`text-comment-text-${comment.id}`}>
+                        {comment.commentText}
                       </div>
                     </div>
                   );
-                });
-              })()}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Comments */}
-      <Card>
-        <CardHeader className="card-header">
-          <CardTitle className="text-white flex items-center gap-2">
-            <MessageSquare className="w-5 h-5" />
-            Comments
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          {/* Add Comment Form */}
-          <form onSubmit={handleAddComment} className="mb-6">
-            <Textarea
-              data-testid="input-comment"
-              placeholder="Add a comment..."
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              className="mb-2"
-              rows={3}
-            />
-            <Button
-              data-testid="button-add-comment"
-              type="submit"
-              disabled={!newComment.trim() || addCommentMutation.isPending}
-            >
-              {addCommentMutation.isPending ? "Adding..." : "Add Comment"}
-            </Button>
-          </form>
-
-          {/* Comments List */}
-          {commentsLoading ? (
-            <p className="text-muted-foreground text-center py-4">Loading comments...</p>
-          ) : comments.length === 0 ? (
-            <p className="text-muted-foreground text-center py-4">No comments yet</p>
-          ) : (
-            <div className="space-y-4">
-              {comments.map((comment) => {
-                const displayName = comment.userFirstName || comment.userLastName
-                  ? `${comment.userFirstName || ''} ${comment.userLastName || ''}`.trim()
-                  : comment.userEmail || 'Unknown User';
-                
-                return (
-                  <div key={comment.id} className="border-b pb-4 last:border-0" data-testid={`comment-${comment.id}`}>
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="font-medium text-sm" data-testid={`text-comment-author-${comment.id}`}>
-                        {displayName}
-                      </div>
-                      <div className="text-xs text-muted-foreground" data-testid={`text-comment-time-${comment.id}`}>
-                        {format(new Date(comment.createdAt), 'PPp')}
-                      </div>
-                    </div>
-                    <div className="text-sm" data-testid={`text-comment-text-${comment.id}`}>
-                      {comment.commentText}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Check In Modal */}
       {job && (
