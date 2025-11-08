@@ -335,3 +335,20 @@ export const insertReferenceDataEntrySchema = createInsertSchema(referenceDataEn
 
 export type SelectReferenceDataEntry = typeof referenceDataEntries.$inferSelect;
 export type InsertReferenceDataEntry = z.infer<typeof insertReferenceDataEntrySchema>;
+
+// Job Comments table
+export const jobComments = pgTable("job_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  jobId: varchar("job_id", { length: 50 }).notNull(), // ECS-formatted job ID
+  userId: varchar("user_id").notNull(),
+  commentText: text("comment_text").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertJobCommentSchema = createInsertSchema(jobComments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertJobComment = z.infer<typeof insertJobCommentSchema>;
+export type JobComment = typeof jobComments.$inferSelect;
