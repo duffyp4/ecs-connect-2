@@ -540,35 +540,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Update the job with all provided data (including userId and shopHandoff)
+      // Validate that shopHandoff is provided (required for GoCanvas dispatch)
+      const shopHandoff = validationResult.data.shopHandoff || job.shopHandoff;
+      if (!shopHandoff) {
+        return res.status(400).json({
+          message: "Technician assignment is required to check in at shop. Please select a technician from the 'Shop Handoff / Technician' field."
+        });
+      }
+      
+      // Update the job with all provided data FIRST (but don't change state yet)
       if (Object.keys(validationResult.data).length > 0) {
         await storage.updateJob(job.id, validationResult.data);
       }
       
-      // Pass userId and shopHandoff (technician) to event metadata
-      // Use values from request or fall back to job values
-      const updatedJob = await jobEventsService.checkInAtShop(job.jobId, {
+      // Refresh job data after update
+      const refreshedJob = await storage.getJobByJobId(jobId);
+      if (!refreshedJob) {
+        return res.status(404).json({ message: "Job not found after update" });
+      }
+      
+      // STEP 1: Try to create GoCanvas dispatch FIRST
+      // This ensures we only check in if GoCanvas accepts the dispatch
+      let submissionId: string | null = null;
+      try {
+        console.log('🚀 Attempting GoCanvas dispatch BEFORE checking in...');
+        submissionId = await goCanvasService.createSubmission(refreshedJob);
+        
+        // Check if dispatch was actually successful
+        if (!submissionId || submissionId.startsWith('skip-')) {
+          throw new Error('GoCanvas dispatch was skipped or failed - check GoCanvas credentials and configuration');
+        }
+        
+        console.log(`✅ GoCanvas dispatch successful: ${submissionId}`);
+      } catch (gocanvasError) {
+        console.error("❌ GoCanvas dispatch failed:", gocanvasError);
+        
+        // Return error to user - do NOT check in the job
+        const errorMessage = gocanvasError instanceof Error 
+          ? gocanvasError.message 
+          : "Failed to dispatch to GoCanvas";
+        
+        return res.status(500).json({
+          message: `Cannot check in: GoCanvas dispatch failed. ${errorMessage}`,
+          details: "The job has NOT been checked in. Please verify the technician email is valid in GoCanvas and try again."
+        });
+      }
+      
+      // STEP 2: Only if GoCanvas succeeded, update job status and create event
+      const updatedJob = await jobEventsService.checkInAtShop(refreshedJob.jobId, {
         metadata: {
-          userId: validationResult.data.userId || job.userId,
-          shopHandoff: validationResult.data.shopHandoff || job.shopHandoff,
+          userId: validationResult.data.userId || refreshedJob.userId,
+          shopHandoff: shopHandoff,
         },
       });
       
-      // Create Emissions Service Log dispatch when job is checked in at shop
-      try {
-        const submissionId = await goCanvasService.createSubmission(updatedJob);
-        
-        if (submissionId && typeof submissionId === 'string' && !submissionId.startsWith('skip-')) {
-          await storage.updateJob(updatedJob.id, {
-            gocanvasSubmissionId: submissionId,
-            gocanvasSynced: "true",
-          });
-          console.log(`Created Emissions Service Log ${submissionId} for job ${updatedJob.jobId} at check-in`);
-        }
-      } catch (gocanvasError) {
-        console.error("Emissions Service Log creation failed at check-in:", gocanvasError);
-        // Job is still checked in, but GoCanvas sync failed
-      }
+      // STEP 3: Update GoCanvas sync status
+      await storage.updateJob(updatedJob.id, {
+        gocanvasSubmissionId: submissionId,
+        gocanvasSynced: "true",
+      });
+      
+      console.log(`✅ Job ${updatedJob.jobId} checked in successfully with GoCanvas submission ${submissionId}`);
       
       res.json(updatedJob);
     } catch (error) {
