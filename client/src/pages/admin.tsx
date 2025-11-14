@@ -5,13 +5,25 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, UserPlus, Shield } from "lucide-react";
+import { Trash2, UserPlus, Shield, Activity } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Whitelist } from "@shared/schema";
 
 interface WhitelistWithRole extends Whitelist {
   role?: string | null;
+}
+
+interface GoCanvasMetrics {
+  now: string;
+  totalCalls: number;
+  byStatus: Record<string, number>;
+  rateLimitHits: number;
+  lastRateLimitAt: string | null;
+  lastRateLimitReset: string | null;
+  lastRateLimitLimit: string | null;
+  lastRateLimitRemaining: string | null;
 }
 
 export default function AdminPage() {
@@ -75,6 +87,11 @@ export default function AdminPage() {
     }
   };
 
+  const { data: metricsData, isLoading: metricsLoading } = useQuery<GoCanvasMetrics>({
+    queryKey: ['/api/metrics/gocanvas'],
+    refetchInterval: 60000, // Auto-refresh every 60 seconds
+  });
+
   return (
     <div className="container mx-auto p-4 space-y-6">
       <div className="flex items-center space-x-3">
@@ -85,7 +102,20 @@ export default function AdminPage() {
         </div>
       </div>
 
-      <Card>
+      <Tabs defaultValue="whitelist" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="whitelist" data-testid="tab-whitelist">
+            <Shield className="h-4 w-4 mr-2" />
+            Whitelist
+          </TabsTrigger>
+          <TabsTrigger value="integration-health" data-testid="tab-integration-health">
+            <Activity className="h-4 w-4 mr-2" />
+            Integration Health
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="whitelist">
+          <Card>
         <CardHeader>
           <CardTitle>Email Whitelist</CardTitle>
           <CardDescription>
@@ -164,6 +194,130 @@ export default function AdminPage() {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="integration-health">
+          <Card>
+            <CardHeader>
+              <CardTitle>GoCanvas Integration Health</CardTitle>
+              <CardDescription>
+                Monitor GoCanvas API usage and rate limits (auto-refreshes every 60 seconds)
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {metricsLoading ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Loading metrics...
+                </div>
+              ) : metricsData ? (
+                <>
+                  <div className="text-sm text-muted-foreground">
+                    Server time: {new Date(metricsData.now).toLocaleString()}
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-medium">Summary</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Total API calls:</span>
+                          <span className="font-semibold" data-testid="metric-total-calls">
+                            {metricsData.totalCalls}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Rate limit hits (429):</span>
+                          <span className={`font-semibold ${metricsData.rateLimitHits > 0 ? 'text-destructive' : ''}`} data-testid="metric-rate-limit-hits">
+                            {metricsData.rateLimitHits}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Last rate limit at:</span>
+                          <span className="font-mono text-sm" data-testid="metric-last-rate-limit-at">
+                            {metricsData.lastRateLimitAt 
+                              ? new Date(metricsData.lastRateLimitAt).toLocaleString() 
+                              : 'N/A'}
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-medium">Current Rate Limit Status</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Limit:</span>
+                          <span className="font-mono text-sm" data-testid="metric-rate-limit-limit">
+                            {metricsData.lastRateLimitLimit ?? 'N/A'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Remaining:</span>
+                          <span className="font-mono text-sm" data-testid="metric-rate-limit-remaining">
+                            {metricsData.lastRateLimitRemaining ?? 'N/A'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Reset:</span>
+                          <span className="font-mono text-sm" data-testid="metric-rate-limit-reset">
+                            {metricsData.lastRateLimitReset ?? 'N/A'}
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium">Calls by Status Code</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {metricsData.byStatus && Object.keys(metricsData.byStatus).length > 0 ? (
+                        <div className="space-y-2">
+                          {Object.entries(metricsData.byStatus)
+                            .sort(([a], [b]) => a.localeCompare(b))
+                            .map(([status, count]) => (
+                              <div key={status} className="flex justify-between items-center">
+                                <div className="flex items-center gap-2">
+                                  <Badge 
+                                    variant={
+                                      status.startsWith('2') ? 'default' : 
+                                      status.startsWith('4') ? 'destructive' : 
+                                      status.startsWith('5') ? 'destructive' : 
+                                      'secondary'
+                                    }
+                                    data-testid={`badge-status-${status}`}
+                                  >
+                                    {status}
+                                  </Badge>
+                                </div>
+                                <span className="font-semibold" data-testid={`count-status-${status}`}>
+                                  {count}
+                                </span>
+                              </div>
+                            ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 text-muted-foreground">
+                          No API calls recorded yet
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  Failed to load metrics
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
