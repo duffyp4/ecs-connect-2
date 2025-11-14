@@ -567,7 +567,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         submissionId = await goCanvasService.createSubmission(refreshedJob);
         
         // Check if dispatch was actually successful
-        if (!submissionId || submissionId.startsWith('skip-')) {
+        // Handle both string and non-string return values safely
+        const submissionIdStr = String(submissionId || '');
+        if (!submissionId || submissionIdStr.startsWith('skip-')) {
           throw new Error('GoCanvas dispatch was skipped or failed - check GoCanvas credentials and configuration');
         }
         
