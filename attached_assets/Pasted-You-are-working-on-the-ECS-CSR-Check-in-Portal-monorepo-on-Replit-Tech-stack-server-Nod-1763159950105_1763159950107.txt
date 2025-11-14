@@ -1,0 +1,109 @@
+You are working on the **ECS CSR Check-in Portal** monorepo on Replit.
+Tech stack:
+
+* `/server`: Node + Express + TypeScript, Drizzle, session auth
+* `/client`: React + TypeScript + Vite
+* GoCanvas integration lives in `/server/services` (e.g. `gocanvas.ts`, `jobTracker` poller, etc.)
+
+### High-level context
+
+* We integrate with **GoCanvas API v3** using a **30-second polling loop** to check for completed submissions.
+* Both **dev and prod** use the **same GoCanvas account and API quota**.
+* The poller runs every 30 seconds per form and repeatedly calls the submissions endpoints to see if anything has changed.
+* We recently added a **GoCanvas Integration Health** page and a metrics wrapper around all GoCanvas calls that logs:
+
+  * total calls
+  * calls by status (200, 429)
+  * rate-limit headers (`ratelimit-limit`, `ratelimit-remaining`, `ratelimit-reset`)
+* Metrics show that:
+
+  * `ratelimit-limit` is 240
+  * `ratelimit-remaining` is often 0
+  * ~30–40% of all calls are 429 “Too Many Requests”
+* This means our current polling approach is continuously saturating the GoCanvas rate limit.
+
+### Target architecture (conceptual)
+
+We want to move from **polling-first** to **webhook / push-first** using GoCanvas’s **Submission Notification API** (“Integrate with Submission Notification API” dialog in the GoCanvas UI):
+
+* GoCanvas can POST an **XML submission-notification** payload to our URL whenever a form is submitted.
+* Example payload (from webhook.site):
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<submission-notification>
+  <form>
+    <id type="integer">1</id>
+    <name>FORM_NAME</name>
+    <guid>FORM_GUID</guid>
+    <tag></tag>
+  </form>
+  <submission>
+    <id type="integer">1</id>
+    <guid>SUBMISSION_GUID</guid>
+  </submission>
+  <dispatch-item>
+    <id type="integer">1</id>
+  </dispatch-item>
+</submission-notification>
+```
+
+* We will configure **one webhook URL** and receive submissions for multiple ECS forms (Pickup, Emissions, Delivery). We’ll route them by `form.guid` (and optionally `form.tag`).
+* For each notification:
+
+  1. Accept the XML at an Express endpoint (e.g. `POST /api/gocanvas/submission`).
+  2. Quickly return 200 OK.
+  3. Asynchronously call `GET /api/v3/submissions/{SUBMISSION_GUID}` to fetch full submission data.
+  4. Extract our **ECS Job ID** from the submission fields using the existing field-mapping logic.
+  5. Update the appropriate job record in Postgres (mark job or step complete, record timestamps, recompute turnaround, etc.).
+* Polling should become **backup-only**:
+
+  * Much lower frequency (e.g. every 5–15 minutes, or nightly).
+  * Only used to reconcile stragglers or missed webhooks.
+
+### What I want from you
+
+Please **do not make code changes yet**. I want you to **analyze the existing codebase and produce a concrete migration plan**.
+
+1. **Discover and summarize the current implementation**:
+
+   * Find the GoCanvas service module(s) and the polling/job-tracking logic.
+   * Describe briefly:
+
+     * Where and how the 30-second poller is implemented.
+     * Which endpoints it calls (e.g. list submissions, get submission details).
+     * How it finds job completion and updates the DB.
+   * Identify any places where GoCanvas is called outside the poller (e.g. dispatch creation, reference data, etc.).
+
+2. **Design a push-first + backup-polling migration plan**, scoped to this codebase:
+
+   * Propose where to add the new webhook endpoint in the Express app.
+   * Describe how to parse the XML in TypeScript and where that code should live.
+   * Show how the webhook handler should plug into the existing job completion / timestamp / turnaround logic.
+   * Propose how to identify the ECS Job ID from the submission using the existing field mapping.
+   * Outline how to route submissions by `form.guid` to the correct ECS flow (Pickup, Emissions, Delivery).
+   * Suggest how to keep things idempotent (e.g., if the same submission notification is sent twice, we don’t double-update a job).
+
+3. **Plan the rollout and risk mitigation**:
+
+   * Suggest a feature-flag or environment-variable strategy so we can:
+
+     * Enable webhooks in dev first.
+     * Then enable in prod while keeping the poller running as a safety net.
+   * Propose a step-by-step cutover:
+
+     * Phase 1: Webhook implemented and tested in dev while polling remains unchanged.
+     * Phase 2: Webhook enabled in prod; polling frequency reduced.
+     * Phase 3: Polling moved to low-frequency reconciliation only.
+   * Note any potential failure modes (e.g., webhook downtime, XML parsing errors) and how to monitor / recover.
+
+4. **Output**:
+
+   * Create a **markdown document** in the repo (e.g. `/docs/gocanvas-webhook-migration.md`) that:
+
+     * Summarizes current state.
+     * Describes the target push-first architecture.
+     * Lists concrete engineering tasks (checklist) with rough order.
+     * Includes any code locations (file paths) that will be affected.
+
+The key is: **an actionable, codebase-aware migration plan**, not the implementation yet. Use the existing structure and patterns in this project when you propose file locations and changes.
