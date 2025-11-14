@@ -644,6 +644,8 @@ export default function JobList() {
             onSuccess={() => {
               setCheckInModalOpen(false);
               setSelectedJob(null);
+              queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
+              queryClient.invalidateQueries({ queryKey: ["/api/metrics"] });
             }}
           />
           <DeliveryDispatchModal
@@ -653,6 +655,8 @@ export default function JobList() {
             onSuccess={() => {
               setDeliveryDispatchModalOpen(false);
               setSelectedJob(null);
+              queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
+              queryClient.invalidateQueries({ queryKey: ["/api/metrics"] });
             }}
           />
         </>
