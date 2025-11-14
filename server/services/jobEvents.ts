@@ -497,29 +497,51 @@ export class JobEventsService {
       throw new Error(`Cannot dispatch delivery: job is in ${job.state} state, must be in service_complete`);
     }
 
-    // Create GoCanvas delivery dispatch
-    const dispatchId = await goCanvasService.createDispatchForForm(
-      'DELIVERY',
-      {
-        jobId: job.jobId,
-        customerName: job.customerName,
-        customerShipTo: job.customerShipTo,
-        shopName: job.shopName,
-        contactName: job.contactName,
-        contactNumber: job.contactNumber,
-        deliveryAddress: deliveryData.deliveryAddress,
-        deliveryNotes: deliveryData.deliveryNotes,
-        itemCount: job.itemCount,
-        orderNumber: deliveryData.orderNumber,
-        orderNumber2: deliveryData.orderNumber2,
-        orderNumber3: deliveryData.orderNumber3,
-        orderNumber4: deliveryData.orderNumber4,
-        orderNumber5: deliveryData.orderNumber5,
-      },
-      deliveryData.driverEmail
-    );
+    // Try to create GoCanvas dispatch FIRST
+    // This ensures we only update the database if GoCanvas accepts the dispatch
+    let dispatchId: string;
+    try {
+      console.log('🚀 Attempting GoCanvas delivery dispatch BEFORE updating database...');
+      dispatchId = await goCanvasService.createDispatchForForm(
+        'DELIVERY',
+        {
+          jobId: job.jobId,
+          customerName: job.customerName,
+          customerShipTo: job.customerShipTo,
+          shopName: job.shopName,
+          contactName: job.contactName,
+          contactNumber: job.contactNumber,
+          deliveryAddress: deliveryData.deliveryAddress,
+          deliveryNotes: deliveryData.deliveryNotes,
+          itemCount: job.itemCount,
+          orderNumber: deliveryData.orderNumber,
+          orderNumber2: deliveryData.orderNumber2,
+          orderNumber3: deliveryData.orderNumber3,
+          orderNumber4: deliveryData.orderNumber4,
+          orderNumber5: deliveryData.orderNumber5,
+        },
+        deliveryData.driverEmail
+      );
 
-    // Update job with dispatch info and order numbers
+      // Check if dispatch was actually successful
+      const dispatchIdStr = String(dispatchId || '');
+      if (!dispatchId || dispatchIdStr.startsWith('skip-')) {
+        throw new Error('GoCanvas dispatch was skipped or failed - check GoCanvas credentials and configuration');
+      }
+
+      console.log(`✅ GoCanvas delivery dispatch successful: ${dispatchId}`);
+    } catch (gocanvasError) {
+      console.error("❌ GoCanvas delivery dispatch failed:", gocanvasError);
+      
+      // Throw error with clear message - do NOT update the database
+      const errorMessage = gocanvasError instanceof Error 
+        ? gocanvasError.message 
+        : "Failed to dispatch to GoCanvas";
+      
+      throw new Error(`Cannot dispatch delivery: GoCanvas dispatch failed. ${errorMessage}. The job has NOT been dispatched. Please verify the driver email is valid in GoCanvas and try again.`);
+    }
+
+    // Only if GoCanvas succeeded, update job with dispatch info and order numbers
     await storage.updateJob(job.id, {
       deliveryDispatchId: dispatchId,
       deliveryDriverEmail: deliveryData.driverEmail,
