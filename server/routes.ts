@@ -117,6 +117,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin: GoCanvas integration metrics (read-only observability)
+  app.get('/api/metrics/gocanvas', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { goCanvasMetrics } = await import('./services/gocanvas');
+      res.json({
+        now: new Date().toISOString(),
+        ...goCanvasMetrics,
+      });
+    } catch (error) {
+      console.error("Error fetching GoCanvas metrics:", error);
+      res.status(500).json({ message: "Failed to fetch metrics" });
+    }
+  });
+
   // Start job tracking polling
   jobTrackerService.startPolling();
 

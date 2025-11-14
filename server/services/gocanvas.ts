@@ -1319,7 +1319,7 @@ export class GoCanvasService {
         if (submission.status === 'completed') {
           // Get detailed submission data to check for Job ID match
           try {
-            const detailResponse = await fetch(`${this.baseUrl}/submissions/${submission.id}`, {
+            const detailResponse = await rawGoCanvasRequest(`/submissions/${submission.id}`, {
               headers: {
                 'Authorization': this.getAuthHeader(),
                 'Content-Type': 'application/json',
