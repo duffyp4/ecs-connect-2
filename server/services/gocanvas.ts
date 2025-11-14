@@ -293,7 +293,7 @@ export class GoCanvasService {
 
     try {
       console.log('Fetching forms from GoCanvas...');
-      const response = await fetch(`${this.baseUrl}/forms`, {
+      const response = await rawGoCanvasRequest('/forms', {
         headers: {
           'Authorization': this.getAuthHeader(),
           'Content-Type': 'application/json',
@@ -321,7 +321,7 @@ export class GoCanvasService {
 
     try {
       console.log(`Fetching form details for form ID: ${formId}`);
-      const response = await fetch(`${this.baseUrl}/forms/${formId}?format=flat`, {
+      const response = await rawGoCanvasRequest(`/forms/${formId}?format=flat`, {
         headers: {
           'Authorization': this.getAuthHeader(),
           'Content-Type': 'application/json',
@@ -350,7 +350,7 @@ export class GoCanvasService {
 
     try {
       console.log('Fetching reference data from GoCanvas...');
-      const response = await fetch(`${this.baseUrl}/reference_data`, {
+      const response = await rawGoCanvasRequest('/reference_data', {
         headers: {
           'Authorization': this.getAuthHeader(),
           'Content-Type': 'application/json',
@@ -378,7 +378,7 @@ export class GoCanvasService {
 
     try {
       console.log(`Fetching reference data for ID: ${id}`);
-      const response = await fetch(`${this.baseUrl}/reference_data/${id}`, {
+      const response = await rawGoCanvasRequest(`/reference_data/${id}`, {
         headers: {
           'Authorization': this.getAuthHeader(),
           'Content-Type': 'application/json',
@@ -405,7 +405,7 @@ export class GoCanvasService {
     }
 
     try {
-      const response = await fetch(`${this.baseUrl}/users`, {
+      const response = await rawGoCanvasRequest('/users', {
         headers: {
           'Authorization': this.getAuthHeader(),
           'Content-Type': 'application/json',
@@ -497,7 +497,7 @@ export class GoCanvasService {
         return `dryrun-${jobData.jobId}-${Date.now()}`;
       }
 
-      const response = await fetch(`${this.baseUrl}/dispatches`, {
+      const response = await rawGoCanvasRequest('/dispatches', {
         method: 'POST',
         headers: {
           'Authorization': this.getAuthHeader(),
@@ -626,7 +626,7 @@ export class GoCanvasService {
         return `dryrun-${formType}-${jobData.jobId}-${Date.now()}`;
       }
 
-      const response = await fetch(`${this.baseUrl}/dispatches`, {
+      const response = await rawGoCanvasRequest('/dispatches', {
         method: 'POST',
         headers: {
           'Authorization': this.getAuthHeader(),
@@ -800,7 +800,7 @@ export class GoCanvasService {
       console.log(`=== FETCHING GOCANVAS SUBMISSION: ${submissionId} ===`);
       
       // Get detailed submission data by ID
-      const detailResponse = await fetch(`${this.baseUrl}/submissions/${submissionId}`, {
+      const detailResponse = await rawGoCanvasRequest(`/submissions/${submissionId}`, {
         headers: {
           'Authorization': this.getAuthHeader(),
           'Content-Type': 'application/json',
@@ -848,7 +848,7 @@ export class GoCanvasService {
       console.log('Username configured:', !!this.username);
       
       // First, get list of submissions for the form
-      const listResponse = await fetch(`${this.baseUrl}/submissions?form_id=${this.formId}`, {
+      const listResponse = await rawGoCanvasRequest(`/submissions?form_id=${this.formId}`, {
         headers: {
           'Authorization': this.getAuthHeader(),
           'Content-Type': 'application/json',
@@ -880,7 +880,7 @@ export class GoCanvasService {
 
       // Get detailed submission data
       console.log('=== FETCHING DETAILED SUBMISSION DATA ===');
-      const detailResponse = await fetch(`${this.baseUrl}/submissions/${mostRecent.id}`, {
+      const detailResponse = await rawGoCanvasRequest(`/submissions/${mostRecent.id}`, {
         headers: {
           'Authorization': this.getAuthHeader(),
           'Content-Type': 'application/json',
@@ -1014,7 +1014,7 @@ export class GoCanvasService {
       console.log(`\n=== FETCHING HANDOFF TIME DATA FOR JOB: ${jobId} ===`);
       
       // Get all submissions for the form
-      const response = await fetch(`${this.baseUrl}/submissions?form_id=${this.formId}`, {
+      const response = await rawGoCanvasRequest(`/submissions?form_id=${this.formId}`, {
         headers: {
           'Authorization': this.getAuthHeader(),
           'Content-Type': 'application/json',
@@ -1036,7 +1036,7 @@ export class GoCanvasService {
       
       for (const submission of submissions) {
         try {
-          const detailResponse = await fetch(`${this.baseUrl}/submissions/${submission.id}`, {
+          const detailResponse = await rawGoCanvasRequest(`/submissions/${submission.id}`, {
             headers: {
               'Authorization': this.getAuthHeader(),
               'Content-Type': 'application/json',
@@ -1288,7 +1288,7 @@ export class GoCanvasService {
     try {
       // Query ALL submissions for the specific form
       console.log(`Searching for job ${jobId} in form ${formId} submissions...`);
-      const response = await fetch(`${this.baseUrl}/submissions?form_id=${formId}`, {
+      const response = await rawGoCanvasRequest(`/submissions?form_id=${formId}`, {
         headers: {
           'Authorization': this.getAuthHeader(),
           'Content-Type': 'application/json',
@@ -1486,7 +1486,7 @@ export class GoCanvasService {
     try {
       console.log(`\n🕒 FETCHING REVISION HISTORY FOR SUBMISSION: ${submissionId}`);
       
-      const response = await fetch(`${this.baseUrl}/submissions/${submissionId}/revisions`, {
+      const response = await rawGoCanvasRequest(`/submissions/${submissionId}/revisions`, {
         headers: {
           'Authorization': this.getAuthHeader(),
           'Content-Type': 'application/json',
