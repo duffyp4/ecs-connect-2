@@ -18,7 +18,7 @@ The application uses a monorepo structure with `/client` (React frontend), `/ser
 
 ### Key Components
 - **Frontend**: Component-based React application supporting a two-path job creation UI ("Direct Shop Check-in" vs "Dispatch Pickup") with conditional fields and validation. It features a Job Detail Page with an Event Timeline and state-specific action buttons for managing the 7-state job lifecycle. Form logic is unified across job creation and check-in via a shared hook (`useCsrCheckInForm`) and a shared form fields component (`CsrCheckInFormFields`) to ensure consistency and reduce duplication.
-- **Backend**: REST API with Express.js, custom middleware, Drizzle ORM. Includes services for GoCanvas integration, reference data, job tracking, Google Sheets sync, and timezone handling. Background polling monitors GoCanvas submissions every 30 seconds.
+- **Backend**: REST API with Express.js, custom middleware, Drizzle ORM. Includes services for GoCanvas integration, reference data, job tracking, Google Sheets sync, timezone handling, and push notifications. Job completion detection uses configurable modes (polling/hybrid/push) with 30-second polling as default.
 - **Database Schema**: PostgreSQL with `Jobs` (core job tracking), `Technicians`, `ReferenceDataEntries`, `JobEvents`, `Users`, `Sessions`, and `Whitelist`. The `JobEvents` table uses ECS-formatted job IDs exclusively (foreign key to `jobs.job_id`) for consistent event tracking across the system. The `Users` table stores user profiles with role-based permissions. The `Whitelist` table controls application access by approved email addresses.
 - **Job Events Service**: Manages a 7-state job lifecycle (queued_for_pickup → picked_up → at_shop → in_service → ready_for_pickup/delivery → queued_for_delivery → delivered) with state-specific timestamps. All job events are stored using ECS-formatted job IDs (e.g., `ECS-20251001220953-3011`) for consistency with user-facing APIs and external integrations.
 - **GoCanvas Integration**: Supports three forms (Emissions Service Log, Pickup Log, Delivery Log) with dynamic field mapping and dispatches. Driver assignment uses actual driver emails from reference data.
@@ -36,6 +36,10 @@ Diagnostic scripts in `/scripts/` assist with GoCanvas integration debugging.
 
 ### GoCanvas Integration
 - **API**: Basic Authentication for Forms, Submissions, and Reference Data APIs.
+- **Push Notifications**: XML-based submission notifications (API v2) with automatic job state transitions. Supports three notification modes:
+  - `polling` (default): 30-second polling of GoCanvas API
+  - `hybrid`: Both polling + push notifications for validation
+  - `push`: Push notifications only, ~99% reduction in API calls
 
 ### Google Sheets Sync
 - **Authentication**: Service Account.
@@ -71,3 +75,37 @@ Diagnostic scripts in `/scripts/` assist with GoCanvas integration debugging.
 - To bootstrap the first admin user:
   1. Add their email to the whitelist via direct database access
   2. After their first login, update their role to 'admin' via SQL: `UPDATE users SET role = 'admin' WHERE email = 'admin@example.com'`
+
+## Push Notification System
+
+### Architecture
+The application supports real-time job completion detection via GoCanvas push notifications, reducing API calls by ~99% (from ~8,700/day to ~50/day) and improving latency from 30 seconds to <5 seconds.
+
+### Implementation Details
+- **Webhook Endpoint**: `POST /api/gocanvas/push-notification` (unauthenticated, called by GoCanvas)
+- **XML Parsing**: Uses `xml2js` to parse API v2 submission notifications
+- **Two-step Process**: Parse minimal XML notification → Fetch full submission data via API v3 → Extract Job ID → Trigger state transition
+- **Idempotency**: In-memory cache (1-hour TTL) prevents duplicate processing
+- **Form Routing**: Automatically routes to pickup/service/delivery handlers based on form ID
+- **Metrics**: Real-time metrics dashboard in Admin Panel showing received/processed/errors/performance
+
+### Feature Flag Modes
+Set via `PUSH_NOTIFICATION_MODE` environment variable:
+- `polling` (default): 30-second polling only, no behavior change from original system
+- `hybrid`: Both polling + push notifications for validation and comparison
+- `push`: Push notifications only, disables polling entirely
+
+### GoCanvas Configuration
+To enable push notifications:
+1. Log into GoCanvas web interface
+2. For each form (Pickup, Emissions, Delivery):
+   - Navigate to Form Settings → Submission Push Notifications
+   - Set webhook URL: `https://your-domain.replit.app/api/gocanvas/push-notification`
+   - GoCanvas will send XML notifications on form submission
+3. Monitor health via Admin Dashboard → Push Notifications tab
+
+### Monitoring
+- Admin Dashboard shows real-time metrics: total received, processed, errors, duplicates, avg processing time
+- Per-form breakdowns with last received timestamps
+- Success rate tracking and performance metrics
+- Auto-refreshes every 60 seconds

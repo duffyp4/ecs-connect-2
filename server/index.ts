@@ -4,6 +4,11 @@ import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 app.set('trust proxy', 1);
+
+// Raw body parser for GoCanvas push notifications (XML)
+app.use('/api/gocanvas/push-notification', express.text({ type: '*/*' }));
+
+// JSON and URL-encoded parsers for all other routes
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
