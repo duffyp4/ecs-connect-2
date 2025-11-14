@@ -9,6 +9,7 @@ import { jobTrackerService } from "./services/jobTracker";
 import { referenceDataService } from "./services/referenceData";
 import { jobEventsService } from "./services/jobEvents";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { pushNotificationService, pushNotificationMetrics } from "./services/pushNotification";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Replit Auth
@@ -128,6 +129,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching GoCanvas metrics:", error);
       res.status(500).json({ message: "Failed to fetch metrics" });
+    }
+  });
+
+  // Admin: Push notification metrics
+  app.get('/api/metrics/push-notifications', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      res.json({
+        now: new Date().toISOString(),
+        ...pushNotificationMetrics,
+      });
+    } catch (error) {
+      console.error("Error fetching push notification metrics:", error);
+      res.status(500).json({ message: "Failed to fetch metrics" });
+    }
+  });
+
+  // GoCanvas Push Notification Webhook (unauthenticated - called by GoCanvas)
+  app.post('/api/gocanvas/push-notification', async (req, res) => {
+    try {
+      // Return 200 immediately (GoCanvas requirement for retry logic)
+      res.status(200).send('OK');
+      
+      // Process notification asynchronously
+      const contentType = req.headers['content-type'] || '';
+      const xmlBody = typeof req.body === 'string' ? req.body : '';
+      
+      console.log('📨 Push notification received from GoCanvas');
+      console.log('Content-Type:', contentType);
+      console.log('Body type:', typeof req.body);
+      
+      // Process in background (don't await)
+      pushNotificationService.processGoCanvasPushNotification(xmlBody, contentType)
+        .catch(error => {
+          console.error('❌ Background push notification processing failed:', error);
+        });
+      
+    } catch (error) {
+      console.error("Error handling push notification:", error);
+      // Already sent 200, so just log the error
     }
   });
 
