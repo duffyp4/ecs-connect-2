@@ -6,6 +6,7 @@ import { timezoneService } from './timezone';
 export class JobTrackerService {
   private pollingInterval: NodeJS.Timeout | null = null;
   private readonly POLL_INTERVAL_MS = 30000; // 30 seconds for faster job completion detection
+  private pushNotificationMode: 'polling' | 'hybrid' | 'push' = 'polling';
 
   private logEnvironmentInfo() {
     console.log('🌍 ===== ENVIRONMENT DEBUG INFO =====');
@@ -15,16 +16,36 @@ export class JobTrackerService {
     console.log('Local time sample:', new Date().toLocaleString());
     console.log('UTC offset (minutes):', new Date().getTimezoneOffset());
     console.log('Server timezone offset:', new Date().toString().match(/GMT[+-]\d{4}/)?.[0] || 'unknown');
+    console.log('Push Notification Mode:', this.pushNotificationMode);
     console.log('=========================================');
   }
 
   startPolling(): void {
+    // Read push notification mode from environment
+    const mode = process.env.PUSH_NOTIFICATION_MODE || 'polling';
+    if (mode === 'polling' || mode === 'hybrid' || mode === 'push') {
+      this.pushNotificationMode = mode;
+    }
+
+    // In 'push' mode, skip polling entirely
+    if (this.pushNotificationMode === 'push') {
+      console.log('⚡ Push notification mode enabled - polling disabled');
+      this.logEnvironmentInfo();
+      return;
+    }
+
     if (this.pollingInterval) {
       return; // Already polling
     }
 
     this.logEnvironmentInfo();
-    console.log('Starting job tracking polling...');
+    
+    if (this.pushNotificationMode === 'hybrid') {
+      console.log('🔄 Starting hybrid mode: polling + push notifications for validation...');
+    } else {
+      console.log('📊 Starting polling mode (default)...');
+    }
+    
     this.pollingInterval = setInterval(() => {
       this.checkPendingJobs();
     }, this.POLL_INTERVAL_MS);
