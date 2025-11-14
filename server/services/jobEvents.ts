@@ -242,23 +242,45 @@ export class JobEventsService {
       throw new Error(`Cannot dispatch pickup: job is in ${job.state} state, must be in queued_for_pickup`);
     }
 
-    // Create GoCanvas pickup dispatch using the driver email for assignment
-    const dispatchId = await goCanvasService.createDispatchForForm(
-      'PICKUP',
-      {
-        jobId: job.jobId,
-        customerName: job.customerName,
-        customerShipTo: job.customerShipTo,
-        shopName: job.shopName,
-        contactName: job.contactName,
-        contactNumber: job.contactNumber,
-        poNumber: job.poNumber,
-        pickupNotes: params.pickupNotes || '',
-      },
-      params.driverEmail // Use the actual driver email for GoCanvas assignment
-    );
+    // Try to create GoCanvas dispatch FIRST
+    // This ensures we only update the database if GoCanvas accepts the dispatch
+    let dispatchId: string;
+    try {
+      console.log('🚀 Attempting GoCanvas pickup dispatch BEFORE updating database...');
+      dispatchId = await goCanvasService.createDispatchForForm(
+        'PICKUP',
+        {
+          jobId: job.jobId,
+          customerName: job.customerName,
+          customerShipTo: job.customerShipTo,
+          shopName: job.shopName,
+          contactName: job.contactName,
+          contactNumber: job.contactNumber,
+          poNumber: job.poNumber,
+          pickupNotes: params.pickupNotes || '',
+        },
+        params.driverEmail
+      );
 
-    // Update job with dispatch info
+      // Check if dispatch was actually successful
+      const dispatchIdStr = String(dispatchId || '');
+      if (!dispatchId || dispatchIdStr.startsWith('skip-')) {
+        throw new Error('GoCanvas dispatch was skipped or failed - check GoCanvas credentials and configuration');
+      }
+
+      console.log(`✅ GoCanvas pickup dispatch successful: ${dispatchId}`);
+    } catch (gocanvasError) {
+      console.error("❌ GoCanvas pickup dispatch failed:", gocanvasError);
+      
+      // Throw error with clear message - do NOT update the database
+      const errorMessage = gocanvasError instanceof Error 
+        ? gocanvasError.message 
+        : "Failed to dispatch to GoCanvas";
+      
+      throw new Error(`Cannot dispatch pickup: GoCanvas dispatch failed. ${errorMessage}. The job has NOT been dispatched. Please verify the driver email is valid in GoCanvas and try again.`);
+    }
+
+    // Only if GoCanvas succeeded, update job with dispatch info
     await storage.updateJob(job.id, {
       pickupDispatchId: dispatchId,
       pickupDriverEmail: params.driverEmail,
