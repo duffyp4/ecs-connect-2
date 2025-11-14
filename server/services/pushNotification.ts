@@ -334,8 +334,15 @@ export class PushNotificationService {
         throw new Error(`Failed to fetch submission data: ${submissionData?.error || 'Unknown error'}`);
       }
       
+      // Extract responses from rawData if available
+      const responses = submissionData.rawData?.responses || [];
+      const enrichedSubmissionData = {
+        ...submissionData,
+        responses,
+      };
+      
       // Process submission
-      await this.handleSubmissionCompleted(notification.formId, submissionData);
+      await this.handleSubmissionCompleted(notification.formId, enrichedSubmissionData);
       
       // Update metrics
       pushNotificationMetrics.totalProcessed++;
