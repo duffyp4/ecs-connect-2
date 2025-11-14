@@ -1,0 +1,140 @@
+2025-11-13 21:09:43.15
+8c36d1f5
+User
+handoffEmailWorkflow value: troy@ecspart.com
+2025-11-13 21:09:43.15
+8c36d1f5
+User
+=============================
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+🚀 Attempting GoCanvas dispatch BEFORE checking in...
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+=== GOCANVAS createDispatch called ===
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+Raw jobData keys: [
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'id',
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'jobId',
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'p21OrderNumber',
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'userId',
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'permissionToStart',
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'permissionDeniedStop',
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'shopName',
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'customerName',
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'customerShipTo',
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'p21ShipToId',
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'customerSpecificInstructions',
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'sendClampsGaskets',
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'preferredProcess',
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'anyOtherSpecificInstructions',
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'anyCommentsForTech',
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'noteToTechAboutCustomer',
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'contactName',
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'serialNumbers',
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'state',
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'initiatedAt',
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'updatedAt',
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'pickedUpAt',
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'atShopAt',
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'inServiceAt',
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'serviceCompleteAt',
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'readyAt',
+2025-11-13 21:09:43.30
+8c36d1f5
+User
+'completedAt',
+2025-11-13 21:10:12.83
+8c36d1f5
+User
+Searching for job ECS-20251113221244-8639 in form 5594156 submissions...
+2025-11-13 21:10:15.33
+8c36d1f5
+User
+API returned 33667 characters of JSON data
+2025-11-13 21:10:15.33
+8c36d1f5
+User
+Found 100 submissions for form 5594156
