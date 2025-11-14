@@ -1,0 +1,267 @@
+You are working on an existing TypeScript monorepo for the ECS CSR Check-in Portal. It has:
+
+/server → Node/Express backend (TypeScript, Drizzle, session-based auth)
+
+/client → React + TypeScript + Vite frontend
+
+GoCanvas integration lives in a service file (e.g. server/services/gocanvas.ts or similar)
+
+There is already session-based auth middleware (e.g. requireAuth) protecting API routes
+
+Goal:
+Add observability only (no behavior change) around GoCanvas API usage and expose a small integration health-check page that is only visible to authenticated admin users. This must be safe to deploy while live users are using the tool.
+
+High-level requirements
+
+Wrap all GoCanvas HTTP calls so we can capture:
+
+Total number of calls
+
+Calls by HTTP status (200, 400, 429, 500, etc.)
+
+How often we hit 429 (rate limit)
+
+The last time we hit 429
+
+The last ratelimit-reset value we saw
+
+Do NOT change business behavior:
+
+Call patterns stay the same
+
+Poller continues to run as-is
+
+Error handling behavior must remain unchanged
+
+Metrics code must be best-effort and never break the integration
+
+Backend metrics endpoint:
+
+GET /api/metrics/gocanvas
+
+requireAuth-protected
+
+Returns a JSON snapshot of the in-memory GoCanvas metrics
+
+Admin-only React page:
+
+Route: /admin/integration-health (or similar)
+
+Only visible to “admin” users in the UI
+
+Uses TanStack Query (if already used in the app) to call /api/metrics/gocanvas
+
+Auto-refreshes every ~30–60 seconds
+
+Read-only, no buttons that change state
+
+Step 1: Add in-memory metrics in GoCanvas service
+
+Locate the single place where all GoCanvas API calls are made (likely server/services/gocanvas.ts or similar). There should be some wrapper around fetch/axios that builds the base URL https://www.gocanvas.com/api/v3/....
+
+Introduce an in-memory metrics object at the top of that file:
+
+// Simple in-memory GoCanvas metrics. Reset on server restart.
+export const goCanvasMetrics = {
+  totalCalls: 0,
+  byStatus: {} as Record<string, number>,
+  rateLimitHits: 0,
+  lastRateLimitAt: null as string | null,
+  lastRateLimitReset: null as string | null,
+};
+
+
+Identify the lowest-level function that actually performs the HTTP call to GoCanvas (e.g. rawGoCanvasRequest or similar). If there is no such function, create one and route all GoCanvas calls through it, but do not change the behavior of the calling code other than going through this function.
+
+Inside that function, after receiving the Response, add observational-only logic:
+
+async function rawGoCanvasRequest(path: string, options: RequestInit): Promise<Response> {
+  const res = await fetch(`https://www.gocanvas.com/api/v3${path}`, {
+    ...options,
+  });
+
+  // ---- BEGIN metrics (observe-only) ----
+  try {
+    const status = res.status.toString();
+    const limit = res.headers.get("ratelimit-limit");
+    const remaining = res.headers.get("ratelimit-remaining");
+    const reset = res.headers.get("ratelimit-reset");
+
+    goCanvasMetrics.totalCalls += 1;
+    goCanvasMetrics.byStatus[status] = (goCanvasMetrics.byStatus[status] || 0) + 1;
+
+    if (status === "429") {
+      goCanvasMetrics.rateLimitHits += 1;
+      goCanvasMetrics.lastRateLimitAt = new Date().toISOString();
+      goCanvasMetrics.lastRateLimitReset = reset;
+    }
+
+    // Optional: only log occasionally to avoid noisy logs
+    // console.log("[GoCanvas]", { path, status, limit, remaining, reset });
+  } catch (err) {
+    console.error("Error recording GoCanvas metrics", err);
+  }
+  // ---- END metrics ----
+
+  return res;
+}
+
+
+Ensure all existing GoCanvas calls (submissions, dispatches, etc.) now go through this wrapper, but do not change how callers interpret the response or handle errors.
+
+Step 2: Add backend metrics route
+
+Create a new Express router file, e.g. server/routes/metrics.ts (or use an existing metrics router if one exists).
+
+Implement GET /api/metrics/gocanvas:
+
+import { Router } from "express";
+import { goCanvasMetrics } from "../services/gocanvas"; // adjust path as needed
+import { requireAuth } from "../middleware/auth"; // adjust import as needed
+
+const router = Router();
+
+router.get("/gocanvas", requireAuth, (req, res) => {
+  res.json({
+    now: new Date().toISOString(),
+    ...goCanvasMetrics,
+  });
+});
+
+export default router;
+
+
+In the main server file (e.g. server/index.ts or server/app.ts), mount this router:
+
+import metricsRouter from "./routes/metrics";
+
+// ...
+app.use("/api/metrics", metricsRouter);
+
+
+Confirm that this route is auth-protected and does not expose any secret credentials—only aggregated metrics.
+
+Step 3: Define “admin” and gate the UI
+
+Reuse the existing auth system. If you already have a concept of an admin user (e.g. req.session.user.isAdmin or similar), use that.
+
+If no admin concept exists, introduce a minimal one:
+
+Add an ADMIN_EMAIL env var or a small hard-coded array of admin usernames/emails.
+
+Create a helper isAdmin(user) that checks the current session user against that list.
+
+On the backend, you can either:
+
+Add a requireAdmin middleware that wraps requireAuth, or
+
+Keep the backend route as requireAuth only, and rely on the frontend to hide the page from non-admins for now (backend remains read-only anyway).
+
+Expose isAdmin to the frontend via an existing /api/auth/status or similar endpoint, or reuse whatever is already there.
+
+Step 4: Add an admin-only Integration Health page in the React app
+
+In the React app (/client), create a new route component, e.g. src/pages/AdminIntegrationHealth.tsx.
+
+This component should:
+
+Require that the user is authenticated.
+
+Check that the user is an admin (using the existing auth context / hook).
+
+Use TanStack Query (if already in the app) or a simple useEffect + fetch loop to call GET /api/metrics/gocanvas.
+
+Poll/refresh the metrics every 30–60 seconds.
+
+Display the following fields in a simple UI (cards or table is fine):
+
+totalCalls
+
+byStatus (render as key/value rows)
+
+rateLimitHits
+
+lastRateLimitAt
+
+lastRateLimitReset
+
+now (from the API)
+
+Example skeleton (adjust imports to match the codebase’s patterns and UI library):
+
+import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+// import your auth hook / layout components / UI components as appropriate
+
+export function AdminIntegrationHealthPage() {
+  // Replace with your real auth context / hook
+  const { user, isAdmin } = useAuth(); 
+
+  if (!user) {
+    return <div>Please log in.</div>;
+  }
+
+  if (!isAdmin) {
+    return <div>Not authorized.</div>;
+  }
+
+  const { data, refetch, isLoading, error } = useQuery({
+    queryKey: ["gocanvas-metrics"],
+    queryFn: async () => {
+      const res = await fetch("/api/metrics/gocanvas");
+      if (!res.ok) throw new Error("Failed to load metrics");
+      return res.json();
+    },
+    refetchInterval: 60000, // 60s auto-refresh
+  });
+
+  if (isLoading) return <div>Loading…</div>;
+  if (error) return <div>Error loading metrics</div>;
+
+  const { totalCalls, byStatus, rateLimitHits, lastRateLimitAt, lastRateLimitReset, now } = data;
+
+  return (
+    <div className="p-4 space-y-4">
+      <h1 className="text-xl font-semibold">GoCanvas Integration Health</h1>
+      <p className="text-sm text-gray-500">Server time: {now}</p>
+
+      <div className="border rounded p-3">
+        <h2 className="font-medium mb-1">Summary</h2>
+        <div>Total calls: {totalCalls}</div>
+        <div>Rate limit hits (429): {rateLimitHits}</div>
+        <div>Last rate limit at: {lastRateLimitAt ?? "N/A"}</div>
+        <div>Last rate limit reset: {lastRateLimitReset ?? "N/A"}</div>
+      </div>
+
+      <div className="border rounded p-3">
+        <h2 className="font-medium mb-1">Calls by Status</h2>
+        {byStatus && Object.keys(byStatus).length > 0 ? (
+          <ul className="list-disc list-inside">
+            {Object.entries(byStatus).map(([status, count]) => (
+              <li key={status}>
+                {status}: {count as number}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div>No calls recorded yet.</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+Register this component in the existing router (e.g. add a route like /admin/integration-health) and ensure that only admin users see the navigation link (e.g. in the app header/sidebar).
+
+Step 5: Safety checks
+
+Do not modify any existing polling/GoCanvas business logic.
+
+Ensure metrics collection is fully wrapped in try/catch so an error here cannot break normal responses.
+
+Verify that /api/metrics/gocanvas is reachable for an authenticated admin but not exposed publicly.
+
+After deployment, open the admin page and confirm you see metrics updating while the app is in use.
+
+Please implement all of the above, keeping changes as minimal and localized as possible, and focusing strictly on read-only observability so CSRs and technicians can continue using the tool without any behavioral changes.
