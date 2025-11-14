@@ -12,6 +12,60 @@ export const FORM_IDS = {
 
 export type FormType = keyof typeof FORM_IDS;
 
+// In-memory GoCanvas API metrics (reset on server restart)
+// This is observe-only and should never break the integration
+export const goCanvasMetrics = {
+  totalCalls: 0,
+  byStatus: {} as Record<string, number>,
+  rateLimitHits: 0,
+  lastRateLimitAt: null as string | null,
+  lastRateLimitReset: null as string | null,
+  lastRateLimitLimit: null as string | null,
+  lastRateLimitRemaining: null as string | null,
+};
+
+/**
+ * Low-level wrapper for all GoCanvas API HTTP requests
+ * Captures metrics (best-effort, never throws) without changing behavior
+ */
+async function rawGoCanvasRequest(
+  path: string,
+  options: RequestInit = {}
+): Promise<Response> {
+  const url = `https://api.gocanvas.com/api/v3${path}`;
+  
+  const res = await fetch(url, options);
+
+  // ---- BEGIN metrics (observe-only, never throws) ----
+  try {
+    const status = res.status.toString();
+    const limit = res.headers.get("ratelimit-limit");
+    const remaining = res.headers.get("ratelimit-remaining");
+    const reset = res.headers.get("ratelimit-reset");
+
+    goCanvasMetrics.totalCalls += 1;
+    goCanvasMetrics.byStatus[status] = (goCanvasMetrics.byStatus[status] || 0) + 1;
+
+    // Capture rate limit info (always, not just on 429)
+    if (limit) goCanvasMetrics.lastRateLimitLimit = limit;
+    if (remaining) goCanvasMetrics.lastRateLimitRemaining = remaining;
+    if (reset) goCanvasMetrics.lastRateLimitReset = reset;
+
+    if (status === "429") {
+      goCanvasMetrics.rateLimitHits += 1;
+      goCanvasMetrics.lastRateLimitAt = new Date().toISOString();
+    }
+
+    // Optional: log occasionally for debugging (comment out if too noisy)
+    // console.log(`[GoCanvas] ${path} → ${status} (limit: ${limit}, remaining: ${remaining})`);
+  } catch (err) {
+    console.error("Error recording GoCanvas metrics (non-fatal):", err);
+  }
+  // ---- END metrics ----
+
+  return res;
+}
+
 export class GoCanvasService {
   private baseUrl = 'https://api.gocanvas.com/api/v3';
   private username: string;
