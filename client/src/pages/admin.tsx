@@ -105,7 +105,7 @@ export default function AdminPage() {
 
   const { data: pushMetricsData, isLoading: pushMetricsLoading } = useQuery<PushNotificationMetrics>({
     queryKey: ['/api/metrics/push-notifications'],
-    refetchInterval: 60000, // Auto-refresh every 60 seconds
+    refetchInterval: 10000, // Auto-refresh every 10 seconds
   });
 
   return (
@@ -343,7 +343,7 @@ export default function AdminPage() {
             <CardHeader>
               <CardTitle>Push Notification Health</CardTitle>
               <CardDescription>
-                Monitor real-time GoCanvas push notification processing (auto-refreshes every 60 seconds)
+                Monitor real-time GoCanvas push notification processing (auto-refreshes every 10 seconds)
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
