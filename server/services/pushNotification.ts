@@ -1,0 +1,369 @@
+import { parseStringPromise } from 'xml2js';
+import { goCanvasService } from './gocanvas';
+import { jobEventsService } from './jobEvents';
+
+// In-memory metrics for push notifications
+export const pushNotificationMetrics = {
+  totalReceived: 0,
+  totalProcessed: 0,
+  duplicatesIgnored: 0,
+  errors: 0,
+  byForm: {} as Record<string, number>,
+  averageProcessingTime: 0,
+  lastReceivedByForm: {} as Record<string, string>,
+  processingTimes: [] as number[],
+};
+
+// In-memory idempotency cache (submission ID -> timestamp)
+const processedSubmissions = new Map<string, number>();
+const CACHE_TTL_MS = 3600000; // 1 hour
+
+// Form ID constants (match gocanvas.ts FORM_IDS)
+const FORM_IDS = {
+  EMISSIONS: '5654184',
+  PICKUP: '5640587',
+  DELIVERY: '5657146',
+} as const;
+
+interface ParsedNotification {
+  formId: string;
+  formName: string;
+  formGuid: string;
+  submissionId: string;
+  submissionGuid: string;
+  dispatchItemId?: string;
+}
+
+export class PushNotificationService {
+  /**
+   * Parse GoCanvas XML push notification
+   */
+  private async parseNotificationXML(xmlBody: string): Promise<ParsedNotification> {
+    try {
+      const result = await parseStringPromise(xmlBody, {
+        explicitArray: false,
+        mergeAttrs: true,
+        trim: true,
+      });
+
+      const notification = result['submission-notification'];
+      
+      if (!notification || !notification.form || !notification.submission) {
+        throw new Error('Invalid push notification structure');
+      }
+
+      return {
+        formId: String(notification.form.id),
+        formName: notification.form.name || '',
+        formGuid: notification.form.guid || '',
+        submissionId: String(notification.submission.id || notification.submission.guid),
+        submissionGuid: notification.submission.guid || '',
+        dispatchItemId: notification['dispatch-item']?.id 
+          ? String(notification['dispatch-item'].id) 
+          : undefined,
+      };
+    } catch (error) {
+      console.error('❌ XML parsing error:', error);
+      throw new Error(`Failed to parse push notification XML: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Clean up expired idempotency cache entries
+   */
+  private cleanupExpiredEntries(): void {
+    const now = Date.now();
+    const expiredKeys: string[] = [];
+    
+    for (const [key, timestamp] of processedSubmissions.entries()) {
+      if (now - timestamp > CACHE_TTL_MS) {
+        expiredKeys.push(key);
+      }
+    }
+    
+    expiredKeys.forEach(key => processedSubmissions.delete(key));
+    
+    if (expiredKeys.length > 0) {
+      console.log(`🧹 Cleaned up ${expiredKeys.length} expired idempotency cache entries`);
+    }
+  }
+
+  /**
+   * Extract Job ID from submission responses
+   */
+  private extractJobId(responses: any[]): string | null {
+    if (!Array.isArray(responses)) {
+      return null;
+    }
+
+    // Search for field labeled "Job ID" containing ECS-formatted ID
+    const jobIdField = responses.find(r => 
+      r.label?.toLowerCase().includes('job') && 
+      r.value?.startsWith('ECS-')
+    );
+    
+    return jobIdField?.value || null;
+  }
+
+  /**
+   * Handle pickup form completion
+   */
+  private async handlePickupCompletion(jobId: string, submissionData: any): Promise<void> {
+    try {
+      console.log(`✅ Pickup form completed for job ${jobId} (push notification)`);
+      
+      await jobEventsService.markPickedUp(
+        jobId,
+        1, // Default item count (actual count not available from form)
+        {
+          metadata: {
+            submittedAt: submissionData.submitted_at ? new Date(submissionData.submitted_at) : new Date(),
+            autoDetected: true,
+            source: 'push_notification',
+          },
+        }
+      );
+    } catch (error) {
+      console.error(`Error handling pickup completion for job ${jobId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Handle service form completion
+   */
+  private async handleServiceCompletion(jobId: string, submissionData: any): Promise<void> {
+    try {
+      const submittedAt = submissionData.submitted_at ? new Date(submissionData.submitted_at) : new Date();
+      
+      console.log(`✅ Service form completed for job ${jobId} (push notification)`);
+      
+      // Get job to check current state
+      const { storage } = await import('../storage');
+      const job = await storage.getJobByJobId(jobId);
+      
+      if (!job) {
+        console.error(`Job ${jobId} not found`);
+        return;
+      }
+
+      // Get handoff time from GPS field for accurate "Service Started" timestamp
+      let handoffTime: Date | null = null;
+      
+      try {
+        const handoffData = await goCanvasService.getHandoffTimeData(jobId);
+        if (handoffData?.handoffFields) {
+          const gpsField = handoffData.handoffFields.find((f: any) => f.label === 'New GPS');
+          
+          if (gpsField?.value) {
+            const timeMatch = gpsField.value.match(/Time:(\d+\.?\d*)/);
+            
+            if (timeMatch && timeMatch[1]) {
+              const unixTimestamp = parseFloat(timeMatch[1]);
+              const timestampMs = unixTimestamp > 10000000000 ? unixTimestamp : unixTimestamp * 1000;
+              handoffTime = new Date(timestampMs);
+              
+              if (isNaN(handoffTime.getTime()) || 
+                  handoffTime.getFullYear() < 2020 || 
+                  handoffTime.getFullYear() > 2100) {
+                console.warn(`Invalid GPS timestamp parsed: "${timeMatch[1]}" → year ${handoffTime.getFullYear()}`);
+                handoffTime = null;
+              } else {
+                console.log(`✅ Found handoff time from GPS field: ${handoffTime.toISOString()}`);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.warn(`Could not retrieve handoff time from GPS: ${error}`);
+      }
+
+      // If still at_shop, transition through in_service to service_complete
+      if (job.state === 'at_shop') {
+        console.log(`✅ Service completed for job ${jobId} (at_shop), transitioning through in_service to service_complete`);
+        
+        await jobEventsService.transitionJobState(jobId, 'in_service', {
+          actor: 'Technician',
+          timestamp: handoffTime || undefined,
+          metadata: {
+            autoDetected: true,
+            source: 'push_notification',
+            handoffTime: handoffTime?.toISOString(),
+          },
+        });
+        
+        await jobEventsService.transitionJobState(jobId, 'service_complete', {
+          actor: 'System',
+          timestamp: submittedAt,
+          metadata: {
+            completedAt: submittedAt,
+            autoDetected: true,
+            source: 'push_notification',
+          },
+        });
+      } 
+      // If already in_service, transition to service_complete
+      else if (job.state === 'in_service') {
+        console.log(`✅ Service form completed for job ${jobId}, transitioning to service_complete`);
+        
+        await jobEventsService.transitionJobState(jobId, 'service_complete', {
+          actor: 'System',
+          timestamp: submittedAt,
+          metadata: {
+            completedAt: submittedAt,
+            autoDetected: true,
+            source: 'push_notification',
+          },
+        });
+      }
+    } catch (error) {
+      console.error(`Error handling service completion for job ${jobId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Handle delivery form completion
+   */
+  private async handleDeliveryCompletion(jobId: string, submissionData: any): Promise<void> {
+    try {
+      console.log(`✅ Delivery form completed for job ${jobId} (push notification)`);
+      
+      await jobEventsService.markDelivered(jobId, {
+        timestamp: submissionData.submitted_at ? new Date(submissionData.submitted_at) : undefined,
+        metadata: {
+          submittedAt: submissionData.submitted_at ? new Date(submissionData.submitted_at) : new Date(),
+          autoDetected: true,
+          source: 'push_notification',
+        },
+      });
+    } catch (error) {
+      console.error(`Error handling delivery completion for job ${jobId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Handle submission completion based on form type
+   */
+  private async handleSubmissionCompleted(
+    formId: string,
+    submissionData: any
+  ): Promise<void> {
+    // Extract Job ID from submission responses
+    const jobId = this.extractJobId(submissionData.responses || []);
+    
+    if (!jobId) {
+      console.warn('⚠️ No Job ID found in submission:', submissionData.id);
+      return;
+    }
+
+    console.log(`📋 Processing submission for Job ID: ${jobId}, Form: ${formId}`);
+
+    // Route to appropriate handler based on form ID
+    switch (formId) {
+      case FORM_IDS.PICKUP:
+        await this.handlePickupCompletion(jobId, submissionData);
+        break;
+      
+      case FORM_IDS.EMISSIONS:
+        await this.handleServiceCompletion(jobId, submissionData);
+        break;
+      
+      case FORM_IDS.DELIVERY:
+        await this.handleDeliveryCompletion(jobId, submissionData);
+        break;
+      
+      default:
+        console.warn('⚠️ Unknown form ID in push notification:', formId);
+    }
+  }
+
+  /**
+   * Process GoCanvas push notification
+   */
+  async processGoCanvasPushNotification(
+    xmlBody: string,
+    contentType?: string
+  ): Promise<void> {
+    const startTime = Date.now();
+    
+    try {
+      console.log('\n🔔 ===== PUSH NOTIFICATION RECEIVED =====');
+      console.log('Content-Type:', contentType);
+      console.log('Body length:', xmlBody.length);
+      
+      // Update metrics
+      pushNotificationMetrics.totalReceived++;
+      
+      // Parse XML notification
+      const notification = await this.parseNotificationXML(xmlBody);
+      
+      console.log('📋 Parsed notification:', {
+        formId: notification.formId,
+        formName: notification.formName,
+        submissionId: notification.submissionId,
+        dispatchItemId: notification.dispatchItemId,
+      });
+      
+      // Idempotency check
+      if (processedSubmissions.has(notification.submissionId)) {
+        console.log(`⚠️ Duplicate notification for submission ${notification.submissionId}, skipping`);
+        pushNotificationMetrics.duplicatesIgnored++;
+        return;
+      }
+      
+      // Mark as processed
+      processedSubmissions.set(notification.submissionId, Date.now());
+      
+      // Clean up expired entries
+      this.cleanupExpiredEntries();
+      
+      // Update form-specific metrics
+      if (!pushNotificationMetrics.byForm[notification.formId]) {
+        pushNotificationMetrics.byForm[notification.formId] = 0;
+      }
+      pushNotificationMetrics.byForm[notification.formId]++;
+      pushNotificationMetrics.lastReceivedByForm[notification.formId] = new Date().toISOString();
+      
+      // Fetch full submission data from GoCanvas API
+      console.log(`🔍 Fetching full submission data for ID: ${notification.submissionId}`);
+      const submissionData = await goCanvasService.getSubmissionById(notification.submissionId);
+      
+      if (!submissionData || submissionData.error) {
+        throw new Error(`Failed to fetch submission data: ${submissionData?.error || 'Unknown error'}`);
+      }
+      
+      // Process submission
+      await this.handleSubmissionCompleted(notification.formId, submissionData);
+      
+      // Update metrics
+      pushNotificationMetrics.totalProcessed++;
+      
+      const processingTime = Date.now() - startTime;
+      pushNotificationMetrics.processingTimes.push(processingTime);
+      
+      // Keep only last 100 processing times for average calculation
+      if (pushNotificationMetrics.processingTimes.length > 100) {
+        pushNotificationMetrics.processingTimes.shift();
+      }
+      
+      // Calculate average processing time
+      pushNotificationMetrics.averageProcessingTime = Math.round(
+        pushNotificationMetrics.processingTimes.reduce((sum, time) => sum + time, 0) / 
+        pushNotificationMetrics.processingTimes.length
+      );
+      
+      console.log(`✅ Push notification processed successfully in ${processingTime}ms`);
+      console.log('===== END PUSH NOTIFICATION =====\n');
+      
+    } catch (error) {
+      pushNotificationMetrics.errors++;
+      console.error('❌ Push notification processing error:', error);
+      console.log('===== END PUSH NOTIFICATION (ERROR) =====\n');
+      throw error;
+    }
+  }
+}
+
+export const pushNotificationService = new PushNotificationService();
