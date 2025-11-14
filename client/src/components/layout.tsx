@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Bolt, Plus, BarChart3, List, FileText, User, LogOut, Menu, X, Code, Settings } from "lucide-react";
+import { Bolt, Plus, BarChart3, List, FileText, User, LogOut, Menu, X, Code, Settings, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -100,6 +100,14 @@ export default function Layout({ children }: LayoutProps) {
                   Settings
                 </Link>
               </DropdownMenuItem>
+              {user?.role === 'admin' && (
+                <DropdownMenuItem asChild>
+                  <Link href="/admin" data-testid="link-admin">
+                    <Shield className="mr-2 h-4 w-4" />
+                    Admin Dashboard
+                  </Link>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem 
                 onClick={handleLogout}
                 data-testid="button-logout"
