@@ -16,13 +16,13 @@ export class JobTrackerService {
     console.log('Local time sample:', new Date().toLocaleString());
     console.log('UTC offset (minutes):', new Date().getTimezoneOffset());
     console.log('Server timezone offset:', new Date().toString().match(/GMT[+-]\d{4}/)?.[0] || 'unknown');
-    console.log('Push Notification Mode:', this.pushNotificationMode);
+    console.log('Webhook Mode:', this.pushNotificationMode);
     console.log('=========================================');
   }
 
   startPolling(): void {
-    // Read push notification mode from environment
-    const mode = process.env.PUSH_NOTIFICATION_MODE || 'polling';
+    // Read webhook mode from environment
+    const mode = process.env.WEBHOOK_MODE || 'polling';
     if (mode === 'polling' || mode === 'hybrid' || mode === 'push') {
       this.pushNotificationMode = mode;
     }
@@ -41,7 +41,7 @@ export class JobTrackerService {
     this.logEnvironmentInfo();
     
     if (this.pushNotificationMode === 'hybrid') {
-      console.log('🔄 Starting hybrid mode: polling + push notifications for validation...');
+      console.log('🔄 Starting hybrid mode: polling + webhooks for validation...');
     } else {
       console.log('📊 Starting polling mode (default)...');
     }

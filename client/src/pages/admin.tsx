@@ -26,7 +26,7 @@ interface GoCanvasMetrics {
   lastRateLimitRemaining: string | null;
 }
 
-interface PushNotificationMetrics {
+interface WebhookMetrics {
   now: string;
   totalReceived: number;
   totalProcessed: number;
@@ -103,8 +103,8 @@ export default function AdminPage() {
     refetchInterval: 60000, // Auto-refresh every 60 seconds
   });
 
-  const { data: pushMetricsData, isLoading: pushMetricsLoading } = useQuery<PushNotificationMetrics>({
-    queryKey: ['/api/metrics/push-notifications'],
+  const { data: webhookMetricsData, isLoading: webhookMetricsLoading } = useQuery<WebhookMetrics>({
+    queryKey: ['/api/metrics/webhooks'],
     refetchInterval: 10000, // Auto-refresh every 10 seconds
   });
 
@@ -130,7 +130,7 @@ export default function AdminPage() {
           </TabsTrigger>
           <TabsTrigger value="push-notifications" data-testid="tab-push-notifications">
             <Activity className="h-4 w-4 mr-2" />
-            Push Notifications
+            Webhooks
           </TabsTrigger>
         </TabsList>
 
@@ -341,50 +341,50 @@ export default function AdminPage() {
         <TabsContent value="push-notifications">
           <Card>
             <CardHeader>
-              <CardTitle>Push Notification Health</CardTitle>
+              <CardTitle>Webhook Health</CardTitle>
               <CardDescription>
-                Monitor real-time GoCanvas push notification processing (auto-refreshes every 10 seconds)
+                Monitor real-time GoCanvas webhook processing (auto-refreshes every 10 seconds)
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {pushMetricsLoading ? (
+              {webhookMetricsLoading ? (
                 <div className="text-center py-8 text-muted-foreground">
                   Loading metrics...
                 </div>
-              ) : pushMetricsData ? (
+              ) : webhookMetricsData ? (
                 <>
                   <div className="text-sm text-muted-foreground">
-                    Server time: {new Date(pushMetricsData.now).toLocaleString()}
+                    Server time: {new Date(webhookMetricsData.now).toLocaleString()}
                   </div>
 
                   <div className="grid gap-4 md:grid-cols-2">
                     <Card>
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-medium">Push Notification Summary</CardTitle>
+                        <CardTitle className="text-sm font-medium">Webhook Summary</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-2">
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Total received:</span>
                           <span className="font-semibold" data-testid="metric-push-total-received">
-                            {pushMetricsData.totalReceived}
+                            {webhookMetricsData.totalReceived}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Successfully processed:</span>
                           <span className="font-semibold text-green-600" data-testid="metric-push-total-processed">
-                            {pushMetricsData.totalProcessed}
+                            {webhookMetricsData.totalProcessed}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Duplicates ignored:</span>
                           <span className="font-semibold text-yellow-600" data-testid="metric-push-duplicates">
-                            {pushMetricsData.duplicatesIgnored}
+                            {webhookMetricsData.duplicatesIgnored}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Errors:</span>
-                          <span className={`font-semibold ${pushMetricsData.errors > 0 ? 'text-destructive' : ''}`} data-testid="metric-push-errors">
-                            {pushMetricsData.errors}
+                          <span className={`font-semibold ${webhookMetricsData.errors > 0 ? 'text-destructive' : ''}`} data-testid="metric-push-errors">
+                            {webhookMetricsData.errors}
                           </span>
                         </div>
                       </CardContent>
@@ -398,14 +398,14 @@ export default function AdminPage() {
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Avg processing time:</span>
                           <span className="font-mono text-sm font-semibold" data-testid="metric-push-avg-time">
-                            {pushMetricsData.averageProcessingTime}ms
+                            {webhookMetricsData.averageProcessingTime}ms
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Success rate:</span>
                           <span className="font-semibold text-green-600" data-testid="metric-push-success-rate">
-                            {pushMetricsData.totalReceived > 0
-                              ? `${Math.round((pushMetricsData.totalProcessed / pushMetricsData.totalReceived) * 100)}%`
+                            {webhookMetricsData.totalReceived > 0
+                              ? `${Math.round((webhookMetricsData.totalProcessed / webhookMetricsData.totalReceived) * 100)}%`
                               : 'N/A'}
                           </span>
                         </div>
@@ -418,15 +418,15 @@ export default function AdminPage() {
                       <CardTitle className="text-sm font-medium">Notifications by Form</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      {pushMetricsData.byForm && Object.keys(pushMetricsData.byForm).length > 0 ? (
+                      {webhookMetricsData.byForm && Object.keys(webhookMetricsData.byForm).length > 0 ? (
                         <div className="space-y-3">
-                          {Object.entries(pushMetricsData.byForm).map(([formId, count]) => {
+                          {Object.entries(webhookMetricsData.byForm).map(([formId, count]) => {
                             const formName = 
                               formId === '5640587' ? 'Pickup Log' :
                               formId === '5654184' ? 'Emissions Service Log' :
                               formId === '5657146' ? 'Delivery Log' :
                               `Form ${formId}`;
-                            const lastReceived = pushMetricsData.lastReceivedByForm[formId];
+                            const lastReceived = webhookMetricsData.lastReceivedByForm[formId];
                             
                             return (
                               <div key={formId} className="border rounded-lg p-3">
@@ -450,27 +450,27 @@ export default function AdminPage() {
                         </div>
                       ) : (
                         <div className="text-center py-4 text-muted-foreground">
-                          No push notifications received yet
+                          No webhooks received yet
                         </div>
                       )}
                     </CardContent>
                   </Card>
 
-                  {pushMetricsData.totalReceived === 0 && (
+                  {webhookMetricsData.totalReceived === 0 && (
                     <Card className="border-yellow-500/50 bg-yellow-50 dark:bg-yellow-950/20">
                       <CardContent className="pt-6">
                         <div className="text-sm">
                           <p className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
-                            ⚠️ No push notifications received yet
+                            ⚠️ No webhooks received yet
                           </p>
                           <p className="text-yellow-700 dark:text-yellow-300 text-xs">
-                            To enable push notifications, configure the webhook URL in GoCanvas:
+                            To enable webhooks, configure the webhook URL in GoCanvas:
                           </p>
                           <code className="block mt-2 p-2 bg-white dark:bg-gray-900 rounded text-xs font-mono">
                             https://your-domain.replit.app/api/gocanvas/push-notification
                           </code>
                           <p className="text-yellow-700 dark:text-yellow-300 text-xs mt-2">
-                            Set this URL for each form (Pickup, Emissions, Delivery) in the GoCanvas UI under Form Settings → Submission Push Notifications.
+                            Set this URL for each form (Pickup, Emissions, Delivery) in the GoCanvas UI under Form Settings → Submission Webhooks.
                           </p>
                         </div>
                       </CardContent>
@@ -479,7 +479,7 @@ export default function AdminPage() {
                 </>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  Failed to load push notification metrics
+                  Failed to load webhook metrics
                 </div>
               )}
             </CardContent>

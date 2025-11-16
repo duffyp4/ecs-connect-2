@@ -1,4 +1,4 @@
-import { pushNotificationService } from '../server/services/pushNotification';
+import { webhookService } from '../server/services/webhook';
 
 const mockPickupXML = `<?xml version="1.0" encoding="UTF-8"?>
 <submission-notification>
@@ -43,12 +43,12 @@ const mockDeliveryXML = `<?xml version="1.0" encoding="UTF-8"?>
 </submission-notification>`;
 
 async function testPushNotificationParsing() {
-  console.log('\n🧪 ===== TESTING PUSH NOTIFICATION XML PARSING =====\n');
+  console.log('\n🧪 ===== TESTING WEBHOOK XML PARSING =====\n');
   
   try {
     console.log('Test 1: Parsing Pickup Log notification');
     console.log('XML:', mockPickupXML);
-    await pushNotificationService.processGoCanvasPushNotification(
+    await webhookService.processGoCanvasWebhook(
       mockPickupXML, 
       'application/xml'
     );
@@ -60,7 +60,7 @@ async function testPushNotificationParsing() {
   try {
     console.log('\nTest 2: Parsing Emissions Service Log notification');
     console.log('XML:', mockEmissionsXML);
-    await pushNotificationService.processGoCanvasPushNotification(
+    await webhookService.processGoCanvasWebhook(
       mockEmissionsXML, 
       'application/xml'
     );
@@ -72,7 +72,7 @@ async function testPushNotificationParsing() {
   try {
     console.log('\nTest 3: Parsing Delivery Log notification');
     console.log('XML:', mockDeliveryXML);
-    await pushNotificationService.processGoCanvasPushNotification(
+    await webhookService.processGoCanvasWebhook(
       mockDeliveryXML, 
       'application/xml'
     );
@@ -83,7 +83,7 @@ async function testPushNotificationParsing() {
 
   try {
     console.log('\nTest 4: Idempotency - sending duplicate notification');
-    await pushNotificationService.processGoCanvasPushNotification(
+    await webhookService.processGoCanvasWebhook(
       mockPickupXML, 
       'application/xml'
     );
@@ -94,8 +94,8 @@ async function testPushNotificationParsing() {
 
   console.log('\n===== TEST COMPLETE =====\n');
   
-  const { pushNotificationMetrics } = await import('../server/services/pushNotification');
-  console.log('📊 Final Metrics:', JSON.stringify(pushNotificationMetrics, null, 2));
+  const { webhookMetrics } = await import('../server/services/webhook');
+  console.log('📊 Final Metrics:', JSON.stringify(webhookMetrics, null, 2));
 }
 
 testPushNotificationParsing()
