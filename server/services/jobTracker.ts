@@ -6,7 +6,7 @@ import { timezoneService } from './timezone';
 export class JobTrackerService {
   private pollingInterval: NodeJS.Timeout | null = null;
   private readonly POLL_INTERVAL_MS = 30000; // 30 seconds for faster job completion detection
-  private pushNotificationMode: 'polling' | 'hybrid' | 'push' = 'polling';
+  private webhookMode: 'polling' | 'hybrid' | 'webhook' = 'polling';
 
   private logEnvironmentInfo() {
     console.log('🌍 ===== ENVIRONMENT DEBUG INFO =====');
@@ -16,20 +16,20 @@ export class JobTrackerService {
     console.log('Local time sample:', new Date().toLocaleString());
     console.log('UTC offset (minutes):', new Date().getTimezoneOffset());
     console.log('Server timezone offset:', new Date().toString().match(/GMT[+-]\d{4}/)?.[0] || 'unknown');
-    console.log('Webhook Mode:', this.pushNotificationMode);
+    console.log('Webhook Mode:', this.webhookMode);
     console.log('=========================================');
   }
 
   startPolling(): void {
     // Read webhook mode from environment
     const mode = process.env.WEBHOOK_MODE || 'polling';
-    if (mode === 'polling' || mode === 'hybrid' || mode === 'push') {
-      this.pushNotificationMode = mode;
+    if (mode === 'polling' || mode === 'hybrid' || mode === 'webhook') {
+      this.webhookMode = mode as 'polling' | 'hybrid' | 'webhook';
     }
 
-    // In 'push' mode, skip polling entirely
-    if (this.pushNotificationMode === 'push') {
-      console.log('⚡ Push notification mode enabled - polling disabled');
+    // In 'webhook' mode, skip polling entirely
+    if (this.webhookMode === 'webhook') {
+      console.log('⚡ Webhook mode enabled - polling disabled');
       this.logEnvironmentInfo();
       return;
     }
@@ -40,7 +40,7 @@ export class JobTrackerService {
 
     this.logEnvironmentInfo();
     
-    if (this.pushNotificationMode === 'hybrid') {
+    if (this.webhookMode === 'hybrid') {
       console.log('🔄 Starting hybrid mode: polling + webhooks for validation...');
     } else {
       console.log('📊 Starting polling mode (default)...');
