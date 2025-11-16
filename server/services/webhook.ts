@@ -2,8 +2,8 @@ import { parseStringPromise } from 'xml2js';
 import { goCanvasService } from './gocanvas';
 import { jobEventsService } from './jobEvents';
 
-// In-memory metrics for push notifications
-export const pushNotificationMetrics = {
+// In-memory metrics for webhooks
+export const webhookMetrics = {
   totalReceived: 0,
   totalProcessed: 0,
   duplicatesIgnored: 0,
@@ -34,9 +34,9 @@ interface ParsedNotification {
   dispatchItemId?: string;
 }
 
-export class PushNotificationService {
+export class WebhookService {
   /**
-   * Parse GoCanvas XML push notification
+   * Parse GoCanvas XML webhook notification
    */
   private async parseNotificationXML(xmlBody: string): Promise<ParsedNotification> {
     try {
@@ -49,7 +49,7 @@ export class PushNotificationService {
       const notification = result['submission-notification'];
       
       if (!notification || !notification.form || !notification.submission) {
-        throw new Error('Invalid push notification structure');
+        throw new Error('Invalid webhook notification structure');
       }
 
       return {
@@ -294,7 +294,7 @@ export class PushNotificationService {
       console.log('Body length:', xmlBody.length);
       
       // Update metrics
-      pushNotificationMetrics.totalReceived++;
+      webhookMetrics.totalReceived++;
       
       // Parse XML notification
       const notification = await this.parseNotificationXML(xmlBody);
@@ -309,7 +309,7 @@ export class PushNotificationService {
       // Idempotency check
       if (processedSubmissions.has(notification.submissionId)) {
         console.log(`⚠️ Duplicate notification for submission ${notification.submissionId}, skipping`);
-        pushNotificationMetrics.duplicatesIgnored++;
+        webhookMetrics.duplicatesIgnored++;
         return;
       }
       
@@ -320,11 +320,11 @@ export class PushNotificationService {
       this.cleanupExpiredEntries();
       
       // Update form-specific metrics
-      if (!pushNotificationMetrics.byForm[notification.formId]) {
-        pushNotificationMetrics.byForm[notification.formId] = 0;
+      if (!webhookMetrics.byForm[notification.formId]) {
+        webhookMetrics.byForm[notification.formId] = 0;
       }
-      pushNotificationMetrics.byForm[notification.formId]++;
-      pushNotificationMetrics.lastReceivedByForm[notification.formId] = new Date().toISOString();
+      webhookMetrics.byForm[notification.formId]++;
+      webhookMetrics.lastReceivedByForm[notification.formId] = new Date().toISOString();
       
       // Fetch full submission data from GoCanvas API
       console.log(`🔍 Fetching full submission data for ID: ${notification.submissionId}`);
@@ -345,27 +345,27 @@ export class PushNotificationService {
       await this.handleSubmissionCompleted(notification.formId, enrichedSubmissionData);
       
       // Update metrics
-      pushNotificationMetrics.totalProcessed++;
+      webhookMetrics.totalProcessed++;
       
       const processingTime = Date.now() - startTime;
-      pushNotificationMetrics.processingTimes.push(processingTime);
+      webhookMetrics.processingTimes.push(processingTime);
       
       // Keep only last 100 processing times for average calculation
-      if (pushNotificationMetrics.processingTimes.length > 100) {
-        pushNotificationMetrics.processingTimes.shift();
+      if (webhookMetrics.processingTimes.length > 100) {
+        webhookMetrics.processingTimes.shift();
       }
       
       // Calculate average processing time
-      pushNotificationMetrics.averageProcessingTime = Math.round(
-        pushNotificationMetrics.processingTimes.reduce((sum, time) => sum + time, 0) / 
-        pushNotificationMetrics.processingTimes.length
+      webhookMetrics.averageProcessingTime = Math.round(
+        webhookMetrics.processingTimes.reduce((sum, time) => sum + time, 0) / 
+        webhookMetrics.processingTimes.length
       );
       
       console.log(`✅ Push notification processed successfully in ${processingTime}ms`);
       console.log('===== END PUSH NOTIFICATION =====\n');
       
     } catch (error) {
-      pushNotificationMetrics.errors++;
+      webhookMetrics.errors++;
       console.error('❌ Push notification processing error:', error);
       console.log('===== END PUSH NOTIFICATION (ERROR) =====\n');
       throw error;
@@ -373,4 +373,4 @@ export class PushNotificationService {
   }
 }
 
-export const pushNotificationService = new PushNotificationService();
+export const webhookService = new WebhookService();

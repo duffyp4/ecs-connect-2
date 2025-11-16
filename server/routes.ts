@@ -9,7 +9,7 @@ import { jobTrackerService } from "./services/jobTracker";
 import { referenceDataService } from "./services/referenceData";
 import { jobEventsService } from "./services/jobEvents";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { pushNotificationService, pushNotificationMetrics } from "./services/pushNotification";
+import { webhookService, webhookMetrics } from "./services/webhook";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Replit Auth
