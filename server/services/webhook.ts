@@ -164,26 +164,24 @@ export class WebhookService {
       let handoffTime: Date | null = null;
       
       try {
-        const handoffData = await goCanvasService.getHandoffTimeData(jobId);
-        if (handoffData?.handoffFields) {
-          const gpsField = handoffData.handoffFields.find((f: any) => f.label === 'New GPS');
+        // Extract GPS field directly from submission data (no extra API call needed!)
+        const gpsField = submissionData.responses?.find((f: any) => f.label === 'New GPS');
+        
+        if (gpsField?.value) {
+          const timeMatch = gpsField.value.match(/Time:(\d+\.?\d*)/);
           
-          if (gpsField?.value) {
-            const timeMatch = gpsField.value.match(/Time:(\d+\.?\d*)/);
+          if (timeMatch && timeMatch[1]) {
+            const unixTimestamp = parseFloat(timeMatch[1]);
+            const timestampMs = unixTimestamp > 10000000000 ? unixTimestamp : unixTimestamp * 1000;
+            handoffTime = new Date(timestampMs);
             
-            if (timeMatch && timeMatch[1]) {
-              const unixTimestamp = parseFloat(timeMatch[1]);
-              const timestampMs = unixTimestamp > 10000000000 ? unixTimestamp : unixTimestamp * 1000;
-              handoffTime = new Date(timestampMs);
-              
-              if (isNaN(handoffTime.getTime()) || 
-                  handoffTime.getFullYear() < 2020 || 
-                  handoffTime.getFullYear() > 2100) {
-                console.warn(`Invalid GPS timestamp parsed: "${timeMatch[1]}" → year ${handoffTime.getFullYear()}`);
-                handoffTime = null;
-              } else {
-                console.log(`✅ Found handoff time from GPS field: ${handoffTime.toISOString()}`);
-              }
+            if (isNaN(handoffTime.getTime()) || 
+                handoffTime.getFullYear() < 2020 || 
+                handoffTime.getFullYear() > 2100) {
+              console.warn(`Invalid GPS timestamp parsed: "${timeMatch[1]}" → year ${handoffTime.getFullYear()}`);
+              handoffTime = null;
+            } else {
+              console.log(`✅ Found handoff time from GPS field: ${handoffTime.toISOString()}`);
             }
           }
         }
