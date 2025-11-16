@@ -31,6 +31,7 @@ interface WebhookMetrics {
   totalReceived: number;
   totalProcessed: number;
   duplicatesIgnored: number;
+  ignoredForms: number;
   errors: number;
   byForm: Record<string, number>;
   averageProcessingTime: number;
@@ -382,6 +383,12 @@ export default function AdminPage() {
                           </span>
                         </div>
                         <div className="flex justify-between">
+                          <span className="text-muted-foreground">Non-target forms ignored:</span>
+                          <span className="font-semibold text-blue-600" data-testid="metric-push-ignored-forms">
+                            {webhookMetricsData.ignoredForms || 0}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
                           <span className="text-muted-foreground">Errors:</span>
                           <span className={`font-semibold ${webhookMetricsData.errors > 0 ? 'text-destructive' : ''}`} data-testid="metric-push-errors">
                             {webhookMetricsData.errors}
@@ -467,7 +474,7 @@ export default function AdminPage() {
                             To enable webhooks, configure the webhook URL in GoCanvas:
                           </p>
                           <code className="block mt-2 p-2 bg-white dark:bg-gray-900 rounded text-xs font-mono">
-                            https://your-domain.replit.app/api/gocanvas/push-notification
+                            https://your-domain.replit.app/api/gocanvas/webhook
                           </code>
                           <p className="text-yellow-700 dark:text-yellow-300 text-xs mt-2">
                             Set this URL for each form (Pickup, Emissions, Delivery) in the GoCanvas UI under Form Settings → Submission Webhooks.

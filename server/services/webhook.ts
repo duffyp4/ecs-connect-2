@@ -1,5 +1,5 @@
 import { parseStringPromise } from 'xml2js';
-import { goCanvasService } from './gocanvas';
+import { goCanvasService, FORM_IDS } from './gocanvas';
 import { jobEventsService } from './jobEvents';
 
 // In-memory metrics for webhooks
@@ -8,6 +8,7 @@ export const webhookMetrics = {
   totalProcessed: 0,
   duplicatesIgnored: 0,
   errors: 0,
+  ignoredForms: 0,
   byForm: {} as Record<string, number>,
   averageProcessingTime: 0,
   lastReceivedByForm: {} as Record<string, string>,
@@ -17,13 +18,6 @@ export const webhookMetrics = {
 // In-memory idempotency cache (submission ID -> timestamp)
 const processedSubmissions = new Map<string, number>();
 const CACHE_TTL_MS = 3600000; // 1 hour
-
-// Form ID constants (match gocanvas.ts FORM_IDS)
-const FORM_IDS = {
-  EMISSIONS: '5654184',
-  PICKUP: '5640587',
-  DELIVERY: '5657146',
-} as const;
 
 interface ParsedNotification {
   formId: string;
@@ -94,7 +88,7 @@ export class WebhookService {
     const now = Date.now();
     const expiredKeys: string[] = [];
     
-    for (const [key, timestamp] of processedSubmissions.entries()) {
+    for (const [key, timestamp] of Array.from(processedSubmissions.entries())) {
       if (now - timestamp > CACHE_TTL_MS) {
         expiredKeys.push(key);
       }
@@ -324,6 +318,15 @@ export class WebhookService {
         submissionId: notification.submissionId,
         dispatchItemId: notification.dispatchItemId,
       });
+      
+      // Filter: Only process webhooks for our 3 target forms
+      const targetFormIds: string[] = [FORM_IDS.PICKUP, FORM_IDS.EMISSIONS, FORM_IDS.DELIVERY];
+      if (!targetFormIds.includes(notification.formId)) {
+        console.log(`⏭️ Ignoring webhook for non-target form: ${notification.formId} (${notification.formName})`);
+        webhookMetrics.ignoredForms++;
+        console.log('===== END WEBHOOK (IGNORED) =====\n');
+        return;
+      }
       
       // Idempotency check
       if (processedSubmissions.has(notification.submissionId)) {
