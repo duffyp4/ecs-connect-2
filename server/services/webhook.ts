@@ -46,22 +46,41 @@ export class WebhookService {
         trim: true,
       });
 
+      console.log('📦 Raw parsed XML:', JSON.stringify(result, null, 2));
+
       const notification = result['submission-notification'];
       
       if (!notification || !notification.form || !notification.submission) {
         throw new Error('Invalid webhook notification structure');
       }
 
-      return {
-        formId: String(notification.form.id),
-        formName: notification.form.name || '',
-        formGuid: notification.form.guid || '',
-        submissionId: String(notification.submission.id || notification.submission.guid),
-        submissionGuid: notification.submission.guid || '',
+      // Helper to extract text value from xml2js parsed object
+      const extractValue = (obj: any): string => {
+        if (typeof obj === 'string') return obj;
+        if (typeof obj === 'number') return String(obj);
+        if (obj && typeof obj === 'object') {
+          // xml2js might wrap text in '_' property
+          if ('_' in obj) return String(obj._);
+          // Or it might just be in the object directly
+          return String(obj);
+        }
+        return '';
+      };
+
+      const parsed = {
+        formId: extractValue(notification.form.id),
+        formName: extractValue(notification.form.name),
+        formGuid: extractValue(notification.form.guid),
+        submissionId: extractValue(notification.submission.id || notification.submission.guid),
+        submissionGuid: extractValue(notification.submission.guid),
         dispatchItemId: notification['dispatch-item']?.id 
-          ? String(notification['dispatch-item'].id) 
+          ? extractValue(notification['dispatch-item'].id) 
           : undefined,
       };
+
+      console.log('✅ Extracted values:', parsed);
+      
+      return parsed;
     } catch (error) {
       console.error('❌ XML parsing error:', error);
       throw new Error(`Failed to parse webhook XML: ${error instanceof Error ? error.message : 'Unknown error'}`);
