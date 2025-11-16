@@ -132,21 +132,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin: Push notification metrics
-  app.get('/api/metrics/push-notifications', isAuthenticated, isAdmin, async (req, res) => {
+  // Admin: Webhook metrics
+  app.get('/api/metrics/webhooks', isAuthenticated, isAdmin, async (req, res) => {
     try {
       res.json({
         now: new Date().toISOString(),
-        ...pushNotificationMetrics,
+        ...webhookMetrics,
       });
     } catch (error) {
-      console.error("Error fetching push notification metrics:", error);
+      console.error("Error fetching webhook metrics:", error);
       res.status(500).json({ message: "Failed to fetch metrics" });
     }
   });
 
-  // GoCanvas Push Notification Webhook (unauthenticated - called by GoCanvas)
-  app.post('/api/gocanvas/push-notification', async (req, res) => {
+  // GoCanvas Webhook (unauthenticated - called by GoCanvas)
+  app.post('/api/gocanvas/webhook', async (req, res) => {
     try {
       // Return 200 immediately (GoCanvas requirement for retry logic)
       res.status(200).send('OK');
@@ -155,18 +155,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const contentType = req.headers['content-type'] || '';
       const xmlBody = typeof req.body === 'string' ? req.body : '';
       
-      console.log('📨 Push notification received from GoCanvas');
+      console.log('📨 Webhook received from GoCanvas');
       console.log('Content-Type:', contentType);
       console.log('Body type:', typeof req.body);
       
       // Process in background (don't await)
-      pushNotificationService.processGoCanvasPushNotification(xmlBody, contentType)
+      webhookService.processGoCanvasWebhook(xmlBody, contentType)
         .catch(error => {
-          console.error('❌ Background push notification processing failed:', error);
+          console.error('❌ Background webhook processing failed:', error);
         });
       
     } catch (error) {
-      console.error("Error handling push notification:", error);
+      console.error("Error handling webhook:", error);
       // Already sent 200, so just log the error
     }
   });

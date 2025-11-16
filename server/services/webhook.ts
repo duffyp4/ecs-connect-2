@@ -64,7 +64,7 @@ export class WebhookService {
       };
     } catch (error) {
       console.error('❌ XML parsing error:', error);
-      throw new Error(`Failed to parse push notification XML: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(`Failed to parse webhook XML: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -110,7 +110,7 @@ export class WebhookService {
    */
   private async handlePickupCompletion(jobId: string, submissionData: any): Promise<void> {
     try {
-      console.log(`✅ Pickup form completed for job ${jobId} (push notification)`);
+      console.log(`✅ Pickup form completed for job ${jobId} (webhook)`);
       
       await jobEventsService.markPickedUp(
         jobId,
@@ -136,7 +136,7 @@ export class WebhookService {
     try {
       const submittedAt = submissionData.submitted_at ? new Date(submissionData.submitted_at) : new Date();
       
-      console.log(`✅ Service form completed for job ${jobId} (push notification)`);
+      console.log(`✅ Service form completed for job ${jobId} (webhook)`);
       
       // Get job to check current state
       const { storage } = await import('../storage');
@@ -227,7 +227,7 @@ export class WebhookService {
    */
   private async handleDeliveryCompletion(jobId: string, submissionData: any): Promise<void> {
     try {
-      console.log(`✅ Delivery form completed for job ${jobId} (push notification)`);
+      console.log(`✅ Delivery form completed for job ${jobId} (webhook)`);
       
       await jobEventsService.markDelivered(jobId, {
         timestamp: submissionData.submitted_at ? new Date(submissionData.submitted_at) : undefined,
@@ -275,21 +275,21 @@ export class WebhookService {
         break;
       
       default:
-        console.warn('⚠️ Unknown form ID in push notification:', formId);
+        console.warn('⚠️ Unknown form ID in webhook:', formId);
     }
   }
 
   /**
-   * Process GoCanvas push notification
+   * Process GoCanvas webhook
    */
-  async processGoCanvasPushNotification(
+  async processGoCanvasWebhook(
     xmlBody: string,
     contentType?: string
   ): Promise<void> {
     const startTime = Date.now();
     
     try {
-      console.log('\n🔔 ===== PUSH NOTIFICATION RECEIVED =====');
+      console.log('\n🔔 ===== WEBHOOK RECEIVED =====');
       console.log('Content-Type:', contentType);
       console.log('Body length:', xmlBody.length);
       
@@ -362,12 +362,12 @@ export class WebhookService {
       );
       
       console.log(`✅ Push notification processed successfully in ${processingTime}ms`);
-      console.log('===== END PUSH NOTIFICATION =====\n');
+      console.log('===== END WEBHOOK =====\n');
       
     } catch (error) {
       webhookMetrics.errors++;
       console.error('❌ Push notification processing error:', error);
-      console.log('===== END PUSH NOTIFICATION (ERROR) =====\n');
+      console.log('===== END WEBHOOK (ERROR) =====\n');
       throw error;
     }
   }
