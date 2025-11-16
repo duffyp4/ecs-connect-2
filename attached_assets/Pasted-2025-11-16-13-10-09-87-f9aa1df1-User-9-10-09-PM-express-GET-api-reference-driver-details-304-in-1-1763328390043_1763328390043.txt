@@ -1,0 +1,140 @@
+2025-11-16 13:10:09.87
+f9aa1df1
+User
+9:10:09 PM [express] GET /api/reference/driver-details 304 in 119ms :: [{"name":"Nashville Driver","…
+2025-11-16 13:10:09.90
+f9aa1df1
+User
+9:10:09 PM [express] GET /api/reference/preferred-processes 304 in 150ms :: ["DPF RENU","Test defaul…
+2025-11-16 13:10:10.05
+f9aa1df1
+User
+9:10:10 PM [express] GET /api/reference/driver-details 304 in 90ms :: [{"name":"Nashville Driver","e…
+2025-11-16 13:10:10.12
+f9aa1df1
+User
+9:10:10 PM [express] GET /api/reference/ship-to/A%26A%20Trucking%20Repair 304 in 380ms :: ["2901 Con…
+2025-11-16 13:10:10.12
+f9aa1df1
+User
+9:10:10 PM [express] GET /api/reference/customer-instructions/A%26A%20Trucking%20Repair 304 in 382ms…
+2025-11-16 13:10:10.12
+f9aa1df1
+User
+9:10:10 PM [express] GET /api/reference/locations 304 in 388ms :: ["ECS - Atlanta","ECS - Chicago","…
+2025-11-16 13:10:10.12
+f9aa1df1
+User
+9:10:10 PM [express] GET /api/reference/shop-users 304 in 384ms :: ["Memphisradiator@ecspart.com","N…
+2025-11-16 13:10:10.13
+f9aa1df1
+User
+9:10:10 PM [express] GET /api/reference/tech-comments 304 in 395ms :: ["If Detroit or Volvo, Thermal…
+2025-11-16 13:10:10.13
+f9aa1df1
+User
+9:10:10 PM [express] GET /api/reference/send-clamps-gaskets 304 in 390ms :: ["Test clamp gaskets","Y…
+2025-11-16 13:10:10.14
+f9aa1df1
+User
+9:10:10 PM [express] GET /api/reference/customer-specific/A%26A%20Trucking%20Repair 304 in 404ms :: …
+2025-11-16 13:10:16.59
+f9aa1df1
+User
+9:10:16 PM [express] GET /api/auth/user 304 in 137ms :: {"id":"48677283","email":"automations@ecspar…
+2025-11-16 13:10:16.91
+f9aa1df1
+User
+9:10:16 PM [express] GET /api/jobs/ECS-20251116210904-3246/comments 304 in 230ms :: []
+2025-11-16 13:10:16.92
+f9aa1df1
+User
+9:10:16 PM [express] GET /api/jobs/ECS-20251116210904-3246/events 304 in 234ms :: [{"id":"cf7bf492-7…
+2025-11-16 13:10:16.98
+f9aa1df1
+User
+9:10:16 PM [express] GET /api/jobs/ECS-20251116210904-3246 304 in 280ms :: {"id":"8dfa895d-bb5f-4a86…
+2025-11-16 13:10:17.20
+f9aa1df1
+User
+9:10:17 PM [express] GET /api/reference/driver-details 304 in 96ms :: [{"name":"Nashville Driver","e…
+2025-11-16 13:10:17.21
+f9aa1df1
+User
+9:10:17 PM [express] GET /api/reference/preferred-processes 304 in 99ms :: ["DPF RENU","Test default…
+2025-11-16 13:10:17.21
+f9aa1df1
+User
+9:10:17 PM [express] GET /api/reference/ship-to/A%26A%20Trucking%20Repair 304 in 107ms :: ["2901 Con…
+2025-11-16 13:10:17.21
+f9aa1df1
+User
+9:10:17 PM [express] GET /api/reference/shop-users 304 in 106ms :: ["Memphisradiator@ecspart.com","N…
+2025-11-16 13:10:17.21
+f9aa1df1
+User
+9:10:17 PM [express] GET /api/reference/locations 304 in 104ms :: ["ECS - Atlanta","ECS - Chicago","…
+2025-11-16 13:10:17.21
+f9aa1df1
+User
+9:10:17 PM [express] GET /api/reference/tech-comments 304 in 106ms :: ["If Detroit or Volvo, Thermal…
+2025-11-16 13:10:17.22
+f9aa1df1
+User
+9:10:17 PM [express] GET /api/reference/customer-instructions/A%26A%20Trucking%20Repair 304 in 108ms…
+2025-11-16 13:10:17.22
+f9aa1df1
+User
+9:10:17 PM [express] GET /api/reference/send-clamps-gaskets 304 in 107ms :: ["Test clamp gaskets","Y…
+2025-11-16 13:10:17.25
+f9aa1df1
+User
+9:10:17 PM [express] GET /api/reference/customer-specific/A%26A%20Trucking%20Repair 304 in 135ms :: …
+2025-11-16 13:10:17.25
+f9aa1df1
+User
+9:10:17 PM [express] GET /api/reference/customers 304 in 136ms :: ["**COD** Penske Truck Leasing","1…
+2025-11-16 13:10:17.25
+f9aa1df1
+User
+9:10:17 PM [express] GET /api/reference/all-shops 304 in 129ms :: ["All","Anaheim","Atlanta","Champa…
+2025-11-16 13:10:17.25
+f9aa1df1
+User
+9:10:17 PM [express] GET /api/reference/ship2-ids/A%26A%20Trucking%20Repair/2901%20Convair%20(Memphi…
+2025-11-16 13:10:17.38
+f9aa1df1
+User
+9:10:17 PM [express] GET /api/reference/driver-details 304 in 88ms :: [{"name":"Nashville Driver","e…
+2025-11-16 13:10:20.51
+f9aa1df1
+User
+9:10:20 PM [express] GET /api/jobs 304 in 272ms :: {"data":[{"id":"8dfa895d-bb5f-4a86-87d7-2bc7ec35e…
+2025-11-16 13:10:29.29
+f9aa1df1
+User
+9:10:29 PM [express] GET /api/admin/whitelist 304 in 179ms :: [{"id":"70668beb-ec35-43d8-ad9b-480a96…
+2025-11-16 13:10:29.40
+f9aa1df1
+User
+9:10:29 PM [express] GET /api/metrics/gocanvas 200 in 283ms :: {"now":"2025-11-16T21:10:29.355Z","to…
+2025-11-16 13:10:29.54
+f9aa1df1
+User
+9:10:29 PM [express] GET /api/metrics/webhooks 200 in 416ms :: {"now":"2025-11-16T21:10:29.496Z","to…
+2025-11-16 13:10:40.20
+f9aa1df1
+User
+9:10:40 PM [express] GET /api/metrics/webhooks 200 in 567ms :: {"now":"2025-11-16T21:10:40.156Z","to…
+2025-11-16 13:10:40.20
+f9aa1df1
+User
+9:10:40 PM [express] GET /api/metrics/webhooks 200 in 567ms :: {"now":"2025-11-16T21:10:40.156Z","to…
+2025-11-16 13:14:07.37
+f9aa1df1
+User
+9:14:07 PM [express] GET /api/metrics/webhooks 200 in 5003ms :: {"now":"2025-11-16T21:14:07.322Z","t…
+2025-11-16 13:23:30.98
+f9aa1df1
+User
+9:23:30 PM [express] GET /api/jobs 304 in 1193ms :: {"data":[{"id":"8dfa895d-bb5f-4a86-87d7-2bc7ec35…
