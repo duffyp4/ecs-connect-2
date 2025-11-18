@@ -17,12 +17,14 @@ import {
   Send,
   XCircle,
   Clock,
-  MessageSquare
+  MessageSquare,
+  Settings
 } from "lucide-react";
 import JobStatusBadge from "@/components/job-status-badge";
 import { CheckInModal } from "@/components/check-in-modal";
 import { DeliveryDispatchModal } from "@/components/delivery-dispatch-modal";
 import { ReadyForPickupModal } from "@/components/ready-for-pickup-modal";
+import { PartsManagementModal } from "@/components/parts-management-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTimezone } from "@/hooks/useTimezone";
@@ -59,6 +61,7 @@ export default function JobDetail() {
   const [checkInModalOpen, setCheckInModalOpen] = useState(false);
   const [deliveryDispatchModalOpen, setDeliveryDispatchModalOpen] = useState(false);
   const [readyForPickupModalOpen, setReadyForPickupModalOpen] = useState(false);
+  const [partsManagementModalOpen, setPartsManagementModalOpen] = useState(false);
   const [newComment, setNewComment] = useState("");
 
   const { data: job, isLoading: jobLoading } = useQuery<any>({
@@ -320,6 +323,16 @@ export default function JobDetail() {
             >
               <Store className="mr-2 h-4 w-4" />
               Check In at Shop
+            </Button>
+
+            <Button 
+              onClick={() => setPartsManagementModalOpen(true)}
+              disabled={!isDevMode && currentState !== 'at_shop'}
+              className="btn-primary"
+              data-testid="button-manage-parts"
+            >
+              <Settings className="mr-2 h-4 w-4" />
+              Manage Parts
             </Button>
 
             <Button 
@@ -638,6 +651,19 @@ export default function JobDetail() {
             queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}/events`] });
             queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
             queryClient.invalidateQueries({ queryKey: ["/api/metrics"] });
+          }}
+        />
+      )}
+
+      {/* Parts Management Modal */}
+      {job && (
+        <PartsManagementModal
+          open={partsManagementModalOpen}
+          onOpenChange={setPartsManagementModalOpen}
+          jobId={job.jobId}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}`] });
+            queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}/parts`] });
           }}
         />
       )}
