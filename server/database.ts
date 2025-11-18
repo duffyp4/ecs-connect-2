@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { Pool, neonConfig } from "@neondatabase/serverless";
-import { jobs, technicians, jobEvents, users, whitelist, jobComments, type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent, type User, type UpsertUser, type Whitelist, type InsertWhitelist, type JobComment, type InsertJobComment } from "@shared/schema";
+import { jobs, technicians, jobEvents, users, whitelist, jobComments, jobParts, type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent, type User, type UpsertUser, type Whitelist, type InsertWhitelist, type JobComment, type InsertJobComment, type JobPart, type InsertJobPart } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { IStorage } from "./storage";
@@ -232,6 +232,37 @@ export class DatabaseStorage implements IStorage {
       .where(eq(jobComments.jobId, jobId))
       .orderBy(jobComments.createdAt);
     return result;
+  }
+
+  // Job Part methods
+  async createJobPart(insertPart: InsertJobPart): Promise<JobPart> {
+    const result = await this.db.insert(jobParts).values({
+      id: randomUUID(),
+      ...insertPart,
+    }).returning();
+    return result[0];
+  }
+
+  async getJobParts(jobId: string): Promise<JobPart[]> {
+    const result = await this.db
+      .select()
+      .from(jobParts)
+      .where(eq(jobParts.jobId, jobId))
+      .orderBy(jobParts.createdAt);
+    return result;
+  }
+
+  async updateJobPart(id: string, updates: Partial<JobPart>): Promise<JobPart | undefined> {
+    const result = await this.db
+      .update(jobParts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(jobParts.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteJobPart(id: string): Promise<void> {
+    await this.db.delete(jobParts).where(eq(jobParts.id, id));
   }
 
   private generateJobId(): string {

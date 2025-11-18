@@ -1,4 +1,4 @@
-import { type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent, type User, type UpsertUser, type Whitelist, type InsertWhitelist, type JobComment, type InsertJobComment } from "@shared/schema";
+import { type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent, type User, type UpsertUser, type Whitelist, type InsertWhitelist, type JobComment, type InsertJobComment, type JobPart, type InsertJobPart } from "@shared/schema";
 import { DatabaseStorage, type WhitelistWithRole } from "./database";
 
 export interface IStorage {
@@ -40,6 +40,12 @@ export interface IStorage {
   // Job Comment methods
   createJobComment(comment: InsertJobComment): Promise<JobComment>;
   getJobComments(jobId: string): Promise<JobComment[]>;
+  
+  // Job Part methods
+  createJobPart(part: InsertJobPart): Promise<JobPart>;
+  getJobParts(jobId: string): Promise<JobPart[]>;
+  updateJobPart(id: string, updates: Partial<JobPart>): Promise<JobPart | undefined>;
+  deleteJobPart(id: string): Promise<void>;
 }
 
 export const storage = new DatabaseStorage();
