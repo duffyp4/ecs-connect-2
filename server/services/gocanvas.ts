@@ -438,6 +438,28 @@ export class GoCanvasService {
       return 'skip-no-config';
     }
 
+    // STEP 0: Validate parts if any exist
+    // Parts are optional, but if added, all required fields must be filled
+    const { storage } = await import('../database');
+    const parts = await storage.getPartsByJobId(jobData.jobId);
+    
+    if (parts && parts.length > 0) {
+      console.log(`🔍 Validating ${parts.length} parts for job ${jobData.jobId}...`);
+      
+      // Check each part for required fields: part, process, ecs_serial, gasket_clamps
+      const incompleteParts = parts.filter((part: any) => {
+        return !part.part || !part.process || !part.ecsSerial || !part.gasketClamps;
+      });
+      
+      if (incompleteParts.length > 0) {
+        const errorMsg = `Cannot dispatch emissions service log: ${incompleteParts.length} part(s) have incomplete required fields. Required: Part, Process Being Performed, ECS Serial Number, and Gasket or Clamps.`;
+        console.error('🚨 PARTS VALIDATION FAILED:', errorMsg);
+        throw new Error(errorMsg);
+      }
+      
+      console.log(`✅ All ${parts.length} parts validated successfully`);
+    }
+
     try {
       const responses = this.mapJobDataToFormResponses(jobData);
       
