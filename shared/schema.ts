@@ -353,3 +353,48 @@ export const insertJobCommentSchema = createInsertSchema(jobComments).omit({
 
 export type InsertJobComment = z.infer<typeof insertJobCommentSchema>;
 export type JobComment = typeof jobComments.$inferSelect;
+
+// Job Parts table - for tracking parts on jobs with GoCanvas loop screen integration
+export const jobParts = pgTable("job_parts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  jobId: varchar("job_id", { length: 50 }).notNull(), // ECS-formatted job ID
+  
+  // 11 fields matching GoCanvas loop screen "Part" columns
+  part: text("part"), // Field ID: 728953416
+  process: text("process"), // Field ID: 728953403 - Process Being Performed
+  ecsSerial: text("ecs_serial"), // Field ID: 728953409 - ECS Serial Number
+  filterPn: text("filter_pn"), // Field ID: 728953404 - Filter Part Number
+  poNumber: text("po_number"), // Field ID: 728953411 - PO Number
+  mileage: text("mileage"), // Field ID: 728953412 - Mileage
+  unitVin: text("unit_vin"), // Field ID: 728953413 - Unit / Vin Number
+  gasketClamps: text("gasket_clamps"), // Field ID: 728953467 - Gasket or Clamps
+  ec: text("ec"), // Field ID: 728953477 - EC
+  eg: text("eg"), // Field ID: 728953478 - EG
+  ek: text("ek"), // Field ID: 728953479 - EK
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertJobPartSchema = createInsertSchema(jobParts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  // Required fields - 4 out of 11 are required
+  part: z.string().min(1, "Part is required"),
+  process: z.string().min(1, "Process Being Performed is required"),
+  ecsSerial: z.string().min(1, "ECS Serial Number is required"),
+  gasketClamps: z.string().min(1, "Gasket or Clamps is required"),
+  // Optional fields
+  filterPn: z.string().optional(),
+  poNumber: z.string().optional(),
+  mileage: z.string().optional(),
+  unitVin: z.string().optional(),
+  ec: z.string().optional(),
+  eg: z.string().optional(),
+  ek: z.string().optional(),
+});
+
+export type InsertJobPart = z.infer<typeof insertJobPartSchema>;
+export type JobPart = typeof jobParts.$inferSelect;
