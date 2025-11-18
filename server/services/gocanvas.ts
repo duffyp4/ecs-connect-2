@@ -463,6 +463,13 @@ export class GoCanvasService {
     try {
       const responses = this.mapJobDataToFormResponses(jobData);
       
+      // STEP 1.5: Add parts as loop screen responses if they exist
+      if (parts && parts.length > 0) {
+        const partsResponses = await this.mapPartsToLoopScreenResponses(parts);
+        responses.push(...partsResponses);
+        console.log(`📦 Added ${partsResponses.length} loop screen responses for ${parts.length} parts`);
+      }
+      
       // Look up technician user ID for assignment
       let assigneeId = null;
       if (jobData.shopHandoff) {
@@ -1493,6 +1500,126 @@ export class GoCanvasService {
       }
     });
     return responses;
+  }
+
+  private async mapPartsToLoopScreenResponses(parts: any[]): Promise<any[]> {
+    console.log(`🔧 Mapping ${parts.length} parts to loop screen responses...`);
+    
+    // Loop screen field IDs based on scratchpad notes
+    const PARTS_FIELD_IDS = {
+      part: '728953416',
+      process: '728953403',
+      ecsSerial: '728953409',
+      filterPn: '728953404',
+      poNumber: '728953411',
+      mileage: '728953412',
+      unitVin: '728953413',
+      gasketClamps: '728953467',
+      ec: '728953477',
+      eg: '728953478',
+      ek: '728953479',
+    };
+    
+    const loopResponses: any[] = [];
+    
+    // Each part gets its own multi_key (e.g., "part_0", "part_1", "part_2")
+    parts.forEach((part, index) => {
+      const multiKey = `part_${index}`;
+      
+      // Add each field for this part with the same multi_key
+      if (part.part) {
+        loopResponses.push({
+          entry_id: PARTS_FIELD_IDS.part,
+          value: String(part.part),
+          multi_key: multiKey,
+        });
+      }
+      
+      if (part.process) {
+        loopResponses.push({
+          entry_id: PARTS_FIELD_IDS.process,
+          value: String(part.process),
+          multi_key: multiKey,
+        });
+      }
+      
+      if (part.ecsSerial) {
+        loopResponses.push({
+          entry_id: PARTS_FIELD_IDS.ecsSerial,
+          value: String(part.ecsSerial),
+          multi_key: multiKey,
+        });
+      }
+      
+      if (part.filterPn) {
+        loopResponses.push({
+          entry_id: PARTS_FIELD_IDS.filterPn,
+          value: String(part.filterPn),
+          multi_key: multiKey,
+        });
+      }
+      
+      if (part.poNumber) {
+        loopResponses.push({
+          entry_id: PARTS_FIELD_IDS.poNumber,
+          value: String(part.poNumber),
+          multi_key: multiKey,
+        });
+      }
+      
+      if (part.mileage) {
+        loopResponses.push({
+          entry_id: PARTS_FIELD_IDS.mileage,
+          value: String(part.mileage),
+          multi_key: multiKey,
+        });
+      }
+      
+      if (part.unitVin) {
+        loopResponses.push({
+          entry_id: PARTS_FIELD_IDS.unitVin,
+          value: String(part.unitVin),
+          multi_key: multiKey,
+        });
+      }
+      
+      if (part.gasketClamps) {
+        loopResponses.push({
+          entry_id: PARTS_FIELD_IDS.gasketClamps,
+          value: String(part.gasketClamps),
+          multi_key: multiKey,
+        });
+      }
+      
+      if (part.ec) {
+        loopResponses.push({
+          entry_id: PARTS_FIELD_IDS.ec,
+          value: String(part.ec),
+          multi_key: multiKey,
+        });
+      }
+      
+      if (part.eg) {
+        loopResponses.push({
+          entry_id: PARTS_FIELD_IDS.eg,
+          value: String(part.eg),
+          multi_key: multiKey,
+        });
+      }
+      
+      if (part.ek) {
+        loopResponses.push({
+          entry_id: PARTS_FIELD_IDS.ek,
+          value: String(part.ek),
+          multi_key: multiKey,
+        });
+      }
+      
+      console.log(`  Part ${index + 1}: Added ${loopResponses.filter(r => r.multi_key === multiKey).length} fields with multi_key="${multiKey}"`);
+    });
+    
+    console.log(`✅ Generated ${loopResponses.length} loop screen responses for ${parts.length} parts`);
+    return loopResponses;
   }
 
 
