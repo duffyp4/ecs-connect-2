@@ -29,6 +29,20 @@ The application uses a monorepo structure with `/client` (React frontend), `/ser
 - **Job Creation**: CSR submits a web form. A unique Job ID is generated, data is stored in PostgreSQL, and then dispatched to GoCanvas via API using dynamic field mapping.
 - **API Endpoints**: Comprehensive REST endpoints for job state transitions, job management, GoCanvas integration, reference data, and authentication.
 
+### Parts Management System
+- **Purpose**: Allows CSRs to add part details to jobs before dispatching emissions service logs to technicians
+- **Database**: `job_parts` table with 11 fields linked to jobs (part, process, ecs_serial, filter_pn, po_number, mileage, unit_vin, gasket_clamps, ec, eg, ek)
+- **Workflow**: 
+  1. CSR creates job (either via Dispatch Pickup or Direct Shop Check-in)
+  2. BEFORE check-in at shop: CSR can manage parts via "Manage Parts" button on job detail page
+  3. Parts are optional, but if added, 4 required fields must be completed: Part, Process, ECS Serial, Gasket/Clamps
+  4. During check-in: Emissions service log dispatch validates parts completeness
+  5. Parts are sent to GoCanvas as loop screen rows using multi_key format
+  6. AFTER check-in: Parts become read-only (already dispatched to technician)
+- **Validation**: Emissions dispatch will fail if parts exist but required fields are incomplete
+- **GoCanvas Integration**: Parts pre-populate loop screen in emissions form using field IDs 728953416-728953479 with multi_key grouping
+- **Edit States**: Parts editable when job state is `queued_for_pickup` or `picked_up` (BEFORE emissions dispatch)
+
 ### Diagnostic Infrastructure
 Diagnostic scripts in `/scripts/` assist with GoCanvas integration debugging.
 
