@@ -48,7 +48,7 @@ export function PartsManagementModal({
   const [showForm, setShowForm] = useState(false);
 
   const { data: parts = [], isLoading, refetch } = useQuery<JobPart[]>({
-    queryKey: ['/api/jobs', jobId, 'parts'],
+    queryKey: [`/api/jobs/${jobId}/parts`],
     enabled: open,
   });
 
@@ -108,7 +108,7 @@ export function PartsManagementModal({
         });
       }
 
-      queryClient.invalidateQueries({ queryKey: ['/api/jobs', jobId, 'parts'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}/parts`] });
       refetch();
       form.reset();
       setEditingPart(null);
@@ -135,7 +135,7 @@ export function PartsManagementModal({
         title: "Part Deleted",
         description: "Part has been deleted successfully.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/jobs', jobId, 'parts'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}/parts`] });
       refetch();
       onSuccess?.();
     } catch (error) {
