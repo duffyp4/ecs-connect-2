@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { insertJobSchema, pickupJobSchema } from "@shared/schema";
+import { type LocalPart } from "@/components/parts-management-modal";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useCsrCheckInForm } from "@/hooks/use-csr-check-in-form";
 import { useLocations } from "@/hooks/use-reference-data";
 import { CsrCheckInFormFields } from "@/components/csr-check-in-form-fields";
+import { PartsManagementModal } from "@/components/parts-management-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -15,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ClipboardList, Send, X, Info, Clock, Database, Check, ChevronsUpDown, Truck, Store, ArrowLeft } from "lucide-react";
+import { ClipboardList, Send, X, Info, Clock, Database, Check, ChevronsUpDown, Truck, Store, ArrowLeft, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { z } from "zod";
 
@@ -81,6 +83,11 @@ export default function CSRForm() {
   const [pickupPoNumber, setPickupPoNumber] = useState<string>("");
   const [pickupFieldErrors, setPickupFieldErrors] = useState<{ driver?: string }>({});
 
+  // Parts management state
+  const [partsModalOpen, setPartsModalOpen] = useState(false);
+  const [tempJobIdForParts, setTempJobIdForParts] = useState<string>("temp-new-job");
+  const [localParts, setLocalParts] = useState<LocalPart[]>([]);
+
   // All auto-population logic is now handled by the shared useCsrCheckInForm hook
 
   const createJobMutation = useMutation({
@@ -135,6 +142,18 @@ export default function CSRForm() {
         }
       }
       
+      // Step 4: Save local parts to the job (if any)
+      if (localParts.length > 0) {
+        console.log(`Saving ${localParts.length} parts to job ${job.jobId}...`);
+        for (const part of localParts) {
+          await apiRequest("POST", `/api/jobs/${job.jobId}/parts`, {
+            jobId: job.jobId,
+            ...part,
+          });
+        }
+        console.log(`✅ Saved ${localParts.length} parts successfully`);
+      }
+      
       // Return the original job object for success handling
       return job;
     },
@@ -154,6 +173,7 @@ export default function CSRForm() {
       setPickupContactNumber("");
       setPickupPoNumber("");
       setPickupFieldErrors({});
+      setLocalParts([]);
       setArrivalPath('direct');
       queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
       queryClient.invalidateQueries({ queryKey: ["/api/metrics"] });

@@ -29,11 +29,18 @@ import { useQuery } from "@tanstack/react-query";
 
 type PartFormData = z.infer<typeof insertJobPartSchema>;
 
+// Local part type (without id, for new jobs)
+export type LocalPart = Omit<InsertJobPart, 'jobId'> & { tempId?: string };
+
 interface PartsManagementModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   jobId: string;
   onSuccess?: () => void;
+  // Optional: For managing parts locally (before job creation)
+  localParts?: LocalPart[];
+  onLocalPartsChange?: (parts: LocalPart[]) => void;
+  mode?: 'api' | 'local'; // 'api' = existing job, 'local' = new job
 }
 
 export function PartsManagementModal({
@@ -41,16 +48,23 @@ export function PartsManagementModal({
   onOpenChange,
   jobId,
   onSuccess,
+  localParts,
+  onLocalPartsChange,
+  mode = 'api',
 }: PartsManagementModalProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editingPart, setEditingPart] = useState<JobPart | null>(null);
+  const [editingPart, setEditingPart] = useState<JobPart | LocalPart | null>(null);
   const [showForm, setShowForm] = useState(false);
 
-  const { data: parts = [], isLoading, refetch } = useQuery<JobPart[]>({
+  // Only query API if in API mode
+  const { data: apiParts = [], isLoading, refetch } = useQuery<JobPart[]>({
     queryKey: [`/api/jobs/${jobId}/parts`],
-    enabled: open,
+    enabled: open && mode === 'api',
   });
+
+  // Use either API parts or local parts depending on mode
+  const parts = mode === 'local' ? (localParts || []) : apiParts;
 
   const form = useForm<PartFormData>({
     resolver: zodResolver(insertJobPartSchema),
@@ -94,22 +108,58 @@ export function PartsManagementModal({
     try {
       setIsSubmitting(true);
 
-      if (editingPart) {
-        await apiRequest("PUT", `/api/jobs/${jobId}/parts/${editingPart.id}`, data);
+      if (mode === 'local') {
+        // Local mode: update local parts array
+        const partData: LocalPart = {
+          part: data.part,
+          process: data.process,
+          ecsSerial: data.ecsSerial,
+          filterPn: data.filterPn,
+          poNumber: data.poNumber,
+          mileage: data.mileage,
+          unitVin: data.unitVin,
+          gasketClamps: data.gasketClamps,
+          ec: data.ec,
+          eg: data.eg,
+          ek: data.ek,
+        };
+
+        if (editingPart && 'tempId' in editingPart) {
+          // Update existing local part
+          const updated = (localParts || []).map(p => 
+            p.tempId === editingPart.tempId ? { ...partData, tempId: editingPart.tempId } : p
+          );
+          onLocalPartsChange?.(updated);
+        } else {
+          // Add new local part
+          const newPart = { ...partData, tempId: Date.now().toString() };
+          onLocalPartsChange?.([...(localParts || []), newPart]);
+        }
+
         toast({
-          title: "Part Updated",
-          description: "Part has been updated successfully.",
+          title: editingPart ? "Part Updated" : "Part Added",
+          description: "Part has been saved locally.",
         });
       } else {
-        await apiRequest("POST", `/api/jobs/${jobId}/parts`, data);
-        toast({
-          title: "Part Added",
-          description: "Part has been added successfully.",
-        });
+        // API mode: save to server
+        if (editingPart && 'id' in editingPart) {
+          await apiRequest("PUT", `/api/jobs/${jobId}/parts/${editingPart.id}`, data);
+          toast({
+            title: "Part Updated",
+            description: "Part has been updated successfully.",
+          });
+        } else {
+          await apiRequest("POST", `/api/jobs/${jobId}/parts`, data);
+          toast({
+            title: "Part Added",
+            description: "Part has been added successfully.",
+          });
+        }
+
+        queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}/parts`] });
+        refetch();
       }
 
-      queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}/parts`] });
-      refetch();
       form.reset();
       setEditingPart(null);
       setShowForm(false);
@@ -126,17 +176,29 @@ export function PartsManagementModal({
     }
   };
 
-  const handleDelete = async (partId: string) => {
+  const handleDelete = async (part: JobPart | LocalPart) => {
     if (!confirm("Are you sure you want to delete this part?")) return;
 
     try {
-      await apiRequest("DELETE", `/api/jobs/${jobId}/parts/${partId}`);
-      toast({
-        title: "Part Deleted",
-        description: "Part has been deleted successfully.",
-      });
-      queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}/parts`] });
-      refetch();
+      if (mode === 'local' && 'tempId' in part) {
+        // Local mode: remove from local parts array
+        const updated = (localParts || []).filter(p => p.tempId !== part.tempId);
+        onLocalPartsChange?.(updated);
+        toast({
+          title: "Part Deleted",
+          description: "Part has been deleted.",
+        });
+      } else if (mode === 'api' && 'id' in part) {
+        // API mode: delete from server
+        await apiRequest("DELETE", `/api/jobs/${jobId}/parts/${part.id}`);
+        toast({
+          title: "Part Deleted",
+          description: "Part has been deleted successfully.",
+        });
+        queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}/parts`] });
+        refetch();
+      }
+      
       onSuccess?.();
     } catch (error) {
       console.error("Part delete error:", error);
@@ -212,51 +274,54 @@ export function PartsManagementModal({
                 </div>
               )}
 
-              {parts.map((part) => (
-                <div
-                  key={part.id}
-                  className="border rounded-lg p-4 space-y-2"
-                  data-testid={`card-part-${part.id}`}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-1 flex-1">
-                      <div className="font-medium">{part.part || "Unnamed Part"}</div>
-                      <div className="text-sm text-muted-foreground grid grid-cols-2 gap-x-4 gap-y-1">
-                        {part.process && <div><span className="font-medium">Process:</span> {part.process}</div>}
-                        {part.ecsSerial && <div><span className="font-medium">ECS Serial:</span> {part.ecsSerial}</div>}
-                        {part.filterPn && <div><span className="font-medium">Filter PN:</span> {part.filterPn}</div>}
-                        {part.poNumber && <div><span className="font-medium">PO:</span> {part.poNumber}</div>}
-                        {part.mileage && <div><span className="font-medium">Mileage:</span> {part.mileage}</div>}
-                        {part.unitVin && <div><span className="font-medium">Unit/VIN:</span> {part.unitVin}</div>}
-                        {part.gasketClamps && <div><span className="font-medium">Gasket/Clamps:</span> {part.gasketClamps}</div>}
-                        {part.ec && <div><span className="font-medium">EC:</span> {part.ec}</div>}
-                        {part.eg && <div><span className="font-medium">EG:</span> {part.eg}</div>}
-                        {part.ek && <div><span className="font-medium">EK:</span> {part.ek}</div>}
+              {parts.map((part) => {
+                const partKey = 'id' in part ? part.id : part.tempId || 'unknown';
+                return (
+                  <div
+                    key={partKey}
+                    className="border rounded-lg p-4 space-y-2"
+                    data-testid={`card-part-${partKey}`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-1 flex-1">
+                        <div className="font-medium">{part.part || "Unnamed Part"}</div>
+                        <div className="text-sm text-muted-foreground grid grid-cols-2 gap-x-4 gap-y-1">
+                          {part.process && <div><span className="font-medium">Process:</span> {part.process}</div>}
+                          {part.ecsSerial && <div><span className="font-medium">ECS Serial:</span> {part.ecsSerial}</div>}
+                          {part.filterPn && <div><span className="font-medium">Filter PN:</span> {part.filterPn}</div>}
+                          {part.poNumber && <div><span className="font-medium">PO:</span> {part.poNumber}</div>}
+                          {part.mileage && <div><span className="font-medium">Mileage:</span> {part.mileage}</div>}
+                          {part.unitVin && <div><span className="font-medium">Unit/VIN:</span> {part.unitVin}</div>}
+                          {part.gasketClamps && <div><span className="font-medium">Gasket/Clamps:</span> {part.gasketClamps}</div>}
+                          {part.ec && <div><span className="font-medium">EC:</span> {part.ec}</div>}
+                          {part.eg && <div><span className="font-medium">EG:</span> {part.eg}</div>}
+                          {part.ek && <div><span className="font-medium">EK:</span> {part.ek}</div>}
+                        </div>
+                      </div>
+                      <div className="flex gap-2 ml-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingPart(part)}
+                          data-testid={`button-edit-part-${partKey}`}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete(part)}
+                          data-testid={`button-delete-part-${partKey}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex gap-2 ml-4">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setEditingPart(part)}
-                        data-testid={`button-edit-part-${part.id}`}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(part.id)}
-                        data-testid={`button-delete-part-${part.id}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
