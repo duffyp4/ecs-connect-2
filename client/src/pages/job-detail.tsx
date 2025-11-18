@@ -327,7 +327,7 @@ export default function JobDetail() {
 
             <Button 
               onClick={() => setPartsManagementModalOpen(true)}
-              disabled={!isDevMode && currentState !== 'at_shop'}
+              disabled={!isDevMode && !['queued_for_pickup', 'picked_up'].includes(currentState)}
               className="btn-primary"
               data-testid="button-manage-parts"
             >
