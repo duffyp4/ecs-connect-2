@@ -901,6 +901,125 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Job Parts API Endpoints
+  
+  // Get all parts for a job
+  app.get("/api/jobs/:jobId/parts", isAuthenticated, async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      
+      // Try to get job by UUID first, then by ECS-formatted jobId
+      let job = await storage.getJob(jobId);
+      if (!job) {
+        job = await storage.getJobByJobId(jobId);
+      }
+      
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+      
+      const parts = await storage.getJobParts(job.jobId);
+      res.json(parts);
+    } catch (error) {
+      console.error("Error fetching job parts:", error);
+      res.status(500).json({ message: "Failed to fetch job parts" });
+    }
+  });
+
+  // Add a new part to a job
+  app.post("/api/jobs/:jobId/parts", isAuthenticated, async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      
+      // Try to get job by UUID first, then by ECS-formatted jobId
+      let job = await storage.getJob(jobId);
+      if (!job) {
+        job = await storage.getJobByJobId(jobId);
+      }
+      
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+      
+      // Validate part data using Zod schema
+      const { insertJobPartSchema } = await import("@shared/schema");
+      const partData = insertJobPartSchema.parse({
+        ...req.body,
+        jobId: job.jobId,
+      });
+      
+      const part = await storage.createJobPart(partData);
+      res.json(part);
+    } catch (error: any) {
+      console.error("Error creating job part:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create job part" });
+    }
+  });
+
+  // Update a part
+  app.put("/api/jobs/:jobId/parts/:partId", isAuthenticated, async (req, res) => {
+    try {
+      const { jobId, partId } = req.params;
+      
+      // Verify job exists
+      let job = await storage.getJob(jobId);
+      if (!job) {
+        job = await storage.getJobByJobId(jobId);
+      }
+      
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+      
+      // Validate part data using Zod schema
+      const { insertJobPartSchema } = await import("@shared/schema");
+      const partData = insertJobPartSchema.parse({
+        ...req.body,
+        jobId: job.jobId,
+      });
+      
+      const updatedPart = await storage.updateJobPart(partId, partData);
+      
+      if (!updatedPart) {
+        return res.status(404).json({ message: "Part not found" });
+      }
+      
+      res.json(updatedPart);
+    } catch (error: any) {
+      console.error("Error updating job part:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update job part" });
+    }
+  });
+
+  // Delete a part
+  app.delete("/api/jobs/:jobId/parts/:partId", isAuthenticated, async (req, res) => {
+    try {
+      const { jobId, partId } = req.params;
+      
+      // Verify job exists
+      let job = await storage.getJob(jobId);
+      if (!job) {
+        job = await storage.getJobByJobId(jobId);
+      }
+      
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+      
+      await storage.deleteJobPart(partId);
+      res.json({ message: "Part deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting job part:", error);
+      res.status(500).json({ message: "Failed to delete job part" });
+    }
+  });
+
   // Get all jobs
   app.get("/api/jobs", isAuthenticated, async (req, res) => {
     try {
