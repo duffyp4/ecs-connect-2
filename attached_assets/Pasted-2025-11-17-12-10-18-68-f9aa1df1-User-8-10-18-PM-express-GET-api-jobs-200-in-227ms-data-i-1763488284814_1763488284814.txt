@@ -1,0 +1,84 @@
+2025-11-17 12:10:18.68
+f9aa1df1
+User
+8:10:18 PM [express] GET /api/jobs 200 in 227ms :: {"data":[{"id":"dc65f008-a5c2-4e4d-8bc8-0c9d7ef79…
+2025-11-17 12:10:49.59
+f9aa1df1
+User
+8:10:49 PM [express] GET /api/jobs 304 in 756ms :: {"data":[{"id":"dc65f008-a5c2-4e4d-8bc8-0c9d7ef79…
+2025-11-17 12:10:50.64
+f9aa1df1
+User
+8:10:50 PM [express] GET /api/jobs/ECS-20251113221244-8639 200 in 135ms :: {"id":"c9f3a6ce-1cfd-4446…
+2025-11-17 12:10:51.07
+f9aa1df1
+User
+8:10:51 PM [express] GET /api/jobs/ECS-20251113221244-8639/events 200 in 554ms :: [{"id":"9a1f8fb5-7…
+2025-11-17 12:10:51.20
+f9aa1df1
+User
+8:10:51 PM [express] GET /api/jobs/ECS-20251113221244-8639/comments 200 in 671ms :: []
+2025-11-17 12:10:51.27
+f9aa1df1
+User
+8:10:51 PM [express] GET /api/reference/ship-to/American%20RadWorx 304 in 93ms :: ["18960 US-31 (Vin…
+2025-11-17 12:10:51.27
+f9aa1df1
+User
+8:10:51 PM [express] GET /api/reference/customer-instructions/American%20RadWorx 304 in 93ms :: {"in…
+2025-11-17 12:10:51.28
+f9aa1df1
+User
+8:10:51 PM [express] GET /api/reference/ship2-ids/American%20RadWorx/18960%20US-31%20(Vinemont) 304 …
+2025-11-17 12:10:51.58
+f9aa1df1
+User
+8:10:51 PM [express] GET /api/reference/customer-specific/American%20RadWorx 304 in 386ms :: {"prefe…
+2025-11-17 12:13:32.14
+f9aa1df1
+User
+8:13:32 PM [express] POST /api/jobs/ECS-20251113221244-8639/mark-ready 200 in 5317ms :: {"id":"c9f3a…
+2025-11-17 12:13:32.39
+f9aa1df1
+User
+8:13:32 PM [express] GET /api/jobs/ECS-20251113221244-8639 200 in 142ms :: {"id":"c9f3a6ce-1cfd-4446…
+2025-11-17 12:13:34.46
+f9aa1df1
+User
+8:13:34 PM [express] POST /api/jobs/ECS-20251113221244-8639/mark-picked-up-from-shop 200 in 294ms ::…
+2025-11-17 12:13:34.79
+f9aa1df1
+User
+8:13:34 PM [express] GET /api/jobs/ECS-20251113221244-8639/events 200 in 2545ms :: [{"id":"9a1f8fb5-…
+2025-11-17 12:13:34.85
+f9aa1df1
+User
+8:13:34 PM [express] GET /api/jobs/ECS-20251113221244-8639 200 in 283ms :: {"id":"c9f3a6ce-1cfd-4446…
+2025-11-17 12:13:35.15
+f9aa1df1
+User
+8:13:35 PM [express] GET /api/jobs/ECS-20251113221244-8639/events 304 in 237ms :: [{"id":"9a1f8fb5-7…
+2025-11-17 12:13:37.70
+f9aa1df1
+User
+8:13:37 PM [express] GET /api/jobs 200 in 288ms :: {"data":[{"id":"dc65f008-a5c2-4e4d-8bc8-0c9d7ef79…
+2025-11-17 12:13:42.46
+f9aa1df1
+User
+8:13:42 PM [express] GET /api/reference/customer-specific/Auto%20Service%20of%20Pleasant%20View 304 …
+2025-11-17 12:13:42.46
+f9aa1df1
+User
+8:13:42 PM [express] GET /api/reference/customer-instructions/Auto%20Service%20of%20Pleasant%20View …
+2025-11-17 12:13:42.76
+f9aa1df1
+User
+8:13:42 PM [express] GET /api/reference/ship2-ids/Auto%20Service%20of%20Pleasant%20View/6356%20Hwy%2…
+2025-11-17 12:13:42.76
+f9aa1df1
+User
+8:13:42 PM [express] GET /api/reference/ship-to/Auto%20Service%20of%20Pleasant%20View 304 in 374ms :…
+2025-11-17 12:14:38.63
+f9aa1df1
+User
+8:14:38 PM [express] GET /api/jobs 304 in 723ms :: {"data":[{"id":"dc65f008-a5c2-4e4d-8bc8-0c9d7ef79…
