@@ -18,7 +18,8 @@ import {
   XCircle,
   Clock,
   MessageSquare,
-  Settings
+  Settings,
+  RefreshCw
 } from "lucide-react";
 import JobStatusBadge from "@/components/job-status-badge";
 import { CheckInModal } from "@/components/check-in-modal";
@@ -133,6 +134,38 @@ export default function JobDetail() {
       toast({
         title: "Error",
         description: error.message || "Failed to update job status",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation for manual update check (dev mode only)
+  const checkUpdatesMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", `/api/jobs/${jobId}/check-updates`, {});
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}/events`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
+      
+      if (data.hasUpdate) {
+        toast({
+          title: "Update Found!",
+          description: `Job transitioned from ${data.previousState} to ${data.currentState}`,
+        });
+      } else {
+        toast({
+          title: "No Updates",
+          description: data.message || "No updates found in GoCanvas",
+        });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to check for updates",
         variant: "destructive",
       });
     },
@@ -369,6 +402,19 @@ export default function JobDetail() {
               <XCircle className="mr-2 h-4 w-4" />
               Cancel Job
             </Button>
+
+            {isDevMode && (
+              <Button
+                variant="outline"
+                onClick={() => checkUpdatesMutation.mutate()}
+                disabled={checkUpdatesMutation.isPending}
+                data-testid="button-check-updates"
+                className="border-blue-500 text-blue-600 hover:bg-blue-50"
+              >
+                <RefreshCw className={`mr-2 h-4 w-4 ${checkUpdatesMutation.isPending ? 'animate-spin' : ''}`} />
+                {checkUpdatesMutation.isPending ? 'Checking...' : 'Check for Updates'}
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
