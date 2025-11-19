@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertJobPartSchema, type JobPart, type InsertJobPart } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useParts } from "@/hooks/use-reference-data";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,7 +24,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Package, Trash2, Edit, Plus } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Package, Trash2, Edit, Plus, ChevronsUpDown, Check, Database } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
 
@@ -58,6 +62,10 @@ export function PartsManagementModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingPart, setEditingPart] = useState<JobPart | LocalPart | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [partSearchOpen, setPartSearchOpen] = useState(false);
+
+  // Fetch parts from reference data
+  const { data: partsOptions = [], isLoading: isLoadingParts } = useParts();
 
   // Open in add mode if requested
   useEffect(() => {
@@ -344,10 +352,77 @@ export function PartsManagementModal({
                     name="part"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Part *</FormLabel>
-                        <FormControl>
-                          <Input {...field} data-testid="input-part" />
-                        </FormControl>
+                        <FormLabel className="flex items-center gap-1">
+                          <Database className="h-3 w-3 text-muted-foreground" /> Part *
+                        </FormLabel>
+                        <Popover open={partSearchOpen} onOpenChange={setPartSearchOpen}>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={partSearchOpen}
+                                className="w-full justify-between"
+                                data-testid="select-part"
+                              >
+                                {field.value || "Select or type part name..."}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[300px] p-0">
+                            <Command shouldFilter={false}>
+                              <div className="flex items-center border-b px-3">
+                                <Database className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                                <Input
+                                  placeholder="Search parts or enter custom name..."
+                                  value={field.value || ""}
+                                  onChange={(e) => field.onChange(e.target.value)}
+                                  className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                />
+                              </div>
+                              <CommandList>
+                                {isLoadingParts ? (
+                                  <div className="py-6 text-center text-sm">Loading parts...</div>
+                                ) : (
+                                  <>
+                                    {partsOptions
+                                      .filter((part) =>
+                                        part.toLowerCase().includes((field.value || "").toLowerCase())
+                                      )
+                                      .slice(0, 100)
+                                      .map((part) => (
+                                        <CommandItem
+                                          key={part}
+                                          value={part}
+                                          onSelect={() => {
+                                            field.onChange(part);
+                                            setPartSearchOpen(false);
+                                          }}
+                                        >
+                                          <Check
+                                            className={cn(
+                                              "mr-2 h-4 w-4",
+                                              field.value === part ? "opacity-100" : "opacity-0"
+                                            )}
+                                          />
+                                          {part}
+                                        </CommandItem>
+                                      ))}
+                                    {partsOptions
+                                      .filter((part) =>
+                                        part.toLowerCase().includes((field.value || "").toLowerCase())
+                                      ).length === 0 && field.value && (
+                                      <div className="py-6 text-center text-sm text-muted-foreground">
+                                        Press Enter to use "{field.value}"
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                         <FormMessage />
                       </FormItem>
                     )}

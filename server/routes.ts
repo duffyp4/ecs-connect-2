@@ -464,6 +464,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get parts from Parts reference data
+  app.get("/api/reference/parts", async (req, res) => {
+    try {
+      const parts = await referenceDataService.getParts();
+      res.json(parts);
+    } catch (error) {
+      console.error("Failed to get parts:", error);
+      res.status(500).json({ error: "Failed to fetch parts" });
+    }
+  });
+
   // Create new job
   app.post("/api/jobs", isAuthenticated, async (req, res) => {
     try {

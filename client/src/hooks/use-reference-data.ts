@@ -238,3 +238,16 @@ export function useLocations() {
     staleTime: 5 * 60 * 1000,
   });
 }
+
+// Get parts from Parts reference data
+export function useParts() {
+  return useQuery({
+    queryKey: ['reference', 'parts'],
+    queryFn: async () => {
+      const response = await fetch('/api/reference/parts');
+      if (!response.ok) throw new Error('Failed to fetch parts');
+      return response.json() as Promise<string[]>;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}

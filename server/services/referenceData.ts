@@ -13,6 +13,7 @@ export interface ReferenceDataService {
   getDrivers(): Promise<string[]>;
   getDriverDetails(): Promise<{ name: string; email: string }[]>;
   getLocations(): Promise<string[]>;
+  getParts(): Promise<string[]>;
 }
 
 class GoCanvasReferenceDataService implements ReferenceDataService {
@@ -20,6 +21,7 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   private customerData: any[] = [];
   private driversData: any[] = [];
   private locationsData: any[] = [];
+  private partsData: any[] = [];
   private lastFetched: number = 0;
   private cacheExpiry = 5 * 60 * 1000; // 5 minutes
 
@@ -48,8 +50,12 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
       const locationsResponse = await goCanvasService.getReferenceDataById('947586');
       this.locationsData = locationsResponse.rows || [];
       
+      // Load Parts (ID: 246465)
+      const partsResponse = await goCanvasService.getReferenceDataById('246465');
+      this.partsData = partsResponse.rows || [];
+      
       this.lastFetched = now;
-      console.log(`Loaded ${this.shopData.length} shop records, ${this.customerData.length} customer records, ${this.driversData.length} driver records, and ${this.locationsData.length} location records`);
+      console.log(`Loaded ${this.shopData.length} shop records, ${this.customerData.length} customer records, ${this.driversData.length} driver records, ${this.locationsData.length} location records, and ${this.partsData.length} parts records`);
     } catch (error) {
       console.error('Failed to load reference data:', error);
       throw error;
@@ -432,6 +438,18 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
     ));
     
     return locations.sort();
+  }
+
+  async getParts(): Promise<string[]> {
+    await this.ensureDataLoaded();
+    
+    // Extract part names from column 0 of Parts reference data (ID: 246465)
+    const parts = Array.from(new Set(this.partsData
+      .map(row => row[0])
+      .filter(value => this.isValidValue(value))
+    ));
+    
+    return parts.sort();
   }
 }
 
