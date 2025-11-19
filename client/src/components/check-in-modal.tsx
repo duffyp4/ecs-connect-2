@@ -4,6 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useCsrCheckInForm } from "@/hooks/use-csr-check-in-form";
 import { CsrCheckInFormFields } from "@/components/csr-check-in-form-fields";
+import { PartsManagementModal } from "@/components/parts-management-modal";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,7 +23,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, Settings } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { z } from "zod";
 import type { Job } from "@shared/schema";
@@ -46,6 +47,7 @@ export function CheckInModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
   const [shipToSearchOpen, setShipToSearchOpen] = useState(false);
+  const [partsModalOpen, setPartsModalOpen] = useState(false);
 
   // Use the shared CSR Check-In form hook with auto-population disabled
   // since we're pre-populating from existing job data
@@ -170,6 +172,18 @@ export function CheckInModal({
         </ScrollArea>
 
         <DialogFooter className="gap-2">
+          <div className="flex-1">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setPartsModalOpen(true)}
+              disabled={isSubmitting}
+              data-testid="button-manage-parts"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Manage Parts
+            </Button>
+          </div>
           <Button
             type="button"
             variant="outline"
@@ -189,6 +203,19 @@ export function CheckInModal({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* Parts Management Modal */}
+      <PartsManagementModal
+        open={partsModalOpen}
+        onOpenChange={setPartsModalOpen}
+        jobId={job.jobId}
+        onSuccess={() => {
+          toast({
+            title: "Parts Updated",
+            description: "Job parts have been updated successfully.",
+          });
+        }}
+      />
     </Dialog>
   );
 }
