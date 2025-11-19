@@ -79,6 +79,11 @@ export default function JobDetail() {
     enabled: !!jobId,
   });
 
+  const { data: parts = [], isLoading: partsLoading } = useQuery<any[]>({
+    queryKey: [`/api/jobs/${jobId}/parts`],
+    enabled: !!jobId,
+  });
+
   // Mutation for adding comments
   const addCommentMutation = useMutation({
     mutationFn: async (commentText: string) => {
@@ -445,6 +450,81 @@ export default function JobDetail() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Parts Information */}
+      {parts.length > 0 && (
+        <Card>
+          <CardHeader className="card-header">
+            <CardTitle className="text-white flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Parts Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="space-y-6">
+              {parts.map((part, index) => (
+                <div key={part.id} className="border rounded-lg p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-[var(--ecs-primary)]">Part {index + 1}</h3>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div>
+                      <div className="text-sm text-muted-foreground">Part</div>
+                      <div className="font-medium">{part.part || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground">Process</div>
+                      <div className="font-medium">{part.process || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground">ECS Serial</div>
+                      <div className="font-medium">{part.ecsSerial || 'N/A'}</div>
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div>
+                      <div className="text-sm text-muted-foreground">Filter PN</div>
+                      <div className="font-medium">{part.filterPn || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground">PO Number</div>
+                      <div className="font-medium">{part.poNumber || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground">Mileage</div>
+                      <div className="font-medium">{part.mileage || 'N/A'}</div>
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div>
+                      <div className="text-sm text-muted-foreground">Unit / VIN</div>
+                      <div className="font-medium">{part.unitVin || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground">Gasket or Clamps</div>
+                      <div className="font-medium">{part.gasketClamps || 'N/A'}</div>
+                    </div>
+                    {part.gasketClamps === 'Yes' && (
+                      <div>
+                        <div className="text-sm text-muted-foreground">Additional</div>
+                        <div className="font-medium flex gap-2">
+                          {part.ec === 'Yes' && <Badge variant="secondary">EC</Badge>}
+                          {part.eg === 'Yes' && <Badge variant="secondary">EG</Badge>}
+                          {part.ek === 'Yes' && <Badge variant="secondary">EK</Badge>}
+                          {!part.ec && !part.eg && !part.ek && 'None'}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Pickup/Delivery Information if applicable */}
       {(job.pickupDriver || job.deliveryDriver) && (
