@@ -1341,17 +1341,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Call the appropriate transition handler based on form type
           if (formIdToCheck === process.env.GOCANVAS_PICKUP_FORM_ID) {
             // Pickup completion
-            await jobEventsService.markPickedUp(
-              jobId,
-              1, // Default item count (not available from form)
-              {
-                metadata: {
-                  submittedAt,
-                  autoDetected: true,
-                  source: 'manual_check',
-                },
-              }
-            );
+            try {
+              await jobEventsService.markPickedUp(
+                jobId,
+                1, // Default item count (not available from form)
+                {
+                  metadata: {
+                    submittedAt,
+                    autoDetected: true,
+                    source: 'manual_check',
+                  },
+                }
+              );
+              console.log(`✅ Successfully marked job ${jobId} as picked up`);
+            } catch (err) {
+              console.error(`❌ Error marking job ${jobId} as picked up:`, err);
+              throw err;
+            }
           } else if (formIdToCheck === process.env.GOCANVAS_FORM_ID) {
             // Emissions service completion - check current state
             const currentJob = await storage.getJobByJobId(jobId);
