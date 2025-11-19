@@ -732,6 +732,22 @@ export default function CSRForm() {
                 />
               )}
 
+              {/* Parts Management Button */}
+              <div className="border-t pt-4 mt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setPartsModalOpen(true)}
+                  className="w-full hover:bg-gray-50"
+                  data-testid="button-manage-parts-form"
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  Manage Parts {localParts.length > 0 && `(${localParts.length})`}
+                </Button>
+                <p className="text-xs text-muted-foreground mt-2 text-center">
+                  Optional: Add parts before creating the job
+                </p>
+              </div>
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 pt-6">
@@ -762,6 +778,16 @@ export default function CSRForm() {
         )}
         </CardContent>
       </Card>
+
+      {/* Parts Management Modal */}
+      <PartsManagementModal
+        open={partsModalOpen}
+        onOpenChange={setPartsModalOpen}
+        jobId={tempJobIdForParts}
+        mode="local"
+        localParts={localParts}
+        onLocalPartsChange={setLocalParts}
+      />
     </div>
   );
 }
