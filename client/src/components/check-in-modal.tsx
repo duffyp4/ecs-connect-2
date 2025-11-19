@@ -117,9 +117,10 @@ export function CheckInModal({
       // This ensures any parts added via the parts modal are included in the GoCanvas dispatch
       await refetchParts();
       
-      // CRITICAL: Add a small delay to allow any pending part saves to complete
+      // CRITICAL: Add a delay to allow any pending part saves to complete
       // The parts modal fires async POST requests that might still be in flight
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Increased to 3 seconds to ensure database commits complete
+      await new Promise(resolve => setTimeout(resolve, 3000));
       
       // Refetch one more time to get the freshly saved parts
       await refetchParts();
