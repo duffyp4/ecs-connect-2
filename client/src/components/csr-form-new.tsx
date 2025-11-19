@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ClipboardList, Send, X, Info, Clock, Database, Check, ChevronsUpDown, Truck, Store, ArrowLeft, Settings } from "lucide-react";
+import { ClipboardList, Send, X, Info, Clock, Database, Check, ChevronsUpDown, Truck, Store, ArrowLeft, Settings, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { z } from "zod";
 
@@ -732,21 +732,28 @@ export default function CSRForm() {
                 />
               )}
 
-              {/* Parts Management Button */}
-              <div className="border-t pt-4 mt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setPartsModalOpen(true)}
-                  className="w-full hover:bg-gray-50"
-                  data-testid="button-manage-parts-form"
-                >
-                  <Settings className="mr-2 h-4 w-4" />
-                  Manage Parts {localParts.length > 0 && `(${localParts.length})`}
-                </Button>
-                <p className="text-xs text-muted-foreground mt-2 text-center">
-                  Optional: Add parts before creating the job
-                </p>
+              {/* Add Parts to Job */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">
+                    Add parts to job (optional)
+                  </label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPartsModalOpen(true)}
+                    className="h-8 w-8 p-0"
+                    data-testid="button-add-part"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                {localParts.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {localParts.length} part{localParts.length !== 1 ? 's' : ''} added
+                  </p>
+                )}
               </div>
 
               {/* Action Buttons */}
