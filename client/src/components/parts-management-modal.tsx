@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -581,47 +582,66 @@ export function PartsManagementModal({
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="ec"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>EC</FormLabel>
-                        <FormControl>
-                          <Input {...field} data-testid="input-ec" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {form.watch("gasketClamps") === "Yes" && (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="ec"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value === "Yes"}
+                                onCheckedChange={(checked) => field.onChange(checked ? "Yes" : "")}
+                                data-testid="checkbox-ec"
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel>EC</FormLabel>
+                            </div>
+                          </FormItem>
+                        )}
+                      />
 
-                  <FormField
-                    control={form.control}
-                    name="eg"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>EG</FormLabel>
-                        <FormControl>
-                          <Input {...field} data-testid="input-eg" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      <FormField
+                        control={form.control}
+                        name="eg"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value === "Yes"}
+                                onCheckedChange={(checked) => field.onChange(checked ? "Yes" : "")}
+                                data-testid="checkbox-eg"
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel>EG</FormLabel>
+                            </div>
+                          </FormItem>
+                        )}
+                      />
 
-                  <FormField
-                    control={form.control}
-                    name="ek"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>EK</FormLabel>
-                        <FormControl>
-                          <Input {...field} data-testid="input-ek" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      <FormField
+                        control={form.control}
+                        name="ek"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value === "Yes"}
+                                onCheckedChange={(checked) => field.onChange(checked ? "Yes" : "")}
+                                data-testid="checkbox-ek"
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel>EK</FormLabel>
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                    </>
+                  )}
                 </div>
 
                 <div className="flex justify-end gap-2 pt-4">
