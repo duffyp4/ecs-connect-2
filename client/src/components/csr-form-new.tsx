@@ -88,6 +88,11 @@ export default function CSRForm() {
   const [tempJobIdForParts, setTempJobIdForParts] = useState<string>("temp-new-job");
   const [localParts, setLocalParts] = useState<LocalPart[]>([]);
 
+  // Clear parts when switching between arrival paths
+  useEffect(() => {
+    setLocalParts([]);
+  }, [arrivalPath]);
+
   // All auto-population logic is now handled by the shared useCsrCheckInForm hook
 
   const createJobMutation = useMutation({
