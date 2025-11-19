@@ -1260,6 +1260,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Manual check for updates - state-aware dispatch/submission query
+  app.post("/api/jobs/:jobId/check-updates", isAuthenticated, async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      console.log(`🔍 Manual update check requested for job ${jobId}`);
+      
+      const job = await storage.getJobByJobId(jobId);
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+
+      console.log(`   Current state: ${job.status}`);
+      
+      // Determine which dispatch to check based on current state
+      let dispatchToCheck: string | null = null;
+      let expectedTransition: string | null = null;
+      let formIdToCheck: string | null = null;
+      
+      switch (job.status) {
+        case 'queued_for_pickup':
+          dispatchToCheck = job.pickupDispatchId;
+          expectedTransition = 'picked_up';
+          formIdToCheck = process.env.GOCANVAS_PICKUP_FORM_ID || '5631022';
+          console.log(`   Looking for pickup completion (dispatch ${dispatchToCheck})`);
+          break;
+          
+        case 'picked_up':
+        case 'at_shop':
+          dispatchToCheck = job.gocanvasDispatchId;
+          expectedTransition = 'in_service';
+          formIdToCheck = process.env.GOCANVAS_FORM_ID;
+          console.log(`   Looking for emissions service completion (dispatch ${dispatchToCheck})`);
+          break;
+          
+        case 'ready_for_pickup':
+        case 'ready_for_delivery':
+        case 'queued_for_delivery':
+          dispatchToCheck = job.deliveryDispatchId;
+          expectedTransition = 'delivered';
+          formIdToCheck = process.env.GOCANVAS_DELIVERY_FORM_ID;
+          console.log(`   Looking for delivery completion (dispatch ${dispatchToCheck})`);
+          break;
+          
+        default:
+          return res.json({
+            message: `Job is in ${job.status} state - no active dispatch to check`,
+            currentState: job.status,
+            hasUpdate: false
+          });
+      }
+      
+      if (!dispatchToCheck) {
+        return res.json({
+          message: "No dispatch ID found for current state",
+          currentState: job.status,
+          hasUpdate: false
+        });
+      }
+
+      // Query the dispatch to see if it's been completed
+      const dispatchInfo = await goCanvasService.getDispatchById(dispatchToCheck);
+      console.log(`   Dispatch status: ${dispatchInfo.status}`);
+      console.log(`   Submission ID: ${dispatchInfo.submission_id || 'none'}`);
+      
+      let updateFound = false;
+      let submissionData = null;
+      
+      // If dispatch has a submission_id, it's been completed
+      if (dispatchInfo.submission_id) {
+        console.log(`✅ Dispatch completed! Fetching submission details...`);
+        submissionData = await goCanvasService.getSubmissionById(dispatchInfo.submission_id);
+        
+        // Trigger the appropriate state transition
+        if (expectedTransition && formIdToCheck) {
+          console.log(`🔄 Triggering state transition to: ${expectedTransition}`);
+          
+          // Call the appropriate transition handler based on form type
+          if (formIdToCheck === process.env.GOCANVAS_PICKUP_FORM_ID) {
+            await jobEventsService.handlePickupCompletion(jobId, submissionData.submitted_at || new Date().toISOString());
+          } else if (formIdToCheck === process.env.GOCANVAS_FORM_ID) {
+            await jobEventsService.handleServiceCompletion(jobId, submissionData.submitted_at || new Date().toISOString());
+          } else if (formIdToCheck === process.env.GOCANVAS_DELIVERY_FORM_ID) {
+            await jobEventsService.handleDeliveryCompletion(jobId, submissionData.submitted_at || new Date().toISOString());
+          }
+          
+          updateFound = true;
+        }
+      }
+      
+      const updatedJob = await storage.getJobByJobId(jobId);
+      
+      res.json({
+        message: updateFound ? "Update found and applied" : "No updates found",
+        currentState: updatedJob?.status || job.status,
+        previousState: job.status,
+        hasUpdate: updateFound,
+        dispatchChecked: dispatchToCheck,
+        dispatchStatus: dispatchInfo.status,
+        submissionId: dispatchInfo.submission_id || null,
+        submissionData: submissionData ? {
+          id: submissionData.id,
+          submitted_at: submissionData.submitted_at,
+          status: submissionData.status
+        } : null
+      });
+      
+    } catch (error) {
+      console.error("Manual update check failed:", error);
+      res.status(500).json({ message: "Failed to check for updates", error: String(error) });
+    }
+  });
+
   // Export jobs to Google Sheets
   app.post("/api/jobs/export", async (req, res) => {
     try {
