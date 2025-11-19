@@ -870,6 +870,44 @@ export class GoCanvasService {
     }
   }
 
+  async getDispatchById(dispatchId: string): Promise<any> {
+    if (!this.username || !this.password) {
+      console.log('GoCanvas not configured, returning mock dispatch status');
+      return { status: 'pending', error: 'Not configured' };
+    }
+
+    try {
+      console.log(`📋 Fetching dispatch ${dispatchId} from GoCanvas...`);
+      const response = await rawGoCanvasRequest(`/dispatches/${dispatchId}`, {
+        headers: {
+          'Authorization': this.getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        console.warn(`Failed to fetch dispatch: ${response.status}`);
+        return { status: 'error', error: `HTTP ${response.status}` };
+      }
+
+      const dispatch = await response.json();
+      console.log(`✅ Dispatch ${dispatchId} status: ${dispatch.status}`);
+      console.log(`   Submission ID: ${dispatch.submission_id || 'none'}`);
+      
+      return {
+        id: dispatch.id,
+        status: dispatch.status,
+        submission_id: dispatch.submission_id,
+        created_at: dispatch.created_at,
+        updated_at: dispatch.updated_at,
+        rawData: dispatch
+      };
+    } catch (error) {
+      console.error(`Error fetching dispatch ${dispatchId}:`, error);
+      return { status: 'error', error: error.message };
+    }
+  }
+
   async getMostRecentSubmission(): Promise<any> {
     try {
       console.log('=== FETCHING MOST RECENT GOCANVAS SUBMISSION ===');
