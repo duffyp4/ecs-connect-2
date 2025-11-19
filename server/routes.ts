@@ -1336,13 +1336,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (expectedTransition && formIdToCheck) {
           console.log(`🔄 Triggering state transition to: ${expectedTransition}`);
           
+          const submittedAt = submissionData.submitted_at ? new Date(submissionData.submitted_at) : new Date();
+          
           // Call the appropriate transition handler based on form type
           if (formIdToCheck === process.env.GOCANVAS_PICKUP_FORM_ID) {
-            await jobEventsService.handlePickupCompletion(jobId, submissionData.submitted_at || new Date().toISOString());
+            // Pickup completion
+            await jobEventsService.markPickedUp(
+              jobId,
+              1, // Default item count (not available from form)
+              {
+                metadata: {
+                  submittedAt,
+                  autoDetected: true,
+                  source: 'manual_check',
+                },
+              }
+            );
           } else if (formIdToCheck === process.env.GOCANVAS_FORM_ID) {
-            await jobEventsService.handleServiceCompletion(jobId, submissionData.submitted_at || new Date().toISOString());
+            // Emissions service completion - check current state
+            const currentJob = await storage.getJobByJobId(jobId);
+            
+            if (currentJob?.state === 'at_shop') {
+              // Transition through in_service to service_complete
+              await jobEventsService.transitionJobState(jobId, 'in_service', {
+                actor: 'Technician',
+                metadata: {
+                  autoDetected: true,
+                  source: 'manual_check',
+                },
+              });
+              
+              await jobEventsService.transitionJobState(jobId, 'service_complete', {
+                actor: 'System',
+                timestamp: submittedAt,
+                metadata: {
+                  completedAt: submittedAt,
+                  autoDetected: true,
+                  source: 'manual_check',
+                },
+              });
+            } else if (currentJob?.state === 'in_service') {
+              // Just transition to service_complete
+              await jobEventsService.transitionJobState(jobId, 'service_complete', {
+                actor: 'System',
+                timestamp: submittedAt,
+                metadata: {
+                  completedAt: submittedAt,
+                  autoDetected: true,
+                  source: 'manual_check',
+                },
+              });
+            }
           } else if (formIdToCheck === process.env.GOCANVAS_DELIVERY_FORM_ID) {
-            await jobEventsService.handleDeliveryCompletion(jobId, submissionData.submitted_at || new Date().toISOString());
+            // Delivery completion
+            await jobEventsService.markDelivered(jobId, {
+              timestamp: submittedAt,
+              metadata: {
+                submittedAt,
+                autoDetected: true,
+                source: 'manual_check',
+              },
+            });
           }
           
           updateFound = true;
