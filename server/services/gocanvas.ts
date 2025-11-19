@@ -426,7 +426,7 @@ export class GoCanvasService {
     }
   }
 
-  async createSubmission(jobData: any): Promise<string> {
+  async createSubmission(jobData: any, storage: any): Promise<string> {
     console.log('=== GOCANVAS createDispatch called ===');
     console.log('Raw jobData keys:', Object.keys(jobData));
     console.log('shopName value:', jobData.shopName);
@@ -440,7 +440,6 @@ export class GoCanvasService {
 
     // STEP 0: Validate parts if any exist
     // Parts are optional, but if added, all required fields must be filled
-    const { storage } = await import('../database');
     const parts = await storage.getPartsByJobId(jobData.jobId);
     
     if (parts && parts.length > 0) {

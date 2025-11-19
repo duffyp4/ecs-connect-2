@@ -651,7 +651,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let submissionId: string | null = null;
       try {
         console.log('🚀 Attempting GoCanvas dispatch BEFORE checking in...');
-        submissionId = await goCanvasService.createSubmission(refreshedJob);
+        submissionId = await goCanvasService.createSubmission(refreshedJob, storage);
         
         // Check if dispatch was actually successful
         // Handle both string and non-string return values safely
