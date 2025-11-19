@@ -14,6 +14,7 @@ export interface ReferenceDataService {
   getDriverDetails(): Promise<{ name: string; email: string }[]>;
   getLocations(): Promise<string[]>;
   getParts(): Promise<string[]>;
+  getProcesses(): Promise<string[]>;
 }
 
 class GoCanvasReferenceDataService implements ReferenceDataService {
@@ -22,6 +23,7 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   private driversData: any[] = [];
   private locationsData: any[] = [];
   private partsData: any[] = [];
+  private processData: any[] = [];
   private lastFetched: number = 0;
   private cacheExpiry = 5 * 60 * 1000; // 5 minutes
 
@@ -54,8 +56,12 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
       const partsResponse = await goCanvasService.getReferenceDataById('246465');
       this.partsData = partsResponse.rows || [];
       
+      // Load Process (ID: 176530)
+      const processResponse = await goCanvasService.getReferenceDataById('176530');
+      this.processData = processResponse.rows || [];
+      
       this.lastFetched = now;
-      console.log(`Loaded ${this.shopData.length} shop records, ${this.customerData.length} customer records, ${this.driversData.length} driver records, ${this.locationsData.length} location records, and ${this.partsData.length} parts records`);
+      console.log(`Loaded ${this.shopData.length} shop records, ${this.customerData.length} customer records, ${this.driversData.length} driver records, ${this.locationsData.length} location records, ${this.partsData.length} parts records, and ${this.processData.length} process records`);
     } catch (error) {
       console.error('Failed to load reference data:', error);
       throw error;
@@ -450,6 +456,18 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
     ));
     
     return parts.sort();
+  }
+
+  async getProcesses(): Promise<string[]> {
+    await this.ensureDataLoaded();
+    
+    // Extract process names from column 0 of Process reference data (ID: 176530)
+    const processes = Array.from(new Set(this.processData
+      .map(row => row[0])
+      .filter(value => this.isValidValue(value))
+    ));
+    
+    return processes.sort();
   }
 }
 

@@ -475,6 +475,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get processes from Process reference data
+  app.get("/api/reference/processes", async (req, res) => {
+    try {
+      const processes = await referenceDataService.getProcesses();
+      res.json(processes);
+    } catch (error) {
+      console.error("Failed to get processes:", error);
+      res.status(500).json({ error: "Failed to fetch processes" });
+    }
+  });
+
   // Create new job
   app.post("/api/jobs", isAuthenticated, async (req, res) => {
     try {

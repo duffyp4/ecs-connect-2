@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertJobPartSchema, type JobPart, type InsertJobPart } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useParts } from "@/hooks/use-reference-data";
+import { useParts, useProcesses } from "@/hooks/use-reference-data";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -67,8 +67,9 @@ export function PartsManagementModal({
   const [editingPart, setEditingPart] = useState<JobPart | LocalPart | null>(null);
   const [showForm, setShowForm] = useState(false);
 
-  // Fetch parts from reference data
+  // Fetch parts and processes from reference data
   const { data: partsOptions = [], isLoading: isLoadingParts } = useParts();
+  const { data: processOptions = [], isLoading: isLoadingProcesses } = useProcesses();
 
   // Open in add mode if requested
   useEffect(() => {
@@ -386,10 +387,27 @@ export function PartsManagementModal({
                     name="process"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Process Being Performed *</FormLabel>
-                        <FormControl>
-                          <Input {...field} data-testid="input-process" />
-                        </FormControl>
+                        <FormLabel className="flex items-center gap-1">
+                          <Database className="h-3 w-3 text-muted-foreground" /> Process Being Performed *
+                        </FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-process">
+                              <SelectValue placeholder="Select process..." />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {isLoadingProcesses ? (
+                              <div className="py-6 text-center text-sm">Loading processes...</div>
+                            ) : (
+                              processOptions.map((process) => (
+                                <SelectItem key={process} value={process}>
+                                  {process}
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}

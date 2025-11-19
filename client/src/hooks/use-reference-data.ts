@@ -251,3 +251,16 @@ export function useParts() {
     staleTime: 5 * 60 * 1000,
   });
 }
+
+// Get processes from Process reference data
+export function useProcesses() {
+  return useQuery({
+    queryKey: ['reference', 'processes'],
+    queryFn: async () => {
+      const response = await fetch('/api/reference/processes');
+      if (!response.ok) throw new Error('Failed to fetch processes');
+      return response.json() as Promise<string[]>;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
