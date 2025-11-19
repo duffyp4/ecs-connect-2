@@ -331,16 +331,6 @@ export default function JobDetail() {
             </Button>
 
             <Button 
-              onClick={() => setPartsManagementModalOpen(true)}
-              disabled={!isDevMode && !['queued_for_pickup', 'picked_up'].includes(currentState)}
-              className="btn-primary"
-              data-testid="button-manage-parts"
-            >
-              <Settings className="mr-2 h-4 w-4" />
-              Manage Parts
-            </Button>
-
-            <Button 
               onClick={() => setReadyForPickupModalOpen(true)}
               disabled={!isDevMode && (currentState !== 'service_complete' || isPending)}
               className="btn-primary"
@@ -455,10 +445,22 @@ export default function JobDetail() {
       {parts.length > 0 && (
         <Card>
           <CardHeader className="card-header">
-            <CardTitle className="text-white flex items-center gap-2">
-              <Package className="h-5 w-5" />
-              Parts Details
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-white flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                Parts Details
+              </CardTitle>
+              <Button 
+                onClick={() => setPartsManagementModalOpen(true)}
+                disabled={!isDevMode && !['queued_for_pickup', 'picked_up'].includes(currentState)}
+                variant="secondary"
+                size="sm"
+                data-testid="button-manage-parts"
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                Manage Parts
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-6">
