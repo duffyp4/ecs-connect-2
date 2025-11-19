@@ -261,7 +261,14 @@ export function PartsManagementModal({
   const handleCancel = () => {
     form.reset();
     setEditingPart(null);
-    setShowForm(false);
+    
+    // If we opened directly in add mode and have no parts yet, close the entire modal
+    // Otherwise, just go back to the parts list
+    if (openInAddMode && parts.length === 0) {
+      onOpenChange(false);
+    } else {
+      setShowForm(false);
+    }
   };
 
   return (
