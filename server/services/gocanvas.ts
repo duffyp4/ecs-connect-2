@@ -1542,19 +1542,13 @@ export class GoCanvasService {
   private async mapPartsToLoopScreenResponses(parts: any[]): Promise<any[]> {
     console.log(`🔧 Mapping ${parts.length} parts to loop screen responses...`);
     
-    // Loop screen field IDs based on scratchpad notes
+    // Loop screen field IDs - matching actual Parts Log loop screen fields
     const PARTS_FIELD_IDS = {
-      part: '728953416',
-      process: '728953403',
-      ecsSerial: '728953409',
-      filterPn: '728953404',
-      poNumber: '728953411',
-      mileage: '728953412',
-      unitVin: '728953413',
-      gasketClamps: '728953467',
-      ec: '728953477',
-      eg: '728953478',
-      ek: '728953479',
+      part: '728953416',           // Part (sets row title)
+      process: '728953403',        // Process Being Performed
+      ecsPartNumber: '728953405',  // ECS Part Number (visible in loop)
+      filterPn: '728953404',       // Filter Part Number
+      partDescription: '728953406', // Part Description
     };
     
     const loopResponses: any[] = [];
@@ -1564,6 +1558,7 @@ export class GoCanvasService {
       const multiKey = `part_${index}`;
       
       // Add each field for this part with the same multi_key
+      // Only include fields that are actually in the Parts Log loop screen
       if (part.part) {
         loopResponses.push({
           entry_id: PARTS_FIELD_IDS.part,
@@ -1582,7 +1577,7 @@ export class GoCanvasService {
       
       if (part.ecsSerial) {
         loopResponses.push({
-          entry_id: PARTS_FIELD_IDS.ecsSerial,
+          entry_id: PARTS_FIELD_IDS.ecsPartNumber,
           value: String(part.ecsSerial),
           multi_key: multiKey,
         });
@@ -1596,58 +1591,18 @@ export class GoCanvasService {
         });
       }
       
-      if (part.poNumber) {
-        loopResponses.push({
-          entry_id: PARTS_FIELD_IDS.poNumber,
-          value: String(part.poNumber),
-          multi_key: multiKey,
-        });
-      }
+      // Part Description - combine multiple fields if available
+      const description = [
+        part.partDescription,
+        part.poNumber && `PO: ${part.poNumber}`,
+        part.mileage && `Mileage: ${part.mileage}`,
+        part.unitVin && `VIN: ${part.unitVin}`,
+      ].filter(Boolean).join(' | ');
       
-      if (part.mileage) {
+      if (description) {
         loopResponses.push({
-          entry_id: PARTS_FIELD_IDS.mileage,
-          value: String(part.mileage),
-          multi_key: multiKey,
-        });
-      }
-      
-      if (part.unitVin) {
-        loopResponses.push({
-          entry_id: PARTS_FIELD_IDS.unitVin,
-          value: String(part.unitVin),
-          multi_key: multiKey,
-        });
-      }
-      
-      if (part.gasketClamps) {
-        loopResponses.push({
-          entry_id: PARTS_FIELD_IDS.gasketClamps,
-          value: String(part.gasketClamps),
-          multi_key: multiKey,
-        });
-      }
-      
-      if (part.ec) {
-        loopResponses.push({
-          entry_id: PARTS_FIELD_IDS.ec,
-          value: String(part.ec),
-          multi_key: multiKey,
-        });
-      }
-      
-      if (part.eg) {
-        loopResponses.push({
-          entry_id: PARTS_FIELD_IDS.eg,
-          value: String(part.eg),
-          multi_key: multiKey,
-        });
-      }
-      
-      if (part.ek) {
-        loopResponses.push({
-          entry_id: PARTS_FIELD_IDS.ek,
-          value: String(part.ek),
+          entry_id: PARTS_FIELD_IDS.partDescription,
+          value: description,
           multi_key: multiKey,
         });
       }
