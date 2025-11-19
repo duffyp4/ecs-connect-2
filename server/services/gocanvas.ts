@@ -1543,12 +1543,17 @@ export class GoCanvasService {
     console.log(`🔧 Mapping ${parts.length} parts to loop screen responses...`);
     
     // Loop screen field IDs - matching actual Parts Log loop screen fields
+    // Based on gocanvas_field_map_5654184.json entries 728953398-728953413
     const PARTS_FIELD_IDS = {
-      part: '728953416',           // Part (sets row title)
-      process: '728953403',        // Process Being Performed
-      ecsPartNumber: '728953405',  // ECS Part Number (visible in loop)
-      filterPn: '728953404',       // Filter Part Number
+      part: '728953416',            // Part (sets row title)
+      process: '728953403',         // Process Being Performed
+      filterPn: '728953404',        // Filter Part Number
+      ecsPartNumber: '728953405',   // ECS Part Number (for display label)
       partDescription: '728953406', // Part Description
+      ecsSerial: '728953409',       // ECS Serial Number (the actual serial)
+      poNumber: '728953411',        // PO Number
+      mileage: '728953412',         // Mileage
+      unitVin: '728953413',         // Unit / Vin Number
     };
     
     const loopResponses: any[] = [];
@@ -1558,7 +1563,9 @@ export class GoCanvasService {
       const multiKey = `part_${index}`;
       
       // Add each field for this part with the same multi_key
-      // Only include fields that are actually in the Parts Log loop screen
+      // All fields with the same multi_key are grouped into one loop row
+      
+      // 1. Part - sets the loop row title (e.g., "DPF")
       if (part.part) {
         loopResponses.push({
           entry_id: PARTS_FIELD_IDS.part,
@@ -1567,6 +1574,7 @@ export class GoCanvasService {
         });
       }
       
+      // 2. Process Being Performed
       if (part.process) {
         loopResponses.push({
           entry_id: PARTS_FIELD_IDS.process,
@@ -1575,14 +1583,7 @@ export class GoCanvasService {
         });
       }
       
-      if (part.ecsSerial) {
-        loopResponses.push({
-          entry_id: PARTS_FIELD_IDS.ecsPartNumber,
-          value: String(part.ecsSerial),
-          multi_key: multiKey,
-        });
-      }
-      
+      // 3. Filter Part Number
       if (part.filterPn) {
         loopResponses.push({
           entry_id: PARTS_FIELD_IDS.filterPn,
@@ -1591,18 +1592,53 @@ export class GoCanvasService {
         });
       }
       
-      // Part Description - combine multiple fields if available
-      const description = [
-        part.partDescription,
-        part.poNumber && `PO: ${part.poNumber}`,
-        part.mileage && `Mileage: ${part.mileage}`,
-        part.unitVin && `VIN: ${part.unitVin}`,
-      ].filter(Boolean).join(' | ');
+      // 4. ECS Part Number (display label) & ECS Serial Number (actual serial)
+      if (part.ecsSerial) {
+        // Send to both fields for better visibility
+        loopResponses.push({
+          entry_id: PARTS_FIELD_IDS.ecsPartNumber,
+          value: String(part.ecsSerial),
+          multi_key: multiKey,
+        });
+        loopResponses.push({
+          entry_id: PARTS_FIELD_IDS.ecsSerial,
+          value: String(part.ecsSerial),
+          multi_key: multiKey,
+        });
+      }
       
-      if (description) {
+      // 5. Part Description
+      if (part.partDescription) {
         loopResponses.push({
           entry_id: PARTS_FIELD_IDS.partDescription,
-          value: description,
+          value: String(part.partDescription),
+          multi_key: multiKey,
+        });
+      }
+      
+      // 6. PO Number
+      if (part.poNumber) {
+        loopResponses.push({
+          entry_id: PARTS_FIELD_IDS.poNumber,
+          value: String(part.poNumber),
+          multi_key: multiKey,
+        });
+      }
+      
+      // 7. Mileage
+      if (part.mileage) {
+        loopResponses.push({
+          entry_id: PARTS_FIELD_IDS.mileage,
+          value: String(part.mileage),
+          multi_key: multiKey,
+        });
+      }
+      
+      // 8. Unit / VIN Number
+      if (part.unitVin) {
+        loopResponses.push({
+          entry_id: PARTS_FIELD_IDS.unitVin,
+          value: String(part.unitVin),
           multi_key: multiKey,
         });
       }
