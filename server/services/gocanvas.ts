@@ -440,7 +440,7 @@ export class GoCanvasService {
 
     // STEP 0: Validate parts if any exist
     // Parts are optional, but if added, all required fields must be filled
-    const parts = await storage.getPartsByJobId(jobData.jobId);
+    const parts = await storage.getJobParts(jobData.jobId);
     
     if (parts && parts.length > 0) {
       console.log(`🔍 Validating ${parts.length} parts for job ${jobData.jobId}...`);
