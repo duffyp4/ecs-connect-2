@@ -486,6 +486,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get filter part numbers from Emission_pn_w kits reference data
+  app.get("/api/reference/filter-part-numbers", async (req, res) => {
+    try {
+      const filterPartNumbers = await referenceDataService.getFilterPartNumbers();
+      res.json(filterPartNumbers);
+    } catch (error) {
+      console.error("Failed to get filter part numbers:", error);
+      res.status(500).json({ error: "Failed to fetch filter part numbers" });
+    }
+  });
+
   // Create new job
   app.post("/api/jobs", isAuthenticated, async (req, res) => {
     try {

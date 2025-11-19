@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertJobPartSchema, type JobPart, type InsertJobPart } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useParts, useProcesses } from "@/hooks/use-reference-data";
+import { useParts, useProcesses, useFilterPartNumbers } from "@/hooks/use-reference-data";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -31,7 +31,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Package, Trash2, Edit, Plus, Database } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Package, Trash2, Edit, Plus, Database, ChevronsUpDown, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
 
@@ -67,9 +70,12 @@ export function PartsManagementModal({
   const [editingPart, setEditingPart] = useState<JobPart | LocalPart | null>(null);
   const [showForm, setShowForm] = useState(false);
 
-  // Fetch parts and processes from reference data
+  // Fetch parts, processes, and filter part numbers from reference data
   const { data: partsOptions = [], isLoading: isLoadingParts } = useParts();
   const { data: processOptions = [], isLoading: isLoadingProcesses } = useProcesses();
+  const { data: filterPNOptions = [], isLoading: isLoadingFilterPNs } = useFilterPartNumbers();
+  
+  const [filterPNSearchOpen, setFilterPNSearchOpen] = useState(false);
 
   // Open in add mode if requested
   useEffect(() => {
@@ -446,10 +452,80 @@ export function PartsManagementModal({
                     name="filterPn"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Filter Part Number</FormLabel>
-                        <FormControl>
-                          <Input {...field} data-testid="input-filter-pn" />
-                        </FormControl>
+                        <FormLabel className="flex items-center gap-1">
+                          <Database className="h-3 w-3 text-muted-foreground" /> Filter Part Number
+                        </FormLabel>
+                        <Popover open={filterPNSearchOpen} onOpenChange={setFilterPNSearchOpen}>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={filterPNSearchOpen}
+                                className="w-full justify-between font-normal"
+                                data-testid="select-filter-pn"
+                              >
+                                {field.value || "Select or type filter part number..."}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[400px] p-0">
+                            <Command shouldFilter={false}>
+                              <div className="flex items-center border-b px-3">
+                                <Database className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                                <Input
+                                  placeholder="Search or type filter part number..."
+                                  value={field.value || ""}
+                                  onChange={(e) => field.onChange(e.target.value)}
+                                  className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                />
+                              </div>
+                              <CommandList>
+                                {isLoadingFilterPNs ? (
+                                  <div className="py-6 text-center text-sm">Loading filter part numbers...</div>
+                                ) : (
+                                  <>
+                                    <CommandEmpty>
+                                      <div className="py-6 text-center text-sm text-muted-foreground">
+                                        {field.value ? (
+                                          <>Press Enter to use &quot;{field.value}&quot;</>
+                                        ) : (
+                                          "Type to search or enter a custom value"
+                                        )}
+                                      </div>
+                                    </CommandEmpty>
+                                    <CommandGroup>
+                                      {filterPNOptions
+                                        .filter((pn) =>
+                                          pn.toLowerCase().includes((field.value || "").toLowerCase())
+                                        )
+                                        .slice(0, 100)
+                                        .map((pn) => (
+                                          <CommandItem
+                                            key={pn}
+                                            value={pn}
+                                            onSelect={() => {
+                                              field.onChange(pn);
+                                              setFilterPNSearchOpen(false);
+                                            }}
+                                          >
+                                            <Check
+                                              className={cn(
+                                                "mr-2 h-4 w-4",
+                                                field.value === pn ? "opacity-100" : "opacity-0"
+                                              )}
+                                            />
+                                            {pn}
+                                          </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                  </>
+                                )}
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                         <FormMessage />
                       </FormItem>
                     )}

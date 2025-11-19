@@ -15,6 +15,7 @@ export interface ReferenceDataService {
   getLocations(): Promise<string[]>;
   getParts(): Promise<string[]>;
   getProcesses(): Promise<string[]>;
+  getFilterPartNumbers(): Promise<string[]>;
 }
 
 class GoCanvasReferenceDataService implements ReferenceDataService {
@@ -24,6 +25,7 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   private locationsData: any[] = [];
   private partsData: any[] = [];
   private processData: any[] = [];
+  private filterPartNumbersData: any[] = [];
   private lastFetched: number = 0;
   private cacheExpiry = 5 * 60 * 1000; // 5 minutes
 
@@ -60,8 +62,12 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
       const processResponse = await goCanvasService.getReferenceDataById('176530');
       this.processData = processResponse.rows || [];
       
+      // Load Emission_pn_w kits (ID: 452576)
+      const filterPartNumbersResponse = await goCanvasService.getReferenceDataById('452576');
+      this.filterPartNumbersData = filterPartNumbersResponse.rows || [];
+      
       this.lastFetched = now;
-      console.log(`Loaded ${this.shopData.length} shop records, ${this.customerData.length} customer records, ${this.driversData.length} driver records, ${this.locationsData.length} location records, ${this.partsData.length} parts records, and ${this.processData.length} process records`);
+      console.log(`Loaded ${this.shopData.length} shop records, ${this.customerData.length} customer records, ${this.driversData.length} driver records, ${this.locationsData.length} location records, ${this.partsData.length} parts records, ${this.processData.length} process records, and ${this.filterPartNumbersData.length} filter part number records`);
     } catch (error) {
       console.error('Failed to load reference data:', error);
       throw error;
@@ -468,6 +474,18 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
     ));
     
     return processes.sort();
+  }
+
+  async getFilterPartNumbers(): Promise<string[]> {
+    await this.ensureDataLoaded();
+    
+    // Extract OE PN from column 0 of Emission_pn_w kits reference data (ID: 452576)
+    const filterPartNumbers = Array.from(new Set(this.filterPartNumbersData
+      .map(row => row[0])
+      .filter(value => this.isValidValue(value))
+    ));
+    
+    return filterPartNumbers.sort();
   }
 }
 

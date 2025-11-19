@@ -264,3 +264,16 @@ export function useProcesses() {
     staleTime: 5 * 60 * 1000,
   });
 }
+
+// Get filter part numbers from Emission_pn_w kits reference data
+export function useFilterPartNumbers() {
+  return useQuery({
+    queryKey: ['reference', 'filter-part-numbers'],
+    queryFn: async () => {
+      const response = await fetch('/api/reference/filter-part-numbers');
+      if (!response.ok) throw new Error('Failed to fetch filter part numbers');
+      return response.json() as Promise<string[]>;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
