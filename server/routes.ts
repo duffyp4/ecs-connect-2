@@ -1335,6 +1335,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Trigger the appropriate state transition
         if (expectedTransition && formIdToCheck) {
           console.log(`🔄 Triggering state transition to: ${expectedTransition}`);
+          console.log(`   formIdToCheck: ${formIdToCheck}`);
+          console.log(`   GOCANVAS_PICKUP_FORM_ID: ${process.env.GOCANVAS_PICKUP_FORM_ID}`);
+          console.log(`   GOCANVAS_FORM_ID: ${process.env.GOCANVAS_FORM_ID}`);
+          console.log(`   GOCANVAS_DELIVERY_FORM_ID: ${process.env.GOCANVAS_DELIVERY_FORM_ID}`);
           
           const submittedAt = submissionData.submitted_at ? new Date(submissionData.submitted_at) : new Date();
           
