@@ -1336,14 +1336,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (expectedTransition && formIdToCheck) {
           console.log(`🔄 Triggering state transition to: ${expectedTransition}`);
           console.log(`   formIdToCheck: ${formIdToCheck}`);
-          console.log(`   GOCANVAS_PICKUP_FORM_ID: ${process.env.GOCANVAS_PICKUP_FORM_ID}`);
-          console.log(`   GOCANVAS_FORM_ID: ${process.env.GOCANVAS_FORM_ID}`);
-          console.log(`   GOCANVAS_DELIVERY_FORM_ID: ${process.env.GOCANVAS_DELIVERY_FORM_ID}`);
           
           const submittedAt = submissionData.submitted_at ? new Date(submissionData.submitted_at) : new Date();
           
+          // Use fallback form IDs if env vars not set
+          const pickupFormId = process.env.GOCANVAS_PICKUP_FORM_ID || '5631022';
+          const emissionsFormId = process.env.GOCANVAS_FORM_ID || '5654184';
+          const deliveryFormId = process.env.GOCANVAS_DELIVERY_FORM_ID || '5632656';
+          
+          console.log(`   pickupFormId: ${pickupFormId} (env: ${process.env.GOCANVAS_PICKUP_FORM_ID || 'not set'})`);
+          console.log(`   emissionsFormId: ${emissionsFormId} (env: ${process.env.GOCANVAS_FORM_ID || 'not set'})`);
+          console.log(`   deliveryFormId: ${deliveryFormId} (env: ${process.env.GOCANVAS_DELIVERY_FORM_ID || 'not set'})`);
+          
           // Call the appropriate transition handler based on form type
-          if (formIdToCheck === process.env.GOCANVAS_PICKUP_FORM_ID) {
+          if (formIdToCheck === pickupFormId) {
             // Pickup completion
             console.log(`🎯 About to call markPickedUp for job ${jobId}...`);
             try {
@@ -1363,7 +1369,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.error(`❌ Error marking job ${jobId} as picked up:`, err);
               throw err;
             }
-          } else if (formIdToCheck === process.env.GOCANVAS_FORM_ID) {
+          } else if (formIdToCheck === emissionsFormId) {
             // Emissions service completion - check current state
             const currentJob = await storage.getJobByJobId(jobId);
             
@@ -1398,7 +1404,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 },
               });
             }
-          } else if (formIdToCheck === process.env.GOCANVAS_DELIVERY_FORM_ID) {
+          } else if (formIdToCheck === deliveryFormId) {
             // Delivery completion
             await jobEventsService.markDelivered(jobId, {
               timestamp: submittedAt,
