@@ -439,9 +439,17 @@ export function PartsManagementModal({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Gasket or Clamps *</FormLabel>
-                        <FormControl>
-                          <Input {...field} data-testid="input-gasket-clamps" />
-                        </FormControl>
+                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-gasket-clamps">
+                              <SelectValue placeholder="Select option..." />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Yes">Yes</SelectItem>
+                            <SelectItem value="No">No</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
