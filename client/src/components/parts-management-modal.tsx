@@ -34,7 +34,8 @@ import {
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Package, Trash2, Edit, Plus, Database, ChevronsUpDown, Check } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Package, Trash2, Edit, Plus, Database, ChevronsUpDown, Check, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
@@ -54,6 +55,7 @@ interface PartsManagementModalProps {
   onLocalPartsChange?: (parts: LocalPart[]) => void;
   mode?: 'api' | 'local'; // 'api' = existing job, 'local' = new job
   openInAddMode?: boolean; // If true, opens directly to add form instead of parts list
+  showEditLockDisclaimer?: boolean; // If true, shows disclaimer about parts being locked after shop check-in
 }
 
 export function PartsManagementModal({
@@ -65,6 +67,7 @@ export function PartsManagementModal({
   onLocalPartsChange,
   mode = 'api',
   openInAddMode = false,
+  showEditLockDisclaimer = false,
 }: PartsManagementModalProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -283,6 +286,15 @@ export function PartsManagementModal({
             Add, edit, or remove parts for this job. Parts will be included in the emissions service log dispatch.
           </DialogDescription>
         </DialogHeader>
+
+        {showEditLockDisclaimer && (
+          <Alert className="mt-4">
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              Parts can only be edited until the job gets checked in at the shop. At that point, edits can only be made by the technician in GoCanvas.
+            </AlertDescription>
+          </Alert>
+        )}
 
         <ScrollArea className="max-h-[calc(90vh-12rem)]">
           {!showForm && (

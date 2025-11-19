@@ -743,6 +743,7 @@ export default function JobDetail() {
           open={partsManagementModalOpen}
           onOpenChange={setPartsManagementModalOpen}
           jobId={job.jobId}
+          showEditLockDisclaimer={true}
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}`] });
             queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}/parts`] });
