@@ -41,6 +41,7 @@ interface PartsManagementModalProps {
   localParts?: LocalPart[];
   onLocalPartsChange?: (parts: LocalPart[]) => void;
   mode?: 'api' | 'local'; // 'api' = existing job, 'local' = new job
+  openInAddMode?: boolean; // If true, opens directly to add form instead of parts list
 }
 
 export function PartsManagementModal({
@@ -51,11 +52,20 @@ export function PartsManagementModal({
   localParts,
   onLocalPartsChange,
   mode = 'api',
+  openInAddMode = false,
 }: PartsManagementModalProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingPart, setEditingPart] = useState<JobPart | LocalPart | null>(null);
   const [showForm, setShowForm] = useState(false);
+
+  // Open in add mode if requested
+  useEffect(() => {
+    if (open && openInAddMode) {
+      setShowForm(true);
+      setEditingPart(null);
+    }
+  }, [open, openInAddMode]);
 
   // Only query API if in API mode
   const { data: apiParts = [], isLoading, refetch } = useQuery<JobPart[]>({

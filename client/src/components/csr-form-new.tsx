@@ -751,7 +751,7 @@ export default function CSRForm() {
                     data-testid="button-add-part"
                   >
                     <Plus className="mr-1 h-4 w-4" />
-                    ADD
+                    {localParts.length === 0 ? 'ADD' : 'MANAGE PARTS'}
                   </Button>
                   {localParts.length > 0 && (
                     <p className="text-xs text-muted-foreground mt-2">
@@ -799,6 +799,7 @@ export default function CSRForm() {
         mode="local"
         localParts={localParts}
         onLocalPartsChange={setLocalParts}
+        openInAddMode={localParts.length === 0}
       />
     </div>
   );
