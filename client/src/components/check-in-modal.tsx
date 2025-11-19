@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { insertJobSchema } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useCsrCheckInForm } from "@/hooks/use-csr-check-in-form";
 import { CsrCheckInFormFields } from "@/components/csr-check-in-form-fields";
@@ -51,7 +51,7 @@ export function CheckInModal({
   const [partsModalOpen, setPartsModalOpen] = useState(false);
 
   // Fetch existing parts for this job
-  const { data: existingParts = [] } = useQuery<any[]>({
+  const { data: existingParts = [], refetch: refetchParts } = useQuery<any[]>({
     queryKey: [`/api/jobs/${job.jobId}/parts`],
     enabled: open,
   });
@@ -112,6 +112,10 @@ export function CheckInModal({
         setIsSubmitting(false);
         return;
       }
+
+      // IMPORTANT: Refetch parts one final time before submitting check-in
+      // This ensures any parts added via the parts modal are included in the GoCanvas dispatch
+      await refetchParts();
 
       // Submit to check-in endpoint with validated data
       await apiRequest("POST", `/api/jobs/${job.jobId}/check-in`, result.data);
@@ -229,7 +233,9 @@ export function CheckInModal({
         onOpenChange={setPartsModalOpen}
         jobId={job.jobId}
         openInAddMode={existingParts.length === 0}
-        onSuccess={() => {
+        onSuccess={async () => {
+          // Refetch parts to ensure we have the latest data before check-in
+          await refetchParts();
           toast({
             title: "Parts Updated",
             description: "Job parts have been updated successfully.",
