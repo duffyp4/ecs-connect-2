@@ -1271,14 +1271,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Job not found" });
       }
 
-      console.log(`   Current state: ${job.status}`);
+      console.log(`   Current state: ${job.state}`);
       
       // Determine which dispatch to check based on current state
       let dispatchToCheck: string | null = null;
       let expectedTransition: string | null = null;
       let formIdToCheck: string | null = null;
       
-      switch (job.status) {
+      switch (job.state) {
         case 'queued_for_pickup':
           dispatchToCheck = job.pickupDispatchId;
           expectedTransition = 'picked_up';
@@ -1305,8 +1305,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
         default:
           return res.json({
-            message: `Job is in ${job.status} state - no active dispatch to check`,
-            currentState: job.status,
+            message: `Job is in ${job.state} state - no active dispatch to check`,
+            currentState: job.state,
             hasUpdate: false
           });
       }
@@ -1314,7 +1314,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!dispatchToCheck) {
         return res.json({
           message: "No dispatch ID found for current state",
-          currentState: job.status,
+          currentState: job.state,
           hasUpdate: false
         });
       }
@@ -1353,8 +1353,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({
         message: updateFound ? "Update found and applied" : "No updates found",
-        currentState: updatedJob?.status || job.status,
-        previousState: job.status,
+        currentState: updatedJob?.state || job.state,
+        previousState: job.state,
         hasUpdate: updateFound,
         dispatchChecked: dispatchToCheck,
         dispatchStatus: dispatchInfo.status,
