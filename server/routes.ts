@@ -1341,8 +1341,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Call the appropriate transition handler based on form type
           if (formIdToCheck === process.env.GOCANVAS_PICKUP_FORM_ID) {
             // Pickup completion
+            console.log(`🎯 About to call markPickedUp for job ${jobId}...`);
             try {
-              await jobEventsService.markPickedUp(
+              const result = await jobEventsService.markPickedUp(
                 jobId,
                 1, // Default item count (not available from form)
                 {
@@ -1353,7 +1354,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   },
                 }
               );
-              console.log(`✅ Successfully marked job ${jobId} as picked up`);
+              console.log(`✅ Successfully marked job ${jobId} as picked up. New state:`, result.state);
             } catch (err) {
               console.error(`❌ Error marking job ${jobId} as picked up:`, err);
               throw err;
