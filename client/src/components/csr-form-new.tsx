@@ -734,26 +734,26 @@ export default function CSRForm() {
 
               {/* Add Parts to Job */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">
-                    Add parts to job (optional)
-                  </label>
+                <label className="text-sm font-medium">
+                  Add parts to job (optional)
+                </label>
+                <div className="ml-4">
                   <Button
                     type="button"
-                    variant="outline"
                     size="sm"
                     onClick={() => setPartsModalOpen(true)}
-                    className="h-8 w-8 p-0"
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
                     data-testid="button-add-part"
                   >
-                    <Plus className="h-4 w-4" />
+                    <Plus className="mr-1 h-4 w-4" />
+                    ADD
                   </Button>
+                  {localParts.length > 0 && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {localParts.length} part{localParts.length !== 1 ? 's' : ''} added
+                    </p>
+                  )}
                 </div>
-                {localParts.length > 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    {localParts.length} part{localParts.length !== 1 ? 's' : ''} added
-                  </p>
-                )}
               </div>
 
               {/* Action Buttons */}
