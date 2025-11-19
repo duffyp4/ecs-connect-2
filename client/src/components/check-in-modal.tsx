@@ -116,6 +116,13 @@ export function CheckInModal({
       // IMPORTANT: Refetch parts one final time before submitting check-in
       // This ensures any parts added via the parts modal are included in the GoCanvas dispatch
       await refetchParts();
+      
+      // CRITICAL: Add a small delay to allow any pending part saves to complete
+      // The parts modal fires async POST requests that might still be in flight
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Refetch one more time to get the freshly saved parts
+      await refetchParts();
 
       // Submit to check-in endpoint with validated data
       await apiRequest("POST", `/api/jobs/${job.jobId}/check-in`, result.data);
