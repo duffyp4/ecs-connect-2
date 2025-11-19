@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { insertJobSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -23,7 +24,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { ClipboardList, Settings } from "lucide-react";
+import { ClipboardList, Plus } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { z } from "zod";
 import type { Job } from "@shared/schema";
@@ -48,6 +49,12 @@ export function CheckInModal({
   const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
   const [shipToSearchOpen, setShipToSearchOpen] = useState(false);
   const [partsModalOpen, setPartsModalOpen] = useState(false);
+
+  // Fetch existing parts for this job
+  const { data: existingParts = [] } = useQuery<any[]>({
+    queryKey: [`/api/jobs/${job.jobId}/parts`],
+    enabled: open,
+  });
 
   // Use the shared CSR Check-In form hook with auto-population disabled
   // since we're pre-populating from existing job data
@@ -167,23 +174,35 @@ export function CheckInModal({
                 setShipToSearchOpen={setShipToSearchOpen}
                 disabledFields={["customerName", "customerShipTo"]}
               />
+
+              {/* Add/Manage Parts */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  Add parts to job (optional)
+                </label>
+                <div className="ml-4">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => setPartsModalOpen(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    data-testid="button-add-part"
+                  >
+                    <Plus className="mr-1 h-4 w-4" />
+                    {existingParts.length === 0 ? 'ADD' : 'MANAGE PARTS'}
+                  </Button>
+                  {existingParts.length > 0 && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {existingParts.length} part{existingParts.length !== 1 ? 's' : ''} added
+                    </p>
+                  )}
+                </div>
+              </div>
             </form>
           </Form>
         </ScrollArea>
 
         <DialogFooter className="gap-2">
-          <div className="flex-1">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setPartsModalOpen(true)}
-              disabled={isSubmitting}
-              data-testid="button-manage-parts"
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              Manage Parts
-            </Button>
-          </div>
           <Button
             type="button"
             variant="outline"
@@ -209,6 +228,7 @@ export function CheckInModal({
         open={partsModalOpen}
         onOpenChange={setPartsModalOpen}
         jobId={job.jobId}
+        openInAddMode={existingParts.length === 0}
         onSuccess={() => {
           toast({
             title: "Parts Updated",
