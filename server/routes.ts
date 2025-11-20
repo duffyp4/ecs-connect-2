@@ -1260,6 +1260,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Helper function to extract and update parts data from GoCanvas submission
+  async function updatePartsFromSubmission(jobId: string, responses: any[], storage: any) {
+    try {
+      // Field IDs for parts data from GoCanvas
+      const PARTS_FIELD_IDS = {
+        part: 728953416, // Part (title field)
+        ecsPartNumber: 728953405, // ECS Part Number
+        passOrFail: 728953401, // Did the Part Pass or Fail?
+        requireRepairs: 728953515, // Did the Part Require Repairs?
+        failedReason: 728953518, // Failed Reason
+        repairsPerformed: 728953517, // Which Repairs Were Performed
+      };
+
+      // Group responses by multi_key (each group = one part)
+      const partGroups = new Map<string, any>();
+      
+      for (const response of responses) {
+        const entryId = response.entry_id;
+        const value = response.value;
+        const multiKey = response.multi_key;
+        
+        // Title field (Part) has no multi_key, use its value as the key
+        if (entryId === PARTS_FIELD_IDS.part && value) {
+          if (!partGroups.has(value)) {
+            partGroups.set(value, { part: value });
+          }
+        }
+        
+        // Other fields reference the Part value via multi_key
+        if (multiKey) {
+          if (!partGroups.has(multiKey)) {
+            partGroups.set(multiKey, { part: multiKey });
+          }
+          
+          const partData = partGroups.get(multiKey)!;
+          
+          if (entryId === PARTS_FIELD_IDS.ecsPartNumber) partData.ecsPartNumber = value;
+          if (entryId === PARTS_FIELD_IDS.passOrFail) partData.passOrFail = value;
+          if (entryId === PARTS_FIELD_IDS.requireRepairs) partData.requireRepairs = value;
+          if (entryId === PARTS_FIELD_IDS.failedReason) partData.failedReason = value;
+          if (entryId === PARTS_FIELD_IDS.repairsPerformed) partData.repairsPerformed = value;
+        }
+      }
+      
+      if (partGroups.size === 0) {
+        console.log('No parts data found in submission');
+        return;
+      }
+      
+      console.log(`Found ${partGroups.size} parts in submission`);
+      
+      // Get existing parts for this job
+      const existingParts = await storage.getJobParts(jobId);
+      
+      // Update each existing part with GoCanvas data
+      for (const [partName, goCanvasData] of partGroups.entries()) {
+        // Find matching part in our database
+        const existingPart = existingParts.find((p: any) => p.part === partName);
+        
+        if (existingPart) {
+          console.log(`Updating part "${partName}" with GoCanvas data...`);
+          await storage.updateJobPart(existingPart.id, {
+            ecsPartNumber: goCanvasData.ecsPartNumber,
+            passOrFail: goCanvasData.passOrFail,
+            requireRepairs: goCanvasData.requireRepairs,
+            failedReason: goCanvasData.failedReason,
+            repairsPerformed: goCanvasData.repairsPerformed,
+          });
+          console.log(`✅ Updated part "${partName}"`);
+        } else {
+          console.log(`⚠️ No matching part found for "${partName}" in database`);
+        }
+      }
+      
+      console.log('✅ Parts data extraction complete');
+    } catch (error) {
+      console.error('Error updating parts from submission:', error);
+      throw error;
+    }
+  }
+
   // Manual check for updates - state-aware dispatch/submission query
   app.post("/api/jobs/:jobId/check-updates", isAuthenticated, async (req, res) => {
     try {
@@ -1341,9 +1422,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           submissionIdToFetch = dispatchInfo.submission_id;
         }
       } else if (submissionToCheck) {
-        // Submission-based flow: Query the submission directly (direct check-in flow)
-        console.log(`   Checking submission ${submissionToCheck} directly...`);
-        submissionIdToFetch = submissionToCheck;
+        // Submission-based flow: Search for completed submission by Job ID (direct check-in flow)
+        // The technician creates a NEW submission rather than updating the existing one
+        console.log(`   Searching for completed emission submission for job ${jobId}...`);
+        
+        if (formIdToCheck) {
+          const searchResult = await goCanvasService.checkSubmissionStatusForForm(jobId, formIdToCheck);
+          
+          if (searchResult.status === 'completed' && searchResult.submissionId) {
+            console.log(`   Found completed submission: ${searchResult.submissionId}`);
+            submissionIdToFetch = searchResult.submissionId;
+          } else {
+            console.log(`   No completed submission found for job ${jobId} (status: ${searchResult.status})`);
+          }
+        }
       }
       
       // Fetch submission data if we have a submission ID
@@ -1422,6 +1514,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   source: 'manual_check',
                 },
               });
+            }
+            
+            // After emissions completion, extract and save parts data from submission
+            if (submissionData && submissionData.responses) {
+              console.log('📦 Extracting parts data from GoCanvas submission...');
+              await updatePartsFromSubmission(jobId, submissionData.responses, storage);
             }
           } else if (formIdToCheck === deliveryFormId) {
             // Delivery completion
