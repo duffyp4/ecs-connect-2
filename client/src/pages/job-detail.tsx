@@ -516,56 +516,48 @@ export default function JobDetail() {
                     <h3 className="font-semibold text-[var(--ecs-primary)]">Part {index + 1}</h3>
                   </div>
                   
-                  <div className="grid md:grid-cols-3 gap-4">
+                  <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <div className="text-sm text-muted-foreground">Part</div>
                       <div className="font-medium">{part.part || 'N/A'}</div>
                     </div>
                     <div>
-                      <div className="text-sm text-muted-foreground">Process</div>
+                      <div className="text-sm text-muted-foreground">Process Being Performed</div>
                       <div className="font-medium">{part.process || 'N/A'}</div>
                     </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <div className="text-sm text-muted-foreground">ECS Serial</div>
+                      <div className="text-sm text-muted-foreground">ECS Serial Number</div>
                       <div className="font-medium">{part.ecsSerial || 'N/A'}</div>
                     </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-3 gap-4">
                     <div>
-                      <div className="text-sm text-muted-foreground">Filter PN</div>
-                      <div className="font-medium">{part.filterPn || 'N/A'}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground">PO Number</div>
-                      <div className="font-medium">{part.poNumber || 'N/A'}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground">Mileage</div>
-                      <div className="font-medium">{part.mileage || 'N/A'}</div>
+                      <div className="text-sm text-muted-foreground">ECS Part Number</div>
+                      <div className="font-medium">{part.ecsPartNumber || '-'}</div>
                     </div>
                   </div>
 
-                  <div className="grid md:grid-cols-3 gap-4">
+                  <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <div className="text-sm text-muted-foreground">Unit / VIN</div>
-                      <div className="font-medium">{part.unitVin || 'N/A'}</div>
+                      <div className="text-sm text-muted-foreground">Did the Part Pass or Fail?</div>
+                      <div className="font-medium">{part.passOrFail || '-'}</div>
                     </div>
                     <div>
-                      <div className="text-sm text-muted-foreground">Gasket or Clamps</div>
-                      <div className="font-medium">{part.gasketClamps || 'N/A'}</div>
+                      <div className="text-sm text-muted-foreground">Did the Part Require Repairs?</div>
+                      <div className="font-medium">{part.requireRepairs || '-'}</div>
                     </div>
-                    {part.gasketClamps === 'Yes' && (
-                      <div>
-                        <div className="text-sm text-muted-foreground">Additional</div>
-                        <div className="font-medium flex gap-2">
-                          {part.ec === 'Yes' && <Badge variant="secondary">EC</Badge>}
-                          {part.eg === 'Yes' && <Badge variant="secondary">EG</Badge>}
-                          {part.ek === 'Yes' && <Badge variant="secondary">EK</Badge>}
-                          {!part.ec && !part.eg && !part.ek && 'None'}
-                        </div>
-                      </div>
-                    )}
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-sm text-muted-foreground">Failed Reason</div>
+                      <div className="font-medium">{part.failedReason || '-'}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground">Which Repairs Were Performed?</div>
+                      <div className="font-medium">{part.repairsPerformed || '-'}</div>
+                    </div>
                   </div>
                 </div>
               ))}

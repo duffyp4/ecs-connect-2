@@ -359,7 +359,7 @@ export const jobParts = pgTable("job_parts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   jobId: varchar("job_id", { length: 50 }).notNull(), // ECS-formatted job ID
   
-  // 11 fields matching GoCanvas loop screen "Part" columns
+  // Fields entered by CSR in ECS Connect (pre-dispatch)
   part: text("part"), // Field ID: 728953416
   process: text("process"), // Field ID: 728953403 - Process Being Performed
   ecsSerial: text("ecs_serial"), // Field ID: 728953409 - ECS Serial Number
@@ -372,6 +372,13 @@ export const jobParts = pgTable("job_parts", {
   eg: text("eg"), // Field ID: 728953478 - EG
   ek: text("ek"), // Field ID: 728953479 - EK
   
+  // Fields filled by technician in GoCanvas (post-dispatch, from submission webhook)
+  ecsPartNumber: text("ecs_part_number"), // Field ID: 728953405 - ECS Part Number
+  passOrFail: text("pass_or_fail"), // Field ID: 728953401 - Did the Part Pass or Fail?
+  requireRepairs: text("require_repairs"), // Field ID: 728953515 - Did the Part Require Repairs?
+  failedReason: text("failed_reason"), // Field ID: 728953518 - Failed Reason
+  repairsPerformed: text("repairs_performed"), // Field ID: 728953517 - Which Repairs Were Performed
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -381,12 +388,12 @@ export const insertJobPartSchema = createInsertSchema(jobParts).omit({
   createdAt: true,
   updatedAt: true,
 }).extend({
-  // Required fields - 4 out of 11 are required
+  // Required fields - 4 out of 11 are required for CSR entry
   part: z.string().min(1, "Part is required"),
   process: z.string().min(1, "Process Being Performed is required"),
   ecsSerial: z.string().min(1, "ECS Serial Number is required"),
   gasketClamps: z.string().min(1, "Gasket or Clamps is required"),
-  // Optional fields
+  // Optional CSR fields
   filterPn: z.string().optional(),
   poNumber: z.string().optional(),
   mileage: z.string().optional(),
@@ -394,6 +401,12 @@ export const insertJobPartSchema = createInsertSchema(jobParts).omit({
   ec: z.string().optional(),
   eg: z.string().optional(),
   ek: z.string().optional(),
+  // Optional GoCanvas completion fields (filled from webhook)
+  ecsPartNumber: z.string().optional(),
+  passOrFail: z.string().optional(),
+  requireRepairs: z.string().optional(),
+  failedReason: z.string().optional(),
+  repairsPerformed: z.string().optional(),
 });
 
 export type InsertJobPart = z.infer<typeof insertJobPartSchema>;
