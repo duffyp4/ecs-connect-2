@@ -125,7 +125,21 @@ export default function CSRForm() {
       const response = await apiRequest("POST", "/api/jobs", jobPayload);
       const job = await response.json();
       
-      // Step 3: Handle direct arrival path (pickup dispatch is now handled in job creation)
+      // Step 3: Save local parts to the job FIRST (before check-in)
+      // This ensures parts are in the database when GoCanvas dispatch is created
+      if (localParts.length > 0) {
+        console.log(`Saving ${localParts.length} parts to job ${job.jobId}...`);
+        for (const part of localParts) {
+          await apiRequest("POST", `/api/jobs/${job.jobId}/parts`, {
+            jobId: job.jobId,
+            ...part,
+          });
+        }
+        console.log(`✅ Saved ${localParts.length} parts successfully`);
+      }
+      
+      // Step 4: Handle direct arrival path (pickup dispatch is now handled in job creation)
+      // Parts are now in database and will be included in GoCanvas dispatch
       if (arrivalPath === 'direct') {
         try {
           // Direct check-in at shop - must pass userId and shopHandoff for event metadata
@@ -145,18 +159,6 @@ export default function CSRForm() {
           // Re-throw the original error
           throw checkInError;
         }
-      }
-      
-      // Step 4: Save local parts to the job (if any)
-      if (localParts.length > 0) {
-        console.log(`Saving ${localParts.length} parts to job ${job.jobId}...`);
-        for (const part of localParts) {
-          await apiRequest("POST", `/api/jobs/${job.jobId}/parts`, {
-            jobId: job.jobId,
-            ...part,
-          });
-        }
-        console.log(`✅ Saved ${localParts.length} parts successfully`);
       }
       
       // Return the original job object for success handling
