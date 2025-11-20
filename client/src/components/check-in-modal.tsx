@@ -113,19 +113,6 @@ export function CheckInModal({
         return;
       }
 
-      // IMPORTANT: Wait for parts to be fully saved before proceeding
-      // Refetch parts immediately and check count
-      const initialPartsResult = await refetchParts();
-      const initialCount = initialPartsResult.data?.length || 0;
-      
-      // If there are parts, wait for database to fully commit, then refetch again
-      if (initialCount > 0) {
-        console.log(`⏳ Waiting for ${initialCount} parts to fully save to database...`);
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        const finalPartsResult = await refetchParts();
-        console.log(`✅ Parts refetched: ${finalPartsResult.data?.length || 0} parts found`);
-      }
-
       // Submit to check-in endpoint with validated data
       await apiRequest("POST", `/api/jobs/${job.jobId}/check-in`, result.data);
 
