@@ -1381,7 +1381,11 @@ export class GoCanvasService {
       // Search for submission containing our Job ID
       let targetSubmission = null;
       
-      for (const submission of submissions) {
+      // Only check the most recent 20 submissions to avoid timeout
+      const submissionsToCheck = submissions.slice(0, 20);
+      console.log(`Checking ${submissionsToCheck.length} most recent submissions...`);
+      
+      for (const submission of submissionsToCheck) {
         if (submission.status === 'completed') {
           // Get detailed submission data to check for Job ID match
           try {
