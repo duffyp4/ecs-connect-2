@@ -227,6 +227,12 @@ export class WebhookService {
           },
         });
       }
+      
+      // Extract and update parts data from submission
+      if (submissionData?.responses) {
+        console.log('📦 Extracting parts data from GoCanvas submission (webhook)...');
+        await this.updatePartsFromSubmission(jobId, submissionData.responses, storage);
+      }
     } catch (error) {
       console.error(`Error handling service completion for job ${jobId}:`, error);
       throw error;
@@ -250,6 +256,89 @@ export class WebhookService {
       });
     } catch (error) {
       console.error(`Error handling delivery completion for job ${jobId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Extract and update parts data from GoCanvas submission
+   */
+  private async updatePartsFromSubmission(jobId: string, responses: any[], storage: any): Promise<void> {
+    try {
+      // Field IDs for parts data from GoCanvas
+      const PARTS_FIELD_IDS = {
+        part: 728953416, // Part (title field)
+        ecsPartNumber: 728953405, // ECS Part Number
+        passOrFail: 728953401, // Did the Part Pass or Fail?
+        requireRepairs: 728953515, // Did the Part Require Repairs?
+        failedReason: 728953518, // Failed Reason
+        repairsPerformed: 728953517, // Which Repairs Were Performed
+      };
+
+      // Group responses by multi_key (each group = one part)
+      const partGroups = new Map<string, any>();
+      
+      for (const response of responses) {
+        const entryId = response.entry_id;
+        const value = response.value;
+        const multiKey = response.multi_key;
+        
+        // Title field (Part) has no multi_key, use its value as the key
+        if (entryId === PARTS_FIELD_IDS.part && value) {
+          if (!partGroups.has(value)) {
+            partGroups.set(value, { part: value });
+          }
+        }
+        
+        // Other fields reference the Part value via multi_key
+        if (multiKey) {
+          if (!partGroups.has(multiKey)) {
+            partGroups.set(multiKey, { part: multiKey });
+          }
+          
+          const partData = partGroups.get(multiKey)!;
+          
+          if (entryId === PARTS_FIELD_IDS.ecsPartNumber) partData.ecsPartNumber = value;
+          if (entryId === PARTS_FIELD_IDS.passOrFail) partData.passOrFail = value;
+          if (entryId === PARTS_FIELD_IDS.requireRepairs) partData.requireRepairs = value;
+          if (entryId === PARTS_FIELD_IDS.failedReason) partData.failedReason = value;
+          if (entryId === PARTS_FIELD_IDS.repairsPerformed) partData.repairsPerformed = value;
+        }
+      }
+      
+      if (partGroups.size === 0) {
+        console.log('No parts data found in submission');
+        return;
+      }
+      
+      console.log(`Found ${partGroups.size} parts in submission`);
+      
+      // Get existing parts for this job
+      const existingParts = await storage.getJobParts(jobId);
+      
+      // Update each existing part with GoCanvas data
+      for (const [partName, goCanvasData] of partGroups.entries()) {
+        // Find matching part in our database
+        const existingPart = existingParts.find((p: any) => p.part === partName);
+        
+        if (existingPart) {
+          console.log(`Updating part "${partName}" with GoCanvas data...`);
+          await storage.updateJobPart(existingPart.id, {
+            ecsPartNumber: goCanvasData.ecsPartNumber,
+            passOrFail: goCanvasData.passOrFail,
+            requireRepairs: goCanvasData.requireRepairs,
+            failedReason: goCanvasData.failedReason,
+            repairsPerformed: goCanvasData.repairsPerformed,
+          });
+          console.log(`✅ Updated part "${partName}"`);
+        } else {
+          console.log(`⚠️ No matching part found for "${partName}" in database`);
+        }
+      }
+      
+      console.log('✅ Parts data extraction complete');
+    } catch (error) {
+      console.error('Error updating parts from submission:', error);
       throw error;
     }
   }
