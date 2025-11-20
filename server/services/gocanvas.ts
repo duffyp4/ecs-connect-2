@@ -1544,16 +1544,17 @@ export class GoCanvasService {
     
     // Loop screen field IDs - matching actual Parts Log loop screen fields
     // Based on gocanvas_field_map_5654184.json entries 728953398-728953413
+    // CRITICAL: entry_id MUST be integers per GoCanvas API v3 spec!
     const PARTS_FIELD_IDS = {
-      part: '728953416',            // Part (sets row title)
-      process: '728953403',         // Process Being Performed
-      filterPn: '728953404',        // Filter Part Number
-      ecsPartNumber: '728953405',   // ECS Part Number (for display label)
-      partDescription: '728953406', // Part Description
-      ecsSerial: '728953409',       // ECS Serial Number (the actual serial)
-      poNumber: '728953411',        // PO Number
-      mileage: '728953412',         // Mileage
-      unitVin: '728953413',         // Unit / Vin Number
+      part: 728953416,            // Part (sets row title)
+      process: 728953403,         // Process Being Performed
+      filterPn: 728953404,        // Filter Part Number
+      ecsPartNumber: 728953405,   // ECS Part Number (for display label)
+      partDescription: 728953406, // Part Description
+      ecsSerial: 728953409,       // ECS Serial Number (the actual serial)
+      poNumber: 728953411,        // PO Number
+      mileage: 728953412,         // Mileage
+      unitVin: 728953413,         // Unit / Vin Number
     };
     
     const loopResponses: any[] = [];
