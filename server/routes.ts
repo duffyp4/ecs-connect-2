@@ -1484,13 +1484,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Emissions service completion - check current state
             const currentJob = await storage.getJobByJobId(jobId);
             
+            // Extract GPS handoff time for accurate "Service Started" timestamp
+            let handoffTime: Date | null = null;
+            
+            try {
+              // Extract GPS field directly from submission data
+              const gpsField = submissionData.rawData?.responses?.find((f: any) => f.label === 'New GPS');
+              
+              if (gpsField?.value) {
+                const timeMatch = gpsField.value.match(/Time:(\d+\.?\d*)/);
+                
+                if (timeMatch && timeMatch[1]) {
+                  const unixTimestamp = parseFloat(timeMatch[1]);
+                  const timestampMs = unixTimestamp > 10000000000 ? unixTimestamp : unixTimestamp * 1000;
+                  handoffTime = new Date(timestampMs);
+                  
+                  if (isNaN(handoffTime.getTime()) || 
+                      handoffTime.getFullYear() < 2020 || 
+                      handoffTime.getFullYear() > 2100) {
+                    console.warn(`Invalid GPS timestamp parsed: "${timeMatch[1]}" → year ${handoffTime.getFullYear()}`);
+                    handoffTime = null;
+                  } else {
+                    console.log(`✅ Found handoff time from GPS field: ${handoffTime.toISOString()}`);
+                  }
+                }
+              }
+            } catch (error) {
+              console.warn(`Could not retrieve handoff time from GPS: ${error}`);
+            }
+            
             if (currentJob?.state === 'at_shop') {
               // Transition through in_service to service_complete
               await jobEventsService.transitionJobState(jobId, 'in_service', {
                 actor: 'Technician',
+                timestamp: handoffTime || undefined,
                 metadata: {
                   autoDetected: true,
                   source: 'manual_check',
+                  handoffTime: handoffTime?.toISOString(),
                 },
               });
               
