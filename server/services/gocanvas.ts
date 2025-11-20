@@ -1560,6 +1560,9 @@ export class GoCanvasService {
       mileage: 728953412,         // Mileage
       unitVin: 728953413,         // Unit / Vin Number
       gasketClamps: 728953467,    // Gasket or Clamps
+      ec: 728953477,              // EC
+      eg: 728953478,              // EG
+      ek: 728953479,              // EK
     };
     
     const loopResponses: any[] = [];
@@ -1657,6 +1660,33 @@ export class GoCanvasService {
         loopResponses.push({
           entry_id: PARTS_FIELD_IDS.gasketClamps,
           value: String(part.gasketClamps),
+          multi_key: multiKey,
+        });
+      }
+      
+      // 10. EC
+      if (part.ec) {
+        loopResponses.push({
+          entry_id: PARTS_FIELD_IDS.ec,
+          value: String(part.ec),
+          multi_key: multiKey,
+        });
+      }
+      
+      // 11. EG
+      if (part.eg) {
+        loopResponses.push({
+          entry_id: PARTS_FIELD_IDS.eg,
+          value: String(part.eg),
+          multi_key: multiKey,
+        });
+      }
+      
+      // 12. EK
+      if (part.ek) {
+        loopResponses.push({
+          entry_id: PARTS_FIELD_IDS.ek,
+          value: String(part.ek),
           multi_key: multiKey,
         });
       }
