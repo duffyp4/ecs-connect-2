@@ -1273,8 +1273,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`   Current state: ${job.state}`);
       
-      // Determine which dispatch to check based on current state
+      // Determine which dispatch/submission to check based on current state
       let dispatchToCheck: string | null = null;
+      let submissionToCheck: string | null = null;
       let expectedTransition: string | null = null;
       let formIdToCheck: string | null = null;
       
@@ -1288,10 +1289,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
         case 'picked_up':
         case 'at_shop':
+          // Check for dispatch ID first (pickup flow), then submission ID (direct check-in flow)
           dispatchToCheck = job.gocanvasDispatchId;
+          submissionToCheck = job.gocanvasSubmissionId;
           expectedTransition = 'in_service';
           formIdToCheck = process.env.GOCANVAS_FORM_ID;
-          console.log(`   Looking for emissions service completion (dispatch ${dispatchToCheck})`);
+          console.log(`   Looking for emissions service completion (dispatch ${dispatchToCheck}, submission ${submissionToCheck})`);
           break;
           
         case 'ready_for_pickup':
@@ -1311,26 +1314,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
       }
       
-      if (!dispatchToCheck) {
+      // Must have either a dispatch ID or submission ID
+      if (!dispatchToCheck && !submissionToCheck) {
         return res.json({
-          message: "No dispatch ID found for current state",
+          message: "No dispatch or submission ID found for current state",
           currentState: job.state,
           hasUpdate: false
         });
       }
 
-      // Query the dispatch to see if it's been completed
-      const dispatchInfo = await goCanvasService.getDispatchById(dispatchToCheck);
-      console.log(`   Dispatch status: ${dispatchInfo.status}`);
-      console.log(`   Submission ID: ${dispatchInfo.submission_id || 'none'}`);
-      
       let updateFound = false;
       let submissionData = null;
+      let dispatchInfo: any = null;
+      let submissionIdToFetch: string | null = null;
       
-      // If dispatch has a submission_id, it's been completed
-      if (dispatchInfo.submission_id) {
-        console.log(`✅ Dispatch completed! Fetching submission details...`);
-        submissionData = await goCanvasService.getSubmissionById(dispatchInfo.submission_id);
+      // Handle two cases: dispatch-based (pickup flow) or submission-based (direct check-in)
+      if (dispatchToCheck) {
+        // Dispatch-based flow: Query the dispatch to see if it's been completed
+        console.log(`   Checking dispatch ${dispatchToCheck}...`);
+        dispatchInfo = await goCanvasService.getDispatchById(dispatchToCheck);
+        console.log(`   Dispatch status: ${dispatchInfo.status}`);
+        console.log(`   Submission ID: ${dispatchInfo.submission_id || 'none'}`);
+        
+        // If dispatch has a submission_id, it's been completed
+        if (dispatchInfo.submission_id) {
+          submissionIdToFetch = dispatchInfo.submission_id;
+        }
+      } else if (submissionToCheck) {
+        // Submission-based flow: Query the submission directly (direct check-in flow)
+        console.log(`   Checking submission ${submissionToCheck} directly...`);
+        submissionIdToFetch = submissionToCheck;
+      }
+      
+      // Fetch submission data if we have a submission ID
+      if (submissionIdToFetch) {
+        console.log(`✅ Fetching submission ${submissionIdToFetch} details...`);
+        submissionData = await goCanvasService.getSubmissionById(submissionIdToFetch);
         
         // Trigger the appropriate state transition
         if (expectedTransition && formIdToCheck) {
@@ -1428,8 +1447,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         previousState: job.state,
         hasUpdate: updateFound,
         dispatchChecked: dispatchToCheck,
-        dispatchStatus: dispatchInfo.status,
-        submissionId: dispatchInfo.submission_id || null,
+        submissionChecked: submissionToCheck,
+        dispatchStatus: dispatchInfo?.status || null,
+        submissionId: submissionIdToFetch,
         submissionData: submissionData ? {
           id: submissionData.id,
           submitted_at: submissionData.submitted_at,
