@@ -1264,8 +1264,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   async function updatePartsFromSubmission(jobId: string, responses: any[], storage: any) {
     try {
       // Field IDs for parts data from GoCanvas
+      // Extract ALL fields - both CSR-filled and technician-filled
+      // GoCanvas values override database values (technician version is source of truth)
       const PARTS_FIELD_IDS = {
         part: 728953416, // Part (title field)
+        process: 728953403, // Process Being Performed
+        filterPn: 728953404, // Filter Part Number
+        ecsSerial: 728953409, // ECS Serial Number
+        poNumber: 728953411, // PO Number
+        mileage: 728953412, // Mileage
+        unitVin: 728953413, // Unit / Vin Number
+        gasketClamps: 728953467, // Gasket or Clamps
+        ec: 728953477, // EC
+        eg: 728953478, // EG
+        ek: 728953479, // EK
         ecsPartNumber: 728953405, // ECS Part Number
         passOrFail: 728953401, // Did the Part Pass or Fail?
         requireRepairs: 728953515, // Did the Part Require Repairs?
@@ -1296,6 +1308,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           const partData = partGroups.get(multiKey)!;
           
+          // CSR-filled fields (might be updated by technician)
+          if (entryId === PARTS_FIELD_IDS.process) partData.process = value;
+          if (entryId === PARTS_FIELD_IDS.filterPn) partData.filterPn = value;
+          if (entryId === PARTS_FIELD_IDS.ecsSerial) partData.ecsSerial = value;
+          if (entryId === PARTS_FIELD_IDS.poNumber) partData.poNumber = value;
+          if (entryId === PARTS_FIELD_IDS.mileage) partData.mileage = value;
+          if (entryId === PARTS_FIELD_IDS.unitVin) partData.unitVin = value;
+          if (entryId === PARTS_FIELD_IDS.gasketClamps) partData.gasketClamps = value;
+          if (entryId === PARTS_FIELD_IDS.ec) partData.ec = value;
+          if (entryId === PARTS_FIELD_IDS.eg) partData.eg = value;
+          if (entryId === PARTS_FIELD_IDS.ek) partData.ek = value;
+          
+          // Technician-filled fields
           if (entryId === PARTS_FIELD_IDS.ecsPartNumber) partData.ecsPartNumber = value;
           if (entryId === PARTS_FIELD_IDS.passOrFail) partData.passOrFail = value;
           if (entryId === PARTS_FIELD_IDS.requireRepairs) partData.requireRepairs = value;
@@ -1321,14 +1346,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (existingPart) {
           console.log(`Updating part "${partName}" with GoCanvas data...`);
-          await storage.updateJobPart(existingPart.id, {
-            ecsPartNumber: goCanvasData.ecsPartNumber,
-            passOrFail: goCanvasData.passOrFail,
-            requireRepairs: goCanvasData.requireRepairs,
-            failedReason: goCanvasData.failedReason,
-            repairsPerformed: goCanvasData.repairsPerformed,
-          });
-          console.log(`✅ Updated part "${partName}"`);
+          
+          // Build update object with all fields from GoCanvas
+          // Only include fields that have values (don't overwrite with undefined)
+          const updateData: any = {};
+          
+          // CSR-filled fields (technician might have changed them)
+          if (goCanvasData.process !== undefined) updateData.process = goCanvasData.process;
+          if (goCanvasData.filterPn !== undefined) updateData.filterPn = goCanvasData.filterPn;
+          if (goCanvasData.ecsSerial !== undefined) updateData.ecsSerial = goCanvasData.ecsSerial;
+          if (goCanvasData.poNumber !== undefined) updateData.poNumber = goCanvasData.poNumber;
+          if (goCanvasData.mileage !== undefined) updateData.mileage = goCanvasData.mileage;
+          if (goCanvasData.unitVin !== undefined) updateData.unitVin = goCanvasData.unitVin;
+          if (goCanvasData.gasketClamps !== undefined) updateData.gasketClamps = goCanvasData.gasketClamps;
+          if (goCanvasData.ec !== undefined) updateData.ec = goCanvasData.ec;
+          if (goCanvasData.eg !== undefined) updateData.eg = goCanvasData.eg;
+          if (goCanvasData.ek !== undefined) updateData.ek = goCanvasData.ek;
+          
+          // Technician-filled fields
+          if (goCanvasData.ecsPartNumber !== undefined) updateData.ecsPartNumber = goCanvasData.ecsPartNumber;
+          if (goCanvasData.passOrFail !== undefined) updateData.passOrFail = goCanvasData.passOrFail;
+          if (goCanvasData.requireRepairs !== undefined) updateData.requireRepairs = goCanvasData.requireRepairs;
+          if (goCanvasData.failedReason !== undefined) updateData.failedReason = goCanvasData.failedReason;
+          if (goCanvasData.repairsPerformed !== undefined) updateData.repairsPerformed = goCanvasData.repairsPerformed;
+          
+          await storage.updateJobPart(existingPart.id, updateData);
+          console.log(`✅ Updated part "${partName}" with ${Object.keys(updateData).length} fields from GoCanvas`);
         } else {
           console.log(`⚠️ No matching part found for "${partName}" in database`);
         }
