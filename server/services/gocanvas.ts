@@ -1559,6 +1559,7 @@ export class GoCanvasService {
       poNumber: 728953411,        // PO Number
       mileage: 728953412,         // Mileage
       unitVin: 728953413,         // Unit / Vin Number
+      gasketClamps: 728953467,    // Gasket or Clamps
     };
     
     const loopResponses: any[] = [];
@@ -1647,6 +1648,15 @@ export class GoCanvasService {
         loopResponses.push({
           entry_id: PARTS_FIELD_IDS.unitVin,
           value: String(part.unitVin),
+          multi_key: multiKey,
+        });
+      }
+      
+      // 9. Gasket or Clamps
+      if (part.gasketClamps) {
+        loopResponses.push({
+          entry_id: PARTS_FIELD_IDS.gasketClamps,
+          value: String(part.gasketClamps),
           multi_key: multiKey,
         });
       }
