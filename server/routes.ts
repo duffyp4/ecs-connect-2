@@ -1354,9 +1354,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`   Current state: ${job.state}`);
       
-      // Determine which dispatch/submission to check based on current state
+      // Determine which dispatch to check based on current state
+      // All forms (pickup, emissions, delivery) create dispatches, so we always check dispatch status
       let dispatchToCheck: string | null = null;
-      let submissionToCheck: string | null = null;
       let expectedTransition: string | null = null;
       let formIdToCheck: string | null = null;
       
@@ -1370,12 +1370,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
         case 'picked_up':
         case 'at_shop':
-          // Check dispatch ID (both pickup flow and direct check-in flow use dispatches)
+          // Check emissions dispatch (created during check-in)
           dispatchToCheck = job.gocanvasDispatchId;
-          submissionToCheck = job.gocanvasDispatchId; // Legacy: used to be gocanvasSubmissionId
           expectedTransition = 'in_service';
-          formIdToCheck = process.env.GOCANVAS_FORM_ID;
-          console.log(`   Looking for emissions service completion (dispatch ${dispatchToCheck}, submission ${submissionToCheck})`);
+          formIdToCheck = process.env.GOCANVAS_FORM_ID || '5654184';
+          console.log(`   Looking for emissions service completion (dispatch ${dispatchToCheck})`);
           break;
           
         case 'ready_for_pickup':
@@ -1383,7 +1382,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         case 'queued_for_delivery':
           dispatchToCheck = job.deliveryDispatchId;
           expectedTransition = 'delivered';
-          formIdToCheck = process.env.GOCANVAS_DELIVERY_FORM_ID;
+          formIdToCheck = process.env.GOCANVAS_DELIVERY_FORM_ID || '5632656';
           console.log(`   Looking for delivery completion (dispatch ${dispatchToCheck})`);
           break;
           
@@ -1395,10 +1394,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
       }
       
-      // Must have either a dispatch ID or submission ID
-      if (!dispatchToCheck && !submissionToCheck) {
+      // Must have a dispatch ID to check
+      if (!dispatchToCheck) {
         return res.json({
-          message: "No dispatch or submission ID found for current state",
+          message: "No dispatch ID found for current state - job may not have been dispatched yet",
           currentState: job.state,
           hasUpdate: false
         });
@@ -1409,33 +1408,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let dispatchInfo: any = null;
       let submissionIdToFetch: string | null = null;
       
-      // Handle two cases: dispatch-based (pickup flow) or submission-based (direct check-in)
-      if (dispatchToCheck) {
-        // Dispatch-based flow: Query the dispatch to see if it's been completed
-        console.log(`   Checking dispatch ${dispatchToCheck}...`);
-        dispatchInfo = await goCanvasService.getDispatchById(dispatchToCheck);
-        console.log(`   Dispatch status: ${dispatchInfo.status}`);
-        console.log(`   Submission ID: ${dispatchInfo.submission_id || 'none'}`);
-        
-        // If dispatch has a submission_id, it's been completed
-        if (dispatchInfo.submission_id) {
-          submissionIdToFetch = dispatchInfo.submission_id;
-        }
-      } else if (submissionToCheck) {
-        // Submission-based flow: Search for completed submission by Job ID (direct check-in flow)
-        // The technician creates a NEW submission rather than updating the existing one
-        console.log(`   Searching for completed emission submission for job ${jobId}...`);
-        
-        if (formIdToCheck) {
-          const searchResult = await goCanvasService.checkSubmissionStatusForForm(jobId, formIdToCheck);
-          
-          if (searchResult.status === 'completed' && searchResult.submissionId) {
-            console.log(`   Found completed submission: ${searchResult.submissionId}`);
-            submissionIdToFetch = searchResult.submissionId;
-          } else {
-            console.log(`   No completed submission found for job ${jobId} (status: ${searchResult.status})`);
-          }
-        }
+      // Check the dispatch to see if it has been completed
+      console.log(`   Checking dispatch ${dispatchToCheck}...`);
+      dispatchInfo = await goCanvasService.getDispatchById(dispatchToCheck);
+      console.log(`   Dispatch status: ${dispatchInfo.status}`);
+      console.log(`   Submission ID: ${dispatchInfo.submission_id || 'none'}`);
+      
+      // If dispatch has a submission_id, it's been completed by the technician
+      if (dispatchInfo.submission_id) {
+        submissionIdToFetch = dispatchInfo.submission_id;
       }
       
       // Fetch submission data if we have a submission ID
@@ -1577,8 +1558,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         currentState: updatedJob?.state || job.state,
         previousState: job.state,
         hasUpdate: updateFound,
-        dispatchChecked: dispatchToCheck,
-        submissionChecked: submissionToCheck,
+        dispatchId: dispatchToCheck,
         dispatchStatus: dispatchInfo?.status || null,
         submissionId: submissionIdToFetch,
         submissionData: submissionData ? {
