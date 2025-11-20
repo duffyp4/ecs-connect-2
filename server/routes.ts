@@ -1517,9 +1517,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
             
             // After emissions completion, extract and save parts data from submission
-            if (submissionData && submissionData.responses) {
+            if (submissionData?.rawData?.responses) {
               console.log('📦 Extracting parts data from GoCanvas submission...');
-              await updatePartsFromSubmission(jobId, submissionData.responses, storage);
+              await updatePartsFromSubmission(jobId, submissionData.rawData.responses, storage);
+            } else {
+              console.log('⚠️ No response data found in submission for parts extraction');
             }
           } else if (formIdToCheck === deliveryFormId) {
             // Delivery completion
