@@ -113,17 +113,18 @@ export function CheckInModal({
         return;
       }
 
-      // IMPORTANT: Refetch parts one final time before submitting check-in
-      // This ensures any parts added via the parts modal are included in the GoCanvas dispatch
-      await refetchParts();
+      // IMPORTANT: Wait for parts to be fully saved before proceeding
+      // Refetch parts immediately and check count
+      const initialPartsResult = await refetchParts();
+      const initialCount = initialPartsResult.data?.length || 0;
       
-      // CRITICAL: Add a delay to allow any pending part saves to complete
-      // The parts modal fires async POST requests that might still be in flight
-      // Increased to 3 seconds to ensure database commits complete
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // Refetch one more time to get the freshly saved parts
-      await refetchParts();
+      // If there are parts, wait for database to fully commit, then refetch again
+      if (initialCount > 0) {
+        console.log(`⏳ Waiting for ${initialCount} parts to fully save to database...`);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        const finalPartsResult = await refetchParts();
+        console.log(`✅ Parts refetched: ${finalPartsResult.data?.length || 0} parts found`);
+      }
 
       // Submit to check-in endpoint with validated data
       await apiRequest("POST", `/api/jobs/${job.jobId}/check-in`, result.data);
