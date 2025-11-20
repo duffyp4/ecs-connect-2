@@ -1559,21 +1559,24 @@ export class GoCanvasService {
     
     const loopResponses: any[] = [];
     
-    // Each part gets its own multi_key (e.g., "part_0", "part_1", "part_2")
+    // Each part creates a loop row using the Part value as the multi_key
+    // Per GoCanvas API: The title field has NO multi_key, other fields reference it
     parts.forEach((part, index) => {
-      const multiKey = `part_${index}`;
-      
-      // Add each field for this part with the same multi_key
-      // All fields with the same multi_key are grouped into one loop row
-      
-      // 1. Part - sets the loop row title (e.g., "DPF")
-      if (part.part) {
-        loopResponses.push({
-          entry_id: PARTS_FIELD_IDS.part,
-          value: String(part.part),
-          multi_key: multiKey,
-        });
+      if (!part.part) {
+        console.warn(`Part ${index} has no 'part' value, skipping...`);
+        return;
       }
+      
+      // The multi_key for this row is the Part value itself (e.g., "DPF")
+      // Per GoCanvas API spec, the title field does NOT include multi_key
+      const multiKey = String(part.part);
+      
+      // 1. Part - the loop row TITLE field - NO multi_key!
+      // This field defines the row and all other fields reference it
+      loopResponses.push({
+        entry_id: PARTS_FIELD_IDS.part,
+        value: multiKey,
+      });
       
       // 2. Process Being Performed
       if (part.process) {
@@ -1644,7 +1647,9 @@ export class GoCanvasService {
         });
       }
       
-      console.log(`  Part ${index + 1}: Added ${loopResponses.filter(r => r.multi_key === multiKey).length} fields with multi_key="${multiKey}"`);
+      const fieldsWithMultiKey = loopResponses.filter(r => r.multi_key === multiKey).length;
+      const titleField = loopResponses.filter(r => r.value === multiKey && !r.multi_key).length;
+      console.log(`  Part ${index + 1} ("${multiKey}"): 1 title field + ${fieldsWithMultiKey} fields with multi_key="${multiKey}"`);
     });
     
     console.log(`✅ Generated ${loopResponses.length} loop screen responses for ${parts.length} parts`);
