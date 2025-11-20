@@ -127,8 +127,7 @@ export const jobs = pgTable("jobs", {
   turnaroundTime: integer("turnaround_time"), // kept for backward compatibility
   
   // GoCanvas Integration - Multiple Forms
-  gocanvasSubmissionId: text("gocanvas_submission_id"), // Emissions Service Log submission
-  gocanvasDispatchId: text("gocanvas_dispatch_id"), // Emissions Service Log dispatch
+  gocanvasDispatchId: text("gocanvas_submission_id"), // Emissions Service Log dispatch (column name kept for data preservation)
   pickupDispatchId: text("pickup_dispatch_id"), // Pickup Log dispatch
   deliveryDispatchId: text("delivery_dispatch_id"), // Delivery Log dispatch
   gocanvasSynced: text("gocanvas_synced").default("false"),
@@ -172,7 +171,6 @@ export const insertJobSchema = createInsertSchema(jobs).omit({
   timeWithTech: true,
   totalTurnaround: true,
   turnaroundTime: true,
-  gocanvasSubmissionId: true,
   gocanvasDispatchId: true,
   pickupDispatchId: true,
   deliveryDispatchId: true,
@@ -229,7 +227,6 @@ export const pickupJobSchema = createInsertSchema(jobs).omit({
   timeWithTech: true,
   totalTurnaround: true,
   turnaroundTime: true,
-  gocanvasSubmissionId: true,
   gocanvasDispatchId: true,
   pickupDispatchId: true,
   deliveryDispatchId: true,
