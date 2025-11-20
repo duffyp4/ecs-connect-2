@@ -426,8 +426,8 @@ export class GoCanvasService {
     }
   }
 
-  async createSubmission(jobData: any, storage: any): Promise<string> {
-    console.log('=== GOCANVAS createDispatch called ===');
+  async dispatchEmissionsForm(jobData: any, storage: any): Promise<string> {
+    console.log('=== GOCANVAS dispatchEmissionsForm called ===');
     console.log('Raw jobData keys:', Object.keys(jobData));
     console.log('shopName value:', jobData.shopName);
     console.log('customerShipTo value:', jobData.customerShipTo);

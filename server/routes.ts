@@ -651,7 +651,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let submissionId: string | null = null;
       try {
         console.log('🚀 Attempting GoCanvas dispatch BEFORE checking in...');
-        submissionId = await goCanvasService.createSubmission(refreshedJob, storage);
+        submissionId = await goCanvasService.dispatchEmissionsForm(refreshedJob, storage);
         
         // Check if dispatch was actually successful
         // Handle both string and non-string return values safely
@@ -685,7 +685,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // STEP 3: Update GoCanvas sync status
       await storage.updateJob(updatedJob.id, {
-        gocanvasSubmissionId: submissionId,
+        gocanvasDispatchId: submissionId,
         gocanvasSynced: "true",
       });
       
@@ -1233,13 +1233,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log(`DEBUG: Database job status: ${job.status}`);
-      console.log(`DEBUG: GoCanvas submission ID: ${job.gocanvasSubmissionId}`);
+      console.log(`DEBUG: GoCanvas dispatch ID: ${job.gocanvasDispatchId}`);
 
       res.json({
         jobId,
         databaseStatus: job.status,
         gocanvasStatus,
-        gocanvasSubmissionId: job.gocanvasSubmissionId,
+        gocanvasDispatchId: job.gocanvasDispatchId,
         initiated: job.initiatedAt
       });
     } catch (error) {
@@ -1370,9 +1370,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
         case 'picked_up':
         case 'at_shop':
-          // Check for dispatch ID first (pickup flow), then submission ID (direct check-in flow)
+          // Check dispatch ID (both pickup flow and direct check-in flow use dispatches)
           dispatchToCheck = job.gocanvasDispatchId;
-          submissionToCheck = job.gocanvasSubmissionId;
+          submissionToCheck = job.gocanvasDispatchId; // Legacy: used to be gocanvasSubmissionId
           expectedTransition = 'in_service';
           formIdToCheck = process.env.GOCANVAS_FORM_ID;
           console.log(`   Looking for emissions service completion (dispatch ${dispatchToCheck}, submission ${submissionToCheck})`);
