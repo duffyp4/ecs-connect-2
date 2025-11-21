@@ -1263,26 +1263,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Helper function to extract and update parts data from GoCanvas submission
   async function updatePartsFromSubmission(jobId: string, responses: any[], storage: any) {
     try {
-      // Field IDs for parts data from GoCanvas (Form 5692359 - updated 2025-11-21)
+      // Field IDs for parts data from GoCanvas (Form 5692904 v12 - updated 2025-11-21)
       // Extract ALL fields - both CSR-filled and technician-filled
       // GoCanvas values override database values (technician version is source of truth)
       const PARTS_FIELD_IDS = {
-        part: 736433802, // Part (title field)
-        process: 736433789, // Process Being Performed
-        filterPn: 736433790, // Filter Part Number
-        ecsSerial: 736433795, // ECS Serial Number
-        poNumber: 736433797, // PO Number
-        mileage: 736433798, // Mileage
-        unitVin: 736433799, // Unit / Vin Number
-        gasketClamps: 736433853, // Gasket or Clamps
-        ec: 736433863, // EC
-        eg: 736433864, // EG
-        ek: 736433865, // EK
-        ecsPartNumber: 736433791, // ECS Part Number
-        passOrFail: 736433787, // Did the Part Pass or Fail?
-        requireRepairs: 736433901, // Did the Part Require Repairs?
-        failedReason: 736433904, // Failed Reason
-        repairsPerformed: 736433903, // Which Repairs Were Performed
+        part: 736551814, // Part (title field)
+        process: 736551801, // Process Being Performed
+        filterPn: 736551802, // Filter Part Number
+        ecsSerial: 736551807, // ECS Serial Number
+        poNumber: 736551809, // PO Number
+        mileage: 736551810, // Mileage
+        unitVin: 736551811, // Unit / Vin Number
+        gasketClamps: 736551865, // Gasket or Clamps
+        ec: 736551875, // EC
+        eg: 736551876, // EG
+        ek: 736551877, // EK
+        ecsPartNumber: 736551803, // ECS Part Number
+        passOrFail: 736551799, // Did the Part Pass or Fail?
+        requireRepairs: 736551913, // Did the Part Require Repairs?
+        failedReason: 736551916, // Failed Reason
+        repairsPerformed: 736551915, // Which Repairs Were Performed
       };
 
       // Group responses by multi_key (each group = one part)
