@@ -467,28 +467,6 @@ export function PartsManagementModal({
 
                   <FormField
                     control={form.control}
-                    name="gasketClamps"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Gasket or Clamps *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || ""}>
-                          <FormControl>
-                            <SelectTrigger data-testid="select-gasket-clamps">
-                              <SelectValue placeholder="Select option..." />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Yes">Yes</SelectItem>
-                            <SelectItem value="No">No</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
                     name="filterPn"
                     render={({ field }) => (
                       <FormItem>
@@ -613,14 +591,37 @@ export function PartsManagementModal({
                     )}
                   />
 
+                  <FormField
+                    control={form.control}
+                    name="gasketClamps"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Gasket or Clamps *</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-gasket-clamps">
+                              <SelectValue placeholder="Select option..." />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Yes">Yes</SelectItem>
+                            <SelectItem value="No">No</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   {form.watch("gasketClamps") === "Yes" && (
                     <div className="col-span-1 md:col-span-2">
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-3">
                         <FormField
                           control={form.control}
                           name="ec"
                           render={({ field }) => (
-                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                            <FormItem className="flex flex-row items-center justify-between space-y-0 rounded-lg border p-3">
+                              <FormLabel className="cursor-pointer">EC</FormLabel>
                               <FormControl>
                                 <Checkbox
                                   checked={field.value === "Yes"}
@@ -629,9 +630,6 @@ export function PartsManagementModal({
                                   className="h-4 w-4"
                                 />
                               </FormControl>
-                              <div className="space-y-1 leading-none">
-                                <FormLabel>EC</FormLabel>
-                              </div>
                             </FormItem>
                           )}
                         />
@@ -640,7 +638,8 @@ export function PartsManagementModal({
                           control={form.control}
                           name="eg"
                           render={({ field }) => (
-                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                            <FormItem className="flex flex-row items-center justify-between space-y-0 rounded-lg border p-3">
+                              <FormLabel className="cursor-pointer">EG</FormLabel>
                               <FormControl>
                                 <Checkbox
                                   checked={field.value === "Yes"}
@@ -649,9 +648,6 @@ export function PartsManagementModal({
                                   className="h-4 w-4"
                                 />
                               </FormControl>
-                              <div className="space-y-1 leading-none">
-                                <FormLabel>EG</FormLabel>
-                              </div>
                             </FormItem>
                           )}
                         />
@@ -660,7 +656,8 @@ export function PartsManagementModal({
                           control={form.control}
                           name="ek"
                           render={({ field }) => (
-                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                            <FormItem className="flex flex-row items-center justify-between space-y-0 rounded-lg border p-3">
+                              <FormLabel className="cursor-pointer">EK</FormLabel>
                               <FormControl>
                                 <Checkbox
                                   checked={field.value === "Yes"}
@@ -669,9 +666,6 @@ export function PartsManagementModal({
                                   className="h-4 w-4"
                                 />
                               </FormControl>
-                              <div className="space-y-1 leading-none">
-                                <FormLabel>EK</FormLabel>
-                              </div>
                             </FormItem>
                           )}
                         />
