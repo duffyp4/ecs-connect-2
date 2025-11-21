@@ -1547,22 +1547,22 @@ export class GoCanvasService {
     console.log(`🔧 Mapping ${parts.length} parts to loop screen responses...`);
     
     // Loop screen field IDs - matching actual Parts Log loop screen fields
-    // Based on gocanvas_field_map_5692359.json (Form updated 2025-11-21)
+    // Based on gocanvas_field_map_5692831.json (Form 5692831 - Nashville, updated 2025-11-21)
     // CRITICAL: entry_id MUST be integers per GoCanvas API v3 spec!
     const PARTS_FIELD_IDS = {
-      part: 736433802,            // Part (sets row title)
-      process: 736433789,         // Process Being Performed
-      filterPn: 736433790,        // Filter Part Number
-      ecsPartNumber: 736433791,   // ECS Part Number (for display label)
-      partDescription: 736433792, // Part Description
-      ecsSerial: 736433795,       // ECS Serial Number (the actual serial)
-      poNumber: 736433797,        // PO Number
-      mileage: 736433798,         // Mileage
-      unitVin: 736433799,         // Unit / Vin Number
-      gasketClamps: 736433853,    // Gasket or Clamps
-      ec: 736433863,              // EC
-      eg: 736433864,              // EG
-      ek: 736433865,              // EK
+      part: 736541826,            // Part (sets row title)
+      process: 736541813,         // Process Being Performed
+      filterPn: 736541814,        // Filter Part Number
+      ecsPartNumber: 736541815,   // ECS Part Number (for display label)
+      partDescription: 736541816, // Part Description
+      ecsSerial: 736541819,       // ECS Serial Number (the actual serial)
+      poNumber: 736541821,        // PO Number
+      mileage: 736541822,         // Mileage
+      unitVin: 736541823,         // Unit / Vin Number
+      gasketClamps: 736541877,    // Gasket or Clamps
+      ec: 736541887,              // EC
+      eg: 736541888,              // EG
+      ek: 736541889,              // EK
     };
     
     const loopResponses: any[] = [];

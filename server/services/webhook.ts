@@ -265,26 +265,26 @@ export class WebhookService {
    */
   private async updatePartsFromSubmission(jobId: string, responses: any[], storage: any): Promise<void> {
     try {
-      // Field IDs for parts data from GoCanvas (Form 5692359 - updated 2025-11-21)
+      // Field IDs for parts data from GoCanvas (Form 5692831 - Nashville, updated 2025-11-21)
       // Extract ALL fields - both CSR-filled and technician-filled
       // GoCanvas values override database values (technician version is source of truth)
       const PARTS_FIELD_IDS = {
-        part: 736433802, // Part (title field)
-        process: 736433789, // Process Being Performed
-        filterPn: 736433790, // Filter Part Number
-        ecsSerial: 736433795, // ECS Serial Number
-        poNumber: 736433797, // PO Number
-        mileage: 736433798, // Mileage
-        unitVin: 736433799, // Unit / Vin Number
-        gasketClamps: 736433853, // Gasket or Clamps
-        ec: 736433863, // EC
-        eg: 736433864, // EG
-        ek: 736433865, // EK
-        ecsPartNumber: 736433791, // ECS Part Number
-        passOrFail: 736433787, // Did the Part Pass or Fail?
-        requireRepairs: 736433901, // Did the Part Require Repairs?
-        failedReason: 736433904, // Failed Reason
-        repairsPerformed: 736433903, // Which Repairs Were Performed
+        part: 736541826, // Part (title field)
+        process: 736541813, // Process Being Performed
+        filterPn: 736541814, // Filter Part Number
+        ecsSerial: 736541819, // ECS Serial Number
+        poNumber: 736541821, // PO Number
+        mileage: 736541822, // Mileage
+        unitVin: 736541823, // Unit / Vin Number
+        gasketClamps: 736541877, // Gasket or Clamps
+        ec: 736541887, // EC
+        eg: 736541888, // EG
+        ek: 736541889, // EK
+        ecsPartNumber: 736541815, // ECS Part Number
+        passOrFail: 736541811, // Did the Part Pass or Fail?
+        requireRepairs: 736541925, // Did the Part Require Repairs?
+        failedReason: 736541928, // Failed Reason
+        repairsPerformed: 736541927, // Which Repairs Were Performed
       };
 
       // Group responses by multi_key (each group = one part)
