@@ -5,7 +5,7 @@ import { fieldMapper } from '@shared/fieldMapper';
 
 // GoCanvas Form IDs
 export const FORM_IDS = {
-  EMISSIONS: '5654184',      // Emissions Service Log (updated 2025-10-20)
+  EMISSIONS: '5692359',      // Emissions Service Log (updated 2025-11-21)
   PICKUP: '5640587',         // Pickup Log (updated with Contact Name, Contact Number, PO Number)
   DELIVERY: '5657146',       // Delivery Log (updated 2025-10-30 - changed Invoice to Order Number)
 } as const;
@@ -1547,22 +1547,22 @@ export class GoCanvasService {
     console.log(`🔧 Mapping ${parts.length} parts to loop screen responses...`);
     
     // Loop screen field IDs - matching actual Parts Log loop screen fields
-    // Based on gocanvas_field_map_5654184.json entries 728953398-728953413
+    // Based on gocanvas_field_map_5692359.json (Form updated 2025-11-21)
     // CRITICAL: entry_id MUST be integers per GoCanvas API v3 spec!
     const PARTS_FIELD_IDS = {
-      part: 728953416,            // Part (sets row title)
-      process: 728953403,         // Process Being Performed
-      filterPn: 728953404,        // Filter Part Number
-      ecsPartNumber: 728953405,   // ECS Part Number (for display label)
-      partDescription: 728953406, // Part Description
-      ecsSerial: 728953409,       // ECS Serial Number (the actual serial)
-      poNumber: 728953411,        // PO Number
-      mileage: 728953412,         // Mileage
-      unitVin: 728953413,         // Unit / Vin Number
-      gasketClamps: 728953467,    // Gasket or Clamps
-      ec: 728953477,              // EC
-      eg: 728953478,              // EG
-      ek: 728953479,              // EK
+      part: 736433802,            // Part (sets row title)
+      process: 736433789,         // Process Being Performed
+      filterPn: 736433790,        // Filter Part Number
+      ecsPartNumber: 736433791,   // ECS Part Number (for display label)
+      partDescription: 736433792, // Part Description
+      ecsSerial: 736433795,       // ECS Serial Number (the actual serial)
+      poNumber: 736433797,        // PO Number
+      mileage: 736433798,         // Mileage
+      unitVin: 736433799,         // Unit / Vin Number
+      gasketClamps: 736433853,    // Gasket or Clamps
+      ec: 736433863,              // EC
+      eg: 736433864,              // EG
+      ek: 736433865,              // EK
     };
     
     const loopResponses: any[] = [];

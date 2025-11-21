@@ -1263,26 +1263,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Helper function to extract and update parts data from GoCanvas submission
   async function updatePartsFromSubmission(jobId: string, responses: any[], storage: any) {
     try {
-      // Field IDs for parts data from GoCanvas
+      // Field IDs for parts data from GoCanvas (Form 5692359 - updated 2025-11-21)
       // Extract ALL fields - both CSR-filled and technician-filled
       // GoCanvas values override database values (technician version is source of truth)
       const PARTS_FIELD_IDS = {
-        part: 728953416, // Part (title field)
-        process: 728953403, // Process Being Performed
-        filterPn: 728953404, // Filter Part Number
-        ecsSerial: 728953409, // ECS Serial Number
-        poNumber: 728953411, // PO Number
-        mileage: 728953412, // Mileage
-        unitVin: 728953413, // Unit / Vin Number
-        gasketClamps: 728953467, // Gasket or Clamps
-        ec: 728953477, // EC
-        eg: 728953478, // EG
-        ek: 728953479, // EK
-        ecsPartNumber: 728953405, // ECS Part Number
-        passOrFail: 728953401, // Did the Part Pass or Fail?
-        requireRepairs: 728953515, // Did the Part Require Repairs?
-        failedReason: 728953518, // Failed Reason
-        repairsPerformed: 728953517, // Which Repairs Were Performed
+        part: 736433802, // Part (title field)
+        process: 736433789, // Process Being Performed
+        filterPn: 736433790, // Filter Part Number
+        ecsSerial: 736433795, // ECS Serial Number
+        poNumber: 736433797, // PO Number
+        mileage: 736433798, // Mileage
+        unitVin: 736433799, // Unit / Vin Number
+        gasketClamps: 736433853, // Gasket or Clamps
+        ec: 736433863, // EC
+        eg: 736433864, // EG
+        ek: 736433865, // EK
+        ecsPartNumber: 736433791, // ECS Part Number
+        passOrFail: 736433787, // Did the Part Pass or Fail?
+        requireRepairs: 736433901, // Did the Part Require Repairs?
+        failedReason: 736433904, // Failed Reason
+        repairsPerformed: 736433903, // Which Repairs Were Performed
       };
 
       // Group responses by multi_key (each group = one part)
@@ -1416,7 +1416,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Check emissions dispatch (created during check-in)
           dispatchToCheck = job.gocanvasDispatchId;
           expectedTransition = 'in_service';
-          formIdToCheck = process.env.GOCANVAS_FORM_ID || '5654184';
+          formIdToCheck = process.env.GOCANVAS_FORM_ID || '5692359';
           console.log(`   Looking for emissions service completion (dispatch ${dispatchToCheck})`);
           break;
           
@@ -1476,7 +1476,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Use fallback form IDs if env vars not set
           const pickupFormId = process.env.GOCANVAS_PICKUP_FORM_ID || '5631022';
-          const emissionsFormId = process.env.GOCANVAS_FORM_ID || '5654184';
+          const emissionsFormId = process.env.GOCANVAS_FORM_ID || '5692359';
           const deliveryFormId = process.env.GOCANVAS_DELIVERY_FORM_ID || '5632656';
           
           console.log(`   pickupFormId: ${pickupFormId} (env: ${process.env.GOCANVAS_PICKUP_FORM_ID || 'not set'})`);
