@@ -1032,8 +1032,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update a part
-  app.put("/api/jobs/:jobId/parts/:partId", isAuthenticated, async (req, res) => {
+  // Update a part (PATCH for partial updates, PUT for full updates)
+  const updatePartHandler = async (req: any, res: any) => {
     try {
       const { jobId, partId } = req.params;
       
@@ -1068,7 +1068,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.status(500).json({ message: "Failed to update job part" });
     }
-  });
+  };
+  
+  app.patch("/api/jobs/:jobId/parts/:partId", isAuthenticated, updatePartHandler);
+  app.put("/api/jobs/:jobId/parts/:partId", isAuthenticated, updatePartHandler);
 
   // Delete a part
   app.delete("/api/jobs/:jobId/parts/:partId", isAuthenticated, async (req, res) => {
