@@ -357,24 +357,24 @@ export const jobParts = pgTable("job_parts", {
   jobId: varchar("job_id", { length: 50 }).notNull(), // ECS-formatted job ID
   
   // Fields entered by CSR in ECS Connect (pre-dispatch)
-  part: text("part"), // Field ID: 736433802 (Form 5692359)
-  process: text("process"), // Field ID: 736433789 - Process Being Performed
-  ecsSerial: text("ecs_serial"), // Field ID: 736433795 - ECS Serial Number
-  filterPn: text("filter_pn"), // Field ID: 736433790 - Filter Part Number
-  poNumber: text("po_number"), // Field ID: 736433797 - PO Number
-  mileage: text("mileage"), // Field ID: 736433798 - Mileage
-  unitVin: text("unit_vin"), // Field ID: 736433799 - Unit / Vin Number
-  gasketClamps: text("gasket_clamps"), // Field ID: 736433853 - Gasket or Clamps
-  ec: text("ec"), // Field ID: 736433863 - EC
-  eg: text("eg"), // Field ID: 736433864 - EG
-  ek: text("ek"), // Field ID: 736433865 - EK
+  part: text("part"), // Field ID: 736541826 (Form 5692831)
+  process: text("process"), // Field ID: 736541813 - Process Being Performed
+  ecsSerial: text("ecs_serial"), // Field ID: 736541819 - ECS Serial Number
+  filterPn: text("filter_pn"), // Field ID: 736541814 - Filter Part Number
+  poNumber: text("po_number"), // Field ID: 736541821 - PO Number
+  mileage: text("mileage"), // Field ID: 736541822 - Mileage
+  unitVin: text("unit_vin"), // Field ID: 736541823 - Unit / Vin Number
+  gasketClamps: text("gasket_clamps"), // Field ID: 736541877 - Gasket or Clamps
+  ec: text("ec"), // Field ID: 736541887 - EC
+  eg: text("eg"), // Field ID: 736541888 - EG
+  ek: text("ek"), // Field ID: 736541889 - EK
   
   // Fields filled by technician in GoCanvas (post-dispatch, from submission webhook)
-  ecsPartNumber: text("ecs_part_number"), // Field ID: 736433791 - ECS Part Number
-  passOrFail: text("pass_or_fail"), // Field ID: 736433787 - Did the Part Pass or Fail?
-  requireRepairs: text("require_repairs"), // Field ID: 736433901 - Did the Part Require Repairs?
-  failedReason: text("failed_reason"), // Field ID: 736433904 - Failed Reason
-  repairsPerformed: text("repairs_performed"), // Field ID: 736433903 - Which Repairs Were Performed
+  ecsPartNumber: text("ecs_part_number"), // Field ID: 736541815 - ECS Part Number
+  passOrFail: text("pass_or_fail"), // Field ID: 736541811 - Did the Part Pass or Fail?
+  requireRepairs: text("require_repairs"), // Field ID: 736541925 - Did the Part Require Repairs?
+  failedReason: text("failed_reason"), // Field ID: 736541928 - Failed Reason
+  repairsPerformed: text("repairs_performed"), // Field ID: 736541927 - Which Repairs Were Performed
   
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
