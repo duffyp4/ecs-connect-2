@@ -40,7 +40,7 @@ The application uses a monorepo structure with `/client` (React frontend), `/ser
   5. Parts are sent to GoCanvas as loop screen rows using multi_key format
   6. AFTER check-in: Parts become read-only (already dispatched to technician)
 - **Validation**: Emissions dispatch will fail if parts exist but required fields are incomplete
-- **GoCanvas Integration**: Parts pre-populate loop screen in emissions form using field IDs 728953416-728953479 with multi_key grouping
+- **GoCanvas Integration**: Parts pre-populate loop screen in emissions form (ID: 5692831) using field IDs 736541826-736541927 with multi_key grouping
 - **Edit States**: Parts editable when job state is `queued_for_pickup` or `picked_up` (BEFORE emissions dispatch)
 
 ### Diagnostic Infrastructure
