@@ -559,6 +559,22 @@ export default function JobDetail() {
                       <div className="font-medium">{part.repairsPerformed || '-'}</div>
                     </div>
                   </div>
+
+                  {/* ECS Internal Tracking Fields */}
+                  <Separator className="my-4" />
+                  <div className="mb-2">
+                    <div className="text-xs font-medium text-muted-foreground">ECS Internal Tracking</div>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-sm text-muted-foreground">Diagnosis</div>
+                      <div className="font-medium">{part.diagnosis || '-'}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground">Status</div>
+                      <div className="font-medium">{part.status || '-'}</div>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
