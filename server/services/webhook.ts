@@ -137,6 +137,28 @@ export class WebhookService {
           },
         }
       );
+
+      // Extract driver notes from submission and add as job comment
+      if (submissionData?.responses && Array.isArray(submissionData.responses)) {
+        const driverNotesField = submissionData.responses.find((r: any) => 
+          r.label === 'Driver Notes'
+        );
+        
+        if (driverNotesField?.value && driverNotesField.value.trim()) {
+          const { storage } = await import('../storage');
+          
+          // Try to get username from submission data, fallback to "Driver"
+          const submitterName = submissionData.username || submissionData.user?.username || 'Driver';
+          
+          await storage.createJobComment({
+            jobId,
+            userId: submitterName, // Store driver's username/name
+            commentText: `[Driver Notes] ${driverNotesField.value.trim()}`,
+          });
+          
+          console.log(`✅ Added driver notes as job comment for ${jobId} by ${submitterName}`);
+        }
+      }
     } catch (error) {
       console.error(`Error handling pickup completion for job ${jobId}:`, error);
       throw error;
@@ -339,7 +361,7 @@ export class WebhookService {
       const existingParts = await storage.getJobParts(jobId);
       
       // Update each existing part with GoCanvas data
-      for (const [partName, goCanvasData] of partGroups.entries()) {
+      for (const [partName, goCanvasData] of Array.from(partGroups.entries())) {
         // Find matching part in our database
         const existingPart = existingParts.find((p: any) => p.part === partName);
         
