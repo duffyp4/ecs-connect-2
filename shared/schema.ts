@@ -408,6 +408,9 @@ export const insertJobPartSchema = createInsertSchema(jobParts).omit({
   requireRepairs: z.string().optional(),
   failedReason: z.string().optional(),
   repairsPerformed: z.string().optional(),
+  // Optional ECS internal fields (editable at any time)
+  diagnosis: z.string().optional(),
+  status: z.string().optional(),
 });
 
 export type InsertJobPart = z.infer<typeof insertJobPartSchema>;
