@@ -1604,14 +1604,9 @@ export class GoCanvasService {
         });
       }
       
-      // 4. ECS Part Number (display label) & ECS Serial Number (actual serial)
+      // 4. ECS Serial Number (CSR-filled field)
+      // NOTE: ECS Part Number (736433791) is a TECHNICIAN-ONLY field - do NOT prefill
       if (part.ecsSerial) {
-        // Send to both fields for better visibility
-        loopResponses.push({
-          entry_id: PARTS_FIELD_IDS.ecsPartNumber,
-          value: String(part.ecsSerial),
-          multi_key: multiKey,
-        });
         loopResponses.push({
           entry_id: PARTS_FIELD_IDS.ecsSerial,
           value: String(part.ecsSerial),
