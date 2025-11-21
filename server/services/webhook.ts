@@ -290,6 +290,17 @@ export class WebhookService {
       // Group responses by multi_key (each group = one part)
       const partGroups = new Map<string, any>();
       
+      // DEBUG: Log first 5 part-related responses to see actual field IDs
+      const partsRelatedResponses = responses.filter(r => 
+        r.entry_id >= 736551799 && r.entry_id <= 736551920 && r.value
+      ).slice(0, 10);
+      if (partsRelatedResponses.length > 0) {
+        console.log('🔍 Sample parts-related field IDs in submission:');
+        partsRelatedResponses.forEach(r => {
+          console.log(`   Field ${r.entry_id}: "${r.value}" (multi_key: ${r.multi_key || 'none'})`);
+        });
+      }
+      
       for (const response of responses) {
         const entryId = response.entry_id;
         const value = response.value;
