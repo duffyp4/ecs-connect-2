@@ -714,17 +714,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Extract "Note to Tech about Customer or service:" and add as job comment
       if (req.body.noteToTechAboutCustomer && req.body.noteToTechAboutCustomer.trim()) {
         try {
-          const userId = req.user.claims.sub;
-          const user = await storage.getUserById(userId);
-          const userName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || userId : userId;
+          const userId = (req.user as any)?.email || 'system';
           
           await storage.createJobComment({
             jobId: updatedJob.jobId,
-            userId: userName,
+            userId,
             commentText: `[Note to Tech] ${req.body.noteToTechAboutCustomer.trim()}`,
           });
           
-          console.log(`✅ Added tech note as job comment for ${updatedJob.jobId} by ${userName}`);
+          console.log(`✅ Added tech note as job comment for ${updatedJob.jobId} by ${userId}`);
         } catch (commentError) {
           console.error('Failed to create tech note comment:', commentError);
           // Don't fail the check-in if comment creation fails
