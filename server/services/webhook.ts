@@ -302,6 +302,39 @@ export class WebhookService {
           console.log(`✅ Added tech note as job comment for ${jobId} by ${submitterName}`);
         }
       }
+      
+      // Extract "Additional Comments" and add as job comment
+      if (submissionData?.responses && Array.isArray(submissionData.responses)) {
+        const additionalCommentsField = submissionData.responses.find((r: any) => 
+          r.entry_id === 736551926 // "Additional Comments"
+        );
+        
+        if (additionalCommentsField?.value && additionalCommentsField.value.trim()) {
+          const { goCanvasService } = await import('./gocanvas');
+          
+          // Get technician name from GoCanvas user API
+          let submitterName = 'Technician';
+          if (submissionData.user_id) {
+            try {
+              const userData = await goCanvasService.getGoCanvasUserById(submissionData.user_id);
+              const firstName = userData.first_name || '';
+              const lastName = userData.last_name || '';
+              submitterName = `${firstName} ${lastName}`.trim() || `User ${submissionData.user_id}`;
+            } catch (error) {
+              console.warn(`Could not fetch GoCanvas user ${submissionData.user_id}:`, error);
+              submitterName = `Technician (ID: ${submissionData.user_id})`;
+            }
+          }
+          
+          await storage.createJobComment({
+            jobId,
+            userId: submitterName,
+            commentText: `[Additional Comments] ${additionalCommentsField.value.trim()}`,
+          });
+          
+          console.log(`✅ Added additional comments as job comment for ${jobId} by ${submitterName}`);
+        }
+      }
     } catch (error) {
       console.error(`Error handling service completion for job ${jobId}:`, error);
       throw error;
