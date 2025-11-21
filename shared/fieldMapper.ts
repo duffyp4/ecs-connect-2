@@ -255,6 +255,76 @@ export class FieldMapper {
   clearCache(): void {
     this.fieldMaps.clear();
   }
+
+  /**
+   * Get all parts-related field IDs for the emissions form
+   * This eliminates the need to hard-code field IDs in parts extraction logic
+   * @param formId - The GoCanvas form ID (defaults to emissions form from env)
+   * @returns Object containing all parts field IDs mapped by their logical names
+   * @throws Error if any required field is not found in the field map
+   */
+  getPartsFieldIds(formId?: string): {
+    part: number;
+    process: number;
+    filterPn: number;
+    ecsSerial: number;
+    poNumber: number;
+    mileage: number;
+    unitVin: number;
+    gasketClamps: number;
+    ec: number;
+    eg: number;
+    ek: number;
+    ecsPartNumber: number;
+    passOrFail: number;
+    requireRepairs: number;
+    failedReason: number;
+    repairsPerformed: number;
+  } {
+    const targetFormId = formId || process.env.GOCANVAS_FORM_ID || '5692904';
+    
+    // Define the exact field labels to look up
+    const fieldLabels = {
+      part: 'Part',
+      process: 'Process Being Performed',
+      filterPn: 'Filter Part Number',
+      ecsSerial: 'ECS Serial Number',
+      poNumber: 'PO Number',
+      mileage: 'Mileage',
+      unitVin: 'Unit / Vin Number',
+      gasketClamps: 'Gasket or Clamps',
+      ec: 'EC',
+      eg: 'EG',
+      ek: 'EK',
+      ecsPartNumber: 'ECS Part Number',
+      passOrFail: 'Did the Part Pass or Fail?',
+      requireRepairs: 'Did the Part Require Repairs?',
+      failedReason: 'Failed Reason',
+      repairsPerformed: 'Which Repairs Were Performed',
+    };
+
+    const result: any = {};
+    const missingFields: string[] = [];
+
+    // Look up each field ID by its label
+    for (const [key, label] of Object.entries(fieldLabels)) {
+      const fieldId = this.getFieldIdForForm(targetFormId, label);
+      if (fieldId === null) {
+        missingFields.push(label);
+      } else {
+        result[key] = fieldId;
+      }
+    }
+
+    if (missingFields.length > 0) {
+      throw new Error(
+        `Parts field mapping incomplete for form ${targetFormId}. Missing fields: ${missingFields.join(', ')}. ` +
+        `Run field mapping update script for this form.`
+      );
+    }
+
+    return result;
+  }
 }
 
 // Export singleton instance
