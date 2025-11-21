@@ -615,60 +615,63 @@ export function PartsManagementModal({
 
                   {form.watch("gasketClamps") === "Yes" && (
                     <div className="col-span-1 md:col-span-2">
-                      <div className="space-y-3">
-                        <FormField
-                          control={form.control}
-                          name="ec"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between space-y-0 rounded-lg border p-3">
-                              <FormLabel className="cursor-pointer">EC</FormLabel>
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value === "Yes"}
-                                  onCheckedChange={(checked) => field.onChange(checked ? "Yes" : "")}
-                                  data-testid="checkbox-ec"
-                                  className="h-4 w-4"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
+                      <div className="rounded-lg border p-4 bg-muted/30">
+                        <div className="text-sm font-medium mb-3">Select Gasket/Clamp Types</div>
+                        <div className="flex flex-wrap gap-6">
+                          <FormField
+                            control={form.control}
+                            name="ec"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value === "Yes"}
+                                    onCheckedChange={(checked) => field.onChange(checked ? "Yes" : "")}
+                                    data-testid="checkbox-ec"
+                                    className="h-4 w-4"
+                                  />
+                                </FormControl>
+                                <FormLabel className="cursor-pointer font-normal">EC</FormLabel>
+                              </FormItem>
+                            )}
+                          />
 
-                        <FormField
-                          control={form.control}
-                          name="eg"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between space-y-0 rounded-lg border p-3">
-                              <FormLabel className="cursor-pointer">EG</FormLabel>
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value === "Yes"}
-                                  onCheckedChange={(checked) => field.onChange(checked ? "Yes" : "")}
-                                  data-testid="checkbox-eg"
-                                  className="h-4 w-4"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
+                          <FormField
+                            control={form.control}
+                            name="eg"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value === "Yes"}
+                                    onCheckedChange={(checked) => field.onChange(checked ? "Yes" : "")}
+                                    data-testid="checkbox-eg"
+                                    className="h-4 w-4"
+                                  />
+                                </FormControl>
+                                <FormLabel className="cursor-pointer font-normal">EG</FormLabel>
+                              </FormItem>
+                            )}
+                          />
 
-                        <FormField
-                          control={form.control}
-                          name="ek"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between space-y-0 rounded-lg border p-3">
-                              <FormLabel className="cursor-pointer">EK</FormLabel>
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value === "Yes"}
-                                  onCheckedChange={(checked) => field.onChange(checked ? "Yes" : "")}
-                                  data-testid="checkbox-ek"
-                                  className="h-4 w-4"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
+                          <FormField
+                            control={form.control}
+                            name="ek"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value === "Yes"}
+                                    onCheckedChange={(checked) => field.onChange(checked ? "Yes" : "")}
+                                    data-testid="checkbox-ek"
+                                    className="h-4 w-4"
+                                  />
+                                </FormControl>
+                                <FormLabel className="cursor-pointer font-normal">EK</FormLabel>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                       </div>
                     </div>
                   )}
