@@ -501,6 +501,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/jobs", isAuthenticated, async (req, res) => {
     try {
       const { arrivalPath, pickupDriverEmail, pickupNotes, ...jobData } = req.body;
+      const userId = req.user.claims.sub;
       
       // Validate using appropriate schema based on arrival path
       const schema = arrivalPath === 'pickup' ? pickupJobSchema : insertJobSchema;
@@ -526,6 +527,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           );
           console.log(`Pickup dispatched successfully for job ${job.jobId}`);
+          
+          // If pickup notes were provided, add them as a job comment
+          if (pickupNotes && pickupNotes.trim()) {
+            await storage.createJobComment({
+              jobId: job.jobId,
+              userId,
+              commentText: `[Pickup Notes] ${pickupNotes.trim()}`,
+            });
+          }
         } catch (dispatchError) {
           // Dispatch failed - rollback the job creation
           console.error(`Pickup dispatch failed for job ${job.jobId}, rolling back job creation:`, dispatchError);
@@ -553,6 +563,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { jobId } = req.params;
       const { driverEmail, pickupNotes } = req.body;
+      const userId = req.user.claims.sub;
       
       if (!driverEmail) {
         return res.status(400).json({ message: "Driver email is required" });
@@ -571,6 +582,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           pickupNotes,
         }
       );
+      
+      // If pickup notes were provided, add them as a job comment
+      if (pickupNotes && pickupNotes.trim()) {
+        await storage.createJobComment({
+          jobId: job.jobId,
+          userId,
+          commentText: `[Pickup Notes] ${pickupNotes.trim()}`,
+        });
+      }
       
       res.json(updatedJob);
     } catch (error) {
