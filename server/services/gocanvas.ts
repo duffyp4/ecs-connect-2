@@ -1651,44 +1651,40 @@ export class GoCanvasService {
       }
       
       // 9. Gasket or Clamps
-      // TEMPORARILY DISABLED FOR TESTING - Functionality preserved, just not dispatched
-      // if (part.gasketClamps) {
-      //   loopResponses.push({
-      //     entry_id: PARTS_FIELD_IDS.gasketClamps,
-      //     value: String(part.gasketClamps),
-      //     multi_key: multiKey,
-      //   });
-      // }
+      if (part.gasketClamps) {
+        loopResponses.push({
+          entry_id: PARTS_FIELD_IDS.gasketClamps,
+          value: String(part.gasketClamps),
+          multi_key: multiKey,
+        });
+      }
       
       // 10. EC
-      // TEMPORARILY DISABLED FOR TESTING - Functionality preserved, just not dispatched
-      // if (part.ec) {
-      //   loopResponses.push({
-      //     entry_id: PARTS_FIELD_IDS.ec,
-      //     value: String(part.ec),
-      //     multi_key: multiKey,
-      //   });
-      // }
+      if (part.ec) {
+        loopResponses.push({
+          entry_id: PARTS_FIELD_IDS.ec,
+          value: String(part.ec),
+          multi_key: multiKey,
+        });
+      }
       
       // 11. EG
-      // TEMPORARILY DISABLED FOR TESTING - Functionality preserved, just not dispatched
-      // if (part.eg) {
-      //   loopResponses.push({
-      //     entry_id: PARTS_FIELD_IDS.eg,
-      //     value: String(part.eg),
-      //     multi_key: multiKey,
-      //   });
-      // }
+      if (part.eg) {
+        loopResponses.push({
+          entry_id: PARTS_FIELD_IDS.eg,
+          value: String(part.eg),
+          multi_key: multiKey,
+        });
+      }
       
       // 12. EK
-      // TEMPORARILY DISABLED FOR TESTING - Functionality preserved, just not dispatched
-      // if (part.ek) {
-      //   loopResponses.push({
-      //     entry_id: PARTS_FIELD_IDS.ek,
-      //     value: String(part.ek),
-      //     multi_key: multiKey,
-      //   });
-      // }
+      if (part.ek) {
+        loopResponses.push({
+          entry_id: PARTS_FIELD_IDS.ek,
+          value: String(part.ek),
+          multi_key: multiKey,
+        });
+      }
       
       const fieldsWithMultiKey = loopResponses.filter(r => r.multi_key === multiKey).length;
       const titleField = loopResponses.filter(r => r.value === multiKey && !r.multi_key).length;
