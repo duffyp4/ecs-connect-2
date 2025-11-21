@@ -620,7 +620,8 @@ export function PartsManagementModal({
                           control={form.control}
                           name="ec"
                           render={({ field }) => (
-                            <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                            <FormItem className="flex flex-row items-center justify-between space-y-0">
+                              <FormLabel className="cursor-pointer font-normal">EC</FormLabel>
                               <FormControl>
                                 <Checkbox
                                   checked={field.value === "Yes"}
@@ -629,7 +630,6 @@ export function PartsManagementModal({
                                   className="h-4 w-4"
                                 />
                               </FormControl>
-                              <FormLabel className="cursor-pointer font-normal">EC</FormLabel>
                             </FormItem>
                           )}
                         />
@@ -638,7 +638,8 @@ export function PartsManagementModal({
                           control={form.control}
                           name="eg"
                           render={({ field }) => (
-                            <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                            <FormItem className="flex flex-row items-center justify-between space-y-0">
+                              <FormLabel className="cursor-pointer font-normal">EG</FormLabel>
                               <FormControl>
                                 <Checkbox
                                   checked={field.value === "Yes"}
@@ -647,7 +648,6 @@ export function PartsManagementModal({
                                   className="h-4 w-4"
                                 />
                               </FormControl>
-                              <FormLabel className="cursor-pointer font-normal">EG</FormLabel>
                             </FormItem>
                           )}
                         />
@@ -656,7 +656,8 @@ export function PartsManagementModal({
                           control={form.control}
                           name="ek"
                           render={({ field }) => (
-                            <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                            <FormItem className="flex flex-row items-center justify-between space-y-0">
+                              <FormLabel className="cursor-pointer font-normal">EK</FormLabel>
                               <FormControl>
                                 <Checkbox
                                   checked={field.value === "Yes"}
@@ -665,7 +666,6 @@ export function PartsManagementModal({
                                   className="h-4 w-4"
                                 />
                               </FormControl>
-                              <FormLabel className="cursor-pointer font-normal">EK</FormLabel>
                             </FormItem>
                           )}
                         />
