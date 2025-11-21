@@ -6,6 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   FileText, 
   ArrowLeft, 
@@ -31,6 +38,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTimezone } from "@/hooks/useTimezone";
 import { useDevMode } from "@/contexts/DevModeContext";
+import { PART_DIAGNOSIS_OPTIONS, PART_STATUS_OPTIONS } from "@shared/schema";
 
 type JobEvent = {
   id: string;
@@ -168,6 +176,30 @@ export default function JobDetail() {
       toast({
         title: "Error",
         description: error.message || "Failed to check for updates",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation for updating part internal tracking fields
+  const updatePartMutation = useMutation({
+    mutationFn: async ({ partId, field, value }: { partId: string; field: string; value: string }) => {
+      const response = await apiRequest("PATCH", `/api/jobs/${jobId}/parts/${partId}`, {
+        [field]: value,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}/parts`] });
+      toast({
+        title: "Success",
+        description: "Part updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update part",
         variant: "destructive",
       });
     },
@@ -563,19 +595,59 @@ export default function JobDetail() {
                     </div>
                   </div>
 
-                  {/* ECS Internal Tracking Fields */}
+                  {/* ECS Internal Tracking Fields - Always Editable */}
                   <Separator className="my-4" />
                   <div className="mb-2">
-                    <div className="text-xs font-medium text-muted-foreground">ECS Internal Tracking</div>
+                    <div className="text-xs font-medium text-muted-foreground">ECS Internal Tracking (Always Editable)</div>
                   </div>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <div className="text-sm text-muted-foreground">Diagnosis</div>
-                      <div className="font-medium">{part.diagnosis || '-'}</div>
+                      <div className="text-sm text-muted-foreground mb-2">Diagnosis</div>
+                      <Select
+                        value={part.diagnosis || ""}
+                        onValueChange={(value) => {
+                          updatePartMutation.mutate({
+                            partId: part.id,
+                            field: "diagnosis",
+                            value: value,
+                          });
+                        }}
+                      >
+                        <SelectTrigger data-testid={`select-diagnosis-${index + 1}`}>
+                          <SelectValue placeholder="Select diagnosis..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PART_DIAGNOSIS_OPTIONS.map((diagnosis) => (
+                            <SelectItem key={diagnosis} value={diagnosis}>
+                              {diagnosis}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
-                      <div className="text-sm text-muted-foreground">Status</div>
-                      <div className="font-medium">{part.status || '-'}</div>
+                      <div className="text-sm text-muted-foreground mb-2">Status</div>
+                      <Select
+                        value={part.status || ""}
+                        onValueChange={(value) => {
+                          updatePartMutation.mutate({
+                            partId: part.id,
+                            field: "status",
+                            value: value,
+                          });
+                        }}
+                      >
+                        <SelectTrigger data-testid={`select-status-${index + 1}`}>
+                          <SelectValue placeholder="Select status..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PART_STATUS_OPTIONS.map((status) => (
+                            <SelectItem key={status} value={status}>
+                              {status}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 </div>
