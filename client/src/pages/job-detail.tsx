@@ -792,7 +792,7 @@ export default function JobDetail() {
                 {comments.map((comment) => {
                   const displayName = comment.userFirstName || comment.userLastName
                     ? `${comment.userFirstName || ''} ${comment.userLastName || ''}`.trim()
-                    : comment.userEmail || 'Unknown User';
+                    : comment.userEmail || comment.userId || 'Unknown User';
                   
                   return (
                     <div key={comment.id} className="border-b pb-4 last:border-0" data-testid={`comment-${comment.id}`}>

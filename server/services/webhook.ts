@@ -146,13 +146,26 @@ export class WebhookService {
         
         if (driverNotesField?.value && driverNotesField.value.trim()) {
           const { storage } = await import('../storage');
+          const { goCanvasService } = await import('./gocanvas');
           
-          // Try to get username from submission data, fallback to "Driver"
-          const submitterName = submissionData.username || submissionData.user?.username || 'Driver';
+          // Get driver name from GoCanvas user API
+          let submitterName = 'Driver';
+          if (submissionData.user_id) {
+            try {
+              const userData = await goCanvasService.getGoCanvasUserById(submissionData.user_id);
+              const firstName = userData.first_name || '';
+              const lastName = userData.last_name || '';
+              submitterName = `${firstName} ${lastName}`.trim() || `User ${submissionData.user_id}`;
+              submitterName += ' (Driver)';
+            } catch (error) {
+              console.warn(`Could not fetch GoCanvas user ${submissionData.user_id}:`, error);
+              submitterName = `Driver (ID: ${submissionData.user_id})`;
+            }
+          }
           
           await storage.createJobComment({
             jobId,
-            userId: submitterName, // Store driver's username/name
+            userId: submitterName,
             commentText: `[Driver Notes] ${driverNotesField.value.trim()}`,
           });
           

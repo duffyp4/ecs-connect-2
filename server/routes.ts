@@ -1513,12 +1513,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 );
                 
                 if (driverNotesField?.value && driverNotesField.value.trim()) {
-                  // Try to get username from submission data, fallback to "Driver"
-                  const submitterName = submissionData.rawData.username || submissionData.rawData.user?.username || 'Driver';
+                  // Get driver name from GoCanvas user API
+                  let submitterName = 'Driver';
+                  if (submissionData.rawData.user_id) {
+                    try {
+                      const userData = await goCanvasService.getGoCanvasUserById(submissionData.rawData.user_id);
+                      const firstName = userData.first_name || '';
+                      const lastName = userData.last_name || '';
+                      submitterName = `${firstName} ${lastName}`.trim() || `User ${submissionData.rawData.user_id}`;
+                      submitterName += ' (Driver)';
+                    } catch (error) {
+                      console.warn(`Could not fetch GoCanvas user ${submissionData.rawData.user_id}:`, error);
+                      submitterName = `Driver (ID: ${submissionData.rawData.user_id})`;
+                    }
+                  }
                   
                   await storage.createJobComment({
                     jobId,
-                    userId: submitterName, // Store driver's username/name
+                    userId: submitterName,
                     commentText: `[Driver Notes] ${driverNotesField.value.trim()}`,
                   });
                   
