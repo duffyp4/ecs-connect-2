@@ -832,6 +832,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         orderNumber5,
       });
       
+      // Add delivery notes as a comment if provided
+      const userId = (req.user as any)?.email || 'system';
+      if (deliveryNotes && deliveryNotes.trim()) {
+        await storage.createJobComment({
+          jobId: job.jobId,
+          userId,
+          commentText: `[Delivery Notes] ${deliveryNotes.trim()}`,
+        });
+      }
+      
       res.json(updatedJob);
     } catch (error) {
       console.error("Error dispatching delivery:", error);
@@ -1683,6 +1693,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 source: 'manual_check',
               },
             });
+            
+            // Extract driver notes from delivery submission and add as job comment
+            if (submissionData?.rawData?.responses && Array.isArray(submissionData.rawData.responses)) {
+              const driverNotesField = submissionData.rawData.responses.find((r: any) => 
+                r.label === 'Driver Notes'
+              );
+              
+              if (driverNotesField?.value && driverNotesField.value.trim()) {
+                // Get driver name from GoCanvas user API
+                let submitterName = 'Driver';
+                if (submissionData.rawData.user_id) {
+                  try {
+                    const userData = await goCanvasService.getGoCanvasUserById(submissionData.rawData.user_id);
+                    const firstName = userData.first_name || '';
+                    const lastName = userData.last_name || '';
+                    submitterName = `${firstName} ${lastName}`.trim() || `User ${submissionData.rawData.user_id}`;
+                  } catch (error) {
+                    console.warn(`Could not fetch GoCanvas user ${submissionData.rawData.user_id}:`, error);
+                    submitterName = `Driver (ID: ${submissionData.rawData.user_id})`;
+                  }
+                }
+                
+                await storage.createJobComment({
+                  jobId,
+                  userId: submitterName,
+                  commentText: `[Driver Notes] ${driverNotesField.value.trim()}`,
+                });
+                
+                console.log(`✅ Added delivery driver notes as job comment for ${jobId} by ${submitterName}`);
+              }
+            }
           }
           
           updateFound = true;

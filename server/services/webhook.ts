@@ -323,6 +323,37 @@ export class WebhookService {
           source: 'push_notification',
         },
       });
+      
+      // Extract driver notes from delivery form completion
+      if (submissionData?.responses && Array.isArray(submissionData.responses)) {
+        const driverNotesField = submissionData.responses.find((r: any) => 
+          r.label === 'Driver Notes'
+        );
+        
+        if (driverNotesField?.value && driverNotesField.value.trim()) {
+          const { storage } = await import('../storage');
+          const { goCanvasService } = await import('./gocanvas');
+          
+          // Get submitter name for author attribution
+          let submitterName = 'Unknown User';
+          try {
+            const userId = submissionData.user_id || submissionData.UserId;
+            if (userId) {
+              submitterName = await goCanvasService.getUserDisplayName(userId);
+            }
+          } catch (error) {
+            console.error('Error getting submitter name for delivery driver notes:', error);
+          }
+          
+          await storage.createJobComment({
+            jobId,
+            userId: submitterName,
+            commentText: `[Driver Notes] ${driverNotesField.value.trim()}`,
+          });
+          
+          console.log(`✅ Added delivery driver notes as job comment for ${jobId} by ${submitterName}`);
+        }
+      }
     } catch (error) {
       console.error(`Error handling delivery completion for job ${jobId}:`, error);
       throw error;
