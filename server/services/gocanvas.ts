@@ -5,7 +5,7 @@ import { fieldMapper } from '@shared/fieldMapper';
 
 // GoCanvas Form IDs
 export const FORM_IDS = {
-  EMISSIONS: '5692831',      // Emissions Service Log (Nashville - updated 2025-11-21)
+  EMISSIONS: '5692904',      // Emissions Service Log (Nashville - updated 2025-11-21, remapped fields)
   PICKUP: '5640587',         // Pickup Log (updated with Contact Name, Contact Number, PO Number)
   DELIVERY: '5657146',       // Delivery Log (updated 2025-10-30 - changed Invoice to Order Number)
 } as const;
@@ -1547,22 +1547,22 @@ export class GoCanvasService {
     console.log(`🔧 Mapping ${parts.length} parts to loop screen responses...`);
     
     // Loop screen field IDs - matching actual Parts Log loop screen fields
-    // Based on gocanvas_field_map_5692831.json (Form 5692831 - Nashville, updated 2025-11-21)
+    // Based on gocanvas_field_map_5692904.json (Form 5692904 - Nashville, remapped 2025-11-21)
     // CRITICAL: entry_id MUST be integers per GoCanvas API v3 spec!
     const PARTS_FIELD_IDS = {
-      part: 736541826,            // Part (sets row title)
-      process: 736541813,         // Process Being Performed
-      filterPn: 736541814,        // Filter Part Number
-      ecsPartNumber: 736541815,   // ECS Part Number (for display label)
-      partDescription: 736541816, // Part Description
-      ecsSerial: 736541819,       // ECS Serial Number (the actual serial)
-      poNumber: 736541821,        // PO Number
-      mileage: 736541822,         // Mileage
-      unitVin: 736541823,         // Unit / Vin Number
-      gasketClamps: 736541877,    // Gasket or Clamps
-      ec: 736541887,              // EC
-      eg: 736541888,              // EG
-      ek: 736541889,              // EK
+      part: 736551814,            // Part (sets row title)
+      process: 736551801,         // Process Being Performed
+      filterPn: 736551802,        // Filter Part Number
+      ecsPartNumber: 736551803,   // ECS Part Number (for display label)
+      partDescription: 736551804, // Part Description
+      ecsSerial: 736551807,       // ECS Serial Number (the actual serial)
+      poNumber: 736551809,        // PO Number
+      mileage: 736551810,         // Mileage
+      unitVin: 736551811,         // Unit / Vin Number
+      gasketClamps: 736551865,    // Gasket or Clamps
+      ec: 736551875,              // EC
+      eg: 736551876,              // EG
+      ek: 736551877,              // EK
     };
     
     const loopResponses: any[] = [];
