@@ -158,6 +158,8 @@ export default function JobDetail() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}`] });
       queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}/events`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}/parts`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}/comments`] });
       queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
       
       if (data.hasUpdate) {
