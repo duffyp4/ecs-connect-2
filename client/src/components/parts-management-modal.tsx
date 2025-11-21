@@ -56,6 +56,7 @@ interface PartsManagementModalProps {
   mode?: 'api' | 'local'; // 'api' = existing job, 'local' = new job
   openInAddMode?: boolean; // If true, opens directly to add form instead of parts list
   showEditLockDisclaimer?: boolean; // If true, shows disclaimer about parts being locked after shop check-in
+  editingPart?: JobPart | null; // Pass a part to edit directly (from job details page)
 }
 
 export function PartsManagementModal({
@@ -68,6 +69,7 @@ export function PartsManagementModal({
   mode = 'api',
   openInAddMode = false,
   showEditLockDisclaimer = false,
+  editingPart: externalEditingPart,
 }: PartsManagementModalProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -88,6 +90,14 @@ export function PartsManagementModal({
       setEditingPart(null);
     }
   }, [open, openInAddMode]);
+
+  // Handle external editing part (from job details page)
+  useEffect(() => {
+    if (open && externalEditingPart) {
+      setEditingPart(externalEditingPart);
+      setShowForm(true);
+    }
+  }, [open, externalEditingPart]);
 
   // Only query API if in API mode
   const { data: apiParts = [], isLoading, refetch } = useQuery<JobPart[]>({

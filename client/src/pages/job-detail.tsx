@@ -19,7 +19,8 @@ import {
   Clock,
   MessageSquare,
   Settings,
-  RefreshCw
+  RefreshCw,
+  Edit
 } from "lucide-react";
 import JobStatusBadge from "@/components/job-status-badge";
 import { CheckInModal } from "@/components/check-in-modal";
@@ -63,6 +64,7 @@ export default function JobDetail() {
   const [deliveryDispatchModalOpen, setDeliveryDispatchModalOpen] = useState(false);
   const [readyForPickupModalOpen, setReadyForPickupModalOpen] = useState(false);
   const [partsManagementModalOpen, setPartsManagementModalOpen] = useState(false);
+  const [editingPart, setEditingPart] = useState<any>(null);
   const [newComment, setNewComment] = useState("");
 
   const { data: job, isLoading: jobLoading } = useQuery<any>({
@@ -491,22 +493,10 @@ export default function JobDetail() {
       {parts.length > 0 && (
         <Card>
           <CardHeader className="card-header">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-white flex items-center gap-2">
-                <Package className="h-5 w-5" />
-                Parts Details
-              </CardTitle>
-              <Button 
-                onClick={() => setPartsManagementModalOpen(true)}
-                disabled={!isDevMode && !['queued_for_pickup', 'picked_up'].includes(currentState)}
-                variant="secondary"
-                size="sm"
-                data-testid="button-manage-parts"
-              >
-                <Settings className="mr-2 h-4 w-4" />
-                Manage Parts
-              </Button>
-            </div>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Parts Details
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-6">
@@ -514,6 +504,19 @@ export default function JobDetail() {
                 <div key={part.id} className="border rounded-lg p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-[var(--ecs-primary)]">Part {index + 1}</h3>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEditingPart(part);
+                        setPartsManagementModalOpen(true);
+                      }}
+                      disabled={!isDevMode && !['queued_for_pickup', 'picked_up'].includes(currentState)}
+                      data-testid={`button-edit-part-${index + 1}`}
+                    >
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit
+                    </Button>
                   </div>
                   
                   <div className="grid md:grid-cols-2 gap-4">
@@ -795,8 +798,14 @@ export default function JobDetail() {
       {job && (
         <PartsManagementModal
           open={partsManagementModalOpen}
-          onOpenChange={setPartsManagementModalOpen}
+          onOpenChange={(open) => {
+            setPartsManagementModalOpen(open);
+            if (!open) {
+              setEditingPart(null);
+            }
+          }}
           jobId={job.jobId}
+          editingPart={editingPart}
           showEditLockDisclaimer={true}
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}`] });
