@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertJobPartSchema, type JobPart, type InsertJobPart, PART_DIAGNOSIS_OPTIONS, PART_STATUS_OPTIONS } from "@shared/schema";
+import { insertJobPartSchema, type JobPart, type InsertJobPart } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useParts, useProcesses, useFilterPartNumbers } from "@/hooks/use-reference-data";
@@ -123,8 +123,6 @@ export function PartsManagementModal({
       ec: "",
       eg: "",
       ek: "",
-      diagnosis: "",
-      status: "",
     },
   });
 
@@ -143,8 +141,6 @@ export function PartsManagementModal({
         ec: editingPart.ec || "",
         eg: editingPart.eg || "",
         ek: editingPart.ek || "",
-        diagnosis: editingPart.diagnosis || "",
-        status: editingPart.status || "",
       });
       setShowForm(true);
     }
@@ -168,8 +164,6 @@ export function PartsManagementModal({
           ec: data.ec,
           eg: data.eg,
           ek: data.ek,
-          diagnosis: data.diagnosis,
-          status: data.status,
         };
 
         if (editingPart && 'tempId' in editingPart) {
@@ -272,8 +266,6 @@ export function PartsManagementModal({
       ec: "",
       eg: "",
       ek: "",
-      diagnosis: "",
-      status: "",
     });
     setEditingPart(null);
     setShowForm(true);
@@ -363,16 +355,6 @@ export function PartsManagementModal({
                           {part.eg && <div><span className="font-medium">EG:</span> {part.eg}</div>}
                           {part.ek && <div><span className="font-medium">EK:</span> {part.ek}</div>}
                         </div>
-                        {/* ECS Internal Tracking Fields */}
-                        {(part.diagnosis || part.status) && (
-                          <div className="mt-3 pt-3 border-t border-muted/50">
-                            <div className="text-xs font-medium text-muted-foreground mb-1">Internal Tracking</div>
-                            <div className="text-sm text-muted-foreground grid grid-cols-2 gap-x-4 gap-y-1">
-                              {part.diagnosis && <div><span className="font-medium">Diagnosis:</span> {part.diagnosis}</div>}
-                              {part.status && <div><span className="font-medium">Status:</span> {part.status}</div>}
-                            </div>
-                          </div>
-                        )}
                       </div>
                       <div className="flex gap-2 ml-4">
                         <Button
@@ -691,67 +673,6 @@ export function PartsManagementModal({
                       />
                     </>
                   )}
-
-                  {/* Visual Separator for ECS Internal Fields */}
-                  <div className="col-span-2 border-t border-muted my-4"></div>
-                  
-                  <div className="col-span-2 mb-2">
-                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                      <div className="h-px flex-1 bg-border"></div>
-                      <span className="px-2">ECS Internal Tracking (Always Editable)</span>
-                      <div className="h-px flex-1 bg-border"></div>
-                    </div>
-                  </div>
-
-                  <FormField
-                    control={form.control}
-                    name="diagnosis"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Diagnosis</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || ""}>
-                          <FormControl>
-                            <SelectTrigger data-testid="select-diagnosis">
-                              <SelectValue placeholder="Select diagnosis..." />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {PART_DIAGNOSIS_OPTIONS.map((diagnosis) => (
-                              <SelectItem key={diagnosis} value={diagnosis}>
-                                {diagnosis}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Status</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || ""}>
-                          <FormControl>
-                            <SelectTrigger data-testid="select-status">
-                              <SelectValue placeholder="Select status..." />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {PART_STATUS_OPTIONS.map((status) => (
-                              <SelectItem key={status} value={status}>
-                                {status}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </div>
               </ScrollArea>
 
