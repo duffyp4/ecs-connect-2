@@ -189,19 +189,38 @@ export default function JobDetail() {
       });
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}/parts`] });
-      toast({
-        title: "Success",
-        description: "Part updated successfully",
+    onMutate: async ({ partId, field, value }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: [`/api/jobs/${jobId}/parts`] });
+      
+      // Snapshot the previous value
+      const previousParts = queryClient.getQueryData([`/api/jobs/${jobId}/parts`]);
+      
+      // Optimistically update to the new value
+      queryClient.setQueryData([`/api/jobs/${jobId}/parts`], (old: any) => {
+        if (!old) return old;
+        return old.map((part: any) => 
+          part.id === partId ? { ...part, [field]: value } : part
+        );
       });
+      
+      // Return a context object with the snapshotted value
+      return { previousParts };
     },
-    onError: (error: any) => {
+    onError: (error: any, variables, context: any) => {
+      // Rollback on error
+      if (context?.previousParts) {
+        queryClient.setQueryData([`/api/jobs/${jobId}/parts`], context.previousParts);
+      }
       toast({
         title: "Error",
         description: error.message || "Failed to update part",
         variant: "destructive",
       });
+    },
+    onSettled: () => {
+      // Always refetch after error or success to ensure we're in sync with server
+      queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}/parts`] });
     },
   });
 
