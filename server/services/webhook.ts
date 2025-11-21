@@ -270,39 +270,6 @@ export class WebhookService {
         await this.updatePartsFromSubmission(jobId, submissionData.responses, storage);
       }
       
-      // Extract "Note to Tech about Customer or service:" and add as job comment
-      if (submissionData?.responses && Array.isArray(submissionData.responses)) {
-        const techNoteField = submissionData.responses.find((r: any) => 
-          r.entry_id === 736551784 // "Note to Tech about Customer or service:"
-        );
-        
-        if (techNoteField?.value && techNoteField.value.trim()) {
-          const { goCanvasService } = await import('./gocanvas');
-          
-          // Get technician name from GoCanvas user API
-          let submitterName = 'Technician';
-          if (submissionData.user_id) {
-            try {
-              const userData = await goCanvasService.getGoCanvasUserById(submissionData.user_id);
-              const firstName = userData.first_name || '';
-              const lastName = userData.last_name || '';
-              submitterName = `${firstName} ${lastName}`.trim() || `User ${submissionData.user_id}`;
-            } catch (error) {
-              console.warn(`Could not fetch GoCanvas user ${submissionData.user_id}:`, error);
-              submitterName = `Technician (ID: ${submissionData.user_id})`;
-            }
-          }
-          
-          await storage.createJobComment({
-            jobId,
-            userId: submitterName,
-            commentText: `[Note to Tech] ${techNoteField.value.trim()}`,
-          });
-          
-          console.log(`✅ Added tech note as job comment for ${jobId} by ${submitterName}`);
-        }
-      }
-      
       // Extract "Additional Comments" and add as job comment
       if (submissionData?.responses && Array.isArray(submissionData.responses)) {
         const additionalCommentsField = submissionData.responses.find((r: any) => 

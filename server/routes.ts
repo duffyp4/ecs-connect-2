@@ -1636,37 +1636,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.log('⚠️ No response data found in submission for parts extraction');
             }
             
-            // Extract "Note to Tech about Customer or service:" and add as job comment
-            if (submissionData?.rawData?.responses && Array.isArray(submissionData.rawData.responses)) {
-              const techNoteField = submissionData.rawData.responses.find((r: any) => 
-                r.entry_id === 736551784 // "Note to Tech about Customer or service:"
-              );
-              
-              if (techNoteField?.value && techNoteField.value.trim()) {
-                // Get technician name from GoCanvas user API
-                let submitterName = 'Technician';
-                if (submissionData.rawData.user_id) {
-                  try {
-                    const userData = await goCanvasService.getGoCanvasUserById(submissionData.rawData.user_id);
-                    const firstName = userData.first_name || '';
-                    const lastName = userData.last_name || '';
-                    submitterName = `${firstName} ${lastName}`.trim() || `User ${submissionData.rawData.user_id}`;
-                  } catch (error) {
-                    console.warn(`Could not fetch GoCanvas user ${submissionData.rawData.user_id}:`, error);
-                    submitterName = `Technician (ID: ${submissionData.rawData.user_id})`;
-                  }
-                }
-                
-                await storage.createJobComment({
-                  jobId,
-                  userId: submitterName,
-                  commentText: `[Note to Tech] ${techNoteField.value.trim()}`,
-                });
-                
-                console.log(`✅ Added tech note as job comment for ${jobId} by ${submitterName}`);
-              }
-            }
-            
             // Extract "Additional Comments" and add as job comment
             if (submissionData?.rawData?.responses && Array.isArray(submissionData.rawData.responses)) {
               const additionalCommentsField = submissionData.rawData.responses.find((r: any) => 
