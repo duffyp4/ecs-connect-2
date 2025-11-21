@@ -376,6 +376,10 @@ export const jobParts = pgTable("job_parts", {
   failedReason: text("failed_reason"), // Field ID: 736541928 - Failed Reason
   repairsPerformed: text("repairs_performed"), // Field ID: 736541927 - Which Repairs Were Performed
   
+  // ECS Internal Fields - Not synced with GoCanvas, editable at any time
+  diagnosis: text("diagnosis"), // Internal diagnosis tracking
+  status: text("status"), // Internal status tracking
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -408,3 +412,80 @@ export const insertJobPartSchema = createInsertSchema(jobParts).omit({
 
 export type InsertJobPart = z.infer<typeof insertJobPartSchema>;
 export type JobPart = typeof jobParts.$inferSelect;
+
+// Part Diagnosis Options - Internal ECS tracking
+export const PART_DIAGNOSIS_OPTIONS = [
+  "Recore",
+  "Refused Recore",
+  "Clean",
+  "Oil Soaked",
+  "Tube Repair",
+  "Gaskets",
+  "Cracked Tank",
+  "C & R",
+  "C & G",
+  "Failed",
+  "Tank seam",
+  "Tube/Header",
+  "Filter Neck",
+  "Weld",
+  "Bought New",
+  "Baffle",
+  "Warranty",
+  "Header Repair",
+  "Clean & Line",
+  "Split Tube",
+  "Neck",
+  "Rotted Tube",
+  "clogged core",
+  "no leaks",
+  "replace tank",
+  "epoxy",
+  "brain cook",
+  "overflow tube",
+  "MOVE RAIL",
+  "TORQUE BOLTS",
+  "cracked header",
+  "tightened cooler nut",
+  "CLEAN ONLY",
+  "transmission cooler",
+  "reattach rail",
+  "reseal hose conn.",
+  "Tank Repair",
+  "Kill Tube",
+  "bung repair",
+  "Refused New",
+  "Repair Only",
+  "Test Only"
+] as const;
+
+// Part Status Options - Internal ECS tracking
+export const PART_STATUS_OPTIONS = [
+  "Checked In",
+  "Washed",
+  "Inspected",
+  "Vat",
+  "CAC Booth",
+  "Paint Booth",
+  "W.O.P",
+  "W.O.A",
+  "Finals",
+  "Complete",
+  "Approved",
+  "C.I.P.",
+  "Scrap",
+  "Oven",
+  "Oven",
+  "Acid",
+  "Warranty",
+  "Core Ordered",
+  "Customer Pickup",
+  "W.O.Q",
+  "FAIL",
+  "In Progress",
+  "Sold New",
+  "work comp."
+] as const;
+
+export type PartDiagnosis = typeof PART_DIAGNOSIS_OPTIONS[number];
+export type PartStatus = typeof PART_STATUS_OPTIONS[number];
