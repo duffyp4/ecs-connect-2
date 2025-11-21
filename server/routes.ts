@@ -1345,7 +1345,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const existingParts = await storage.getJobParts(jobId);
       
       // Update each existing part with GoCanvas data
-      for (const [partName, goCanvasData] of partGroups.entries()) {
+      for (const [partName, goCanvasData] of Array.from(partGroups.entries())) {
         // Find matching part in our database
         const existingPart = existingParts.find((p: any) => p.part === partName);
         
@@ -1505,6 +1505,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 }
               );
               console.log(`✅ Successfully marked job ${jobId} as picked up. New state:`, result.state);
+              
+              // Extract driver notes from submission and add as job comment
+              if (submissionData?.rawData?.responses && Array.isArray(submissionData.rawData.responses)) {
+                const driverNotesField = submissionData.rawData.responses.find((r: any) => 
+                  r.label === 'Driver Notes'
+                );
+                
+                if (driverNotesField?.value && driverNotesField.value.trim()) {
+                  // Try to get username from submission data, fallback to "Driver"
+                  const submitterName = submissionData.rawData.username || submissionData.rawData.user?.username || 'Driver';
+                  
+                  await storage.createJobComment({
+                    jobId,
+                    userId: submitterName, // Store driver's username/name
+                    commentText: `[Driver Notes] ${driverNotesField.value.trim()}`,
+                  });
+                  
+                  console.log(`✅ Added driver notes as job comment for ${jobId} by ${submitterName}`);
+                }
+              }
             } catch (err) {
               console.error(`❌ Error marking job ${jobId} as picked up:`, err);
               throw err;
