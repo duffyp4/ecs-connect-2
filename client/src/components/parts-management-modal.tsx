@@ -286,8 +286,8 @@ export function PartsManagementModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh]">
-        <DialogHeader>
+      <DialogContent className="max-w-[95vw] sm:max-w-[90vw] md:max-w-3xl lg:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
             Manage Parts
@@ -298,7 +298,7 @@ export function PartsManagementModal({
         </DialogHeader>
 
         {showEditLockDisclaimer && (
-          <Alert className="mt-4">
+          <Alert className="mt-4 flex-shrink-0">
             <Info className="h-4 w-4" />
             <AlertDescription>
               Parts can only be edited until the job gets checked in at the shop. At that point, edits can only be made by the technician in GoCanvas.
@@ -307,8 +307,8 @@ export function PartsManagementModal({
         )}
 
         {!showForm && (
-          <ScrollArea className="max-h-[calc(90vh-12rem)]">
-            <div className="space-y-4 pr-4">
+          <ScrollArea className="flex-1 overflow-auto">
+            <div className="space-y-4 pr-2 sm:pr-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-sm font-medium">Parts List ({parts.length})</h3>
                 <Button
@@ -386,9 +386,9 @@ export function PartsManagementModal({
 
         {showForm && (
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <ScrollArea className="max-h-[calc(90vh-16rem)] pr-4">
-                <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
+              <ScrollArea className="flex-1 overflow-auto pr-2 sm:pr-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4">
                   <FormField
                     control={form.control}
                     name="part"
@@ -614,74 +614,80 @@ export function PartsManagementModal({
                   />
 
                   {form.watch("gasketClamps") === "Yes" && (
-                    <>
-                      <FormField
-                        control={form.control}
-                        name="ec"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value === "Yes"}
-                                onCheckedChange={(checked) => field.onChange(checked ? "Yes" : "")}
-                                data-testid="checkbox-ec"
-                              />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel>EC</FormLabel>
-                            </div>
-                          </FormItem>
-                        )}
-                      />
+                    <div className="col-span-1 md:col-span-2">
+                      <div className="grid grid-cols-3 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="ec"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value === "Yes"}
+                                  onCheckedChange={(checked) => field.onChange(checked ? "Yes" : "")}
+                                  data-testid="checkbox-ec"
+                                  className="h-4 w-4"
+                                />
+                              </FormControl>
+                              <div className="space-y-1 leading-none">
+                                <FormLabel>EC</FormLabel>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
 
-                      <FormField
-                        control={form.control}
-                        name="eg"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value === "Yes"}
-                                onCheckedChange={(checked) => field.onChange(checked ? "Yes" : "")}
-                                data-testid="checkbox-eg"
-                              />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel>EG</FormLabel>
-                            </div>
-                          </FormItem>
-                        )}
-                      />
+                        <FormField
+                          control={form.control}
+                          name="eg"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value === "Yes"}
+                                  onCheckedChange={(checked) => field.onChange(checked ? "Yes" : "")}
+                                  data-testid="checkbox-eg"
+                                  className="h-4 w-4"
+                                />
+                              </FormControl>
+                              <div className="space-y-1 leading-none">
+                                <FormLabel>EG</FormLabel>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
 
-                      <FormField
-                        control={form.control}
-                        name="ek"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value === "Yes"}
-                                onCheckedChange={(checked) => field.onChange(checked ? "Yes" : "")}
-                                data-testid="checkbox-ek"
-                              />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel>EK</FormLabel>
-                            </div>
-                          </FormItem>
-                        )}
-                      />
-                    </>
+                        <FormField
+                          control={form.control}
+                          name="ek"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value === "Yes"}
+                                  onCheckedChange={(checked) => field.onChange(checked ? "Yes" : "")}
+                                  data-testid="checkbox-ek"
+                                  className="h-4 w-4"
+                                />
+                              </FormControl>
+                              <div className="space-y-1 leading-none">
+                                <FormLabel>EK</FormLabel>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
                   )}
                 </div>
               </ScrollArea>
 
-              <DialogFooter className="pt-4">
+              <DialogFooter className="flex-shrink-0 pt-4 flex-col sm:flex-row gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handleCancel}
                   data-testid="button-cancel-part"
+                  className="w-full sm:w-auto"
                 >
                   Cancel
                 </Button>
@@ -689,6 +695,7 @@ export function PartsManagementModal({
                   type="submit"
                   disabled={isSubmitting}
                   data-testid="button-save-part"
+                  className="w-full sm:w-auto"
                 >
                   {isSubmitting ? "Saving..." : editingPart ? "Update Part" : "Add Part"}
                 </Button>
@@ -698,12 +705,13 @@ export function PartsManagementModal({
         )}
 
         {!showForm && (
-          <DialogFooter>
+          <DialogFooter className="flex-shrink-0">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               data-testid="button-close-parts"
+              className="w-full sm:w-auto"
             >
               Close
             </Button>
