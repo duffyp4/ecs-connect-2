@@ -5,7 +5,7 @@ import { fieldMapper } from '@shared/fieldMapper';
 
 // GoCanvas Form IDs
 export const FORM_IDS = {
-  EMISSIONS: '5692359',      // Emissions Service Log (updated 2025-11-21)
+  EMISSIONS: '5692831',      // Emissions Service Log (Nashville - updated 2025-11-21)
   PICKUP: '5640587',         // Pickup Log (updated with Contact Name, Contact Number, PO Number)
   DELIVERY: '5657146',       // Delivery Log (updated 2025-10-30 - changed Invoice to Order Number)
 } as const;
