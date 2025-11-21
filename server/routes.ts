@@ -1036,6 +1036,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const updatePartHandler = async (req: any, res: any) => {
     try {
       const { jobId, partId } = req.params;
+      const isPatch = req.method === 'PATCH';
       
       // Verify job exists
       let job = await storage.getJob(jobId);
@@ -1047,9 +1048,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Job not found" });
       }
       
-      // Validate part data using Zod schema
+      // For PATCH requests, allow partial updates (don't require all fields)
+      // For PUT requests, require all fields
       const { insertJobPartSchema } = await import("@shared/schema");
-      const partData = insertJobPartSchema.parse({
+      const schema = isPatch ? insertJobPartSchema.partial() : insertJobPartSchema;
+      
+      const partData = schema.parse({
         ...req.body,
         jobId: job.jobId,
       });
