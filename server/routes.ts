@@ -1263,27 +1263,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Helper function to extract and update parts data from GoCanvas submission
   async function updatePartsFromSubmission(jobId: string, responses: any[], storage: any) {
     try {
-      // Field IDs for parts data from GoCanvas (Form 5692904 v12 - updated 2025-11-21)
-      // Extract ALL fields - both CSR-filled and technician-filled
-      // GoCanvas values override database values (technician version is source of truth)
-      const PARTS_FIELD_IDS = {
-        part: 736551814, // Part (title field)
-        process: 736551801, // Process Being Performed
-        filterPn: 736551802, // Filter Part Number
-        ecsSerial: 736551807, // ECS Serial Number
-        poNumber: 736551809, // PO Number
-        mileage: 736551810, // Mileage
-        unitVin: 736551811, // Unit / Vin Number
-        gasketClamps: 736551865, // Gasket or Clamps
-        ec: 736551875, // EC
-        eg: 736551876, // EG
-        ek: 736551877, // EK
-        ecsPartNumber: 736551803, // ECS Part Number
-        passOrFail: 736551799, // Did the Part Pass or Fail?
-        requireRepairs: 736551913, // Did the Part Require Repairs?
-        failedReason: 736551916, // Failed Reason
-        repairsPerformed: 736551915, // Which Repairs Were Performed
-      };
+      // Dynamically load field IDs from the field mapping JSON
+      // This automatically updates when the form changes and field map is regenerated
+      const PARTS_FIELD_IDS = fieldMapper.getPartsFieldIds();
 
       // Group responses by multi_key (each group = one part)
       const partGroups = new Map<string, any>();
