@@ -1307,7 +1307,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (entryId === PARTS_FIELD_IDS.passOrFail) partData.passOrFail = value;
           if (entryId === PARTS_FIELD_IDS.requireRepairs) partData.requireRepairs = value;
           if (entryId === PARTS_FIELD_IDS.failedReason) partData.failedReason = value;
-          if (entryId === PARTS_FIELD_IDS.repairsPerformed) partData.repairsPerformed = value;
+          if (entryId === PARTS_FIELD_IDS.repairsPerformed) {
+            // Format repairs: replace newlines with commas for clean display
+            partData.repairsPerformed = value ? value.split('\n').filter((s: string) => s.trim()).join(', ') : value;
+          }
         }
       }
       
