@@ -379,7 +379,6 @@ export default function JobDetail() {
         </div>
         <JobStatusBadge status={job.state} />
       </div>
-
       {/* Action Buttons */}
       <Card>
         <CardHeader className="card-header">
@@ -452,7 +451,6 @@ export default function JobDetail() {
           </div>
         </CardContent>
       </Card>
-
       {/* Job Information */}
       <div className="grid md:grid-cols-2 gap-4">
         <Card>
@@ -520,7 +518,6 @@ export default function JobDetail() {
           </CardContent>
         </Card>
       </div>
-
       {/* Parts Information */}
       {parts.length > 0 && (
         <Card>
@@ -598,7 +595,7 @@ export default function JobDetail() {
                   {/* ECS Internal Tracking Fields - Always Editable */}
                   <Separator className="my-4" />
                   <div className="mb-2">
-                    <div className="text-xs font-medium text-muted-foreground">ECS Internal Tracking (Always Editable)</div>
+                    <div className="text-xs font-medium text-muted-foreground">ECS Internal Tracking</div>
                   </div>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
@@ -656,7 +653,6 @@ export default function JobDetail() {
           </CardContent>
         </Card>
       )}
-
       {/* Pickup/Delivery Information if applicable */}
       {(job.pickupDriver || job.deliveryDriver) && (
         <Card>
@@ -697,7 +693,6 @@ export default function JobDetail() {
           </CardContent>
         </Card>
       )}
-
       {/* Event Timeline and Comments - Side by Side */}
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Event Timeline */}
@@ -820,7 +815,6 @@ export default function JobDetail() {
           </CardContent>
         </Card>
       </div>
-
       {/* Check In Modal */}
       {job && (
         <CheckInModal
@@ -835,7 +829,6 @@ export default function JobDetail() {
           }}
         />
       )}
-
       {/* Delivery Dispatch Modal */}
       {job && (
         <DeliveryDispatchModal
@@ -850,7 +843,6 @@ export default function JobDetail() {
           }}
         />
       )}
-
       {/* Ready for Pickup Modal */}
       {job && (
         <ReadyForPickupModal
@@ -865,7 +857,6 @@ export default function JobDetail() {
           }}
         />
       )}
-
       {/* Parts Management Modal */}
       {job && (
         <PartsManagementModal
