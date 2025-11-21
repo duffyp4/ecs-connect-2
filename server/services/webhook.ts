@@ -265,10 +265,11 @@ export class WebhookService {
    */
   private async updatePartsFromSubmission(jobId: string, responses: any[], storage: any): Promise<void> {
     try {
-      // Field IDs for parts data from GoCanvas (Form 5692904 - Nashville, remapped 2025-11-21)
-      // Extract ALL fields - both CSR-filled and technician-filled
-      // GoCanvas values override database values (technician version is source of truth)
-      const PARTS_FIELD_IDS = {
+      // Field IDs for parts data from GoCanvas
+      // SUPPORT BOTH OLD AND NEW FORMS during transition period
+      // New form: 5692904 (remapped 2025-11-21)
+      // Old form: 5692831 (Nashville, pre-remapping)
+      const PARTS_FIELD_IDS_NEW = {
         part: 736551814, // Part (title field)
         process: 736551801, // Process Being Performed
         filterPn: 736551802, // Filter Part Number
@@ -286,6 +287,30 @@ export class WebhookService {
         failedReason: 736551916, // Failed Reason
         repairsPerformed: 736551915, // Which Repairs Were Performed
       };
+      
+      const PARTS_FIELD_IDS_OLD = {
+        part: 736541826, // Part (title field)
+        process: 736541813, // Process Being Performed
+        filterPn: 736541814, // Filter Part Number
+        ecsSerial: 736541819, // ECS Serial Number
+        poNumber: 736541821, // PO Number
+        mileage: 736541822, // Mileage
+        unitVin: 736541823, // Unit / Vin Number
+        gasketClamps: 736541877, // Gasket or Clamps
+        ec: 736541887, // EC
+        eg: 736541888, // EG
+        ek: 736541889, // EK
+        ecsPartNumber: 736541815, // ECS Part Number
+        passOrFail: 736541811, // Did the Part Pass or Fail?
+        requireRepairs: 736541925, // Did the Part Require Repairs?
+        failedReason: 736541928, // Failed Reason
+        repairsPerformed: 736541927, // Which Repairs Were Performed
+      };
+      
+      // Helper function to check if entry_id matches either old or new field ID
+      const matchesField = (entryId: number, fieldName: keyof typeof PARTS_FIELD_IDS_NEW): boolean => {
+        return entryId === PARTS_FIELD_IDS_NEW[fieldName] || entryId === PARTS_FIELD_IDS_OLD[fieldName];
+      };
 
       // Group responses by multi_key (each group = one part)
       const partGroups = new Map<string, any>();
@@ -296,7 +321,8 @@ export class WebhookService {
         const multiKey = response.multi_key;
         
         // Title field (Part) has no multi_key, use its value as the key
-        if (entryId === PARTS_FIELD_IDS.part && value) {
+        // Support both old and new field IDs
+        if (matchesField(entryId, 'part') && value) {
           if (!partGroups.has(value)) {
             partGroups.set(value, { part: value });
           }
@@ -311,23 +337,23 @@ export class WebhookService {
           const partData = partGroups.get(multiKey)!;
           
           // CSR-filled fields (might be updated by technician)
-          if (entryId === PARTS_FIELD_IDS.process) partData.process = value;
-          if (entryId === PARTS_FIELD_IDS.filterPn) partData.filterPn = value;
-          if (entryId === PARTS_FIELD_IDS.ecsSerial) partData.ecsSerial = value;
-          if (entryId === PARTS_FIELD_IDS.poNumber) partData.poNumber = value;
-          if (entryId === PARTS_FIELD_IDS.mileage) partData.mileage = value;
-          if (entryId === PARTS_FIELD_IDS.unitVin) partData.unitVin = value;
-          if (entryId === PARTS_FIELD_IDS.gasketClamps) partData.gasketClamps = value;
-          if (entryId === PARTS_FIELD_IDS.ec) partData.ec = value;
-          if (entryId === PARTS_FIELD_IDS.eg) partData.eg = value;
-          if (entryId === PARTS_FIELD_IDS.ek) partData.ek = value;
+          if (matchesField(entryId, 'process')) partData.process = value;
+          if (matchesField(entryId, 'filterPn')) partData.filterPn = value;
+          if (matchesField(entryId, 'ecsSerial')) partData.ecsSerial = value;
+          if (matchesField(entryId, 'poNumber')) partData.poNumber = value;
+          if (matchesField(entryId, 'mileage')) partData.mileage = value;
+          if (matchesField(entryId, 'unitVin')) partData.unitVin = value;
+          if (matchesField(entryId, 'gasketClamps')) partData.gasketClamps = value;
+          if (matchesField(entryId, 'ec')) partData.ec = value;
+          if (matchesField(entryId, 'eg')) partData.eg = value;
+          if (matchesField(entryId, 'ek')) partData.ek = value;
           
           // Technician-filled fields
-          if (entryId === PARTS_FIELD_IDS.ecsPartNumber) partData.ecsPartNumber = value;
-          if (entryId === PARTS_FIELD_IDS.passOrFail) partData.passOrFail = value;
-          if (entryId === PARTS_FIELD_IDS.requireRepairs) partData.requireRepairs = value;
-          if (entryId === PARTS_FIELD_IDS.failedReason) partData.failedReason = value;
-          if (entryId === PARTS_FIELD_IDS.repairsPerformed) partData.repairsPerformed = value;
+          if (matchesField(entryId, 'ecsPartNumber')) partData.ecsPartNumber = value;
+          if (matchesField(entryId, 'passOrFail')) partData.passOrFail = value;
+          if (matchesField(entryId, 'requireRepairs')) partData.requireRepairs = value;
+          if (matchesField(entryId, 'failedReason')) partData.failedReason = value;
+          if (matchesField(entryId, 'repairsPerformed')) partData.repairsPerformed = value;
         }
       }
       
