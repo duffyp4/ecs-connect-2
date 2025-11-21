@@ -296,8 +296,8 @@ export function PartsManagementModal({
           </Alert>
         )}
 
-        <ScrollArea className="max-h-[calc(90vh-12rem)]">
-          {!showForm && (
+        {!showForm && (
+          <ScrollArea className="max-h-[calc(90vh-12rem)]">
             <div className="space-y-4 pr-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-sm font-medium">Parts List ({parts.length})</h3>
@@ -371,11 +371,13 @@ export function PartsManagementModal({
                 );
               })}
             </div>
-          )}
+          </ScrollArea>
+        )}
 
-          {showForm && (
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pr-4">
+        {showForm && (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <ScrollArea className="max-h-[calc(90vh-16rem)] pr-4">
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
@@ -662,28 +664,28 @@ export function PartsManagementModal({
                     </>
                   )}
                 </div>
+              </ScrollArea>
 
-                <div className="flex justify-end gap-2 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleCancel}
-                    data-testid="button-cancel-part"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting}
-                    data-testid="button-save-part"
-                  >
-                    {isSubmitting ? "Saving..." : editingPart ? "Update Part" : "Add Part"}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          )}
-        </ScrollArea>
+              <DialogFooter className="pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCancel}
+                  data-testid="button-cancel-part"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  data-testid="button-save-part"
+                >
+                  {isSubmitting ? "Saving..." : editingPart ? "Update Part" : "Add Part"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        )}
 
         {!showForm && (
           <DialogFooter>
