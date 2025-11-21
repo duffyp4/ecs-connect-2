@@ -54,6 +54,7 @@ Diagnostic scripts in `/scripts/` assist with GoCanvas integration debugging.
   - `polling` (default): 30-second polling of GoCanvas API
   - `hybrid`: Both polling + webhooks for validation
   - `push`: Push notifications only, ~99% reduction in API calls
+- **Historical Issue - "Ghost Parts"**: Previously experienced an issue where dispatching an invalid value to the "Submission Status" dropdown field (field ID 736433785) triggered GoCanvas's Parts Log conditional logic, creating a "ghost part" that technicians couldn't edit. **FIXED**: We no longer dispatch to the "Submission Status" field, preventing this issue.
 
 ### Google Sheets Sync
 - **Authentication**: Service Account.
