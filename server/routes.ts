@@ -1651,13 +1651,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.log('⚠️ No response data found in submission for parts extraction');
             }
             
-            // Extract "Additional Comments" and add as job comment
+            // Extract "Additional Comments" and add as job comment (one per part)
             if (submissionData?.rawData?.responses && Array.isArray(submissionData.rawData.responses)) {
-              const additionalCommentsField = submissionData.rawData.responses.find((r: any) => 
-                r.entry_id === 736551926 // "Additional Comments"
+              const additionalCommentsFields = submissionData.rawData.responses.filter((r: any) => 
+                r.entry_id === 736551926 && r.value && r.value.trim() // "Additional Comments"
               );
               
-              if (additionalCommentsField?.value && additionalCommentsField.value.trim()) {
+              if (additionalCommentsFields.length > 0) {
                 // Get technician name from GoCanvas user API
                 let submitterName = 'Technician';
                 if (submissionData.rawData.user_id) {
@@ -1672,13 +1672,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   }
                 }
                 
-                await storage.createJobComment({
-                  jobId,
-                  userId: submitterName,
-                  commentText: `[Additional Comments] ${additionalCommentsField.value.trim()}`,
-                });
-                
-                console.log(`✅ Added additional comments as job comment for ${jobId} by ${submitterName}`);
+                // Create one comment per part
+                for (const commentField of additionalCommentsFields) {
+                  const partName = commentField.multi_key || 'Unknown Part';
+                  await storage.createJobComment({
+                    jobId,
+                    userId: submitterName,
+                    commentText: `[Additional Comments - ${partName}] ${commentField.value.trim()}`,
+                  });
+                  
+                  console.log(`✅ Added additional comments for part "${partName}" as job comment for ${jobId} by ${submitterName}`);
+                }
               }
             }
           } else if (formIdToCheck === deliveryFormId) {

@@ -270,13 +270,13 @@ export class WebhookService {
         await this.updatePartsFromSubmission(jobId, submissionData.responses, storage);
       }
       
-      // Extract "Additional Comments" and add as job comment
+      // Extract "Additional Comments" and add as job comment (one per part)
       if (submissionData?.responses && Array.isArray(submissionData.responses)) {
-        const additionalCommentsField = submissionData.responses.find((r: any) => 
-          r.entry_id === 736551926 // "Additional Comments"
+        const additionalCommentsFields = submissionData.responses.filter((r: any) => 
+          r.entry_id === 736551926 && r.value && r.value.trim() // "Additional Comments"
         );
         
-        if (additionalCommentsField?.value && additionalCommentsField.value.trim()) {
+        if (additionalCommentsFields.length > 0) {
           const { goCanvasService } = await import('./gocanvas');
           
           // Get technician name from GoCanvas user API
@@ -293,13 +293,17 @@ export class WebhookService {
             }
           }
           
-          await storage.createJobComment({
-            jobId,
-            userId: submitterName,
-            commentText: `[Additional Comments] ${additionalCommentsField.value.trim()}`,
-          });
-          
-          console.log(`✅ Added additional comments as job comment for ${jobId} by ${submitterName}`);
+          // Create one comment per part
+          for (const commentField of additionalCommentsFields) {
+            const partName = commentField.multi_key || 'Unknown Part';
+            await storage.createJobComment({
+              jobId,
+              userId: submitterName,
+              commentText: `[Additional Comments - ${partName}] ${commentField.value.trim()}`,
+            });
+            
+            console.log(`✅ Added additional comments for part "${partName}" as job comment for ${jobId} by ${submitterName}`);
+          }
         }
       }
     } catch (error) {
