@@ -111,6 +111,7 @@ export function DeliveryDispatchModal({
 
       // Invalidate queries to refresh data immediately
       queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/jobs/${job.jobId}/comments`] });
       queryClient.invalidateQueries({ queryKey: ["/api/metrics"] });
 
       toast({
