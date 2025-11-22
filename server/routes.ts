@@ -831,7 +831,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Add delivery notes as a comment if provided
-      const userId = (req.user as any)?.email || 'system';
+      const userId = req.user.claims.sub;
       if (deliveryNotes && deliveryNotes.trim()) {
         await storage.createJobComment({
           jobId: job.jobId,
