@@ -44,12 +44,6 @@ export default function PartsList() {
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [tempStatusFilter, setTempStatusFilter] = useState<string[]>([]);
   const [statusFilterOpen, setStatusFilterOpen] = useState(false);
-  const [diagnosisFilter, setDiagnosisFilter] = useState<string[]>([]);
-  const [tempDiagnosisFilter, setTempDiagnosisFilter] = useState<string[]>([]);
-  const [diagnosisFilterOpen, setDiagnosisFilterOpen] = useState(false);
-  const [partStatusFilter, setPartStatusFilter] = useState<string[]>([]);
-  const [tempPartStatusFilter, setTempPartStatusFilter] = useState<string[]>([]);
-  const [partStatusFilterOpen, setPartStatusFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>('');
   const [dateFrom, setDateFrom] = useState<string>('');
@@ -69,8 +63,6 @@ export default function PartsList() {
     if (!isInitializedRef.current) {
       const params = new URLSearchParams(window.location.search);
       const status = params.get('status');
-      const diagnosis = params.get('diagnosis');
-      const partStatus = params.get('partStatus');
       const search = params.get('search');
       const from = params.get('dateFrom');
       const to = params.get('dateTo');
@@ -83,16 +75,6 @@ export default function PartsList() {
         const statuses = status.split(',');
         setStatusFilter(statuses);
         setTempStatusFilter(statuses);
-      }
-      if (diagnosis) {
-        const diagnoses = diagnosis.split(',');
-        setDiagnosisFilter(diagnoses);
-        setTempDiagnosisFilter(diagnoses);
-      }
-      if (partStatus) {
-        const statuses = partStatus.split(',');
-        setPartStatusFilter(statuses);
-        setTempPartStatusFilter(statuses);
       }
       if (search) {
         setSearchQuery(search);
@@ -122,23 +104,6 @@ export default function PartsList() {
     { value: "delivered", label: "Delivered" },
   ];
 
-  const diagnosisOptions = [
-    { value: "Regen Required", label: "Regen Required" },
-    { value: "Regen & Bake Required", label: "Regen & Bake Required" },
-    { value: "Bake Required", label: "Bake Required" },
-    { value: "Replace Filter", label: "Replace Filter" },
-    { value: "Coolant & Pressure Test", label: "Coolant & Pressure Test" },
-    { value: "Pressure Test", label: "Pressure Test" },
-    { value: "Thermal Imaging", label: "Thermal Imaging" },
-    { value: "Other", label: "Other" },
-  ];
-
-  const partStatusOptions = [
-    { value: "At ECS Location", label: "At ECS Location" },
-    { value: "In Transit", label: "In Transit" },
-    { value: "Delivered to Customer", label: "Delivered to Customer" },
-  ];
-
   // Debounce search query
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -153,8 +118,6 @@ export default function PartsList() {
     
     const newSearch = updateQueryParams({
       status: statusFilter.length > 0 ? statusFilter : null,
-      diagnosis: diagnosisFilter.length > 0 ? diagnosisFilter : null,
-      partStatus: partStatusFilter.length > 0 ? partStatusFilter : null,
       search: debouncedSearchQuery || null,
       dateFrom: dateFrom || null,
       dateTo: dateTo || null,
@@ -166,18 +129,16 @@ export default function PartsList() {
     
     const newUrl = '/parts' + newSearch;
     window.history.replaceState({}, '', newUrl);
-  }, [statusFilter, diagnosisFilter, partStatusFilter, debouncedSearchQuery, dateFrom, dateTo, sortBy, sortOrder, currentPage, pageSize]);
+  }, [statusFilter, debouncedSearchQuery, dateFrom, dateTo, sortBy, sortOrder, currentPage, pageSize]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [statusFilter, diagnosisFilter, partStatusFilter, debouncedSearchQuery, dateFrom, dateTo, sortBy, sortOrder]);
+  }, [statusFilter, debouncedSearchQuery, dateFrom, dateTo, sortBy, sortOrder]);
 
   const { data: response, isLoading, isFetching } = useQuery<PaginatedResponse>({
     queryKey: ["/api/parts", {
       ...(statusFilter.length > 0 && { status: statusFilter.join(',') }),
-      ...(diagnosisFilter.length > 0 && { diagnosis: diagnosisFilter.join(',') }),
-      ...(partStatusFilter.length > 0 && { partStatus: partStatusFilter.join(',') }),
       ...(debouncedSearchQuery && { search: debouncedSearchQuery }),
       ...(dateFrom && { dateFrom }),
       ...(dateTo && { dateTo }),
@@ -325,160 +286,6 @@ export default function PartsList() {
                     setStatusFilterOpen(false);
                   }}
                   data-testid="button-apply-status-filter"
-                >
-                  Apply
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          <Popover 
-            open={diagnosisFilterOpen} 
-            onOpenChange={(open) => {
-              setDiagnosisFilterOpen(open);
-              if (open) {
-                setTempDiagnosisFilter(diagnosisFilter);
-              }
-            }}
-          >
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full sm:w-48 justify-between"
-                data-testid="button-diagnosis-filter"
-              >
-                <span className="truncate">
-                  {diagnosisFilter.length === 0
-                    ? "All Diagnoses"
-                    : diagnosisFilter.length === 1
-                    ? diagnosisOptions.find(opt => opt.value === diagnosisFilter[0])?.label
-                    : `${diagnosisFilter.length} diagnoses`}
-                </span>
-                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64 p-0" align="start">
-              <div className="p-2 border-b">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-semibold text-sm">Filter by Diagnosis</h4>
-                  {tempDiagnosisFilter.length > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-auto p-1 text-xs"
-                      onClick={() => setTempDiagnosisFilter([])}
-                    >
-                      Clear
-                    </Button>
-                  )}
-                </div>
-              </div>
-              <div className="max-h-64 overflow-y-auto p-2">
-                {diagnosisOptions.map((option) => (
-                  <div
-                    key={option.value}
-                    className="flex items-center space-x-2 px-2 py-1.5 rounded hover:bg-accent cursor-pointer"
-                    onClick={() => {
-                      if (tempDiagnosisFilter.includes(option.value)) {
-                        setTempDiagnosisFilter(tempDiagnosisFilter.filter(s => s !== option.value));
-                      } else {
-                        setTempDiagnosisFilter([...tempDiagnosisFilter, option.value]);
-                      }
-                    }}
-                    data-testid={`checkbox-diagnosis-${option.value}`}
-                  >
-                    <Checkbox checked={tempDiagnosisFilter.includes(option.value)} />
-                    <label className="text-sm cursor-pointer flex-1">
-                      {option.label}
-                    </label>
-                  </div>
-                ))}
-              </div>
-              <div className="p-2 border-t">
-                <Button
-                  className="w-full"
-                  onClick={() => {
-                    setDiagnosisFilter(tempDiagnosisFilter);
-                    setDiagnosisFilterOpen(false);
-                  }}
-                  data-testid="button-apply-diagnosis-filter"
-                >
-                  Apply
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          <Popover 
-            open={partStatusFilterOpen} 
-            onOpenChange={(open) => {
-              setPartStatusFilterOpen(open);
-              if (open) {
-                setTempPartStatusFilter(partStatusFilter);
-              }
-            }}
-          >
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full sm:w-48 justify-between"
-                data-testid="button-part-status-filter"
-              >
-                <span className="truncate">
-                  {partStatusFilter.length === 0
-                    ? "All Part Statuses"
-                    : partStatusFilter.length === 1
-                    ? partStatusOptions.find(opt => opt.value === partStatusFilter[0])?.label
-                    : `${partStatusFilter.length} statuses`}
-                </span>
-                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64 p-0" align="start">
-              <div className="p-2 border-b">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-semibold text-sm">Filter by Part Status</h4>
-                  {tempPartStatusFilter.length > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-auto p-1 text-xs"
-                      onClick={() => setTempPartStatusFilter([])}
-                    >
-                      Clear
-                    </Button>
-                  )}
-                </div>
-              </div>
-              <div className="max-h-64 overflow-y-auto p-2">
-                {partStatusOptions.map((option) => (
-                  <div
-                    key={option.value}
-                    className="flex items-center space-x-2 px-2 py-1.5 rounded hover:bg-accent cursor-pointer"
-                    onClick={() => {
-                      if (tempPartStatusFilter.includes(option.value)) {
-                        setTempPartStatusFilter(tempPartStatusFilter.filter(s => s !== option.value));
-                      } else {
-                        setTempPartStatusFilter([...tempPartStatusFilter, option.value]);
-                      }
-                    }}
-                    data-testid={`checkbox-part-status-${option.value}`}
-                  >
-                    <Checkbox checked={tempPartStatusFilter.includes(option.value)} />
-                    <label className="text-sm cursor-pointer flex-1">
-                      {option.label}
-                    </label>
-                  </div>
-                ))}
-              </div>
-              <div className="p-2 border-t">
-                <Button
-                  className="w-full"
-                  onClick={() => {
-                    setPartStatusFilter(tempPartStatusFilter);
-                    setPartStatusFilterOpen(false);
-                  }}
-                  data-testid="button-apply-part-status-filter"
                 >
                   Apply
                 </Button>
