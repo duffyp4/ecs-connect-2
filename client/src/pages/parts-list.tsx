@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox";
 import { Package, Search, ArrowUpDown, ChevronDown } from "lucide-react";
 import JobStatusBadge from "@/components/job-status-badge";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { JobPart, Job } from "@shared/schema";
+import { PART_DIAGNOSIS_OPTIONS, PART_STATUS_OPTIONS } from "@shared/schema";
 
 function updateQueryParams(params: Record<string, string | string[] | null>): string {
   const searchParams = new URLSearchParams(window.location.search);
@@ -190,6 +192,19 @@ export default function PartsList() {
   const parts = response?.data ?? [];
   const total = response?.total ?? 0;
   const totalPages = Math.ceil(total / pageSize);
+
+  // Mutation for updating part internal tracking fields
+  const updatePartMutation = useMutation({
+    mutationFn: async ({ partId, jobId, field, value }: { partId: string; jobId: string; field: string; value: string }) => {
+      const response = await apiRequest("PATCH", `/api/jobs/${jobId}/parts/${partId}`, {
+        [field]: value,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/parts"] });
+    },
+  });
 
   useEffect(() => {
     if (wasFetchingRef.current && !isFetching && !isUserTypingRef.current) {
@@ -519,7 +534,7 @@ export default function PartsList() {
               <thead>
                 <tr className="border-b bg-[var(--ecs-light)]">
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Part Name</th>
-                  <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Job Name</th>
+                  <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Ship To</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Customer Name</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Current Job Status</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Part Diagnosis</th>
@@ -552,8 +567,8 @@ export default function PartsList() {
                         )}
                       </td>
                       <td className="p-4">
-                        <div className="font-medium" data-testid={`text-job-name-${part.id}`}>
-                          {part.job?.shipToName || '-'}
+                        <div className="font-medium" data-testid={`text-ship-to-${part.id}`}>
+                          {part.job?.customerShipTo || '-'}
                         </div>
                       </td>
                       <td className="p-4" data-testid={`text-customer-name-${part.id}`}>
@@ -562,11 +577,61 @@ export default function PartsList() {
                       <td className="p-4" data-testid={`text-job-status-${part.id}`}>
                         {part.job ? <JobStatusBadge status={part.job.state} /> : '-'}
                       </td>
-                      <td className="p-4" data-testid={`text-diagnosis-${part.id}`}>
-                        {part.diagnosis || '-'}
+                      <td className="p-4" data-testid={`select-diagnosis-${part.id}`}>
+                        {part.job?.jobId ? (
+                          <Select
+                            value={part.diagnosis || ""}
+                            onValueChange={(value) => {
+                              updatePartMutation.mutate({
+                                partId: part.id,
+                                jobId: part.job!.jobId,
+                                field: "diagnosis",
+                                value: value,
+                              });
+                            }}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select diagnosis..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {PART_DIAGNOSIS_OPTIONS.map((diagnosis) => (
+                                <SelectItem key={diagnosis} value={diagnosis}>
+                                  {diagnosis}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <span>{part.diagnosis || '-'}</span>
+                        )}
                       </td>
-                      <td className="p-4" data-testid={`text-part-status-${part.id}`}>
-                        {part.status || '-'}
+                      <td className="p-4" data-testid={`select-part-status-${part.id}`}>
+                        {part.job?.jobId ? (
+                          <Select
+                            value={part.status || ""}
+                            onValueChange={(value) => {
+                              updatePartMutation.mutate({
+                                partId: part.id,
+                                jobId: part.job!.jobId,
+                                field: "status",
+                                value: value,
+                              });
+                            }}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select status..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {PART_STATUS_OPTIONS.map((status) => (
+                                <SelectItem key={status} value={status}>
+                                  {status}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <span>{part.status || '-'}</span>
+                        )}
                       </td>
                     </tr>
                   ))
