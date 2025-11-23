@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Package, Search, ArrowUpDown, Check } from "lucide-react";
+import { Package, Search, ArrowUpDown, ChevronDown } from "lucide-react";
 import JobStatusBadge from "@/components/job-status-badge";
 import type { JobPart, Job } from "@shared/schema";
 
@@ -197,347 +198,338 @@ export default function PartsList() {
     wasFetchingRef.current = isFetching;
   }, [isFetching]);
 
-  const handleToggleJobStatus = (value: string) => {
-    setTempStatusFilter(prev =>
-      prev.includes(value)
-        ? prev.filter(v => v !== value)
-        : [...prev, value]
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center space-x-2">
+          <Package className="h-6 w-6" />
+          <h1 className="text-2xl font-bold">All Parts</h1>
+        </div>
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
     );
-  };
-
-  const handleToggleDiagnosis = (value: string) => {
-    setTempDiagnosisFilter(prev =>
-      prev.includes(value)
-        ? prev.filter(v => v !== value)
-        : [...prev, value]
-    );
-  };
-
-  const handleTogglePartStatus = (value: string) => {
-    setTempPartStatusFilter(prev =>
-      prev.includes(value)
-        ? prev.filter(v => v !== value)
-        : [...prev, value]
-    );
-  };
-
-  const applyStatusFilter = () => {
-    setStatusFilter(tempStatusFilter);
-    setStatusFilterOpen(false);
-  };
-
-  const applyDiagnosisFilter = () => {
-    setDiagnosisFilter(tempDiagnosisFilter);
-    setDiagnosisFilterOpen(false);
-  };
-
-  const applyPartStatusFilter = () => {
-    setPartStatusFilter(tempPartStatusFilter);
-    setPartStatusFilterOpen(false);
-  };
-
-  const clearStatusFilter = () => {
-    setTempStatusFilter([]);
-    setStatusFilter([]);
-    setStatusFilterOpen(false);
-  };
-
-  const clearDiagnosisFilter = () => {
-    setTempDiagnosisFilter([]);
-    setDiagnosisFilter([]);
-    setDiagnosisFilterOpen(false);
-  };
-
-  const clearPartStatusFilter = () => {
-    setTempPartStatusFilter([]);
-    setPartStatusFilter([]);
-    setPartStatusFilterOpen(false);
-  };
-
-  const clearAllFilters = () => {
-    setStatusFilter([]);
-    setTempStatusFilter([]);
-    setDiagnosisFilter([]);
-    setTempDiagnosisFilter([]);
-    setPartStatusFilter([]);
-    setTempPartStatusFilter([]);
-    setSearchQuery('');
-    setDebouncedSearchQuery('');
-    setDateFrom('');
-    setDateTo('');
-    setSortBy('createdAt');
-    setSortOrder('desc');
-  };
-
-  const handleSort = (field: string) => {
-    if (sortBy === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(field);
-      setSortOrder('asc');
-    }
-  };
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-[var(--ecs-primary)]">Parts List</h1>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-[var(--ecs-dark)] flex items-center">
+              <Package className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
+              <span className="hidden sm:inline">All Parts</span>
+              <span className="sm:hidden">Parts</span>
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Complete list of all parts</p>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="relative flex-1 sm:max-w-xs">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              ref={searchInputRef}
+              placeholder="Search by Part, Job ID, or Customer..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => { isUserTypingRef.current = true; }}
+              onBlur={() => { isUserTypingRef.current = false; }}
+              className="pl-10"
+              data-testid="input-search-parts"
+              autoComplete="off"
+            />
+          </div>
+          
+          <Popover 
+            open={statusFilterOpen} 
+            onOpenChange={(open) => {
+              setStatusFilterOpen(open);
+              if (open) {
+                setTempStatusFilter(statusFilter);
+              }
+            }}
+          >
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full sm:w-48 justify-between"
+                data-testid="button-status-filter"
+              >
+                <span className="truncate">
+                  {statusFilter.length === 0
+                    ? "All Job Statuses"
+                    : statusFilter.length === 1
+                    ? jobStatusOptions.find(opt => opt.value === statusFilter[0])?.label
+                    : `${statusFilter.length} statuses`}
+                </span>
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-0" align="start">
+              <div className="p-2 border-b">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-sm">Filter by Job Status</h4>
+                  {tempStatusFilter.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto p-1 text-xs"
+                      onClick={() => setTempStatusFilter([])}
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <div className="max-h-64 overflow-y-auto p-2">
+                {jobStatusOptions.map((option) => (
+                  <div
+                    key={option.value}
+                    className="flex items-center space-x-2 px-2 py-1.5 rounded hover:bg-accent cursor-pointer"
+                    onClick={() => {
+                      if (tempStatusFilter.includes(option.value)) {
+                        setTempStatusFilter(tempStatusFilter.filter(s => s !== option.value));
+                      } else {
+                        setTempStatusFilter([...tempStatusFilter, option.value]);
+                      }
+                    }}
+                    data-testid={`checkbox-status-${option.value}`}
+                  >
+                    <Checkbox checked={tempStatusFilter.includes(option.value)} />
+                    <label className="text-sm cursor-pointer flex-1">
+                      {option.label}
+                    </label>
+                  </div>
+                ))}
+              </div>
+              <div className="p-2 border-t">
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    setStatusFilter(tempStatusFilter);
+                    setStatusFilterOpen(false);
+                  }}
+                  data-testid="button-apply-status-filter"
+                >
+                  Apply
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <Popover 
+            open={diagnosisFilterOpen} 
+            onOpenChange={(open) => {
+              setDiagnosisFilterOpen(open);
+              if (open) {
+                setTempDiagnosisFilter(diagnosisFilter);
+              }
+            }}
+          >
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full sm:w-48 justify-between"
+                data-testid="button-diagnosis-filter"
+              >
+                <span className="truncate">
+                  {diagnosisFilter.length === 0
+                    ? "All Diagnoses"
+                    : diagnosisFilter.length === 1
+                    ? diagnosisOptions.find(opt => opt.value === diagnosisFilter[0])?.label
+                    : `${diagnosisFilter.length} diagnoses`}
+                </span>
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-0" align="start">
+              <div className="p-2 border-b">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-sm">Filter by Diagnosis</h4>
+                  {tempDiagnosisFilter.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto p-1 text-xs"
+                      onClick={() => setTempDiagnosisFilter([])}
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <div className="max-h-64 overflow-y-auto p-2">
+                {diagnosisOptions.map((option) => (
+                  <div
+                    key={option.value}
+                    className="flex items-center space-x-2 px-2 py-1.5 rounded hover:bg-accent cursor-pointer"
+                    onClick={() => {
+                      if (tempDiagnosisFilter.includes(option.value)) {
+                        setTempDiagnosisFilter(tempDiagnosisFilter.filter(s => s !== option.value));
+                      } else {
+                        setTempDiagnosisFilter([...tempDiagnosisFilter, option.value]);
+                      }
+                    }}
+                    data-testid={`checkbox-diagnosis-${option.value}`}
+                  >
+                    <Checkbox checked={tempDiagnosisFilter.includes(option.value)} />
+                    <label className="text-sm cursor-pointer flex-1">
+                      {option.label}
+                    </label>
+                  </div>
+                ))}
+              </div>
+              <div className="p-2 border-t">
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    setDiagnosisFilter(tempDiagnosisFilter);
+                    setDiagnosisFilterOpen(false);
+                  }}
+                  data-testid="button-apply-diagnosis-filter"
+                >
+                  Apply
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <Popover 
+            open={partStatusFilterOpen} 
+            onOpenChange={(open) => {
+              setPartStatusFilterOpen(open);
+              if (open) {
+                setTempPartStatusFilter(partStatusFilter);
+              }
+            }}
+          >
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full sm:w-48 justify-between"
+                data-testid="button-part-status-filter"
+              >
+                <span className="truncate">
+                  {partStatusFilter.length === 0
+                    ? "All Part Statuses"
+                    : partStatusFilter.length === 1
+                    ? partStatusOptions.find(opt => opt.value === partStatusFilter[0])?.label
+                    : `${partStatusFilter.length} statuses`}
+                </span>
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-0" align="start">
+              <div className="p-2 border-b">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-sm">Filter by Part Status</h4>
+                  {tempPartStatusFilter.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto p-1 text-xs"
+                      onClick={() => setTempPartStatusFilter([])}
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <div className="max-h-64 overflow-y-auto p-2">
+                {partStatusOptions.map((option) => (
+                  <div
+                    key={option.value}
+                    className="flex items-center space-x-2 px-2 py-1.5 rounded hover:bg-accent cursor-pointer"
+                    onClick={() => {
+                      if (tempPartStatusFilter.includes(option.value)) {
+                        setTempPartStatusFilter(tempPartStatusFilter.filter(s => s !== option.value));
+                      } else {
+                        setTempPartStatusFilter([...tempPartStatusFilter, option.value]);
+                      }
+                    }}
+                    data-testid={`checkbox-part-status-${option.value}`}
+                  >
+                    <Checkbox checked={tempPartStatusFilter.includes(option.value)} />
+                    <label className="text-sm cursor-pointer flex-1">
+                      {option.label}
+                    </label>
+                  </div>
+                ))}
+              </div>
+              <div className="p-2 border-t">
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    setPartStatusFilter(tempPartStatusFilter);
+                    setPartStatusFilterOpen(false);
+                  }}
+                  data-testid="button-apply-part-status-filter"
+                >
+                  Apply
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <Input
+            type="date"
+            placeholder="From Date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="w-full sm:w-40"
+            data-testid="input-date-from"
+          />
+
+          <Input
+            type="date"
+            placeholder="To Date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="w-full sm:w-40"
+            data-testid="input-date-to"
+          />
+
+          <Select value={`${sortBy}-${sortOrder}`} onValueChange={(value) => {
+            const [field, order] = value.split('-');
+            setSortBy(field);
+            setSortOrder(order);
+          }}>
+            <SelectTrigger className="w-full sm:w-56" data-testid="select-sort">
+              <ArrowUpDown className="mr-2 h-4 w-4" />
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="createdAt-desc">Newest First</SelectItem>
+              <SelectItem value="createdAt-asc">Oldest First</SelectItem>
+              <SelectItem value="part-asc">Part Name (A-Z)</SelectItem>
+              <SelectItem value="part-desc">Part Name (Z-A)</SelectItem>
+              <SelectItem value="job.customerName-asc">Customer (A-Z)</SelectItem>
+              <SelectItem value="job.customerName-desc">Customer (Z-A)</SelectItem>
+              <SelectItem value="diagnosis-asc">Diagnosis (A-Z)</SelectItem>
+              <SelectItem value="status-asc">Status (A-Z)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      {/* Filters Card */}
-      <Card>
-        <CardHeader className="card-header">
-          <CardTitle className="text-white flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            Filter Parts
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6 space-y-4">
-          {/* Search and Filter Row */}
-          <div className="flex flex-wrap gap-3">
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                ref={searchInputRef}
-                placeholder="Search by Part Name, Job ID, or Customer"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  isUserTypingRef.current = true;
-                }}
-                onFocus={() => { isUserTypingRef.current = true; }}
-                onBlur={() => { isUserTypingRef.current = false; }}
-                className="pl-10"
-                data-testid="input-search-parts"
-              />
-            </div>
-
-            {/* Job Status Filter */}
-            <Popover open={statusFilterOpen} onOpenChange={setStatusFilterOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="gap-2" data-testid="button-filter-job-status">
-                  Job Status
-                  {statusFilter.length > 0 && (
-                    <span className="ml-1 px-2 py-0.5 text-xs bg-[var(--ecs-primary)] text-white rounded-full">
-                      {statusFilter.length}
-                    </span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-72 p-4" align="start">
-                <div className="space-y-3">
-                  <h3 className="font-medium">Filter by Job Status</h3>
-                  <div className="max-h-64 overflow-y-auto space-y-2">
-                    {jobStatusOptions.map((option) => (
-                      <div key={option.value} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`job-status-${option.value}`}
-                          checked={tempStatusFilter.includes(option.value)}
-                          onCheckedChange={() => handleToggleJobStatus(option.value)}
-                          data-testid={`checkbox-job-status-${option.value}`}
-                        />
-                        <label
-                          htmlFor={`job-status-${option.value}`}
-                          className="text-sm cursor-pointer flex-1"
-                        >
-                          {option.label}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex gap-2 pt-2 border-t">
-                    <Button variant="outline" size="sm" onClick={clearStatusFilter} className="flex-1">
-                      Clear
-                    </Button>
-                    <Button size="sm" onClick={applyStatusFilter} className="flex-1">
-                      <Check className="mr-1 h-4 w-4" />
-                      Apply
-                    </Button>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-
-            {/* Diagnosis Filter */}
-            <Popover open={diagnosisFilterOpen} onOpenChange={setDiagnosisFilterOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="gap-2" data-testid="button-filter-diagnosis">
-                  Diagnosis
-                  {diagnosisFilter.length > 0 && (
-                    <span className="ml-1 px-2 py-0.5 text-xs bg-[var(--ecs-primary)] text-white rounded-full">
-                      {diagnosisFilter.length}
-                    </span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-72 p-4" align="start">
-                <div className="space-y-3">
-                  <h3 className="font-medium">Filter by Diagnosis</h3>
-                  <div className="max-h-64 overflow-y-auto space-y-2">
-                    {diagnosisOptions.map((option) => (
-                      <div key={option.value} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`diagnosis-${option.value}`}
-                          checked={tempDiagnosisFilter.includes(option.value)}
-                          onCheckedChange={() => handleToggleDiagnosis(option.value)}
-                          data-testid={`checkbox-diagnosis-${option.value}`}
-                        />
-                        <label
-                          htmlFor={`diagnosis-${option.value}`}
-                          className="text-sm cursor-pointer flex-1"
-                        >
-                          {option.label}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex gap-2 pt-2 border-t">
-                    <Button variant="outline" size="sm" onClick={clearDiagnosisFilter} className="flex-1">
-                      Clear
-                    </Button>
-                    <Button size="sm" onClick={applyDiagnosisFilter} className="flex-1">
-                      <Check className="mr-1 h-4 w-4" />
-                      Apply
-                    </Button>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-
-            {/* Part Status Filter */}
-            <Popover open={partStatusFilterOpen} onOpenChange={setPartStatusFilterOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="gap-2" data-testid="button-filter-part-status">
-                  Part Status
-                  {partStatusFilter.length > 0 && (
-                    <span className="ml-1 px-2 py-0.5 text-xs bg-[var(--ecs-primary)] text-white rounded-full">
-                      {partStatusFilter.length}
-                    </span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-72 p-4" align="start">
-                <div className="space-y-3">
-                  <h3 className="font-medium">Filter by Part Status</h3>
-                  <div className="max-h-64 overflow-y-auto space-y-2">
-                    {partStatusOptions.map((option) => (
-                      <div key={option.value} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`part-status-${option.value}`}
-                          checked={tempPartStatusFilter.includes(option.value)}
-                          onCheckedChange={() => handleTogglePartStatus(option.value)}
-                          data-testid={`checkbox-part-status-${option.value}`}
-                        />
-                        <label
-                          htmlFor={`part-status-${option.value}`}
-                          className="text-sm cursor-pointer flex-1"
-                        >
-                          {option.label}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex gap-2 pt-2 border-t">
-                    <Button variant="outline" size="sm" onClick={clearPartStatusFilter} className="flex-1">
-                      Clear
-                    </Button>
-                    <Button size="sm" onClick={applyPartStatusFilter} className="flex-1">
-                      <Check className="mr-1 h-4 w-4" />
-                      Apply
-                    </Button>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-
-            {(statusFilter.length > 0 || diagnosisFilter.length > 0 || partStatusFilter.length > 0 || searchQuery || dateFrom || dateTo) && (
-              <Button
-                variant="ghost"
-                onClick={clearAllFilters}
-                className="text-muted-foreground hover:text-foreground"
-                data-testid="button-clear-all-filters"
-              >
-                Clear All
-              </Button>
-            )}
-          </div>
-
-          {/* Date Range Row */}
-          <div className="flex flex-wrap gap-3">
-            <div className="flex-1 min-w-[150px]">
-              <Input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                placeholder="From Date"
-                data-testid="input-date-from"
-              />
-            </div>
-            <div className="flex-1 min-w-[150px]">
-              <Input
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                placeholder="To Date"
-                data-testid="input-date-to"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Parts Table */}
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-[var(--ecs-primary)] text-white">
-                <tr>
-                  <th className="px-4 py-3 text-left cursor-pointer hover:bg-[var(--ecs-primary-dark)]" onClick={() => handleSort('part')}>
-                    <div className="flex items-center gap-2">
-                      Part Name
-                      <ArrowUpDown className="h-4 w-4" />
-                    </div>
-                  </th>
-                  <th className="px-4 py-3 text-left cursor-pointer hover:bg-[var(--ecs-primary-dark)]" onClick={() => handleSort('job.shipToName')}>
-                    <div className="flex items-center gap-2">
-                      Job Name
-                      <ArrowUpDown className="h-4 w-4" />
-                    </div>
-                  </th>
-                  <th className="px-4 py-3 text-left cursor-pointer hover:bg-[var(--ecs-primary-dark)]" onClick={() => handleSort('job.customerName')}>
-                    <div className="flex items-center gap-2">
-                      Customer Name
-                      <ArrowUpDown className="h-4 w-4" />
-                    </div>
-                  </th>
-                  <th className="px-4 py-3 text-left">
-                    Job Status
-                  </th>
-                  <th className="px-4 py-3 text-left cursor-pointer hover:bg-[var(--ecs-primary-dark)]" onClick={() => handleSort('diagnosis')}>
-                    <div className="flex items-center gap-2">
-                      Diagnosis
-                      <ArrowUpDown className="h-4 w-4" />
-                    </div>
-                  </th>
-                  <th className="px-4 py-3 text-left cursor-pointer hover:bg-[var(--ecs-primary-dark)]" onClick={() => handleSort('status')}>
-                    <div className="flex items-center gap-2">
-                      Part Status
-                      <ArrowUpDown className="h-4 w-4" />
-                    </div>
-                  </th>
+              <thead>
+                <tr className="border-b bg-[var(--ecs-light)]">
+                  <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Part Name</th>
+                  <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Job Name</th>
+                  <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Customer Name</th>
+                  <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Current Job Status</th>
+                  <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Part Diagnosis</th>
+                  <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Part Status</th>
                 </tr>
               </thead>
               <tbody>
-                {isLoading ? (
+                {parts.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
-                      Loading parts...
-                    </td>
-                  </tr>
-                ) : parts.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
+                    <td colSpan={6} className="text-center p-8 text-muted-foreground">
                       No parts found. Try adjusting your filters.
                     </td>
                   </tr>
@@ -545,30 +537,35 @@ export default function PartsList() {
                   parts.map((part) => (
                     <tr
                       key={part.id}
-                      className="border-b hover:bg-muted/50 cursor-pointer"
-                      onClick={() => {
-                        if (part.job?.jobId) {
-                          window.location.href = `/jobs/${part.job.jobId}`;
-                        }
-                      }}
+                      className="border-b hover:bg-gray-50"
                       data-testid={`row-part-${part.id}`}
                     >
-                      <td className="px-4 py-3 font-medium" data-testid={`text-part-name-${part.id}`}>
-                        {part.part || '-'}
+                      <td className="p-4">
+                        {part.job?.jobId ? (
+                          <Link href={`/jobs/${part.job.jobId}`}>
+                            <span className="job-id cursor-pointer hover:underline" data-testid={`link-part-${part.id}`}>
+                              {part.part || '-'}
+                            </span>
+                          </Link>
+                        ) : (
+                          <span>{part.part || '-'}</span>
+                        )}
                       </td>
-                      <td className="px-4 py-3" data-testid={`text-job-name-${part.id}`}>
-                        {part.job?.shipToName || '-'}
+                      <td className="p-4">
+                        <div className="font-medium" data-testid={`text-job-name-${part.id}`}>
+                          {part.job?.shipToName || '-'}
+                        </div>
                       </td>
-                      <td className="px-4 py-3" data-testid={`text-customer-name-${part.id}`}>
+                      <td className="p-4" data-testid={`text-customer-name-${part.id}`}>
                         {part.job?.customerName || '-'}
                       </td>
-                      <td className="px-4 py-3" data-testid={`text-job-status-${part.id}`}>
+                      <td className="p-4" data-testid={`text-job-status-${part.id}`}>
                         {part.job ? <JobStatusBadge status={part.job.state} /> : '-'}
                       </td>
-                      <td className="px-4 py-3" data-testid={`text-diagnosis-${part.id}`}>
+                      <td className="p-4" data-testid={`text-diagnosis-${part.id}`}>
                         {part.diagnosis || '-'}
                       </td>
-                      <td className="px-4 py-3" data-testid={`text-part-status-${part.id}`}>
+                      <td className="p-4" data-testid={`text-part-status-${part.id}`}>
                         {part.status || '-'}
                       </td>
                     </tr>
