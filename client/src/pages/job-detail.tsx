@@ -12,6 +12,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  SelectLabel,
 } from "@/components/ui/select";
 import { 
   FileText, 
@@ -635,11 +636,28 @@ export default function JobDetail() {
                           <SelectValue placeholder="Select diagnosis..." />
                         </SelectTrigger>
                         <SelectContent>
-                          {PART_DIAGNOSIS_OPTIONS.map((diagnosis) => (
-                            <SelectItem key={diagnosis} value={diagnosis}>
-                              {diagnosis}
-                            </SelectItem>
-                          ))}
+                          <SelectItem value="Pass">Pass</SelectItem>
+                          <SelectLabel>Repairs</SelectLabel>
+                          <SelectItem value="Oil soaked">Oil soaked</SelectItem>
+                          <SelectItem value="Coolant soaked">Coolant soaked</SelectItem>
+                          <SelectItem value="Fuel soaked">Fuel soaked</SelectItem>
+                          <SelectItem value="Sintered ash">Sintered ash</SelectItem>
+                          <SelectItem value="Core push">Core push</SelectItem>
+                          <SelectItem value="Air deflector">Air deflector</SelectItem>
+                          <SelectItem value="Ceramic repair">Ceramic repair</SelectItem>
+                          <SelectItem value="Bung repair">Bung repair</SelectItem>
+                          <SelectItem value="Housing repair">Housing repair</SelectItem>
+                          <SelectItem value="Sealing ring damage">Sealing ring damage</SelectItem>
+                          <SelectItem value="Ceramic loss during blast">Ceramic loss during blast</SelectItem>
+                          <SelectItem value="Bracket mounts">Bracket mounts</SelectItem>
+                          <SelectLabel>Failed</SelectLabel>
+                          <SelectItem value="Bad cells">Bad cells</SelectItem>
+                          <SelectItem value="Cracked core/shifted">Cracked core/shifted</SelectItem>
+                          <SelectItem value="Melted core">Melted core</SelectItem>
+                          <SelectItem value="Outer core seal">Outer core seal</SelectItem>
+                          <SelectItem value="Deteriorated ceramic">Deteriorated ceramic</SelectItem>
+                          <SelectItem value="Light test">Light test</SelectItem>
+                          <SelectItem value="Housing damage">Housing damage</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
