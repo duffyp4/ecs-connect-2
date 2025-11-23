@@ -450,11 +450,34 @@ export default function PartsList() {
                               <SelectValue placeholder="Select status..." />
                             </SelectTrigger>
                             <SelectContent>
-                              {PART_STATUS_OPTIONS.map((status) => (
-                                <SelectItem key={status} value={status}>
-                                  {status}
-                                </SelectItem>
-                              ))}
+                              <SelectGroup>
+                                <SelectLabel>Standard Service Process</SelectLabel>
+                                <SelectItem value="Checked In">Checked In</SelectItem>
+                                <SelectItem value="Processing">Processing</SelectItem>
+                                <SelectItem value="Oven">Oven</SelectItem>
+                                <SelectItem value="Cooling">Cooling</SelectItem>
+                                <SelectItem value="Complete">Complete</SelectItem>
+                              </SelectGroup>
+                              <SelectGroup>
+                                <SelectLabel>Action Required</SelectLabel>
+                                <SelectItem value="Failed">Failed</SelectItem>
+                                <SelectItem value="Approved">Approved</SelectItem>
+                                <SelectItem value="W.O.A">W.O.A</SelectItem>
+                                <SelectItem value="S.A. VAT">S.A. VAT</SelectItem>
+                                <SelectItem value="Daybake">Daybake</SelectItem>
+                                <SelectItem value="Rebake">Rebake</SelectItem>
+                                <SelectItem value="Repairing">Repairing</SelectItem>
+                                <SelectItem value="Assembling">Assembling</SelectItem>
+                                <SelectItem value="Denied Approval">Denied Approval</SelectItem>
+                                <SelectItem value="Sold New">Sold New</SelectItem>
+                                <SelectItem value="Sold Reman">Sold Reman</SelectItem>
+                                <SelectItem value="Testing">Testing</SelectItem>
+                                <SelectItem value="Warranty">Warranty</SelectItem>
+                                <SelectItem value="Scrap">Scrap</SelectItem>
+                                <SelectItem value="Customer Pickup">Customer Pickup</SelectItem>
+                                <SelectItem value="Blast Only">Blast Only</SelectItem>
+                                <SelectItem value="Swings">Swings</SelectItem>
+                              </SelectGroup>
                             </SelectContent>
                           </Select>
                         ) : (
