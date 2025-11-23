@@ -1243,6 +1243,134 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all parts with job information
+  app.get("/api/parts", isAuthenticated, async (req, res) => {
+    try {
+      const { status, diagnosis, partStatus, search, dateFrom, dateTo, sortBy, sortOrder, page, pageSize } = req.query;
+      
+      let parts = await storage.getAllJobParts();
+      
+      // Filter by job status
+      if (status && typeof status === 'string' && status.trim()) {
+        const statuses = status.split(',').map(s => s.trim()).filter(s => s);
+        if (statuses.length > 0) {
+          parts = parts.filter(part => part.job && statuses.includes(part.job.state));
+        }
+      }
+      
+      // Filter by part diagnosis
+      if (diagnosis && typeof diagnosis === 'string' && diagnosis.trim()) {
+        const diagnoses = diagnosis.split(',').map(s => s.trim()).filter(s => s);
+        if (diagnoses.length > 0) {
+          parts = parts.filter(part => part.diagnosis && diagnoses.includes(part.diagnosis));
+        }
+      }
+      
+      // Filter by part status
+      if (partStatus && typeof partStatus === 'string' && partStatus.trim()) {
+        const statuses = partStatus.split(',').map(s => s.trim()).filter(s => s);
+        if (statuses.length > 0) {
+          parts = parts.filter(part => part.status && statuses.includes(part.status));
+        }
+      }
+      
+      // Filter by search query (Part Name, Job ID, or Customer Name)
+      if (search && typeof search === 'string' && search.trim()) {
+        const searchLower = search.toLowerCase().trim();
+        parts = parts.filter(part => 
+          String(part.part ?? '').toLowerCase().includes(searchLower) ||
+          String(part.job?.jobId ?? '').toLowerCase().includes(searchLower) ||
+          String(part.job?.customerName ?? '').toLowerCase().includes(searchLower)
+        );
+      }
+      
+      // Filter by date range (part created date)
+      if (dateFrom && typeof dateFrom === 'string' && dateFrom.trim()) {
+        const fromDate = new Date(dateFrom);
+        fromDate.setHours(0, 0, 0, 0);
+        parts = parts.filter(part => {
+          if (!part.createdAt) return false;
+          const partDate = new Date(part.createdAt);
+          return partDate >= fromDate;
+        });
+      }
+      
+      if (dateTo && typeof dateTo === 'string' && dateTo.trim()) {
+        const toDate = new Date(dateTo);
+        toDate.setHours(23, 59, 59, 999);
+        parts = parts.filter(part => {
+          if (!part.createdAt) return false;
+          const partDate = new Date(part.createdAt);
+          return partDate <= toDate;
+        });
+      }
+      
+      // Sort parts
+      if (sortBy && typeof sortBy === 'string') {
+        const order = sortOrder === 'asc' ? 1 : -1;
+        parts.sort((a, b) => {
+          let aVal: any;
+          let bVal: any;
+          
+          // Handle nested job properties
+          if (sortBy.startsWith('job.')) {
+            const jobField = sortBy.substring(4);
+            aVal = a.job?.[jobField as keyof typeof a.job];
+            bVal = b.job?.[jobField as keyof typeof b.job];
+          } else {
+            aVal = a[sortBy as keyof typeof a];
+            bVal = b[sortBy as keyof typeof b];
+          }
+          
+          // Handle null/undefined values
+          if (aVal == null && bVal == null) return 0;
+          if (aVal == null) return 1;
+          if (bVal == null) return -1;
+          
+          // Handle dates
+          if (sortBy.includes('At')) {
+            aVal = new Date(aVal).getTime();
+            bVal = new Date(bVal).getTime();
+          }
+          
+          // Handle strings
+          if (typeof aVal === 'string' && typeof bVal === 'string') {
+            return order * aVal.localeCompare(bVal);
+          }
+          
+          // Handle numbers
+          if (typeof aVal === 'number' && typeof bVal === 'number') {
+            return order * (aVal - bVal);
+          }
+          
+          // Fallback
+          return order * String(aVal).localeCompare(String(bVal));
+        });
+      }
+      
+      // Calculate total before pagination
+      const total = parts.length;
+      
+      // Apply pagination
+      const currentPage = page ? parseInt(page as string) : 1;
+      const itemsPerPage = pageSize ? parseInt(pageSize as string) : 25;
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      
+      const paginatedParts = parts.slice(startIndex, endIndex);
+      
+      res.json({
+        data: paginatedParts,
+        total,
+        page: currentPage,
+        pageSize: itemsPerPage,
+      });
+    } catch (error) {
+      console.error("Error fetching parts:", error);
+      res.status(500).json({ message: "Failed to fetch parts" });
+    }
+  });
+
   // Get dashboard metrics
   app.get("/api/metrics", async (req, res) => {
     try {

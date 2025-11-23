@@ -44,6 +44,7 @@ export interface IStorage {
   // Job Part methods
   createJobPart(part: InsertJobPart): Promise<JobPart>;
   getJobParts(jobId: string): Promise<JobPart[]>;
+  getAllJobParts(): Promise<Array<JobPart & { job: Job | null }>>;
   updateJobPart(id: string, updates: Partial<JobPart>): Promise<JobPart | undefined>;
   deleteJobPart(id: string): Promise<void>;
 }

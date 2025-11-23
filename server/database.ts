@@ -252,6 +252,19 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
+  async getAllJobParts(): Promise<Array<JobPart & { job: Job | null }>> {
+    const result = await this.db
+      .select()
+      .from(jobParts)
+      .leftJoin(jobs, eq(jobParts.jobId, jobs.jobId))
+      .orderBy(desc(jobParts.createdAt));
+    
+    return result.map(row => ({
+      ...row.job_parts,
+      job: row.jobs,
+    }));
+  }
+
   async updateJobPart(id: string, updates: Partial<JobPart>): Promise<JobPart | undefined> {
     const result = await this.db
       .update(jobParts)
