@@ -8,6 +8,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Dashboard from "@/pages/dashboard";
 import JobList from "@/pages/job-list";
+import PartsList from "@/pages/parts-list";
 import JobDetail from "@/pages/job-detail";
 import Settings from "@/pages/settings";
 import AdminPage from "@/pages/admin";
@@ -45,6 +46,7 @@ function Router() {
         <Route path="/" component={Home} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/jobs" component={JobList} />
+        <Route path="/parts" component={PartsList} />
         <Route path="/jobs/:id" component={JobDetail} />
         <Route path="/settings" component={Settings} />
         <Route path="/admin" component={AdminPage} />

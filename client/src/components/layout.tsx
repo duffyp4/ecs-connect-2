@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Bolt, Plus, BarChart3, List, FileText, User, LogOut, Menu, X, Code, Settings, Shield } from "lucide-react";
+import { Bolt, Plus, BarChart3, List, Package, FileText, User, LogOut, Menu, X, Code, Settings, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -46,6 +46,7 @@ export default function Layout({ children }: LayoutProps) {
     { href: "/", label: "New Job", icon: Plus },
     { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
     { href: "/jobs", label: "Job List", icon: List },
+    { href: "/parts", label: "Parts List", icon: Package },
   ];
 
   return (
