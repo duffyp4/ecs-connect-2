@@ -1612,8 +1612,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Update each existing part with GoCanvas data
       for (const [partName, goCanvasData] of Array.from(partGroups.entries())) {
-        // Find matching part in our database
-        const existingPart = existingParts.find((p: any) => p.part === partName);
+        // Find matching part in our database by ECS Serial Number (NOT by part name)
+        // This prevents data loss when multiple parts share the same name
+        let existingPart = null;
+        
+        if (goCanvasData.ecsSerial) {
+          // Match by ECS Serial Number (unique identifier)
+          existingPart = existingParts.find((p: any) => p.ecsSerial === goCanvasData.ecsSerial);
+          if (existingPart) {
+            console.log(`Matched part by ECS Serial "${goCanvasData.ecsSerial}" (Part: "${partName}")`);
+          }
+        }
+        
+        // Fallback: if no serial match, try part name (for backwards compatibility)
+        if (!existingPart) {
+          existingPart = existingParts.find((p: any) => p.part === partName);
+          if (existingPart) {
+            console.log(`⚠️ Matched part by name "${partName}" (no serial match) - consider adding ECS Serial Number`);
+          }
+        }
         
         if (existingPart) {
           console.log(`Updating part "${partName}" with GoCanvas data...`);
