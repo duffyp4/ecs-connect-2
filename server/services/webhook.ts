@@ -441,41 +441,64 @@ export class WebhookService {
       // Get existing parts for this job
       const existingParts = await storage.getJobParts(jobId);
       
-      // Update each existing part with GoCanvas data
+      // Process each part from GoCanvas submission
       for (const [partName, goCanvasData] of Array.from(partGroups.entries())) {
-        // Find matching part in our database
-        const existingPart = existingParts.find((p: any) => p.part === partName);
+        // CRITICAL FIX: Match by ECS Serial Number, not part name
+        // This handles multiple parts with the same name (e.g., two DPFs)
+        let existingPart;
+        
+        if (goCanvasData.ecsSerial) {
+          // If we have an ECS Serial, use it to find the exact part
+          existingPart = existingParts.find((p: any) => p.ecsSerial === goCanvasData.ecsSerial);
+          
+          if (existingPart) {
+            console.log(`Found existing part by serial "${goCanvasData.ecsSerial}" (${partName})`);
+          } else {
+            console.log(`No existing part found with serial "${goCanvasData.ecsSerial}" - technician may have added new part`);
+          }
+        } else {
+          // Fallback: if no serial number, try matching by part name (for backward compatibility)
+          // This should rarely happen if CSRs are using the auto-generation
+          existingPart = existingParts.find((p: any) => p.part === partName && !p.ecsSerial);
+          console.log(`⚠️ Part "${partName}" has no serial number - using name-based matching`);
+        }
+        
+        // Build update/insert object with all fields from GoCanvas
+        const partData: any = {};
+        
+        // Always include the part name
+        partData.part = partName;
+        
+        // CSR-filled fields (technician might have changed them)
+        if (goCanvasData.process !== undefined) partData.process = goCanvasData.process;
+        if (goCanvasData.filterPn !== undefined) partData.filterPn = goCanvasData.filterPn;
+        if (goCanvasData.ecsSerial !== undefined) partData.ecsSerial = goCanvasData.ecsSerial;
+        if (goCanvasData.poNumber !== undefined) partData.poNumber = goCanvasData.poNumber;
+        if (goCanvasData.mileage !== undefined) partData.mileage = goCanvasData.mileage;
+        if (goCanvasData.unitVin !== undefined) partData.unitVin = goCanvasData.unitVin;
+        if (goCanvasData.gasketClamps !== undefined) partData.gasketClamps = goCanvasData.gasketClamps;
+        if (goCanvasData.ec !== undefined) partData.ec = goCanvasData.ec;
+        if (goCanvasData.eg !== undefined) partData.eg = goCanvasData.eg;
+        if (goCanvasData.ek !== undefined) partData.ek = goCanvasData.ek;
+        
+        // Technician-filled fields
+        if (goCanvasData.ecsPartNumber !== undefined) partData.ecsPartNumber = goCanvasData.ecsPartNumber;
+        if (goCanvasData.passOrFail !== undefined) partData.passOrFail = goCanvasData.passOrFail;
+        if (goCanvasData.requireRepairs !== undefined) partData.requireRepairs = goCanvasData.requireRepairs;
+        if (goCanvasData.failedReason !== undefined) partData.failedReason = goCanvasData.failedReason;
+        if (goCanvasData.repairsPerformed !== undefined) partData.repairsPerformed = goCanvasData.repairsPerformed;
         
         if (existingPart) {
-          console.log(`Updating part "${partName}" with GoCanvas data...`);
-          
-          // Build update object with all fields from GoCanvas
-          // Only include fields that have values (don't overwrite with undefined)
-          const updateData: any = {};
-          
-          // CSR-filled fields (technician might have changed them)
-          if (goCanvasData.process !== undefined) updateData.process = goCanvasData.process;
-          if (goCanvasData.filterPn !== undefined) updateData.filterPn = goCanvasData.filterPn;
-          if (goCanvasData.ecsSerial !== undefined) updateData.ecsSerial = goCanvasData.ecsSerial;
-          if (goCanvasData.poNumber !== undefined) updateData.poNumber = goCanvasData.poNumber;
-          if (goCanvasData.mileage !== undefined) updateData.mileage = goCanvasData.mileage;
-          if (goCanvasData.unitVin !== undefined) updateData.unitVin = goCanvasData.unitVin;
-          if (goCanvasData.gasketClamps !== undefined) updateData.gasketClamps = goCanvasData.gasketClamps;
-          if (goCanvasData.ec !== undefined) updateData.ec = goCanvasData.ec;
-          if (goCanvasData.eg !== undefined) updateData.eg = goCanvasData.eg;
-          if (goCanvasData.ek !== undefined) updateData.ek = goCanvasData.ek;
-          
-          // Technician-filled fields
-          if (goCanvasData.ecsPartNumber !== undefined) updateData.ecsPartNumber = goCanvasData.ecsPartNumber;
-          if (goCanvasData.passOrFail !== undefined) updateData.passOrFail = goCanvasData.passOrFail;
-          if (goCanvasData.requireRepairs !== undefined) updateData.requireRepairs = goCanvasData.requireRepairs;
-          if (goCanvasData.failedReason !== undefined) updateData.failedReason = goCanvasData.failedReason;
-          if (goCanvasData.repairsPerformed !== undefined) updateData.repairsPerformed = goCanvasData.repairsPerformed;
-          
-          await storage.updateJobPart(existingPart.id, updateData);
-          console.log(`✅ Updated part "${partName}" with ${Object.keys(updateData).length} fields from GoCanvas`);
+          // Update existing part with GoCanvas data
+          await storage.updateJobPart(existingPart.id, partData);
+          console.log(`✅ Updated part serial "${goCanvasData.ecsSerial}" (${partName}) with ${Object.keys(partData).length} fields from GoCanvas`);
         } else {
-          console.log(`⚠️ No matching part found for "${partName}" in database`);
+          // Technician added a new part in GoCanvas - create it
+          await storage.createJobPart({
+            jobId,
+            ...partData,
+          });
+          console.log(`✅ Created new part serial "${goCanvasData.ecsSerial}" (${partName}) - technician added in GoCanvas`);
         }
       }
       
