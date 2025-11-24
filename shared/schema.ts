@@ -468,3 +468,16 @@ export const PART_STATUS_OPTIONS = [
 
 export type PartDiagnosis = typeof PART_DIAGNOSIS_OPTIONS[number];
 export type PartStatus = typeof PART_STATUS_OPTIONS[number];
+
+// ECS Serial Number Tracking - ensures uniqueness and sequential generation
+export const ecsSerialTracking = pgTable("ecs_serial_tracking", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  shopCode: varchar("shop_code", { length: 2 }).notNull(), // e.g., "01" for Nashville
+  date: varchar("date", { length: 10 }).notNull(), // MMDDYYYY format
+  lastSequence: integer("last_sequence").notNull().default(0), // last sequential number used
+  usedSerials: text("used_serials").array().notNull().default(sql`ARRAY[]::text[]`), // array of all used serial numbers for this shop/date
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type EcsSerialTracking = typeof ecsSerialTracking.$inferSelect;
