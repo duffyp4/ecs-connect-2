@@ -138,16 +138,22 @@ export function PartsManagementModal({
   // Auto-generate serial number when opening modal in add mode
   useEffect(() => {
     const generateSerial = async () => {
-      // Use prop shop name if provided, otherwise use from fetched job
-      const shopNameToUse = propShopName || job?.shopName;
+      // Default to Nashville if no shop name is provided
+      const shopNameToUse = propShopName || job?.shopName || "Nashville";
       
-      if (open && !editingPart && showForm && shopNameToUse) {
+      console.log("Auto-generate conditions:", { open, editingPart, showForm, shopNameToUse });
+      
+      if (open && !editingPart && showForm) {
         try {
           const shopCode = getShopCode(shopNameToUse);
           const dateCode = getTodayDateCode();
           
+          console.log("Generating serial with:", { shopCode, dateCode });
+          
           const response = await apiRequest("POST", `/api/serial/generate`, { shopCode, date: dateCode });
           const data = await response.json();
+          
+          console.log("Generated serial number:", data.serialNumber);
           
           // Set the serial number in the form
           form.setValue("ecsSerial", data.serialNumber);
