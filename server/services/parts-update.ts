@@ -24,63 +24,45 @@ export async function updatePartsFromSubmission(
     // This automatically updates when the form changes and field map is regenerated
     const PARTS_FIELD_IDS = fieldMapper.getPartsFieldIds();
 
-    // CRITICAL: Group responses by ECS Serial Number ONLY
-    // We completely ignore multi_key for matching - it's only for GoCanvas loop screens
-    // We use serial number as the ONLY identifier
+    // CRITICAL: Match parts by ECS Serial Number ONLY
+    // Serial number is the unique identifier - multi_key is just for GoCanvas grouping
     const partsBySerial = new Map<string, any>();
     
-    // Build response index map for fast lookup
-    const responsesByEntryId = new Map<number, any[]>();
-    for (const response of responses) {
-      if (!responsesByEntryId.has(response.entry_id)) {
-        responsesByEntryId.set(response.entry_id, []);
+    // Find all ECS Serial Number fields (in order of appearance)
+    const serialFieldIndices: number[] = [];
+    responses.forEach((r, idx) => {
+      if (r.entry_id === PARTS_FIELD_IDS.ecsSerial && r.value) {
+        serialFieldIndices.push(idx);
       }
-      responsesByEntryId.get(response.entry_id)!.push(response);
-    }
+    });
     
-    // STEP 1: Find all ECS Serial Numbers in order of appearance
-    const serialFields = responses.filter(r => 
-      r.entry_id === PARTS_FIELD_IDS.ecsSerial && r.value
-    );
+    console.log(`📋 Found ${serialFieldIndices.length} ECS Serial Numbers in GoCanvas submission`);
     
-    console.log(`📋 Found ${serialFields.length} ECS Serial Numbers in GoCanvas submission`);
-    if (serialFields.length > 0) {
-      console.log(`   Serials: ${serialFields.map(f => f.value).join(', ')}`);
-    }
-    
-    // STEP 2: For each serial number, find ALL its associated fields
-    // We do this by finding the response index of each serial field,
-    // then collecting all responses with the same multi_key between serials
-    for (let i = 0; i < serialFields.length; i++) {
-      const serialField = serialFields[i];
-      const serialNumber = serialField.value;
-      const multiKey = serialField.multi_key; // Part name from GoCanvas
+    // For each serial number, collect all responses between it and the next serial
+    for (let i = 0; i < serialFieldIndices.length; i++) {
+      const serialIdx = serialFieldIndices[i];
+      const serialResponse = responses[serialIdx];
+      const serialNumber = serialResponse.value;
+      const multiKey = serialResponse.multi_key; // Part name (DOC, DPF, etc)
       
-      // Initialize part data with serial and part name
+      // Find the range of responses for this part
+      // Start: current serial's index
+      // End: next serial's index (or end of array)
+      const nextSerialIdx = i < serialFieldIndices.length - 1 
+        ? serialFieldIndices[i + 1] 
+        : responses.length;
+      
+      // Get all responses in this range with the same multi_key
+      const thisPartResponses = responses
+        .slice(serialIdx, nextSerialIdx)
+        .filter(r => r.multi_key === multiKey);
+      
+      // Extract field values
       const partData: any = {
         ecsSerial: serialNumber,
         part: multiKey
       };
       
-      // Find all responses with this multi_key (same row in loop screen)
-      const relatedResponses = responses.filter(r => r.multi_key === multiKey);
-      
-      // Count how many times we've seen this multi_key so far
-      // This handles multiple parts with the same name
-      const multiKeyOccurrencesSoFar = serialFields.slice(0, i).filter(f => f.multi_key === multiKey).length;
-      
-      // Filter to only responses for THIS occurrence of the multi_key
-      // GoCanvas sends fields in order, so we can use array slicing
-      const responsesWithThisMultiKey = responses.filter(r => r.multi_key === multiKey);
-      
-      // Calculate field indices for this specific part
-      // Each part has the same number of fields, so we can slice by occurrence
-      const fieldsPerPart = responsesWithThisMultiKey.length / serialFields.filter(f => f.multi_key === multiKey).length;
-      const startIdx = multiKeyOccurrencesSoFar * fieldsPerPart;
-      const endIdx = startIdx + fieldsPerPart;
-      const thisPartResponses = responsesWithThisMultiKey.slice(startIdx, endIdx);
-      
-      // Extract field values for this part
       for (const response of thisPartResponses) {
         const entryId = response.entry_id;
         const value = response.value;
@@ -108,8 +90,8 @@ export async function updatePartsFromSubmission(
         }
       }
       
-      // Store by serial number (unique identifier)
       partsBySerial.set(serialNumber, partData);
+      console.log(`   Serial ${serialNumber} (${multiKey}): ${thisPartResponses.length} fields`);
     }
     
     if (partsBySerial.size === 0) {
