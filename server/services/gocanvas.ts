@@ -1587,26 +1587,36 @@ export class GoCanvasService {
     
     const loopResponses: any[] = [];
     
-    // Each part creates a loop row using the Part value as the multi_key
+    // Each part creates a loop row using the ECS Serial Number as the multi_key
+    // This allows unique identification of each part even when multiple parts have the same name
     // Per GoCanvas API: The title field has NO multi_key, other fields reference it
     parts.forEach((part, index) => {
-      if (!part.part) {
-        console.warn(`Part ${index} has no 'part' value, skipping...`);
+      if (!part.ecsSerial) {
+        console.warn(`Part ${index} has no 'ecsSerial' value, skipping...`);
         return;
       }
       
-      // The multi_key for this row is the Part value itself (e.g., "DPF")
+      // The multi_key for this row is the ECS Serial Number (unique per part)
       // Per GoCanvas API spec, the title field does NOT include multi_key
-      const multiKey = String(part.part);
+      const multiKey = String(part.ecsSerial);
       
-      // 1. Part - the loop row TITLE field - NO multi_key!
+      // 1. ECS Serial Number - the loop row TITLE field - NO multi_key!
       // This field defines the row and all other fields reference it
       loopResponses.push({
-        entry_id: PARTS_FIELD_IDS.part,
+        entry_id: PARTS_FIELD_IDS.ecsSerial,
         value: multiKey,
       });
       
-      // 2. Process Being Performed
+      // 2. Part (now references the serial number via multi_key)
+      if (part.part) {
+        loopResponses.push({
+          entry_id: PARTS_FIELD_IDS.part,
+          value: String(part.part),
+          multi_key: multiKey,
+        });
+      }
+      
+      // 3. Process Being Performed
       if (part.process) {
         loopResponses.push({
           entry_id: PARTS_FIELD_IDS.process,
@@ -1615,21 +1625,11 @@ export class GoCanvasService {
         });
       }
       
-      // 3. Filter Part Number
+      // 4. Filter Part Number
       if (part.filterPn) {
         loopResponses.push({
           entry_id: PARTS_FIELD_IDS.filterPn,
           value: String(part.filterPn),
-          multi_key: multiKey,
-        });
-      }
-      
-      // 4. ECS Serial Number (CSR-filled field)
-      // NOTE: ECS Part Number (736433791) is a TECHNICIAN-ONLY field - do NOT prefill
-      if (part.ecsSerial) {
-        loopResponses.push({
-          entry_id: PARTS_FIELD_IDS.ecsSerial,
-          value: String(part.ecsSerial),
           multi_key: multiKey,
         });
       }
@@ -1707,8 +1707,7 @@ export class GoCanvasService {
       }
       
       const fieldsWithMultiKey = loopResponses.filter(r => r.multi_key === multiKey).length;
-      const titleField = loopResponses.filter(r => r.value === multiKey && !r.multi_key).length;
-      console.log(`  Part ${index + 1} ("${multiKey}"): 1 title field + ${fieldsWithMultiKey} fields with multi_key="${multiKey}"`);
+      console.log(`  Part ${index + 1} (serial "${multiKey}"): 1 title field + ${fieldsWithMultiKey} fields with multi_key="${multiKey}"`);
     });
     
     console.log(`✅ Generated ${loopResponses.length} loop screen responses for ${parts.length} parts`);

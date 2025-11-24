@@ -5,6 +5,9 @@
  * CRITICAL: This service uses ECS Serial Number as the unique identifier
  * for matching parts, not the part name. This prevents data loss when
  * multiple parts have the same name (e.g., two DPFs).
+ * 
+ * UPDATED: multi_key is now the ECS Serial Number (not the part name).
+ * This simplifies extraction - just group by multi_key directly.
  */
 
 import { fieldMapper } from '../../shared/fieldMapper';
@@ -12,7 +15,7 @@ import type { IStorage } from '../storage';
 
 /**
  * Extract and update parts data from GoCanvas submission
- * Matches parts by ECS Serial Number for accuracy
+ * Now uses multi_key directly as the serial number (after GoCanvas form update)
  */
 export async function updatePartsFromSubmission(
   jobId: string,
@@ -24,74 +27,64 @@ export async function updatePartsFromSubmission(
     // This automatically updates when the form changes and field map is regenerated
     const PARTS_FIELD_IDS = fieldMapper.getPartsFieldIds();
 
-    // CRITICAL: Match parts by ECS Serial Number ONLY
-    // Serial number is the unique identifier - multi_key is just for GoCanvas grouping
+    // SIMPLIFIED: multi_key IS now the ECS Serial Number (unique per part)
+    // Just group all responses by multi_key - no complex position-based slicing needed!
     const partsBySerial = new Map<string, any>();
     
-    // Find all ECS Serial Number fields (in order of appearance)
-    const serialFieldIndices: number[] = [];
-    responses.forEach((r, idx) => {
-      if (r.entry_id === PARTS_FIELD_IDS.ecsSerial && r.value) {
-        serialFieldIndices.push(idx);
-      }
-    });
-    
-    console.log(`📋 Found ${serialFieldIndices.length} ECS Serial Numbers in GoCanvas submission`);
-    
-    // For each serial number, collect all responses between it and the next serial
-    for (let i = 0; i < serialFieldIndices.length; i++) {
-      const serialIdx = serialFieldIndices[i];
-      const serialResponse = responses[serialIdx];
-      const serialNumber = serialResponse.value;
-      const multiKey = serialResponse.multi_key; // Part name (DOC, DPF, etc)
-      
-      // Find the range of responses for this part
-      // Start: current serial's index
-      // End: next serial's index (or end of array)
-      const nextSerialIdx = i < serialFieldIndices.length - 1 
-        ? serialFieldIndices[i + 1] 
-        : responses.length;
-      
-      // Get all responses in this range with the same multi_key
-      const thisPartResponses = responses
-        .slice(serialIdx, nextSerialIdx)
-        .filter(r => r.multi_key === multiKey);
-      
-      // Extract field values
-      const partData: any = {
-        ecsSerial: serialNumber,
-        part: multiKey
-      };
-      
-      for (const response of thisPartResponses) {
-        const entryId = response.entry_id;
-        const value = response.value;
-        
-        // CSR-filled fields (might be updated by technician)
-        if (entryId === PARTS_FIELD_IDS.part) partData.part = value;
-        if (entryId === PARTS_FIELD_IDS.process) partData.process = value;
-        if (entryId === PARTS_FIELD_IDS.filterPn) partData.filterPn = value;
-        if (entryId === PARTS_FIELD_IDS.ecsSerial) partData.ecsSerial = value;
-        if (entryId === PARTS_FIELD_IDS.poNumber) partData.poNumber = value;
-        if (entryId === PARTS_FIELD_IDS.mileage) partData.mileage = value;
-        if (entryId === PARTS_FIELD_IDS.unitVin) partData.unitVin = value;
-        if (entryId === PARTS_FIELD_IDS.gasketClamps) partData.gasketClamps = value;
-        if (entryId === PARTS_FIELD_IDS.ec) partData.ec = value;
-        if (entryId === PARTS_FIELD_IDS.eg) partData.eg = value;
-        if (entryId === PARTS_FIELD_IDS.ek) partData.ek = value;
-        
-        // Technician-filled fields
-        if (entryId === PARTS_FIELD_IDS.ecsPartNumber) partData.ecsPartNumber = value;
-        if (entryId === PARTS_FIELD_IDS.passOrFail) partData.passOrFail = value;
-        if (entryId === PARTS_FIELD_IDS.requireRepairs) partData.requireRepairs = value;
-        if (entryId === PARTS_FIELD_IDS.failedReason) partData.failedReason = value;
-        if (entryId === PARTS_FIELD_IDS.repairsPerformed) {
-          partData.repairsPerformed = value ? value.split('\n').filter((s: string) => s.trim()).join(', ') : value;
+    // First pass: Find all unique serial numbers from responses with multi_key
+    // The title field (ECS Serial) has no multi_key, but its VALUE is the serial
+    // All other fields have multi_key = serial number
+    for (const response of responses) {
+      // Skip responses without multi_key (non-loop fields or title fields)
+      if (!response.multi_key) {
+        // Check if this is a title field (ECS Serial without multi_key)
+        if (response.entry_id === PARTS_FIELD_IDS.ecsSerial && response.value) {
+          const serialNumber = response.value;
+          if (!partsBySerial.has(serialNumber)) {
+            partsBySerial.set(serialNumber, { ecsSerial: serialNumber });
+          }
         }
+        continue;
       }
       
-      partsBySerial.set(serialNumber, partData);
-      console.log(`   Serial ${serialNumber} (${multiKey}): ${thisPartResponses.length} fields`);
+      const serialNumber = response.multi_key;
+      
+      // Initialize part data if not exists
+      if (!partsBySerial.has(serialNumber)) {
+        partsBySerial.set(serialNumber, { ecsSerial: serialNumber });
+      }
+      
+      const partData = partsBySerial.get(serialNumber);
+      const entryId = response.entry_id;
+      const value = response.value;
+      
+      // Extract field values based on entry_id
+      // CSR-filled fields (might be updated by technician)
+      if (entryId === PARTS_FIELD_IDS.part) partData.part = value;
+      if (entryId === PARTS_FIELD_IDS.process) partData.process = value;
+      if (entryId === PARTS_FIELD_IDS.filterPn) partData.filterPn = value;
+      if (entryId === PARTS_FIELD_IDS.poNumber) partData.poNumber = value;
+      if (entryId === PARTS_FIELD_IDS.mileage) partData.mileage = value;
+      if (entryId === PARTS_FIELD_IDS.unitVin) partData.unitVin = value;
+      if (entryId === PARTS_FIELD_IDS.gasketClamps) partData.gasketClamps = value;
+      if (entryId === PARTS_FIELD_IDS.ec) partData.ec = value;
+      if (entryId === PARTS_FIELD_IDS.eg) partData.eg = value;
+      if (entryId === PARTS_FIELD_IDS.ek) partData.ek = value;
+      
+      // Technician-filled fields
+      if (entryId === PARTS_FIELD_IDS.ecsPartNumber) partData.ecsPartNumber = value;
+      if (entryId === PARTS_FIELD_IDS.passOrFail) partData.passOrFail = value;
+      if (entryId === PARTS_FIELD_IDS.requireRepairs) partData.requireRepairs = value;
+      if (entryId === PARTS_FIELD_IDS.failedReason) partData.failedReason = value;
+      if (entryId === PARTS_FIELD_IDS.repairsPerformed) {
+        partData.repairsPerformed = value ? value.split('\n').filter((s: string) => s.trim()).join(', ') : value;
+      }
+    }
+    
+    console.log(`📋 Found ${partsBySerial.size} parts by multi_key (ECS Serial) in GoCanvas submission`);
+    for (const [serial, data] of partsBySerial.entries()) {
+      const fieldCount = Object.keys(data).length;
+      console.log(`   Serial ${serial} (${data.part || 'unknown part'}): ${fieldCount} fields`);
     }
     
     if (partsBySerial.size === 0) {
@@ -177,7 +170,7 @@ export async function updatePartsFromSubmission(
 
 /**
  * Extract "Additional Comments" from GoCanvas submission and add as job comments
- * Uses ECS Serial Number to identify which part the comment belongs to
+ * Uses multi_key directly as the ECS Serial Number (after GoCanvas form update)
  */
 export async function handleAdditionalComments(
   jobId: string,
@@ -195,7 +188,6 @@ export async function handleAdditionalComments(
     }
     
     const { goCanvasService } = await import('./gocanvas');
-    const PARTS_FIELD_IDS = fieldMapper.getPartsFieldIds();
     
     // Get technician name from GoCanvas user API
     let submitterName = 'Technician';
@@ -212,15 +204,9 @@ export async function handleAdditionalComments(
     }
     
     // Create one comment per part
+    // multi_key IS now the ECS Serial Number directly
     for (const commentField of additionalCommentsFields) {
-      const partKey = commentField.multi_key;
-      
-      // Find ECS Serial Number for this part (same multi_key)
-      const ecsSerialField = responses.find((r: any) => 
-        r.entry_id === PARTS_FIELD_IDS.ecsSerial && r.multi_key === partKey
-      );
-      
-      const ecsSerial = ecsSerialField?.value || partKey || 'Unknown Part';
+      const ecsSerial = commentField.multi_key || 'Unknown Part';
       
       await storage.createJobComment({
         jobId,
