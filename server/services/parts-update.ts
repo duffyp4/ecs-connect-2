@@ -82,7 +82,7 @@ export async function updatePartsFromSubmission(
     }
     
     console.log(`📋 Found ${partsBySerial.size} parts by multi_key (ECS Serial) in GoCanvas submission`);
-    for (const [serial, data] of partsBySerial.entries()) {
+    for (const [serial, data] of Array.from(partsBySerial.entries())) {
       const fieldCount = Object.keys(data).length;
       console.log(`   Serial ${serial} (${data.part || 'unknown part'}): ${fieldCount} fields`);
     }
