@@ -540,6 +540,7 @@ export function PartsManagementModal({
                             size="sm"
                             onClick={handleGenerateSerial}
                             disabled={isGenerating}
+                            className="border-blue-500 text-blue-600 hover:bg-blue-50"
                             data-testid="button-generate-serial"
                           >
                             {isGenerating ? "Generating..." : "Generate"}

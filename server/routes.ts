@@ -1243,7 +1243,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate next ECS serial number for a given shop code and date
+  // Peek at next ECS serial number for a given shop code and date (doesn't reserve it)
   app.post("/api/serial/generate", isAuthenticated, async (req, res) => {
     try {
       const { shopCode, date } = req.body;
@@ -1257,7 +1257,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid format. shopCode must be 2 characters, date must be MMDDYYYY" });
       }
       
-      const serialNumber = await storage.generateNextSerialNumber(shopCode, date);
+      // Peek at next serial without reserving it
+      const serialNumber = await storage.peekNextSerialNumber(shopCode, date);
       res.json({ serialNumber });
     } catch (error) {
       console.error("Error generating serial number:", error);

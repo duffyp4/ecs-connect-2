@@ -286,6 +286,32 @@ export class DatabaseStorage implements IStorage {
   }
 
   // ECS Serial Number methods
+  // Peek at next serial number WITHOUT reserving it
+  async peekNextSerialNumber(shopCode: string, date: string): Promise<string> {
+    // Get tracking record for this shop/date
+    const existingRecord = await this.db
+      .select()
+      .from(ecsSerialTracking)
+      .where(and(
+        eq(ecsSerialTracking.shopCode, shopCode),
+        eq(ecsSerialTracking.date, date)
+      ));
+    
+    let nextSequence: number;
+    
+    if (existingRecord.length === 0) {
+      // First serial for this shop/date
+      nextSequence = 1;
+    } else {
+      // Next sequence would be current + 1
+      nextSequence = existingRecord[0].lastSequence + 1;
+    }
+    
+    // Format: XX.MMDDYYYY.ZZ
+    const formattedSequence = String(nextSequence).padStart(2, '0');
+    return `${shopCode}.${date}.${formattedSequence}`;
+  }
+
   async generateNextSerialNumber(shopCode: string, date: string): Promise<string> {
     // Get or create tracking record for this shop/date
     const existingRecord = await this.db
