@@ -343,6 +343,7 @@ export default function PartsList() {
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Part Name</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Ship To</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Customer Name</th>
+                  <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">ECS Serial</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Current Job Status</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Part Diagnosis</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Part Status</th>
@@ -351,7 +352,7 @@ export default function PartsList() {
               <tbody>
                 {parts.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center p-8 text-muted-foreground">
+                    <td colSpan={7} className="text-center p-8 text-muted-foreground">
                       No parts found. Try adjusting your filters.
                     </td>
                   </tr>
@@ -380,6 +381,9 @@ export default function PartsList() {
                       </td>
                       <td className="p-4" data-testid={`text-customer-name-${part.id}`}>
                         {part.job?.customerName || '-'}
+                      </td>
+                      <td className="p-4" data-testid={`text-ecs-serial-${part.id}`}>
+                        {part.ecsSerial || '-'}
                       </td>
                       <td className="p-4" data-testid={`text-job-status-${part.id}`}>
                         {part.job ? <JobStatusBadge status={part.job.state} /> : '-'}
