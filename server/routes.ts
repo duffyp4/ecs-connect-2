@@ -1264,6 +1264,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to generate serial number" });
     }
   });
+
+  // Check if a serial number is valid and available
+  app.get("/api/serial/check/:serialNumber", isAuthenticated, async (req, res) => {
+    try {
+      const { serialNumber } = req.params;
+      
+      // Validate format: XX.MMDDYYYY.ZZ (e.g., 01.11242025.01)
+      const serialPattern = /^\d{2}\.\d{8}\.\d{2}$/;
+      if (!serialPattern.test(serialNumber)) {
+        return res.json({
+          valid: false,
+          available: false,
+          error: "Invalid format. Expected: XX.MMDDYYYY.ZZ (e.g., 01.11242025.01)"
+        });
+      }
+      
+      // Check if serial number is already in use
+      const isAvailable = await storage.isSerialNumberAvailable(serialNumber);
+      
+      res.json({
+        valid: true,
+        available: isAvailable,
+        serialNumber
+      });
+    } catch (error) {
+      console.error("Error checking serial number:", error);
+      res.status(500).json({ message: "Failed to check serial number" });
+    }
+  });
   
   // Validate and reserve a manually-entered serial number
   app.post("/api/serial/validate", isAuthenticated, async (req, res) => {
