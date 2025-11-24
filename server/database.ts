@@ -300,11 +300,32 @@ export class DatabaseStorage implements IStorage {
     let nextSequence: number;
     
     if (existingRecord.length === 0) {
-      // First serial for this shop/date
+      // First serial for this shop/date - check job_parts table too
       nextSequence = 1;
     } else {
       // Next sequence would be current + 1
       nextSequence = existingRecord[0].lastSequence + 1;
+    }
+    
+    // ALSO check job_parts table for any serials matching this shop/date pattern
+    // that might be higher than the tracking table sequence
+    const serialPattern = `${shopCode}.${date}.%`;
+    const existingParts = await this.db
+      .select()
+      .from(jobParts)
+      .where(drizzleSql`${jobParts.ecsSerial} LIKE ${serialPattern}`);
+    
+    // Extract sequence numbers from existing parts
+    for (const part of existingParts) {
+      if (part.ecsSerial) {
+        const match = part.ecsSerial.match(/\.(\d{2})$/);
+        if (match) {
+          const sequence = parseInt(match[1], 10);
+          if (sequence >= nextSequence) {
+            nextSequence = sequence + 1;
+          }
+        }
+      }
     }
     
     // Format: XX.MMDDYYYY.ZZ
