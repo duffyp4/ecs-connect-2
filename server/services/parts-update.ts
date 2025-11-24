@@ -28,9 +28,13 @@ export async function updatePartsFromSubmission(
     // This is CRITICAL: We must use serial number, not part name, because
     // jobs can have multiple parts with the same name (e.g., 3 DOCs)
     const partsBySerial = new Map<string, any>();
-    const serialToPartName = new Map<string, string>();
     
-    // DEBUG: Log first 10 part-related responses to see actual field IDs
+    // Map each field to its part using a composite key: multiKey + rowIndex
+    // This handles multiple parts with the same name correctly
+    const multiKeySerialMap = new Map<string, string[]>(); // multiKey -> [serial1, serial2, ...]
+    const rowIndexBySerial = new Map<string, number>(); // Track which row each serial belongs to
+    
+    // DEBUG: Log first 15 part-related responses to see actual field IDs
     const partsRelatedResponses = responses.filter(r => 
       r.entry_id >= 736551799 && r.entry_id <= 736551920 && r.value
     ).slice(0, 15);
@@ -41,7 +45,8 @@ export async function updatePartsFromSubmission(
       });
     }
     
-    // FIRST PASS: Extract ECS Serial Numbers and map them to part names (multi_key)
+    // FIRST PASS: Extract ECS Serial Numbers and build the multiKey -> serials mapping
+    // This creates an ordered list of serials for each part name
     for (const response of responses) {
       const entryId = response.entry_id;
       const value = response.value;
@@ -49,17 +54,32 @@ export async function updatePartsFromSubmission(
       
       // ECS Serial Number field - this is the unique identifier
       if (entryId === PARTS_FIELD_IDS.ecsSerial && value && multiKey) {
-        serialToPartName.set(value, multiKey); // Map serial -> part name
+        // Add this serial to the list for this multiKey (in order of appearance)
+        if (!multiKeySerialMap.has(multiKey)) {
+          multiKeySerialMap.set(multiKey, []);
+        }
+        multiKeySerialMap.get(multiKey)!.push(value);
+        
+        // Create entry for this part
         if (!partsBySerial.has(value)) {
           partsBySerial.set(value, { ecsSerial: value, part: multiKey });
         }
       }
     }
     
-    console.log(`📋 Found ${serialToPartName.size} ECS Serial Numbers in GoCanvas submission`);
-    if (serialToPartName.size > 0) {
-      console.log(`   Serials: ${Array.from(serialToPartName.keys()).join(', ')}`);
+    console.log(`📋 Found ${partsBySerial.size} ECS Serial Numbers in GoCanvas submission`);
+    if (partsBySerial.size > 0) {
+      console.log(`   Serials: ${Array.from(partsBySerial.keys()).join(', ')}`);
+      // Show which serials belong to which part names
+      for (const [partName, serials] of multiKeySerialMap.entries()) {
+        if (serials.length > 1) {
+          console.log(`   "${partName}": ${serials.length} parts (${serials.join(', ')})`);
+        }
+      }
     }
+    
+    // Track which row index we're on for each multiKey as we process fields
+    const multiKeyRowCounters = new Map<string, number>();
     
     // SECOND PASS: Fill in all other fields using the serial number as the key
     for (const response of responses) {
@@ -70,13 +90,21 @@ export async function updatePartsFromSubmission(
       // Skip if no multi_key (title row has no multi_key)
       if (!multiKey) continue;
       
-      // Find the serial number for this multi_key (part name)
+      // For ECS Serial fields, increment the row counter for this multiKey
+      if (entryId === PARTS_FIELD_IDS.ecsSerial && value) {
+        const currentCount = multiKeyRowCounters.get(multiKey) || 0;
+        multiKeyRowCounters.set(multiKey, currentCount + 1);
+      }
+      
+      // Find which serial this field belongs to
       let serialForThisPart: string | undefined;
-      for (const [serial, partName] of Array.from(serialToPartName.entries())) {
-        if (partName === multiKey) {
-          serialForThisPart = serial;
-          break;
-        }
+      const serialsForThisPartName = multiKeySerialMap.get(multiKey);
+      
+      if (serialsForThisPartName && serialsForThisPartName.length > 0) {
+        // Get the current row index for this multiKey (0-based)
+        const rowIndex = (multiKeyRowCounters.get(multiKey) || 1) - 1;
+        // Use the serial at this row index
+        serialForThisPart = serialsForThisPartName[rowIndex];
       }
       
       // Use the serial number as the key (or fallback to part name if no serial)
