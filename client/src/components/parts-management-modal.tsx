@@ -150,10 +150,42 @@ export function PartsManagementModal({
       const shopCode = getShopCode(shopNameToUse);
       const dateCode = getTodayDateCode();
       
+      // Get next serial from database
       const response = await apiRequest("POST", `/api/serial/generate`, { shopCode, date: dateCode });
       const data = await response.json();
+      let suggestedSerial = data.serialNumber;
       
-      form.setValue("ecsSerial", data.serialNumber);
+      // If in local mode, also check local parts array and increment if needed
+      if (mode === 'local' && localParts && localParts.length > 0) {
+        const localSerials = localParts
+          .map(p => p.ecsSerial)
+          .filter(s => s && s.startsWith(`${shopCode}.${dateCode}.`));
+        
+        // Extract sequence numbers from local parts
+        const localSequences = localSerials
+          .map(serial => {
+            const match = serial?.match(/\.(\d{2})$/);
+            return match ? parseInt(match[1], 10) : 0;
+          })
+          .filter(seq => !isNaN(seq));
+        
+        if (localSequences.length > 0) {
+          // Find the highest sequence in local parts
+          const maxLocalSeq = Math.max(...localSequences);
+          
+          // Extract sequence from suggested serial
+          const suggestedMatch = suggestedSerial.match(/\.(\d{2})$/);
+          const suggestedSeq = suggestedMatch ? parseInt(suggestedMatch[1], 10) : 0;
+          
+          // If local sequence is higher or equal, use next after max local
+          if (maxLocalSeq >= suggestedSeq) {
+            const nextSeq = maxLocalSeq + 1;
+            suggestedSerial = `${shopCode}.${dateCode}.${String(nextSeq).padStart(2, '0')}`;
+          }
+        }
+      }
+      
+      form.setValue("ecsSerial", suggestedSerial);
       setSerialValidation({ status: 'valid', message: 'Serial # Available' });
     } catch (error) {
       console.error("Failed to generate serial number:", error);
@@ -180,6 +212,21 @@ export function PartsManagementModal({
       try {
         setSerialValidation({ status: 'checking' });
         
+        // FIRST: Check local parts array (for new jobs where parts aren't in DB yet)
+        if (mode === 'local' && localParts && localParts.length > 0) {
+          // Find if serial is already used by another local part
+          const existingLocalPart = localParts.find(p => 
+            p.ecsSerial === serial && 
+            (!editingPart || !('tempId' in editingPart) || p.tempId !== editingPart.tempId)
+          );
+          
+          if (existingLocalPart) {
+            setSerialValidation({ status: 'invalid', message: 'Serial number already in use on this job' });
+            return;
+          }
+        }
+        
+        // SECOND: Check database for existing parts
         // Build query params to exclude current part when editing
         const queryParams = new URLSearchParams();
         queryParams.set('jobId', jobId);
@@ -204,7 +251,7 @@ export function PartsManagementModal({
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [form.watch("ecsSerial"), jobId, editingPart]);
+  }, [form.watch("ecsSerial"), jobId, editingPart, mode, localParts]);
 
   useEffect(() => {
     if (editingPart) {
