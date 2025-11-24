@@ -356,7 +356,11 @@ export class DatabaseStorage implements IStorage {
     return `${shopCode}.${date}.${formattedSequence}`;
   }
   
-  async isSerialNumberAvailable(serialNumber: string): Promise<boolean> {
+  async isSerialNumberAvailable(
+    serialNumber: string, 
+    excludeJobId?: string,
+    excludePartId?: string
+  ): Promise<boolean> {
     // Check if this serial number exists in any tracking record
     const allRecords = await this.db.select().from(ecsSerialTracking);
     
@@ -366,13 +370,21 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
-    // Also check if it's already assigned to a part
-    const existingPart = await this.db
+    // Check if it's already assigned to a part (excluding current part if editing)
+    let query = this.db
       .select()
       .from(jobParts)
       .where(eq(jobParts.ecsSerial, serialNumber));
     
-    return existingPart.length === 0;
+    const existingParts = await query;
+    
+    // If we're excluding a specific part (editing mode), filter it out
+    if (excludePartId) {
+      const otherParts = existingParts.filter(p => p.id !== excludePartId);
+      return otherParts.length === 0;
+    }
+    
+    return existingParts.length === 0;
   }
   
   async reserveSerialNumber(shopCode: string, date: string, sequence: number, serialNumber: string): Promise<void> {

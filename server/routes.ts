@@ -1270,6 +1270,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/serial/check/:serialNumber", isAuthenticated, async (req, res) => {
     try {
       const { serialNumber } = req.params;
+      const { jobId, partId } = req.query;
       
       // Validate format: XX.MMDDYYYY.ZZ (e.g., 01.11242025.01)
       const serialPattern = /^\d{2}\.\d{8}\.\d{2}$/;
@@ -1281,8 +1282,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Check if serial number is already in use
-      const isAvailable = await storage.isSerialNumberAvailable(serialNumber);
+      // Check if serial number is already in use (excluding current part if editing)
+      const isAvailable = await storage.isSerialNumberAvailable(
+        serialNumber,
+        jobId as string | undefined,
+        partId as string | undefined
+      );
       
       res.json({
         valid: true,

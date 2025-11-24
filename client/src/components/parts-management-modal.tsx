@@ -180,7 +180,14 @@ export function PartsManagementModal({
       try {
         setSerialValidation({ status: 'checking' });
         
-        const response = await apiRequest("GET", `/api/serial/check/${encodeURIComponent(serial)}`);
+        // Build query params to exclude current part when editing
+        const queryParams = new URLSearchParams();
+        queryParams.set('jobId', jobId);
+        if (editingPart && 'id' in editingPart) {
+          queryParams.set('partId', editingPart.id);
+        }
+        
+        const response = await apiRequest("GET", `/api/serial/check/${encodeURIComponent(serial)}?${queryParams.toString()}`);
         const data = await response.json();
         
         if (data.valid && data.available) {
@@ -197,7 +204,7 @@ export function PartsManagementModal({
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [form.watch("ecsSerial")]);
+  }, [form.watch("ecsSerial"), jobId, editingPart]);
 
   useEffect(() => {
     if (editingPart) {
