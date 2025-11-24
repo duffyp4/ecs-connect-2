@@ -38,7 +38,8 @@ export class FieldMapper {
   private initializeFieldMaps(): void {
     // Try to load all known field maps
     const formIds = [
-      '5692904', // Emissions Service Log (Nashville - remapped 2025-11-21)
+      '5695669', // Emissions Service Log (Nashville - remapped 2025-11-24 with ECS Serial as loop key)
+      '5692904', // Emissions Service Log (OLD - Nashville - remapped 2025-11-21)
       '5640587', // Pickup Log (updated with Contact Name, Contact Number, PO Number)
       '5657146', // Delivery Log (updated 2025-10-30 - changed Invoice to Order Number)
     ];
