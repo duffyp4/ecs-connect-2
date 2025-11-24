@@ -135,36 +135,69 @@ export function PartsManagementModal({
     },
   });
 
-  // Auto-generate serial number when opening modal in add mode
-  useEffect(() => {
-    const generateSerial = async () => {
-      // Default to Nashville if no shop name is provided
+  // Serial number validation state
+  const [serialValidation, setSerialValidation] = useState<{
+    status: 'idle' | 'checking' | 'valid' | 'invalid';
+    message?: string;
+  }>({ status: 'idle' });
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  // Generate serial number on demand
+  const handleGenerateSerial = async () => {
+    try {
+      setIsGenerating(true);
       const shopNameToUse = propShopName || job?.shopName || "Nashville";
+      const shopCode = getShopCode(shopNameToUse);
+      const dateCode = getTodayDateCode();
       
-      console.log("Auto-generate conditions:", { open, editingPart, showForm, shopNameToUse });
+      const response = await apiRequest("POST", `/api/serial/generate`, { shopCode, date: dateCode });
+      const data = await response.json();
       
-      if (open && !editingPart && showForm) {
-        try {
-          const shopCode = getShopCode(shopNameToUse);
-          const dateCode = getTodayDateCode();
-          
-          console.log("Generating serial with:", { shopCode, dateCode });
-          
-          const response = await apiRequest("POST", `/api/serial/generate`, { shopCode, date: dateCode });
-          const data = await response.json();
-          
-          console.log("Generated serial number:", data.serialNumber);
-          
-          // Set the serial number in the form
-          form.setValue("ecsSerial", data.serialNumber);
-        } catch (error) {
-          console.error("Failed to auto-generate serial number:", error);
-        }
-      }
-    };
+      form.setValue("ecsSerial", data.serialNumber);
+      setSerialValidation({ status: 'valid', message: 'Serial # Available' });
+    } catch (error) {
+      console.error("Failed to generate serial number:", error);
+      toast({
+        title: "Generation Failed",
+        description: "Could not generate serial number. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // Real-time validation with debounce
+  useEffect(() => {
+    const serial = form.watch("ecsSerial");
     
-    generateSerial();
-  }, [open, editingPart, showForm, job?.shopName, propShopName, form]);
+    if (!serial) {
+      setSerialValidation({ status: 'idle' });
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        setSerialValidation({ status: 'checking' });
+        
+        const response = await apiRequest("GET", `/api/serial/check/${encodeURIComponent(serial)}`);
+        const data = await response.json();
+        
+        if (data.valid && data.available) {
+          setSerialValidation({ status: 'valid', message: 'Serial # Available' });
+        } else if (!data.valid) {
+          setSerialValidation({ status: 'invalid', message: data.error || 'Invalid serial number format' });
+        } else if (!data.available) {
+          setSerialValidation({ status: 'invalid', message: 'Serial number already in use' });
+        }
+      } catch (error) {
+        console.error("Failed to validate serial number:", error);
+        setSerialValidation({ status: 'invalid', message: 'Could not validate serial number' });
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [form.watch("ecsSerial")]);
 
   useEffect(() => {
     if (editingPart) {
@@ -500,6 +533,31 @@ export function PartsManagementModal({
                         <FormControl>
                           <Input {...field} data-testid="input-ecs-serial" />
                         </FormControl>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleGenerateSerial}
+                            disabled={isGenerating}
+                            data-testid="button-generate-serial"
+                          >
+                            {isGenerating ? "Generating..." : "Generate"}
+                          </Button>
+                          {serialValidation.status === 'checking' && (
+                            <span className="text-xs text-muted-foreground">Checking...</span>
+                          )}
+                          {serialValidation.status === 'valid' && (
+                            <span className="text-xs text-green-600 font-medium" data-testid="text-serial-valid">
+                              ✓ {serialValidation.message}
+                            </span>
+                          )}
+                          {serialValidation.status === 'invalid' && (
+                            <span className="text-xs text-red-600 font-medium" data-testid="text-serial-invalid">
+                              ✗ {serialValidation.message}
+                            </span>
+                          )}
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
