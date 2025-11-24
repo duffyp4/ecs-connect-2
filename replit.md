@@ -31,14 +31,18 @@ The application uses a monorepo structure with `/client` (React frontend), `/ser
 
 ### Parts Management System
 - **Purpose**: Allows CSRs to add part details to jobs before dispatching emissions service logs to technicians
-- **Database**: `job_parts` table with 11 fields linked to jobs (part, process, ecs_serial, filter_pn, po_number, mileage, unit_vin, gasket_clamps, ec, eg, ek)
+- **Database**: `job_parts` table with 11 fields linked to jobs (part, process, ecs_serial, filter_pn, po_number, mileage, unit_vin, gasket_clamps, ec, eg, ek) + `ecs_serial_tracking` table for serial number sequence management
+- **ECS Serial Numbers**: Auto-generated unique identifiers (format: XX.MMDDYYYY.ZZ) where XX = shop code (01=Nashville, 02=Birmingham, etc), MMDDYYYY = date, ZZ = sequential number (01, 02, ...). Numbers are auto-populated but remain editable for manual override/future-dating scenarios.
+- **Serial Number Matching**: Webhook matches parts by ECS Serial Number (not part name) to prevent data loss when multiple parts share the same name
 - **Workflow**: 
   1. CSR creates job (either via Dispatch Pickup or Direct Shop Check-in)
   2. BEFORE check-in at shop: CSR can manage parts via "Manage Parts" button on job detail page
-  3. Parts are optional, but if added, 4 required fields must be completed: Part, Process, ECS Serial, Gasket/Clamps
-  4. During check-in: Emissions service log dispatch validates parts completeness
-  5. Parts are sent to GoCanvas as loop screen rows using multi_key format
-  6. AFTER check-in: Parts become read-only (already dispatched to technician)
+  3. When adding a part, ECS Serial Number is auto-generated using shop code + today's date + next sequential number
+  4. Parts are optional, but if added, 4 required fields must be completed: Part, Process, ECS Serial, Gasket/Clamps
+  5. During check-in: Emissions service log dispatch validates parts completeness
+  6. Parts are sent to GoCanvas as loop screen rows using multi_key format
+  7. AFTER check-in: Parts become read-only (already dispatched to technician)
+  8. Webhook updates parts by matching ECS Serial Number from GoCanvas submissions (GoCanvas is source of truth)
 - **Validation**: Emissions dispatch will fail if parts exist but required fields are incomplete
 - **GoCanvas Integration**: Parts pre-populate loop screen in emissions form (ID: 5692831) using field IDs 736541826-736541927 with multi_key grouping
 - **Edit States**: Parts editable when job state is `queued_for_pickup` or `picked_up` (BEFORE emissions dispatch)
