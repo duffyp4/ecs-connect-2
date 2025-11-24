@@ -802,6 +802,7 @@ export default function CSRForm() {
         localParts={localParts}
         onLocalPartsChange={setLocalParts}
         openInAddMode={localParts.length === 0}
+        shopName={form.watch("shopName")}
       />
     </div>
   );

@@ -58,6 +58,7 @@ interface PartsManagementModalProps {
   openInAddMode?: boolean; // If true, opens directly to add form instead of parts list
   showEditLockDisclaimer?: boolean; // If true, shows disclaimer about parts being locked after shop check-in
   editingPart?: JobPart | null; // Pass a part to edit directly (from job details page)
+  shopName?: string; // Optional: Pass shop name directly (for local mode when job doesn't exist yet)
 }
 
 export function PartsManagementModal({
@@ -71,6 +72,7 @@ export function PartsManagementModal({
   openInAddMode = false,
   showEditLockDisclaimer = false,
   editingPart: externalEditingPart,
+  shopName: propShopName,
 }: PartsManagementModalProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -136,9 +138,12 @@ export function PartsManagementModal({
   // Auto-generate serial number when opening modal in add mode
   useEffect(() => {
     const generateSerial = async () => {
-      if (open && !editingPart && showForm && job?.shopName) {
+      // Use prop shop name if provided, otherwise use from fetched job
+      const shopNameToUse = propShopName || job?.shopName;
+      
+      if (open && !editingPart && showForm && shopNameToUse) {
         try {
-          const shopCode = getShopCode(job.shopName);
+          const shopCode = getShopCode(shopNameToUse);
           const dateCode = getTodayDateCode();
           
           const response = await apiRequest("POST", `/api/serial/generate`, { shopCode, date: dateCode });
@@ -153,7 +158,7 @@ export function PartsManagementModal({
     };
     
     generateSerial();
-  }, [open, editingPart, showForm, job?.shopName, form]);
+  }, [open, editingPart, showForm, job?.shopName, propShopName, form]);
 
   useEffect(() => {
     if (editingPart) {
