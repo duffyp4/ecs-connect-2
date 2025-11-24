@@ -278,6 +278,7 @@ export class WebhookService {
         
         if (additionalCommentsFields.length > 0) {
           const { goCanvasService } = await import('./gocanvas');
+          const PARTS_FIELD_IDS = fieldMapper.getPartsFieldIds();
           
           // Get technician name from GoCanvas user API
           let submitterName = 'Technician';
@@ -295,14 +296,22 @@ export class WebhookService {
           
           // Create one comment per part
           for (const commentField of additionalCommentsFields) {
-            const partName = commentField.multi_key || 'Unknown Part';
+            const partKey = commentField.multi_key;
+            
+            // Find ECS Serial Number for this part (same multi_key)
+            const ecsSerialField = submissionData.responses.find((r: any) => 
+              r.entry_id === PARTS_FIELD_IDS.ecsSerial && r.multi_key === partKey
+            );
+            
+            const ecsSerial = ecsSerialField?.value || partKey || 'Unknown Part';
+            
             await storage.createJobComment({
               jobId,
               userId: submitterName,
-              commentText: `[Additional Comments - ${partName}] ${commentField.value.trim()}`,
+              commentText: `[Additional Comments - ${ecsSerial}] ${commentField.value.trim()}`,
             });
             
-            console.log(`✅ Added additional comments for part "${partName}" as job comment for ${jobId} by ${submitterName}`);
+            console.log(`✅ Added additional comments for part "${ecsSerial}" as job comment for ${jobId} by ${submitterName}`);
           }
         }
       }
