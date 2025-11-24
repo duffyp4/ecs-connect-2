@@ -3,13 +3,13 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertJobSchema, pickupJobSchema } from "@shared/schema";
 import { goCanvasService } from "./services/gocanvas";
-import { fieldMapper } from "@shared/fieldMapper";
 import { googleSheetsService } from "./services/googleSheets";
 import { jobTrackerService } from "./services/jobTracker";
 import { referenceDataService } from "./services/referenceData";
 import { jobEventsService } from "./services/jobEvents";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { webhookService, webhookMetrics } from "./services/webhook";
+import { updatePartsFromSubmission, handleAdditionalComments } from "./services/parts-update";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Replit Auth
@@ -1546,132 +1546,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Helper function to extract and update parts data from GoCanvas submission
-  async function updatePartsFromSubmission(jobId: string, responses: any[], storage: any) {
-    try {
-      // Dynamically load field IDs from the field mapping JSON
-      // This automatically updates when the form changes and field map is regenerated
-      const PARTS_FIELD_IDS = fieldMapper.getPartsFieldIds();
-
-      // Group responses by multi_key (each group = one part)
-      const partGroups = new Map<string, any>();
-      
-      for (const response of responses) {
-        const entryId = response.entry_id;
-        const value = response.value;
-        const multiKey = response.multi_key;
-        
-        // Title field (Part) has no multi_key, use its value as the key
-        if (entryId === PARTS_FIELD_IDS.part && value) {
-          if (!partGroups.has(value)) {
-            partGroups.set(value, { part: value });
-          }
-        }
-        
-        // Other fields reference the Part value via multi_key
-        if (multiKey) {
-          if (!partGroups.has(multiKey)) {
-            partGroups.set(multiKey, { part: multiKey });
-          }
-          
-          const partData = partGroups.get(multiKey)!;
-          
-          // CSR-filled fields (might be updated by technician)
-          if (entryId === PARTS_FIELD_IDS.process) partData.process = value;
-          if (entryId === PARTS_FIELD_IDS.filterPn) partData.filterPn = value;
-          if (entryId === PARTS_FIELD_IDS.ecsSerial) partData.ecsSerial = value;
-          if (entryId === PARTS_FIELD_IDS.poNumber) partData.poNumber = value;
-          if (entryId === PARTS_FIELD_IDS.mileage) partData.mileage = value;
-          if (entryId === PARTS_FIELD_IDS.unitVin) partData.unitVin = value;
-          if (entryId === PARTS_FIELD_IDS.gasketClamps) partData.gasketClamps = value;
-          if (entryId === PARTS_FIELD_IDS.ec) partData.ec = value;
-          if (entryId === PARTS_FIELD_IDS.eg) partData.eg = value;
-          if (entryId === PARTS_FIELD_IDS.ek) partData.ek = value;
-          
-          // Technician-filled fields
-          if (entryId === PARTS_FIELD_IDS.ecsPartNumber) partData.ecsPartNumber = value;
-          if (entryId === PARTS_FIELD_IDS.passOrFail) partData.passOrFail = value;
-          if (entryId === PARTS_FIELD_IDS.requireRepairs) partData.requireRepairs = value;
-          if (entryId === PARTS_FIELD_IDS.failedReason) partData.failedReason = value;
-          if (entryId === PARTS_FIELD_IDS.repairsPerformed) {
-            // Format repairs: replace newlines with commas for clean display
-            partData.repairsPerformed = value ? value.split('\n').filter((s: string) => s.trim()).join(', ') : value;
-          }
-        }
-      }
-      
-      if (partGroups.size === 0) {
-        console.log('No parts data found in submission');
-        return;
-      }
-      
-      console.log(`Found ${partGroups.size} parts in submission`);
-      
-      // Get existing parts for this job
-      const existingParts = await storage.getJobParts(jobId);
-      
-      // Update each existing part with GoCanvas data
-      for (const [partName, goCanvasData] of Array.from(partGroups.entries())) {
-        // Find matching part in our database by ECS Serial Number (NOT by part name)
-        // This prevents data loss when multiple parts share the same name
-        let existingPart = null;
-        
-        if (goCanvasData.ecsSerial) {
-          // Match by ECS Serial Number (unique identifier)
-          existingPart = existingParts.find((p: any) => p.ecsSerial === goCanvasData.ecsSerial);
-          if (existingPart) {
-            console.log(`Matched part by ECS Serial "${goCanvasData.ecsSerial}" (Part: "${partName}")`);
-          }
-        }
-        
-        // Fallback: if no serial match, try part name (for backwards compatibility)
-        if (!existingPart) {
-          existingPart = existingParts.find((p: any) => p.part === partName);
-          if (existingPart) {
-            console.log(`⚠️ Matched part by name "${partName}" (no serial match) - consider adding ECS Serial Number`);
-          }
-        }
-        
-        if (existingPart) {
-          console.log(`Updating part "${partName}" with GoCanvas data...`);
-          
-          // Build update object with all fields from GoCanvas
-          // Only include fields that have values (don't overwrite with undefined)
-          const updateData: any = {};
-          
-          // CSR-filled fields (technician might have changed them)
-          if (goCanvasData.process !== undefined) updateData.process = goCanvasData.process;
-          if (goCanvasData.filterPn !== undefined) updateData.filterPn = goCanvasData.filterPn;
-          if (goCanvasData.ecsSerial !== undefined) updateData.ecsSerial = goCanvasData.ecsSerial;
-          if (goCanvasData.poNumber !== undefined) updateData.poNumber = goCanvasData.poNumber;
-          if (goCanvasData.mileage !== undefined) updateData.mileage = goCanvasData.mileage;
-          if (goCanvasData.unitVin !== undefined) updateData.unitVin = goCanvasData.unitVin;
-          if (goCanvasData.gasketClamps !== undefined) updateData.gasketClamps = goCanvasData.gasketClamps;
-          if (goCanvasData.ec !== undefined) updateData.ec = goCanvasData.ec;
-          if (goCanvasData.eg !== undefined) updateData.eg = goCanvasData.eg;
-          if (goCanvasData.ek !== undefined) updateData.ek = goCanvasData.ek;
-          
-          // Technician-filled fields
-          if (goCanvasData.ecsPartNumber !== undefined) updateData.ecsPartNumber = goCanvasData.ecsPartNumber;
-          if (goCanvasData.passOrFail !== undefined) updateData.passOrFail = goCanvasData.passOrFail;
-          if (goCanvasData.requireRepairs !== undefined) updateData.requireRepairs = goCanvasData.requireRepairs;
-          if (goCanvasData.failedReason !== undefined) updateData.failedReason = goCanvasData.failedReason;
-          if (goCanvasData.repairsPerformed !== undefined) updateData.repairsPerformed = goCanvasData.repairsPerformed;
-          
-          await storage.updateJobPart(existingPart.id, updateData);
-          console.log(`✅ Updated part "${partName}" with ${Object.keys(updateData).length} fields from GoCanvas`);
-        } else {
-          console.log(`⚠️ No matching part found for "${partName}" in database`);
-        }
-      }
-      
-      console.log('✅ Parts data extraction complete');
-    } catch (error) {
-      console.error('Error updating parts from submission:', error);
-      throw error;
-    }
-  }
-
   // Manual check for updates - state-aware dispatch/submission query
   app.post("/api/jobs/:jobId/check-updates", isAuthenticated, async (req, res) => {
     try {
@@ -1891,7 +1765,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               });
             }
             
-            // After emissions completion, extract and save parts data from submission
+            // After emissions completion, extract and save parts data from submission (using shared service)
             if (submissionData?.rawData?.responses) {
               console.log('📦 Extracting parts data from GoCanvas submission...');
               await updatePartsFromSubmission(jobId, submissionData.rawData.responses, storage);
@@ -1899,49 +1773,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.log('⚠️ No response data found in submission for parts extraction');
             }
             
-            // Extract "Additional Comments" and add as job comment (one per part)
+            // Extract "Additional Comments" and add as job comment (using shared service)
             if (submissionData?.rawData?.responses && Array.isArray(submissionData.rawData.responses)) {
-              const additionalCommentsFields = submissionData.rawData.responses.filter((r: any) => 
-                r.entry_id === 736551926 && r.value && r.value.trim() // "Additional Comments"
-              );
-              
-              if (additionalCommentsFields.length > 0) {
-                const PARTS_FIELD_IDS = fieldMapper.getPartsFieldIds();
-                
-                // Get technician name from GoCanvas user API
-                let submitterName = 'Technician';
-                if (submissionData.rawData.user_id) {
-                  try {
-                    const userData = await goCanvasService.getGoCanvasUserById(submissionData.rawData.user_id);
-                    const firstName = userData.first_name || '';
-                    const lastName = userData.last_name || '';
-                    submitterName = `${firstName} ${lastName}`.trim() || `User ${submissionData.rawData.user_id}`;
-                  } catch (error) {
-                    console.warn(`Could not fetch GoCanvas user ${submissionData.rawData.user_id}:`, error);
-                    submitterName = `Technician (ID: ${submissionData.rawData.user_id})`;
-                  }
-                }
-                
-                // Create one comment per part
-                for (const commentField of additionalCommentsFields) {
-                  const partKey = commentField.multi_key;
-                  
-                  // Find ECS Serial Number for this part (same multi_key)
-                  const ecsSerialField = submissionData.rawData.responses.find((r: any) => 
-                    r.entry_id === PARTS_FIELD_IDS.ecsSerial && r.multi_key === partKey
-                  );
-                  
-                  const ecsSerial = ecsSerialField?.value || partKey || 'Unknown Part';
-                  
-                  await storage.createJobComment({
-                    jobId,
-                    userId: submitterName,
-                    commentText: `[Additional Comments - ${ecsSerial}] ${commentField.value.trim()}`,
-                  });
-                  
-                  console.log(`✅ Added additional comments for part "${ecsSerial}" as job comment for ${jobId} by ${submitterName}`);
-                }
-              }
+              await handleAdditionalComments(jobId, submissionData.rawData.responses, submissionData.rawData.user_id, storage);
             }
           } else if (formIdToCheck === deliveryFormId) {
             // Delivery completion
