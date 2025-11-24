@@ -82,7 +82,7 @@ export class FieldMapper {
 
   private loadFieldMap(): FieldMap {
     // For backward compatibility - load default emissions form
-    const defaultFormId = process.env.GOCANVAS_FORM_ID || '5692359';
+    const defaultFormId = process.env.GOCANVAS_FORM_ID || '5695669';
     return this.loadFieldMapForForm(defaultFormId);
   }
 
@@ -282,7 +282,7 @@ export class FieldMapper {
     failedReason: number;
     repairsPerformed: number;
   } {
-    const targetFormId = formId || process.env.GOCANVAS_FORM_ID || '5692904';
+    const targetFormId = formId || process.env.GOCANVAS_FORM_ID || '5695669';
     
     // Define the exact field labels to look up
     const fieldLabels = {

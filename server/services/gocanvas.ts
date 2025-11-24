@@ -240,7 +240,7 @@ export class GoCanvasService {
       }
       
       // Check for specific field IDs known to cause issues
-      if (response.entry_id === 718414077) { // FORCE STOP field
+      if (response.entry_id === 737072004) { // FORCE STOP field (Form 5695669)
         triggers.push({
           entry_id: response.entry_id,
           value: response.value,
@@ -1318,7 +1318,7 @@ export class GoCanvasService {
         });
       } else {
         console.log('📍 "New GPS" field not found - checking by entry_id...');
-        const gpsById = targetSubmission.responses?.find((r: any) => r.entry_id === 714491454);
+        const gpsById = targetSubmission.responses?.find((r: any) => r.entry_id === 737071868); // Form 5695669
         if (gpsById) {
           console.log(`📍 FOUND GPS BY ID: "${gpsById.label}" = "${gpsById.value}" (type: ${gpsById.type}, entry_id: ${gpsById.entry_id})`);
           handoffData.handoffFields.push({
@@ -1552,7 +1552,7 @@ export class GoCanvasService {
       console.log(`  - ${fieldName}: "${r.value}"`);
       
       // Special logging for PO Number
-      if (r.entry_id === 714302736) {
+      if (r.entry_id === 737071885) { // Form 5695669
         console.log(`🔍 PO NUMBER DEBUGGING:`);
         console.log(`   Field ID: ${r.entry_id}`);
         console.log(`   Value: "${r.value}"`);
