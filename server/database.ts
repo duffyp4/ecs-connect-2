@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { Pool, neonConfig } from "@neondatabase/serverless";
-import { jobs, technicians, jobEvents, users, whitelist, jobComments, jobParts, type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent, type User, type UpsertUser, type Whitelist, type InsertWhitelist, type JobComment, type InsertJobComment, type JobPart, type InsertJobPart } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { jobs, technicians, jobEvents, users, whitelist, jobComments, jobParts, ecsSerialTracking, type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent, type User, type UpsertUser, type Whitelist, type InsertWhitelist, type JobComment, type InsertJobComment, type JobPart, type InsertJobPart } from "@shared/schema";
+import { eq, desc, and, sql as drizzleSql } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { IStorage } from "./storage";
 import ws from "ws";
@@ -283,6 +283,106 @@ export class DatabaseStorage implements IStorage {
     const timestamp = now.toISOString().replace(/[-T:\.Z]/g, '').slice(0, 14);
     const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
     return `ECS-${timestamp}-${random}`;
+  }
+
+  // ECS Serial Number methods
+  async generateNextSerialNumber(shopCode: string, date: string): Promise<string> {
+    // Get or create tracking record for this shop/date
+    const existingRecord = await this.db
+      .select()
+      .from(ecsSerialTracking)
+      .where(and(
+        eq(ecsSerialTracking.shopCode, shopCode),
+        eq(ecsSerialTracking.date, date)
+      ));
+    
+    let nextSequence: number;
+    
+    if (existingRecord.length === 0) {
+      // First serial for this shop/date
+      nextSequence = 1;
+      await this.db.insert(ecsSerialTracking).values({
+        shopCode,
+        date,
+        lastSequence: 1,
+        usedSerials: [`${shopCode}.${date}.01`],
+      });
+    } else {
+      // Increment sequence
+      nextSequence = existingRecord[0].lastSequence + 1;
+      const serialNumber = `${shopCode}.${date}.${String(nextSequence).padStart(2, '0')}`;
+      
+      await this.db
+        .update(ecsSerialTracking)
+        .set({
+          lastSequence: nextSequence,
+          usedSerials: drizzleSql`array_append(${ecsSerialTracking.usedSerials}, ${serialNumber})`,
+          updatedAt: new Date(),
+        })
+        .where(and(
+          eq(ecsSerialTracking.shopCode, shopCode),
+          eq(ecsSerialTracking.date, date)
+        ));
+    }
+    
+    // Format: XX.MMDDYYYY.ZZ
+    const formattedSequence = String(nextSequence).padStart(2, '0');
+    return `${shopCode}.${date}.${formattedSequence}`;
+  }
+  
+  async isSerialNumberAvailable(serialNumber: string): Promise<boolean> {
+    // Check if this serial number exists in any tracking record
+    const allRecords = await this.db.select().from(ecsSerialTracking);
+    
+    for (const record of allRecords) {
+      if (record.usedSerials.includes(serialNumber)) {
+        return false;
+      }
+    }
+    
+    // Also check if it's already assigned to a part
+    const existingPart = await this.db
+      .select()
+      .from(jobParts)
+      .where(eq(jobParts.ecsSerial, serialNumber));
+    
+    return existingPart.length === 0;
+  }
+  
+  async reserveSerialNumber(shopCode: string, date: string, sequence: number, serialNumber: string): Promise<void> {
+    // Get or create tracking record
+    const existingRecord = await this.db
+      .select()
+      .from(ecsSerialTracking)
+      .where(and(
+        eq(ecsSerialTracking.shopCode, shopCode),
+        eq(ecsSerialTracking.date, date)
+      ));
+    
+    if (existingRecord.length === 0) {
+      // Create new tracking record
+      await this.db.insert(ecsSerialTracking).values({
+        shopCode,
+        date,
+        lastSequence: Math.max(sequence, 1),
+        usedSerials: [serialNumber],
+      });
+    } else {
+      // Update existing record
+      const newLastSequence = Math.max(existingRecord[0].lastSequence, sequence);
+      
+      await this.db
+        .update(ecsSerialTracking)
+        .set({
+          lastSequence: newLastSequence,
+          usedSerials: drizzleSql`array_append(${ecsSerialTracking.usedSerials}, ${serialNumber})`,
+          updatedAt: new Date(),
+        })
+        .where(and(
+          eq(ecsSerialTracking.shopCode, shopCode),
+          eq(ecsSerialTracking.date, date)
+        ));
+    }
   }
 
   // Initialize with sample technicians if none exist

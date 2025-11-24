@@ -1243,6 +1243,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generate next ECS serial number for a given shop code and date
+  app.post("/api/serial/generate", isAuthenticated, async (req, res) => {
+    try {
+      const { shopCode, date } = req.body;
+      
+      if (!shopCode || !date) {
+        return res.status(400).json({ message: "shopCode and date are required" });
+      }
+      
+      // Validate format: shopCode should be 2 chars, date should be MMDDYYYY
+      if (shopCode.length !== 2 || !/^\d{8}$/.test(date)) {
+        return res.status(400).json({ message: "Invalid format. shopCode must be 2 characters, date must be MMDDYYYY" });
+      }
+      
+      const serialNumber = await storage.generateNextSerialNumber(shopCode, date);
+      res.json({ serialNumber });
+    } catch (error) {
+      console.error("Error generating serial number:", error);
+      res.status(500).json({ message: "Failed to generate serial number" });
+    }
+  });
+  
+  // Validate and reserve a manually-entered serial number
+  app.post("/api/serial/validate", isAuthenticated, async (req, res) => {
+    try {
+      const { serialNumber } = req.body;
+      
+      if (!serialNumber) {
+        return res.status(400).json({ message: "serialNumber is required" });
+      }
+      
+      // Validate format: XX.MMDDYYYY.ZZ
+      const serialPattern = /^(\d{2})\.(\d{8})\.(\d{2})$/;
+      const match = serialNumber.match(serialPattern);
+      
+      if (!match) {
+        return res.status(400).json({ 
+          valid: false, 
+          message: "Invalid format. Must be XX.MMDDYYYY.ZZ (e.g., 01.11232025.03)" 
+        });
+      }
+      
+      const [, shopCode, date, sequence] = match;
+      
+      // Check if this serial number is already used
+      const isAvailable = await storage.isSerialNumberAvailable(serialNumber);
+      
+      if (!isAvailable) {
+        return res.status(400).json({ 
+          valid: false, 
+          message: "This serial number is already in use" 
+        });
+      }
+      
+      // Reserve this serial number
+      await storage.reserveSerialNumber(shopCode, date, parseInt(sequence, 10), serialNumber);
+      
+      res.json({ 
+        valid: true, 
+        serialNumber,
+        message: "Serial number is valid and reserved" 
+      });
+    } catch (error) {
+      console.error("Error validating serial number:", error);
+      res.status(500).json({ message: "Failed to validate serial number" });
+    }
+  });
+
   // Get all parts with job information
   app.get("/api/parts", isAuthenticated, async (req, res) => {
     try {

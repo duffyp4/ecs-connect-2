@@ -47,6 +47,11 @@ export interface IStorage {
   getAllJobParts(): Promise<Array<JobPart & { job: Job | null }>>;
   updateJobPart(id: string, updates: Partial<JobPart>): Promise<JobPart | undefined>;
   deleteJobPart(id: string): Promise<void>;
+  
+  // ECS Serial Number methods
+  generateNextSerialNumber(shopCode: string, date: string): Promise<string>;
+  isSerialNumberAvailable(serialNumber: string): Promise<boolean>;
+  reserveSerialNumber(shopCode: string, date: string, sequence: number, serialNumber: string): Promise<void>;
 }
 
 export const storage = new DatabaseStorage();
