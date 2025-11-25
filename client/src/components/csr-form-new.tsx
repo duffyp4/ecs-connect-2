@@ -292,7 +292,7 @@ export default function CSRForm() {
         <CardHeader className="card-header">
           <h2 className="text-lg font-semibold flex items-center">
             <ClipboardList className="mr-2 h-5 w-5" />
-            New Job
+            {currentStep === 1 ? 'New Job' : arrivalPath === 'direct' ? 'Direct Shop Check-in' : 'Dispatch Pickup'}
           </h2>
           <p className="text-sm opacity-90">Connected to GoCanvas</p>
         </CardHeader>
@@ -359,14 +359,6 @@ export default function CSRForm() {
           {/* Step 2: Form */}
           {currentStep === 2 && (
             <>
-              {/* Path Indicator */}
-              <Alert className="bg-[var(--ecs-primary)]/10 border-[var(--ecs-primary)]">
-                <Info className="h-4 w-4 text-[var(--ecs-primary)]" />
-                <AlertDescription className="text-[var(--ecs-dark)]">
-                  <strong>Selected Path:</strong> {arrivalPath === 'direct' ? 'Direct Shop Check-in' : 'Dispatch Pickup'}
-                </AlertDescription>
-              </Alert>
-
               {/* Job ID Display */}
               <Alert>
                 <Info className="h-4 w-4" />
