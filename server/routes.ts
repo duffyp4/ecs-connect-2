@@ -712,14 +712,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`✅ Job ${updatedJob.jobId} checked in successfully with GoCanvas submission ${submissionId}`);
       
       // Extract "Note to Tech about Customer or service:" and add as job comment
-      if (req.body.noteToTechAboutCustomer && req.body.noteToTechAboutCustomer.trim()) {
+      // Check both req.body (from form submission) and refreshedJob (from database)
+      const noteToTech = req.body.noteToTechAboutCustomer || refreshedJob.noteToTechAboutCustomer;
+      if (noteToTech && noteToTech.trim()) {
         try {
           const userId = (req.user as any)?.email || 'system';
           
           await storage.createJobComment({
             jobId: updatedJob.jobId,
             userId,
-            commentText: `[Note to Tech] ${req.body.noteToTechAboutCustomer.trim()}`,
+            commentText: `[Note to Tech] ${noteToTech.trim()}`,
           });
           
           console.log(`✅ Added tech note as job comment for ${updatedJob.jobId} by ${userId}`);
