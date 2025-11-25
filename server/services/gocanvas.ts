@@ -86,7 +86,13 @@ export class GoCanvasService {
     }
     
     this.formId = fieldMapper.getFormId();
-    console.log('📋 Connected to GoCanvas');
+    console.log('✅ GoCanvas initialized:', validation.message);
+    
+    // Log available forms
+    const loadedForms = fieldMapper.getLoadedFormIds();
+    if (loadedForms.length > 0) {
+      console.log(`📋 Connected to GoCanvas`);
+    }
     
     if (this.dryRun) {
       console.log('🧪 DRY_RUN MODE ENABLED - No actual API calls will be made');
