@@ -367,24 +367,16 @@ export default function CSRForm() {
                 </AlertDescription>
               </Alert>
 
-              {/* Job ID and Timestamp Display */}
-              <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-4">
-                <Alert>
-                  <Info className="h-4 w-4" />
-                  <AlertDescription>
-                    <strong>Job ID:</strong> <span className="job-id">{generatedJobId}</span>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Automatically generated on form submission
-                    </div>
-                  </AlertDescription>
-                </Alert>
-                <Alert>
-                  <Clock className="h-4 w-4" />
-                  <AlertDescription>
-                    <strong>Initiated:</strong> Time recorded upon check-in form submission
-                  </AlertDescription>
-                </Alert>
-              </div>
+              {/* Job ID Display */}
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Job ID:</strong> <span className="job-id">{generatedJobId}</span>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Automatically generated on form submission
+                  </div>
+                </AlertDescription>
+              </Alert>
 
 
               <Form {...form}>
