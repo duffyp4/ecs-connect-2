@@ -274,6 +274,9 @@ export class WebhookService {
       if (submissionData?.responses && Array.isArray(submissionData.responses)) {
         await handleAdditionalComments(jobId, submissionData.responses, submissionData.user_id, storage);
       }
+      
+      // Note: "Note to Tech about Customer or service:" is captured at check-in time
+      // (see POST /api/jobs/:jobId/check-in route) - not captured here to avoid duplicates
     } catch (error) {
       console.error(`Error handling service completion for job ${jobId}:`, error);
       throw error;
