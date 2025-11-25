@@ -170,7 +170,7 @@ export function useCsrCheckInForm(options: UseCsrCheckInFormOptions = {}): CsrCh
       if (customerSpecificData.customerNotes === '#N/A' || 
           customerSpecificData.customerNotes === '' || 
           !customerSpecificData.customerNotes) {
-        form.setValue("noteToTechAboutCustomer", "N/A");
+        form.setValue("noteToTechAboutCustomer", "");
       } else {
         form.setValue("noteToTechAboutCustomer", customerSpecificData.customerNotes);
       }
