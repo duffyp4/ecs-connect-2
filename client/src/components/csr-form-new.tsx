@@ -275,6 +275,19 @@ export default function CSRForm() {
         <p className="text-sm sm:text-base text-muted-foreground">Complete all required fields to initiate a new service job</p>
       </div>
 
+      {currentStep === 2 && (
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => setCurrentStep(1)}
+          className="text-sm"
+          data-testid="button-back-to-step1"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Change Path Selection
+        </Button>
+      )}
+
       <Card>
         <CardHeader className="card-header">
           <h2 className="text-lg font-semibold flex items-center">
@@ -346,20 +359,6 @@ export default function CSRForm() {
           {/* Step 2: Form */}
           {currentStep === 2 && (
             <>
-              {/* Back Button */}
-              <div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setCurrentStep(1)}
-                  className="text-sm"
-                  data-testid="button-back-to-step1"
-                >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Change Path Selection
-                </Button>
-              </div>
-
               {/* Path Indicator */}
               <Alert className="bg-[var(--ecs-primary)]/10 border-[var(--ecs-primary)]">
                 <Info className="h-4 w-4 text-[var(--ecs-primary)]" />
