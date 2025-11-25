@@ -717,9 +717,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (noteToTech && noteToTech.trim()) {
         try {
           const user = req.user as any;
-          const userName = user?.firstName && user?.lastName 
-            ? `${user.firstName} ${user.lastName}` 
-            : user?.email || 'system';
+          // User claims contain first_name/last_name from OIDC
+          const firstName = user?.claims?.first_name;
+          const lastName = user?.claims?.last_name;
+          const userName = firstName && lastName 
+            ? `${firstName} ${lastName}` 
+            : user?.claims?.email || 'system';
           
           await storage.createJobComment({
             jobId: updatedJob.jobId,
