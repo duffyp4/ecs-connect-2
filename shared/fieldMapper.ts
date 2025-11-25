@@ -232,7 +232,7 @@ export class FieldMapper {
       
       return {
         valid: true,
-        message: `Field mapping is current (Form: ${map.form_id}, ${map.total_fields} fields)`
+        message: `Connected to GoCanvas`
       };
       
     } catch (error) {
