@@ -279,9 +279,9 @@ export default function CSRForm() {
         <CardHeader className="card-header">
           <h2 className="text-lg font-semibold flex items-center">
             <ClipboardList className="mr-2 h-5 w-5" />
-            Customer Check-in
+            New Job
           </h2>
-          <p className="text-sm opacity-90">Fields matching GoCanvas "Testing Copy" form structure</p>
+          <p className="text-sm opacity-90">Connected to GoCanvas</p>
         </CardHeader>
         <CardContent className="pt-6 pb-6 px-4 sm:px-6 space-y-6">
           {/* Step 1: Path Selection */}
@@ -289,7 +289,6 @@ export default function CSRForm() {
             <div className="space-y-6">
               <div className="text-center space-y-2">
                 <h3 className="text-xl font-semibold">How will items arrive at the shop?</h3>
-                <p className="text-sm text-muted-foreground">Choose the appropriate path to continue</p>
               </div>
               
               <div className="grid md:grid-cols-2 gap-6">
