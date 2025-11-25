@@ -91,7 +91,7 @@ export class GoCanvasService {
     // Log available forms
     const loadedForms = fieldMapper.getLoadedFormIds();
     if (loadedForms.length > 0) {
-      console.log(`📋 Loaded field maps for ${loadedForms.length} forms:`, loadedForms.join(', '));
+      console.log(`📋 Connected to GoCanvas`);
     }
     
     if (this.dryRun) {
