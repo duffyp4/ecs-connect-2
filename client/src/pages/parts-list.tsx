@@ -340,10 +340,10 @@ export default function PartsList() {
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-[var(--ecs-light)]">
+                  <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">ECS Serial</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Part Name</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Ship To</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Customer Name</th>
-                  <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">ECS Serial</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Current Job Status</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Part Diagnosis</th>
                   <th className="text-left p-4 font-semibold text-[var(--ecs-dark)]">Part Status</th>
@@ -366,13 +366,16 @@ export default function PartsList() {
                       <td className="p-4">
                         {part.job?.jobId ? (
                           <Link href={`/jobs/${part.job.jobId}`}>
-                            <span className="job-id cursor-pointer hover:underline" data-testid={`link-part-${part.id}`}>
-                              {part.part || '-'}
+                            <span className="job-id cursor-pointer hover:underline font-medium" data-testid={`link-ecs-serial-${part.id}`}>
+                              {part.ecsSerial || '-'}
                             </span>
                           </Link>
                         ) : (
-                          <span>{part.part || '-'}</span>
+                          <span data-testid={`text-ecs-serial-${part.id}`}>{part.ecsSerial || '-'}</span>
                         )}
+                      </td>
+                      <td className="p-4" data-testid={`text-part-${part.id}`}>
+                        {part.part || '-'}
                       </td>
                       <td className="p-4">
                         <div className="font-medium" data-testid={`text-ship-to-${part.id}`}>
@@ -381,9 +384,6 @@ export default function PartsList() {
                       </td>
                       <td className="p-4" data-testid={`text-customer-name-${part.id}`}>
                         {part.job?.customerName || '-'}
-                      </td>
-                      <td className="p-4" data-testid={`text-ecs-serial-${part.id}`}>
-                        {part.ecsSerial || '-'}
                       </td>
                       <td className="p-4" data-testid={`text-job-status-${part.id}`}>
                         {part.job ? <JobStatusBadge status={part.job.state} /> : '-'}
