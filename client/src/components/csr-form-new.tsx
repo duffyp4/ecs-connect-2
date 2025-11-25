@@ -272,7 +272,6 @@ export default function CSRForm() {
           <span className="hidden sm:inline">ECS Connect</span>
           <span className="sm:hidden">New Service Job</span>
         </h1>
-        <p className="text-sm sm:text-base text-muted-foreground">Complete all required fields to initiate a new service job</p>
       </div>
 
       {currentStep === 2 && (
