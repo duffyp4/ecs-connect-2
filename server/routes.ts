@@ -655,6 +655,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      // Validate that at least one part exists for this job
+      const jobParts = await storage.getJobParts(job.jobId);
+      if (!jobParts || jobParts.length === 0) {
+        return res.status(400).json({
+          message: "At least one part is required before checking in at shop. Please add parts to this job first."
+        });
+      }
+      
       // Update the job with all provided data FIRST (but don't change state yet)
       if (Object.keys(validationResult.data).length > 0) {
         await storage.updateJob(job.id, validationResult.data);
