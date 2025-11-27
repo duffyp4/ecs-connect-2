@@ -48,7 +48,6 @@ export default function CSRForm() {
       contactName: "",
       contactNumber: "",
       poNumber: "",
-      serialNumbers: "",
       techCustomerQuestionInquiry: "",
       shopHandoff: "",
       handoffEmailWorkflow: "",
@@ -470,34 +469,19 @@ export default function CSRForm() {
               </div>
 
               {/* Row 8 */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="serialNumbers"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Serial Number(s)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter Serial Numbers" {...field} value={field.value || ""} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="techHelper"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tech Customer Question Helper</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter Tech Helper Info" {...field} value={field.value || ""} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="techHelper"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tech Customer Question Helper</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter Tech Helper Info" {...field} value={field.value || ""} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               {/* Row 9 */}
               <div className="grid md:grid-cols-2 gap-4">
