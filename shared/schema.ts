@@ -356,25 +356,25 @@ export const jobParts = pgTable("job_parts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   jobId: varchar("job_id", { length: 50 }).notNull(), // ECS-formatted job ID
   
-  // Fields entered by CSR in ECS Connect (pre-dispatch)
-  part: text("part"), // Field ID: 736541826 (Form 5692831)
-  process: text("process"), // Field ID: 736541813 - Process Being Performed
-  ecsSerial: text("ecs_serial"), // Field ID: 736541819 - ECS Serial Number
-  filterPn: text("filter_pn"), // Field ID: 736541814 - Filter Part Number
-  poNumber: text("po_number"), // Field ID: 736541821 - PO Number
-  mileage: text("mileage"), // Field ID: 736541822 - Mileage
-  unitVin: text("unit_vin"), // Field ID: 736541823 - Unit / Vin Number
-  gasketClamps: text("gasket_clamps"), // Field ID: 736541877 - Gasket or Clamps
-  ec: text("ec"), // Field ID: 736541887 - EC
-  eg: text("eg"), // Field ID: 736541888 - EG
-  ek: text("ek"), // Field ID: 736541889 - EK
+  // Fields entered by CSR in ECS Connect (pre-dispatch) - Form 5695685
+  part: text("part"), // Field ID: 737545164
+  process: text("process"), // Field ID: 737545170 - Process Being Performed
+  ecsSerial: text("ecs_serial"), // Field ID: 737545295 - ECS Serial Number
+  filterPn: text("filter_pn"), // Field ID: 737545171 - Filter Part Number
+  poNumber: text("po_number"), // Field ID: 737545177 - PO Number
+  mileage: text("mileage"), // Field ID: 737545178 - Mileage
+  unitVin: text("unit_vin"), // Field ID: 737545179 - Unit / Vin Number
+  gasketClamps: text("gasket_clamps"), // Field ID: 737545232 - Gasket or Clamps
+  ec: text("ec"), // Field ID: 737545242 - EC
+  eg: text("eg"), // Field ID: 737545243 - EG
+  ek: text("ek"), // Field ID: 737545244 - EK
   
-  // Fields filled by technician in GoCanvas (post-dispatch, from submission webhook)
-  ecsPartNumber: text("ecs_part_number"), // Field ID: 736541815 - ECS Part Number
-  passOrFail: text("pass_or_fail"), // Field ID: 736541811 - Did the Part Pass or Fail?
-  requireRepairs: text("require_repairs"), // Field ID: 736541925 - Did the Part Require Repairs?
-  failedReason: text("failed_reason"), // Field ID: 736541928 - Failed Reason
-  repairsPerformed: text("repairs_performed"), // Field ID: 736541927 - Which Repairs Were Performed
+  // Fields filled by technician in GoCanvas (post-dispatch, from submission webhook) - Form 5695685
+  ecsPartNumber: text("ecs_part_number"), // Field ID: 737545172 - ECS Part Number
+  passOrFail: text("pass_or_fail"), // Field ID: 737545168 - Did the Part Pass or Fail?
+  requireRepairs: text("require_repairs"), // Field ID: 737545280 - Did the Part Require Repairs?
+  failedReason: text("failed_reason"), // Field ID: 737545283 - Failed Reason
+  repairsPerformed: text("repairs_performed"), // Field ID: 737545282 - Which Repairs Were Performed
   
   // ECS Internal Fields - Not synced with GoCanvas, editable at any time
   diagnosis: text("diagnosis"), // Internal diagnosis tracking
