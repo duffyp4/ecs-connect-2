@@ -40,7 +40,7 @@ const deliveryDispatchSchema = z.object({
   location: z.string().min(1, "Location is required"),
   customerName: z.string(),
   customerShipTo: z.string(),
-  orderNumber: z.string().optional(),
+  orderNumber: z.string().min(1, "Order number is required"),
   orderNumber2: z.string().optional(),
   orderNumber3: z.string().optional(),
   orderNumber4: z.string().optional(),
@@ -223,7 +223,7 @@ export function DeliveryDispatchModal({
                   name="orderNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Order Number</FormLabel>
+                      <FormLabel>Order Number *</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
