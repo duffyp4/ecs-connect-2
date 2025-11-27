@@ -13,6 +13,7 @@ import { List, Store, Package, Send, ChevronDown, Search, ArrowUpDown, Check } f
 import JobStatusBadge from "@/components/job-status-badge";
 import { CheckInModal } from "@/components/check-in-modal";
 import { DeliveryDispatchModal } from "@/components/delivery-dispatch-modal";
+import { ReadyForPickupModal } from "@/components/ready-for-pickup-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -66,6 +67,7 @@ export default function JobList() {
   const [pageSize, setPageSize] = useState<number>(25);
   const [checkInModalOpen, setCheckInModalOpen] = useState(false);
   const [deliveryDispatchModalOpen, setDeliveryDispatchModalOpen] = useState(false);
+  const [readyForPickupModalOpen, setReadyForPickupModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<any | null>(null);
   const { toast } = useToast();
   
@@ -259,11 +261,7 @@ export default function JobList() {
     } else if (action.id === 'dispatch-delivery') {
       setDeliveryDispatchModalOpen(true);
     } else if (action.id === 'ready-pickup') {
-      actionMutation.mutate({ 
-        jobId: job.jobId, 
-        action: 'mark-ready', 
-        data: { deliveryMethod: 'pickup' } 
-      });
+      setReadyForPickupModalOpen(true);
     } else if (action.id === 'mark-picked-up') {
       actionMutation.mutate({ 
         jobId: job.jobId, 
@@ -654,6 +652,17 @@ export default function JobList() {
             job={selectedJob}
             onSuccess={() => {
               setDeliveryDispatchModalOpen(false);
+              setSelectedJob(null);
+              queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
+              queryClient.invalidateQueries({ queryKey: ["/api/metrics"] });
+            }}
+          />
+          <ReadyForPickupModal
+            open={readyForPickupModalOpen}
+            onOpenChange={setReadyForPickupModalOpen}
+            job={selectedJob}
+            onSuccess={() => {
+              setReadyForPickupModalOpen(false);
               setSelectedJob(null);
               queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
               queryClient.invalidateQueries({ queryKey: ["/api/metrics"] });
