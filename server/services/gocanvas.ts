@@ -5,7 +5,7 @@ import { fieldMapper } from '@shared/fieldMapper';
 
 // GoCanvas Form IDs
 export const FORM_IDS = {
-  EMISSIONS: '5695669',      // Emissions Service Log (Nashville - remapped 2025-11-24 with ECS Serial as loop key)
+  EMISSIONS: '5695685',      // Emissions Service Log (Nashville - remapped 2025-11-27 with ECS Serial as loop key)
   PICKUP: '5640587',         // Pickup Log (updated with Contact Name, Contact Number, PO Number)
   DELIVERY: '5657146',       // Delivery Log (updated 2025-10-30 - changed Invoice to Order Number)
 } as const;
@@ -240,7 +240,7 @@ export class GoCanvasService {
       }
       
       // Check for specific field IDs known to cause issues
-      if (response.entry_id === 737072004) { // FORCE STOP field (Form 5695669)
+      if (response.entry_id === 737545296) { // FORCE STOP field (Form 5695685)
         triggers.push({
           entry_id: response.entry_id,
           value: response.value,
@@ -1318,7 +1318,7 @@ export class GoCanvasService {
         });
       } else {
         console.log('📍 "New GPS" field not found - checking by entry_id...');
-        const gpsById = targetSubmission.responses?.find((r: any) => r.entry_id === 737071868); // Form 5695669
+        const gpsById = targetSubmission.responses?.find((r: any) => r.entry_id === 737545160); // Form 5695685
         if (gpsById) {
           console.log(`📍 FOUND GPS BY ID: "${gpsById.label}" = "${gpsById.value}" (type: ${gpsById.type}, entry_id: ${gpsById.entry_id})`);
           handoffData.handoffFields.push({
@@ -1552,7 +1552,7 @@ export class GoCanvasService {
       console.log(`  - ${fieldName}: "${r.value}"`);
       
       // Special logging for PO Number
-      if (r.entry_id === 737071885) { // Form 5695669
+      if (r.entry_id === 737545177) { // Form 5695685
         console.log(`🔍 PO NUMBER DEBUGGING:`);
         console.log(`   Field ID: ${r.entry_id}`);
         console.log(`   Value: "${r.value}"`);
@@ -1567,23 +1567,23 @@ export class GoCanvasService {
     console.log(`🔧 Mapping ${parts.length} parts to loop screen responses...`);
     
     // Loop screen field IDs - matching actual Parts Log loop screen fields
-    // Based on gocanvas_field_map_5695669.json (Form 5695669 - Nashville, remapped 2025-11-24)
+    // Based on gocanvas_field_map_5695685.json (Form 5695685 - Nashville, remapped 2025-11-27)
     // ECS Serial Number is now the loop key field (multi_key)
     // CRITICAL: entry_id MUST be integers per GoCanvas API v3 spec!
     const PARTS_FIELD_IDS = {
-      part: 737071872,            // Part
-      process: 737071878,         // Process Being Performed
-      filterPn: 737071879,        // Filter Part Number
-      ecsPartNumber: 737071880,   // ECS Part Number
-      partDescription: 737071881, // Part Description
-      ecsSerial: 737072003,       // ECS Serial Number (now the loop key!)
-      poNumber: 737071885,        // PO Number
-      mileage: 737071886,         // Mileage
-      unitVin: 737071887,         // Unit / Vin Number
-      gasketClamps: 737071940,    // Gasket or Clamps
-      ec: 737071950,              // EC
-      eg: 737071951,              // EG
-      ek: 737071952,              // EK
+      part: 737545164,            // Part
+      process: 737545170,         // Process Being Performed
+      filterPn: 737545171,        // Filter Part Number
+      ecsPartNumber: 737545172,   // ECS Part Number
+      partDescription: 737545173, // Part Description
+      ecsSerial: 737545295,       // ECS Serial Number (now the loop key!)
+      poNumber: 737545177,        // PO Number
+      mileage: 737545178,         // Mileage
+      unitVin: 737545179,         // Unit / Vin Number
+      gasketClamps: 737545232,    // Gasket or Clamps
+      ec: 737545242,              // EC
+      eg: 737545243,              // EG
+      ek: 737545244,              // EK
     };
     
     const loopResponses: any[] = [];

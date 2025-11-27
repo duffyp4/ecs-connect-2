@@ -180,7 +180,7 @@ export async function handleAdditionalComments(
 ): Promise<void> {
   try {
     const additionalCommentsFields = responses.filter((r: any) => 
-      r.entry_id === 737072001 && r.value && r.value.trim() // "Additional Comments" (Form 5695669)
+      r.entry_id === 737545293 && r.value && r.value.trim() // "Additional Comments" (Form 5695685)
     );
     
     if (additionalCommentsFields.length === 0) {

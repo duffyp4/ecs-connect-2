@@ -38,8 +38,8 @@ export class FieldMapper {
   private initializeFieldMaps(): void {
     // Try to load all known field maps
     const formIds = [
-      '5695669', // Emissions Service Log (Nashville - remapped 2025-11-24 with ECS Serial as loop key)
-      '5692904', // Emissions Service Log (OLD - Nashville - remapped 2025-11-21)
+      '5695685', // Emissions Service Log (Nashville - remapped 2025-11-27 with ECS Serial as loop key)
+      '5695669', // Emissions Service Log (OLD - Nashville - remapped 2025-11-24)
       '5640587', // Pickup Log (updated with Contact Name, Contact Number, PO Number)
       '5657146', // Delivery Log (updated 2025-10-30 - changed Invoice to Order Number)
     ];
@@ -82,7 +82,7 @@ export class FieldMapper {
 
   private loadFieldMap(): FieldMap {
     // For backward compatibility - load default emissions form
-    const defaultFormId = process.env.GOCANVAS_FORM_ID || '5695669';
+    const defaultFormId = process.env.GOCANVAS_FORM_ID || '5695685';
     return this.loadFieldMapForForm(defaultFormId);
   }
 
@@ -282,7 +282,7 @@ export class FieldMapper {
     failedReason: number;
     repairsPerformed: number;
   } {
-    const targetFormId = formId || process.env.GOCANVAS_FORM_ID || '5695669';
+    const targetFormId = formId || process.env.GOCANVAS_FORM_ID || '5695685';
     
     // Define the exact field labels to look up
     const fieldLabels = {
