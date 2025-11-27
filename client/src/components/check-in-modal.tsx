@@ -78,7 +78,6 @@ export function CheckInModal({
       contactName: job.contactName || "",
       contactNumber: job.contactNumber || "",
       poNumber: job.poNumber || "",
-      serialNumbers: job.serialNumbers || "",
       techCustomerQuestionInquiry:
         job.techCustomerQuestionInquiry || "sales@ecspart.com",
       shopHandoff: job.shopHandoff || "",

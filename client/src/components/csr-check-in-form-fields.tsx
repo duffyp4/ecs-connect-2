@@ -735,50 +735,27 @@ export function CsrCheckInFormFields({
         />
       </div>
 
-      {/* PO and Serial Information */}
-      <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-4">
-        <FormField
-          control={form.control}
-          name="poNumber"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>PO Number *</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="Purchase order number" 
-                  {...field} 
-                  value={field.value || ""} 
-                  data-testid="input-po-number"
-                  disabled={isFieldDisabled('poNumber')}
-                  className={isFieldDisabled('poNumber') ? "bg-muted" : ""}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="serialNumbers"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Serial Number(s) *</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="Serial numbers" 
-                  {...field} 
-                  value={field.value || ""} 
-                  data-testid="input-serial-numbers"
-                  disabled={isFieldDisabled('serialNumbers')}
-                  className={isFieldDisabled('serialNumbers') ? "bg-muted" : ""}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
+      {/* PO Number */}
+      <FormField
+        control={form.control}
+        name="poNumber"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>PO Number *</FormLabel>
+            <FormControl>
+              <Input 
+                placeholder="Purchase order number" 
+                {...field} 
+                value={field.value || ""} 
+                data-testid="input-po-number"
+                disabled={isFieldDisabled('poNumber')}
+                className={isFieldDisabled('poNumber') ? "bg-muted" : ""}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
       {/* Tech Customer Question Inquiry - Pre-filled and read-only */}
       <FormField

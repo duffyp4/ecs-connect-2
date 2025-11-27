@@ -87,7 +87,6 @@ export function useCsrCheckInForm(options: UseCsrCheckInFormOptions = {}): CsrCh
       contactName: "",
       contactNumber: "",
       poNumber: "",
-      serialNumbers: "",
       techCustomerQuestionInquiry: "sales@ecspart.com",
       shopHandoff: "",
       handoffEmailWorkflow: "",

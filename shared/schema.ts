@@ -191,7 +191,7 @@ export const insertJobSchema = createInsertSchema(jobs).omit({
     { message: "Contact Number must be a valid 10-digit phone number" }
   ),
   poNumber: z.string().min(1, "PO Number is required"),
-  serialNumbers: z.string().min(1, "Serial Number(s) is required"),
+  serialNumbers: z.string().optional(),
   shopHandoff: z.string().min(1, "Shop Handoff is required"),
   userId: z.string().min(1, "User ID is required"),
   // Optional fields that can be empty
