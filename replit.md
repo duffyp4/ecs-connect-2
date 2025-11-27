@@ -44,7 +44,7 @@ The application uses a monorepo structure with `/client` (React frontend), `/ser
   7. AFTER check-in: Parts become read-only (already dispatched to technician)
   8. Webhook updates parts by matching ECS Serial Number from GoCanvas submissions (GoCanvas is source of truth)
 - **Validation**: Emissions dispatch will fail if parts exist but required fields are incomplete
-- **GoCanvas Integration**: Parts pre-populate loop screen in emissions form (ID: 5692831) using field IDs 736541826-736541927 with multi_key grouping
+- **GoCanvas Integration**: Parts pre-populate loop screen in emissions form (ID: 5695685) using dynamically mapped field IDs with multi_key grouping
 - **Edit States**: Parts editable when job state is `queued_for_pickup` or `picked_up` (BEFORE emissions dispatch)
 
 ### Diagnostic Infrastructure
