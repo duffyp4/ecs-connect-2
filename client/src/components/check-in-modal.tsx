@@ -90,6 +90,17 @@ export function CheckInModal({
     try {
       setIsSubmitting(true);
 
+      // Validate that at least one part exists
+      if (!existingParts || existingParts.length === 0) {
+        toast({
+          title: "Parts Required",
+          description: "At least one part is required before checking in at shop. Please add parts to this job first.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       // Validate using insertJobSchema (same as original CSR form)
       const result = insertJobSchema.safeParse(data);
 
@@ -178,7 +189,7 @@ export function CheckInModal({
               {/* Add/Manage Parts */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">
-                  Add parts to job (optional)
+                  Parts * <span className="text-muted-foreground font-normal">(at least one required)</span>
                 </label>
                 <div className="ml-4">
                   <Button
