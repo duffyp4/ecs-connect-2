@@ -109,6 +109,11 @@ export default function CSRForm() {
         setPickupFieldErrors({});
       }
       
+      // Step 1b: Validate parts for direct shop check-in
+      if (arrivalPath === 'direct' && localParts.length === 0) {
+        throw new Error("At least one part is required before checking in at shop. Please add parts to this job first.");
+      }
+      
       // Step 2: Create the job with arrivalPath (and pickup details for pickup jobs)
       const jobPayload = arrivalPath === 'pickup'
         ? { 
@@ -723,7 +728,9 @@ export default function CSRForm() {
               {/* Add Parts to Job */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">
-                  Add parts to job (optional)
+                  {arrivalPath === 'direct' 
+                    ? <>Parts * <span className="text-muted-foreground font-normal">(at least one required)</span></>
+                    : 'Add parts to job (optional)'}
                 </label>
                 <div className="ml-4">
                   <Button
