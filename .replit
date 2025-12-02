@@ -80,3 +80,10 @@ args = "npm run dev"
 waitForPort = 5000
 
 [agent]
+
+[userenv]
+
+[userenv.shared]
+GOCANVAS_FORM_ID_EMISSIONS = "5695685"
+GOCANVAS_FORM_ID_PICKUP = "5640587"
+GOCANVAS_FORM_ID_DELIVERY = "5657146"

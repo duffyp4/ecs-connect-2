@@ -3,11 +3,12 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { fieldMapper } from '@shared/fieldMapper';
 
-// GoCanvas Form IDs
+// GoCanvas Form IDs - loaded from environment variables for easy configuration
+// To update: Change values in the Secrets tab, then restart the server
 export const FORM_IDS = {
-  EMISSIONS: '5695685',      // Emissions Service Log (Nashville - remapped 2025-11-27 with ECS Serial as loop key)
-  PICKUP: '5640587',         // Pickup Log (updated with Contact Name, Contact Number, PO Number)
-  DELIVERY: '5657146',       // Delivery Log (updated 2025-10-30 - changed Invoice to Order Number)
+  EMISSIONS: process.env.GOCANVAS_FORM_ID_EMISSIONS || '5695685',
+  PICKUP: process.env.GOCANVAS_FORM_ID_PICKUP || '5640587',
+  DELIVERY: process.env.GOCANVAS_FORM_ID_DELIVERY || '5657146',
 } as const;
 
 export type FormType = keyof typeof FORM_IDS;
