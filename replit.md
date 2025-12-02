@@ -54,6 +54,11 @@ Diagnostic scripts in `/scripts/` assist with GoCanvas integration debugging.
 
 ### GoCanvas Integration
 - **API**: Basic Authentication for Forms, Submissions, and Reference Data APIs.
+- **Dynamic Field Mapping**: All field IDs are loaded dynamically from JSON files instead of hardcoded values. This enables form updates without code changes:
+  - Files: `gocanvas_field_map_emissions.json`, `gocanvas_field_map_pickup.json`, `gocanvas_field_map_delivery.json`
+  - FieldMapper singleton (`shared/fieldMapper.ts`) provides type-safe field ID lookups
+  - To regenerate mappings after GoCanvas form changes: `./update-gocanvas-mapping.sh <type> [form_id]`
+  - Example: `./update-gocanvas-mapping.sh emissions 5695685`
 - **Push Notifications**: XML-based submission notifications (API v2) with automatic job state transitions. Supports three notification modes:
   - `polling` (default): 30-second polling of GoCanvas API
   - `hybrid`: Both polling + webhooks for validation
