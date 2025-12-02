@@ -96,7 +96,7 @@ export class FieldMapper {
     }
 
     // Try to find in type-loaded maps
-    for (const [type, map] of this.fieldMapsByType.entries()) {
+    for (const [type, map] of Array.from(this.fieldMapsByType.entries())) {
       if (map.form_id === formId) {
         this.fieldMapsById.set(formId, map);
         return map;
@@ -351,7 +351,7 @@ export class FieldMapper {
   clearCacheForForm(formId: string): void {
     this.fieldMapsById.delete(formId);
     // Also clear from type cache if it matches
-    for (const [type, map] of this.fieldMapsByType.entries()) {
+    for (const [type, map] of Array.from(this.fieldMapsByType.entries())) {
       if (map.form_id === formId) {
         this.fieldMapsByType.delete(type);
         break;
@@ -387,6 +387,7 @@ export class FieldMapper {
     eg: number;
     ek: number;
     ecsPartNumber: number;
+    partDescription: number;
     passOrFail: number;
     requireRepairs: number;
     failedReason: number;
@@ -406,6 +407,7 @@ export class FieldMapper {
       eg: 'EG',
       ek: 'EK',
       ecsPartNumber: 'ECS Part Number',
+      partDescription: 'Part Description',
       passOrFail: 'Did the Part Pass or Fail?',
       requireRepairs: 'Did the Part Require Repairs?',
       failedReason: 'Failed Reason',

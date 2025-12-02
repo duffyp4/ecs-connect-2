@@ -1566,25 +1566,11 @@ export class GoCanvasService {
   private async mapPartsToLoopScreenResponses(parts: any[]): Promise<any[]> {
     console.log(`🔧 Mapping ${parts.length} parts to loop screen responses...`);
     
-    // Loop screen field IDs - matching actual Parts Log loop screen fields
-    // Based on gocanvas_field_map_5695685.json (Form 5695685 - Nashville, remapped 2025-11-27)
-    // ECS Serial Number is now the loop key field (multi_key)
+    // Dynamically load parts field IDs from the field mapping JSON
+    // This automatically updates when the form changes and field map is regenerated
     // CRITICAL: entry_id MUST be integers per GoCanvas API v3 spec!
-    const PARTS_FIELD_IDS = {
-      part: 737545164,            // Part
-      process: 737545170,         // Process Being Performed
-      filterPn: 737545171,        // Filter Part Number
-      ecsPartNumber: 737545172,   // ECS Part Number
-      partDescription: 737545173, // Part Description
-      ecsSerial: 737545295,       // ECS Serial Number (now the loop key!)
-      poNumber: 737545177,        // PO Number
-      mileage: 737545178,         // Mileage
-      unitVin: 737545179,         // Unit / Vin Number
-      gasketClamps: 737545232,    // Gasket or Clamps
-      ec: 737545242,              // EC
-      eg: 737545243,              // EG
-      ek: 737545244,              // EK
-    };
+    const PARTS_FIELD_IDS = fieldMapper.getPartsFieldIds('emissions');
+    console.log(`📋 Loaded ${Object.keys(PARTS_FIELD_IDS).length} parts field IDs from FieldMapper`);
     
     const loopResponses: any[] = [];
     
