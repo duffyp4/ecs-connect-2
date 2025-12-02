@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertJobSchema, pickupJobSchema } from "@shared/schema";
-import { goCanvasService } from "./services/gocanvas";
+import { goCanvasService, FORM_IDS } from "./services/gocanvas";
 import { googleSheetsService } from "./services/googleSheets";
 import { jobTrackerService } from "./services/jobTracker";
 import { referenceDataService } from "./services/referenceData";
@@ -1585,7 +1585,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         case 'queued_for_pickup':
           dispatchToCheck = job.pickupDispatchId;
           expectedTransition = 'picked_up';
-          formIdToCheck = process.env.GOCANVAS_PICKUP_FORM_ID || '5631022';
+          formIdToCheck = FORM_IDS.PICKUP;
           console.log(`   Looking for pickup completion (dispatch ${dispatchToCheck})`);
           break;
           
@@ -1594,7 +1594,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Check emissions dispatch (created during check-in)
           dispatchToCheck = job.gocanvasDispatchId;
           expectedTransition = 'in_service';
-          formIdToCheck = process.env.GOCANVAS_FORM_ID || '5692359';
+          formIdToCheck = FORM_IDS.EMISSIONS;
           console.log(`   Looking for emissions service completion (dispatch ${dispatchToCheck})`);
           break;
           
@@ -1603,7 +1603,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         case 'queued_for_delivery':
           dispatchToCheck = job.deliveryDispatchId;
           expectedTransition = 'delivered';
-          formIdToCheck = process.env.GOCANVAS_DELIVERY_FORM_ID || '5632656';
+          formIdToCheck = FORM_IDS.DELIVERY;
           console.log(`   Looking for delivery completion (dispatch ${dispatchToCheck})`);
           break;
           
@@ -1652,14 +1652,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           const submittedAt = submissionData.submitted_at ? new Date(submissionData.submitted_at) : new Date();
           
-          // Use fallback form IDs if env vars not set
-          const pickupFormId = process.env.GOCANVAS_PICKUP_FORM_ID || '5631022';
-          const emissionsFormId = process.env.GOCANVAS_FORM_ID || '5692359';
-          const deliveryFormId = process.env.GOCANVAS_DELIVERY_FORM_ID || '5632656';
+          // Form IDs loaded from environment variables via FORM_IDS constant
+          const pickupFormId = FORM_IDS.PICKUP;
+          const emissionsFormId = FORM_IDS.EMISSIONS;
+          const deliveryFormId = FORM_IDS.DELIVERY;
           
-          console.log(`   pickupFormId: ${pickupFormId} (env: ${process.env.GOCANVAS_PICKUP_FORM_ID || 'not set'})`);
-          console.log(`   emissionsFormId: ${emissionsFormId} (env: ${process.env.GOCANVAS_FORM_ID || 'not set'})`);
-          console.log(`   deliveryFormId: ${deliveryFormId} (env: ${process.env.GOCANVAS_DELIVERY_FORM_ID || 'not set'})`);
+          console.log(`   pickupFormId: ${pickupFormId}`);
+          console.log(`   emissionsFormId: ${emissionsFormId}`);
+          console.log(`   deliveryFormId: ${deliveryFormId}`);
           
           // Call the appropriate transition handler based on form type
           if (formIdToCheck === pickupFormId) {
@@ -1963,7 +1963,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const jobId = req.params.jobId;
       
       // Get all submissions for the form
-      const response = await fetch(`https://api.gocanvas.com/api/v3/submissions?form_id=${process.env.GOCANVAS_FORM_ID || '5628226'}`, {
+      const response = await fetch(`https://api.gocanvas.com/api/v3/submissions?form_id=${FORM_IDS.EMISSIONS}`, {
         headers: {
           'Authorization': `Basic ${Buffer.from(`${process.env.GOCANVAS_USERNAME}:${process.env.GOCANVAS_PASSWORD}`).toString('base64')}`,
           'Content-Type': 'application/json',
@@ -2083,7 +2083,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Test direct submissions access
   app.get("/api/gocanvas/submissions", async (req, res) => {
     try {
-      const formId = req.query.form_id || process.env.GOCANVAS_FORM_ID || '5628226';
+      const formId = req.query.form_id || FORM_IDS.EMISSIONS;
       console.log(`Testing submissions API for form: ${formId}`);
       const response = await fetch(`https://api.gocanvas.com/api/v3/submissions?form_id=${formId}`, {
         headers: {
