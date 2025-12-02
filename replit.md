@@ -54,6 +54,10 @@ Diagnostic scripts in `/scripts/` assist with GoCanvas integration debugging.
 
 ### GoCanvas Integration
 - **API**: Basic Authentication for Forms, Submissions, and Reference Data APIs.
+- **Form IDs**: Loaded from environment variables for easy configuration:
+  - `GOCANVAS_FORM_ID_EMISSIONS` - Emissions Service Log form (default: 5695685)
+  - `GOCANVAS_FORM_ID_PICKUP` - Pickup Log form (default: 5640587)
+  - `GOCANVAS_FORM_ID_DELIVERY` - Delivery Log form (default: 5657146)
 - **Dynamic Field Mapping**: All field IDs are loaded dynamically from JSON files instead of hardcoded values. This enables form updates without code changes:
   - Files: `gocanvas_field_map_emissions.json`, `gocanvas_field_map_pickup.json`, `gocanvas_field_map_delivery.json`
   - FieldMapper singleton (`shared/fieldMapper.ts`) provides type-safe field ID lookups
