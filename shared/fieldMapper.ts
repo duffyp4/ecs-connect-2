@@ -1,5 +1,6 @@
 // GoCanvas Field Mapping Utility
 // Dynamically reads field mappings from JSON file to eliminate hardcoded values
+// Uses form TYPE (emissions, pickup, delivery) instead of form ID for stable file names
 
 import { readFileSync } from 'fs';
 import { join } from 'path';
@@ -13,18 +14,22 @@ interface FieldEntry {
 
 interface FieldMap {
   form_id: string;
+  form_type?: string;
   version: number;
   updated_at: string;
   total_fields: number;
   entries: FieldEntry[];
 }
 
+// Valid form types
+export type FormType = 'emissions' | 'pickup' | 'delivery';
+
 export class FieldMapper {
   private static instance: FieldMapper;
-  private fieldMaps: Map<string, FieldMap> = new Map();
+  private fieldMapsByType: Map<FormType, FieldMap> = new Map();
+  private fieldMapsById: Map<string, FieldMap> = new Map();
 
   private constructor() {
-    // Initialize with known form IDs
     this.initializeFieldMaps();
   }
 
@@ -36,35 +41,30 @@ export class FieldMapper {
   }
 
   private initializeFieldMaps(): void {
-    // Try to load all known field maps
-    const formIds = [
-      '5695685', // Emissions Service Log (Nashville - remapped 2025-11-27 with ECS Serial as loop key)
-      '5695669', // Emissions Service Log (OLD - Nashville - remapped 2025-11-24)
-      '5640587', // Pickup Log (updated with Contact Name, Contact Number, PO Number)
-      '5657146', // Delivery Log (updated 2025-10-30 - changed Invoice to Order Number)
-    ];
+    // Load all form type mappings
+    const formTypes: FormType[] = ['emissions', 'pickup', 'delivery'];
 
-    formIds.forEach(formId => {
+    formTypes.forEach(formType => {
       try {
-        this.loadFieldMapForForm(formId);
+        this.loadFieldMapByType(formType);
       } catch (error) {
         // Silent fail - maps will be loaded on demand
       }
     });
   }
 
-  private getMapPath(formId: string): string {
-    return join(process.cwd(), `gocanvas_field_map_${formId}.json`);
+  private getMapPathByType(formType: FormType): string {
+    return join(process.cwd(), `gocanvas_field_map_${formType}.json`);
   }
 
-  private loadFieldMapForForm(formId: string): FieldMap {
+  private loadFieldMapByType(formType: FormType): FieldMap {
     // Check cache first
-    if (this.fieldMaps.has(formId)) {
-      return this.fieldMaps.get(formId)!;
+    if (this.fieldMapsByType.has(formType)) {
+      return this.fieldMapsByType.get(formType)!;
     }
 
     try {
-      const mapPath = this.getMapPath(formId);
+      const mapPath = this.getMapPathByType(formType);
       const mapData = readFileSync(mapPath, 'utf8');
       const fieldMap: FieldMap = JSON.parse(mapData);
       
@@ -72,22 +72,65 @@ export class FieldMapper {
         throw new Error('Invalid field map structure');
       }
       
-      // Cache the map
-      this.fieldMaps.set(formId, fieldMap);
+      // Cache by type and by ID
+      this.fieldMapsByType.set(formType, fieldMap);
+      this.fieldMapsById.set(fieldMap.form_id, fieldMap);
+      
       return fieldMap;
     } catch (error) {
-      throw new Error(`Field mapping file not found for form ${formId}. Run field mapping update script for this form.`);
+      throw new Error(
+        `Field mapping file not found for form type "${formType}". ` +
+        `Run: node scripts/buildFieldMap.js ${formType} <form_id>`
+      );
     }
   }
 
-  private loadFieldMap(): FieldMap {
-    // For backward compatibility - load default emissions form
-    const defaultFormId = process.env.GOCANVAS_FORM_ID || '5695685';
-    return this.loadFieldMapForForm(defaultFormId);
+  /**
+   * Load field map by form ID (for backward compatibility)
+   * First checks if already cached, then searches loaded type maps
+   */
+  private loadFieldMapForForm(formId: string): FieldMap {
+    // Check ID cache first
+    if (this.fieldMapsById.has(formId)) {
+      return this.fieldMapsById.get(formId)!;
+    }
+
+    // Try to find in type-loaded maps
+    for (const [type, map] of this.fieldMapsByType.entries()) {
+      if (map.form_id === formId) {
+        this.fieldMapsById.set(formId, map);
+        return map;
+      }
+    }
+
+    // Load all types and try again
+    const formTypes: FormType[] = ['emissions', 'pickup', 'delivery'];
+    for (const formType of formTypes) {
+      try {
+        const map = this.loadFieldMapByType(formType);
+        if (map.form_id === formId) {
+          return map;
+        }
+      } catch {
+        // Continue to next type
+      }
+    }
+
+    throw new Error(
+      `Field mapping not found for form ID ${formId}. ` +
+      `Ensure the form type JSON file contains this form ID.`
+    );
   }
 
   /**
-   * Get the current GoCanvas form ID from the field mapping (backward compatible)
+   * Get the emissions form field map (default)
+   */
+  private loadFieldMap(): FieldMap {
+    return this.loadFieldMapByType('emissions');
+  }
+
+  /**
+   * Get the current GoCanvas form ID for emissions form (backward compatible)
    */
   getFormId(): string {
     const map = this.loadFieldMap();
@@ -95,7 +138,15 @@ export class FieldMapper {
   }
 
   /**
-   * Get field ID by exact label match (backward compatible - uses default form)
+   * Get form ID by type
+   */
+  getFormIdByType(formType: FormType): string {
+    const map = this.loadFieldMapByType(formType);
+    return map.form_id;
+  }
+
+  /**
+   * Get field ID by exact label match (backward compatible - uses emissions form)
    */
   getFieldId(label: string): number | null {
     const map = this.loadFieldMap();
@@ -104,7 +155,16 @@ export class FieldMapper {
   }
 
   /**
-   * Get field ID by exact label match for specific form
+   * Get field ID by exact label match for specific form type
+   */
+  getFieldIdByType(formType: FormType, label: string): number | null {
+    const map = this.loadFieldMapByType(formType);
+    const field = map.entries.find(entry => entry.label === label);
+    return field ? field.id : null;
+  }
+
+  /**
+   * Get field ID by exact label match for specific form ID (backward compatible)
    */
   getFieldIdForForm(formId: string, label: string): number | null {
     const map = this.loadFieldMapForForm(formId);
@@ -113,7 +173,19 @@ export class FieldMapper {
   }
 
   /**
-   * Get field ID by partial label match (case-insensitive) for specific form
+   * Get field ID by partial label match (case-insensitive) for specific form type
+   */
+  getFieldIdByPartialLabelForType(formType: FormType, partialLabel: string): number | null {
+    const map = this.loadFieldMapByType(formType);
+    const normalizedSearch = partialLabel.toLowerCase();
+    const field = map.entries.find(entry => 
+      entry.label.toLowerCase().includes(normalizedSearch)
+    );
+    return field ? field.id : null;
+  }
+
+  /**
+   * Get field ID by partial label match (case-insensitive) for specific form ID
    */
   getFieldIdByPartialLabelForForm(formId: string, partialLabel: string): number | null {
     const map = this.loadFieldMapForForm(formId);
@@ -148,7 +220,18 @@ export class FieldMapper {
   }
 
   /**
-   * Get multiple field IDs by labels for specific form
+   * Get multiple field IDs by labels for specific form type
+   */
+  getFieldIdsByType(formType: FormType, labels: string[]): Record<string, number | null> {
+    const result: Record<string, number | null> = {};
+    labels.forEach(label => {
+      result[label] = this.getFieldIdByType(formType, label);
+    });
+    return result;
+  }
+
+  /**
+   * Get multiple field IDs by labels for specific form ID (backward compatible)
    */
   getFieldIdsForForm(formId: string, labels: string[]): Record<string, number | null> {
     const result: Record<string, number | null> = {};
@@ -167,7 +250,15 @@ export class FieldMapper {
   }
 
   /**
-   * Get all required fields for specific form
+   * Get all required fields for specific form type
+   */
+  getRequiredFieldsByType(formType: FormType): FieldEntry[] {
+    const map = this.loadFieldMapByType(formType);
+    return map.entries.filter(entry => entry.required);
+  }
+
+  /**
+   * Get all required fields for specific form ID
    */
   getRequiredFieldsForForm(formId: string): FieldEntry[] {
     const map = this.loadFieldMapForForm(formId);
@@ -183,7 +274,15 @@ export class FieldMapper {
   }
 
   /**
-   * Get all field entries for specific form
+   * Get all field entries for specific form type
+   */
+  getAllFieldsByType(formType: FormType): FieldEntry[] {
+    const map = this.loadFieldMapByType(formType);
+    return map.entries;
+  }
+
+  /**
+   * Get all field entries for specific form ID
    */
   getAllFieldsForForm(formId: string): FieldEntry[] {
     const map = this.loadFieldMapForForm(formId);
@@ -194,30 +293,22 @@ export class FieldMapper {
    * Get all loaded form IDs
    */
   getLoadedFormIds(): string[] {
-    return Array.from(this.fieldMaps.keys());
+    return Array.from(this.fieldMapsById.keys());
   }
 
   /**
-   * Validate that field mapping is up to date with environment
+   * Get all loaded form types
+   */
+  getLoadedFormTypes(): FormType[] {
+    return Array.from(this.fieldMapsByType.keys());
+  }
+
+  /**
+   * Validate that emissions field mapping is loaded and current
    */
   validateMapping(): { valid: boolean; message: string } {
     try {
       const map = this.loadFieldMap();
-      const envFormId = process.env.GOCANVAS_FORM_ID;
-      
-      if (!envFormId) {
-        return {
-          valid: false,
-          message: 'GOCANVAS_FORM_ID environment variable not set'
-        };
-      }
-      
-      if (map.form_id !== envFormId) {
-        return {
-          valid: false,
-          message: `Field mapping (${map.form_id}) doesn't match environment (${envFormId}). Run: npm run update-field-mapping`
-        };
-      }
       
       // Check if mapping is older than 30 days
       const mapDate = new Date(map.updated_at);
@@ -244,27 +335,46 @@ export class FieldMapper {
   }
 
   /**
-   * Clear cached mapping for specific form
+   * Clear cached mapping for specific form type
+   */
+  clearCacheForType(formType: FormType): void {
+    const map = this.fieldMapsByType.get(formType);
+    if (map) {
+      this.fieldMapsById.delete(map.form_id);
+    }
+    this.fieldMapsByType.delete(formType);
+  }
+
+  /**
+   * Clear cached mapping for specific form ID
    */
   clearCacheForForm(formId: string): void {
-    this.fieldMaps.delete(formId);
+    this.fieldMapsById.delete(formId);
+    // Also clear from type cache if it matches
+    for (const [type, map] of this.fieldMapsByType.entries()) {
+      if (map.form_id === formId) {
+        this.fieldMapsByType.delete(type);
+        break;
+      }
+    }
   }
 
   /**
    * Clear all cached mappings (useful for testing or after updates)
    */
   clearCache(): void {
-    this.fieldMaps.clear();
+    this.fieldMapsByType.clear();
+    this.fieldMapsById.clear();
   }
 
   /**
    * Get all parts-related field IDs for the emissions form
    * This eliminates the need to hard-code field IDs in parts extraction logic
-   * @param formId - The GoCanvas form ID (defaults to emissions form from env)
+   * @param formType - The form type (defaults to 'emissions')
    * @returns Object containing all parts field IDs mapped by their logical names
    * @throws Error if any required field is not found in the field map
    */
-  getPartsFieldIds(formId?: string): {
+  getPartsFieldIds(formType: FormType = 'emissions'): {
     part: number;
     process: number;
     filterPn: number;
@@ -282,8 +392,6 @@ export class FieldMapper {
     failedReason: number;
     repairsPerformed: number;
   } {
-    const targetFormId = formId || process.env.GOCANVAS_FORM_ID || '5695685';
-    
     // Define the exact field labels to look up
     const fieldLabels = {
       part: 'Part',
@@ -309,7 +417,7 @@ export class FieldMapper {
 
     // Look up each field ID by its label
     for (const [key, label] of Object.entries(fieldLabels)) {
-      const fieldId = this.getFieldIdForForm(targetFormId, label);
+      const fieldId = this.getFieldIdByType(formType, label);
       if (fieldId === null) {
         missingFields.push(label);
       } else {
@@ -319,8 +427,8 @@ export class FieldMapper {
 
     if (missingFields.length > 0) {
       throw new Error(
-        `Parts field mapping incomplete for form ${targetFormId}. Missing fields: ${missingFields.join(', ')}. ` +
-        `Run field mapping update script for this form.`
+        `Parts field mapping incomplete for form type "${formType}". Missing fields: ${missingFields.join(', ')}. ` +
+        `Run: node scripts/buildFieldMap.js ${formType} <form_id>`
       );
     }
 

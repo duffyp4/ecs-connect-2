@@ -1,12 +1,22 @@
 #!/usr/bin/env node
 
 // Script to build GoCanvas field mapping from form definition
-// Usage: node scripts/buildFieldMap.js
+// Usage: node scripts/buildFieldMap.js <form_type> [form_id]
+// Examples:
+//   node scripts/buildFieldMap.js emissions 5695685
+//   node scripts/buildFieldMap.js pickup 5640587
+//   node scripts/buildFieldMap.js delivery 5657146
 
 import { writeFileSync } from 'fs';
 
 const BASE_URL = "https://api.gocanvas.com/api/v3";
-const FORM_ID = process.argv[2] || process.env.GOCANVAS_FORM_ID;
+
+// Valid form types
+const VALID_FORM_TYPES = ['emissions', 'pickup', 'delivery'];
+
+// Parse command line arguments
+const FORM_TYPE = process.argv[2];
+const FORM_ID = process.argv[3] || process.env.GOCANVAS_FORM_ID;
 const USERNAME = process.env.GOCANVAS_USERNAME;
 const PASSWORD = process.env.GOCANVAS_PASSWORD;
 
@@ -18,14 +28,26 @@ if (!USERNAME || !PASSWORD) {
   process.exit(1);
 }
 
+if (!FORM_TYPE || !VALID_FORM_TYPES.includes(FORM_TYPE)) {
+  console.error('❌ Invalid or missing form type');
+  console.error('Usage: node scripts/buildFieldMap.js <form_type> [form_id]');
+  console.error('Valid form types: emissions, pickup, delivery');
+  console.error('Examples:');
+  console.error('  node scripts/buildFieldMap.js emissions 5695685');
+  console.error('  node scripts/buildFieldMap.js pickup 5640587');
+  console.error('  node scripts/buildFieldMap.js delivery 5657146');
+  process.exit(1);
+}
+
 if (!FORM_ID) {
-  console.error('❌ Missing GOCANVAS_FORM_ID environment variable');
-  console.error('Please set GOCANVAS_FORM_ID and try again.');
-  console.error('Example: export GOCANVAS_FORM_ID=5594156');
+  console.error('❌ Missing form ID');
+  console.error('Please provide form ID as second argument or set GOCANVAS_FORM_ID');
+  console.error('Example: node scripts/buildFieldMap.js emissions 5695685');
   process.exit(1);
 }
 
 console.log('🚀 Starting GoCanvas field mapping update...');
+console.log(`📋 Form Type: ${FORM_TYPE}`);
 console.log(`📋 Form ID: ${FORM_ID}`);
 console.log(`👤 Username: ${USERNAME}`);
 
@@ -164,6 +186,7 @@ function buildFieldMap(fields, formData) {
 
   const fieldMap = {
     form_id: FORM_ID,
+    form_type: FORM_TYPE,
     version: formData.version || formData.form_version || 'unknown',
     updated_at: new Date().toISOString(),
     total_fields: entries.length,
@@ -182,12 +205,14 @@ async function main() {
     const fields = extractFieldsFromResponse(data, format);
     const fieldMap = buildFieldMap(fields, data);
 
-    // Save the field map
-    const outputPath = './gocanvas_field_map.json';
+    // Save the field map with form type name (overwrites existing)
+    const outputPath = `./gocanvas_field_map_${FORM_TYPE}.json`;
     writeFileSync(outputPath, JSON.stringify(fieldMap, null, 2));
     
     console.log(`✅ Success! Saved field map to ${outputPath}`);
     console.log(`📊 Found ${fieldMap.total_fields} fields`);
+    console.log(`📋 Form ID: ${fieldMap.form_id}`);
+    console.log(`📋 Form Type: ${fieldMap.form_type}`);
     console.log(`📋 Form version: ${fieldMap.version}`);
     
     // Display some sample mappings
