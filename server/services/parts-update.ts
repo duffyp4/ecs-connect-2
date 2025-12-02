@@ -179,8 +179,15 @@ export async function handleAdditionalComments(
   storage: IStorage
 ): Promise<void> {
   try {
+    // Dynamically look up the Additional Comments field ID from the field mapping
+    const additionalCommentsFieldId = fieldMapper.getFieldIdByType('emissions', 'Additional Comments');
+    if (!additionalCommentsFieldId) {
+      console.warn('Additional Comments field not found in field mapping - skipping comments extraction');
+      return;
+    }
+    
     const additionalCommentsFields = responses.filter((r: any) => 
-      r.entry_id === 737545293 && r.value && r.value.trim() // "Additional Comments" (Form 5695685)
+      r.entry_id === additionalCommentsFieldId && r.value && r.value.trim()
     );
     
     if (additionalCommentsFields.length === 0) {
