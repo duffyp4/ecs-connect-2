@@ -16,6 +16,10 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
+localPort = 35595
+externalPort = 8008
+
+[[ports]]
 localPort = 36633
 externalPort = 6800
 
@@ -84,6 +88,6 @@ waitForPort = 5000
 [userenv]
 
 [userenv.shared]
-GOCANVAS_FORM_ID_EMISSIONS = "5700493"
+GOCANVAS_FORM_ID_EMISSIONS = "5701663"
 GOCANVAS_FORM_ID_PICKUP = "5640587"
 GOCANVAS_FORM_ID_DELIVERY = "5657146"
