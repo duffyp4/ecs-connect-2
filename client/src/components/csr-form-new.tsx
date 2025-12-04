@@ -827,54 +827,46 @@ export default function CSRForm() {
                                   variant="outline"
                                   role="combobox"
                                   aria-expanded={shipmentCarrierOpen}
-                                  className="w-full justify-between font-normal"
+                                  className="w-full justify-between"
                                   data-testid="combobox-shipment-carrier"
                                 >
                                   {shipmentCarrier || "Select or type carrier..."}
                                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                 </Button>
                               </PopoverTrigger>
-                              <PopoverContent className="w-full p-0" align="start">
-                                <Command>
-                                  <CommandInput 
-                                    placeholder="Search or type carrier..." 
-                                    value={shipmentCarrierSearch}
-                                    onValueChange={setShipmentCarrierSearch}
-                                    data-testid="input-carrier-search"
-                                  />
+                              <PopoverContent className="w-[400px] p-0">
+                                <Command shouldFilter={false}>
+                                  <div className="flex items-center border-b px-3">
+                                    <Truck className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                                    <Input
+                                      placeholder="Search carriers or enter custom carrier..."
+                                      value={shipmentCarrier}
+                                      onChange={(e) => setShipmentCarrier(e.target.value)}
+                                      className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                      data-testid="input-carrier-search"
+                                    />
+                                  </div>
                                   <CommandList>
-                                    <CommandEmpty>
-                                      {shipmentCarrierSearch ? (
-                                        <CommandItem
-                                          onSelect={() => {
-                                            setShipmentCarrier(shipmentCarrierSearch);
-                                            setShipmentCarrierOpen(false);
-                                            setShipmentCarrierSearch("");
-                                          }}
-                                          className="cursor-pointer"
-                                        >
-                                          Use "{shipmentCarrierSearch}"
-                                        </CommandItem>
-                                      ) : (
-                                        "Type a carrier name..."
-                                      )}
-                                    </CommandEmpty>
-                                    <CommandGroup>
-                                      {["USPS", "UPS", "FedEx", "DHL"].map((carrier) => (
-                                        <CommandItem
-                                          key={carrier}
-                                          value={carrier}
-                                          onSelect={() => {
-                                            setShipmentCarrier(carrier);
-                                            setShipmentCarrierOpen(false);
-                                            setShipmentCarrierSearch("");
-                                          }}
-                                          data-testid={`option-carrier-${carrier}`}
-                                        >
-                                          <Check className={cn("mr-2 h-4 w-4", shipmentCarrier === carrier ? "opacity-100" : "opacity-0")} />
-                                          {carrier}
-                                        </CommandItem>
-                                      ))}
+                                    <CommandGroup heading="Common Carriers">
+                                      {["USPS", "UPS", "FedEx", "DHL"]
+                                        .filter(carrier => 
+                                          !shipmentCarrier || 
+                                          carrier.toLowerCase().includes(shipmentCarrier.toLowerCase())
+                                        )
+                                        .map((carrier) => (
+                                          <CommandItem
+                                            key={carrier}
+                                            value={carrier}
+                                            onSelect={() => {
+                                              setShipmentCarrier(carrier);
+                                              setShipmentCarrierOpen(false);
+                                            }}
+                                            data-testid={`option-carrier-${carrier}`}
+                                          >
+                                            <Check className={cn("mr-2 h-4 w-4", shipmentCarrier === carrier ? "opacity-100" : "opacity-0")} />
+                                            {carrier}
+                                          </CommandItem>
+                                        ))}
                                     </CommandGroup>
                                   </CommandList>
                                 </Command>
