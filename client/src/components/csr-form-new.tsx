@@ -403,6 +403,9 @@ export default function CSRForm() {
                         <p className="text-sm text-muted-foreground">
                           Customer is shipping items to the shop via carrier
                         </p>
+                        <p className="text-xs text-muted-foreground mt-1 italic">
+                          Not connected to GoCanvas
+                        </p>
                       </div>
                     </CardContent>
                   </Card>
