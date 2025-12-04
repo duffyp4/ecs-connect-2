@@ -17,7 +17,7 @@ The application uses a monorepo structure with `/client` (React frontend), `/ser
 - **Database**: PostgreSQL (Neon serverless) with Drizzle ORM.
 
 ### Key Components
-- **Frontend**: Component-based React application supporting a two-path job creation UI ("Direct Shop Check-in" vs "Dispatch Pickup") with conditional fields and validation. It features a Job Detail Page with an Event Timeline and state-specific action buttons for managing the 7-state job lifecycle. Form logic is unified across job creation and check-in via a shared hook (`useCsrCheckInForm`) and a shared form fields component (`CsrCheckInFormFields`) to ensure consistency and reduce duplication.
+- **Frontend**: Component-based React application supporting a three-path job creation UI ("Direct Shop Check-in" vs "Dispatch Pickup" vs "Direct Delivery") with conditional fields and validation. It features a Job Detail Page with an Event Timeline and state-specific action buttons for managing the 7-state job lifecycle. Form logic is unified across job creation and check-in via a shared hook (`useCsrCheckInForm`) and a shared form fields component (`CsrCheckInFormFields`) to ensure consistency and reduce duplication.
 - **Backend**: REST API with Express.js, custom middleware, Drizzle ORM. Includes services for GoCanvas integration, reference data, job tracking, Google Sheets sync, timezone handling, and webhooks. Job completion detection uses configurable modes (polling/hybrid/push) with 30-second polling as default.
 - **Database Schema**: PostgreSQL with `Jobs` (core job tracking), `Technicians`, `ReferenceDataEntries`, `JobEvents`, `Users`, `Sessions`, and `Whitelist`. The `JobEvents` table uses ECS-formatted job IDs exclusively (foreign key to `jobs.job_id`) for consistent event tracking across the system. The `Users` table stores user profiles with role-based permissions. The `Whitelist` table controls application access by approved email addresses.
 - **Job Events Service**: Manages a 7-state job lifecycle (queued_for_pickup → picked_up → at_shop → in_service → ready_for_pickup/delivery → queued_for_delivery → delivered) with state-specific timestamps. All job events are stored using ECS-formatted job IDs (e.g., `ECS-20251001220953-3011`) for consistency with user-facing APIs and external integrations.
@@ -46,6 +46,20 @@ The application uses a monorepo structure with `/client` (React frontend), `/ser
 - **Validation**: Emissions dispatch will fail if parts exist but required fields are incomplete
 - **GoCanvas Integration**: Parts pre-populate loop screen in emissions form (ID: 5695685) using dynamically mapped field IDs with multi_key grouping
 - **Edit States**: Parts editable when job state is `queued_for_pickup` or `picked_up` (BEFORE emissions dispatch)
+
+### Direct Delivery Workflow
+- **Purpose**: Enables CSRs to ship inventory parts directly to customers without going through the service workflow
+- **Use Case**: For customers who just need parts delivered (no emissions testing or service required)
+- **State Machine**: Jobs created via Direct Delivery start in `queued_for_delivery` state, skipping the entire pickup/service flow
+- **Workflow**:
+  1. CSR selects "Direct Delivery" option on the New Job form (Step 1 path selection)
+  2. Modal opens with: Location dropdown, Customer Name combobox, Ship-To combobox, Driver selection, Order numbers, Delivery notes
+  3. Job ID is auto-generated using ECS format (e.g., `ECS-20251204195000-3011`)
+  4. On submission: Job is created with `queued_for_delivery` state → Delivery is immediately dispatched to selected driver via GoCanvas
+  5. Driver receives the Delivery Log in GoCanvas app and delivers parts to customer
+  6. When driver completes delivery form, webhook updates job state to `delivered`
+- **API Endpoint**: `POST /api/jobs/direct-delivery` creates job and dispatches delivery in one atomic operation
+- **Component**: `DeliveryDispatchModal` supports dual modes (`existing` for regular jobs, `new` for Direct Delivery)
 
 ### Diagnostic Infrastructure
 Diagnostic scripts in `/scripts/` assist with GoCanvas integration debugging.
