@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { format, parseISO } from "date-fns";
-import { formatInTimeZone } from "date-fns-tz";
+import { format, parseISO, startOfDay } from "date-fns";
+import { formatInTimeZone, toZonedTime } from "date-fns-tz";
 
 export function useTimezone() {
   const { data: user } = useQuery<any>({
@@ -33,11 +33,18 @@ export function useTimezone() {
     return formatDateTime(dateString, 'MMMM d, yyyy h:mm:ss a');
   };
 
+  const getTodayInTimezone = () => {
+    const now = new Date();
+    const zonedNow = toZonedTime(now, timezone);
+    return startOfDay(zonedNow);
+  };
+
   return {
     timezone,
     formatDateTime,
     formatDate,
     formatTime,
     formatDateTimeLong,
+    getTodayInTimezone,
   };
 }

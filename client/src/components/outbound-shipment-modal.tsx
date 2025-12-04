@@ -5,6 +5,7 @@ import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocations } from "@/hooks/use-reference-data";
+import { useTimezone } from "@/hooks/useTimezone";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -68,6 +69,8 @@ export function OutboundShipmentModal({
   const [expectedArrivalOpen, setExpectedArrivalOpen] = useState(false);
   
   const { data: locations = [], isLoading: isLoadingLocations } = useLocations();
+  const { getTodayInTimezone } = useTimezone();
+  const today = getTodayInTimezone();
 
   const form = useForm<OutboundShipmentFormData>({
     resolver: zodResolver(outboundShipmentSchema),
@@ -424,6 +427,7 @@ export function OutboundShipmentModal({
                               field.onChange(date);
                               setExpectedArrivalOpen(false);
                             }}
+                            disabled={(date) => date < today}
                             initialFocus
                           />
                         </PopoverContent>

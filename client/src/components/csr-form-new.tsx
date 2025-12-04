@@ -5,6 +5,7 @@ import { type LocalPart } from "@/components/parts-management-modal";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useCsrCheckInForm } from "@/hooks/use-csr-check-in-form";
+import { useTimezone } from "@/hooks/useTimezone";
 import { useLocations } from "@/hooks/use-reference-data";
 import { CsrCheckInFormFields } from "@/components/csr-check-in-form-fields";
 import { PartsManagementModal } from "@/components/parts-management-modal";
@@ -75,6 +76,10 @@ export default function CSRForm() {
   
   // Locations is still needed separately for this form
   const { data: locations = [], isLoading: isLoadingLocations } = useLocations();
+  
+  // Timezone for date picker
+  const { getTodayInTimezone } = useTimezone();
+  const today = getTodayInTimezone();
   
   // Map drivers for the driver select dropdown
   const drivers = driverDetails.map(d => d.name);
@@ -929,6 +934,7 @@ export default function CSRForm() {
                                     setShipmentExpectedArrival(date);
                                     setShipmentExpectedArrivalOpen(false);
                                   }}
+                                  disabled={(date) => date < today}
                                   initialFocus
                                 />
                               </PopoverContent>
