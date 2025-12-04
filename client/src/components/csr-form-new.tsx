@@ -333,16 +333,38 @@ export default function CSRForm() {
   }, []);
 
   const onSubmit = async (data: FormData) => {
+    // For pickup and shipment paths, merge local state fields before validation
+    // These fields are not controlled by react-hook-form
+    let dataToValidate = data;
+    if (arrivalPath === 'pickup' || arrivalPath === 'shipment') {
+      dataToValidate = {
+        ...data,
+        contactName: pickupContactName,
+        contactNumber: pickupContactNumber,
+      };
+    }
+    
     // Validate using the appropriate schema
     const schema = arrivalPath === 'pickup' ? pickupJobSchema : insertJobSchema;
-    const result = schema.safeParse(data);
+    const result = schema.safeParse(dataToValidate);
     
     if (!result.success) {
       // Show validation errors
       const errors = result.error.flatten().fieldErrors;
+      console.log("Validation errors:", errors);
       Object.entries(errors).forEach(([field, messages]) => {
         if (messages && messages.length > 0) {
-          form.setError(field as any, { message: messages[0] });
+          // For pickup/shipment fields that are in local state, show toast instead of form error
+          if ((arrivalPath === 'pickup' || arrivalPath === 'shipment') && 
+              (field === 'contactName' || field === 'contactNumber')) {
+            toast({
+              title: "Validation Error",
+              description: messages[0],
+              variant: "destructive",
+            });
+          } else {
+            form.setError(field as any, { message: messages[0] });
+          }
         }
       });
       return;
