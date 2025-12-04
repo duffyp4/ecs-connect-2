@@ -895,7 +895,7 @@ export default function CSRForm() {
 
                           {/* Tracking Number */}
                           <div>
-                            <label className="block text-sm font-medium mb-2">Tracking Number (Optional)</label>
+                            <label className="block text-sm font-medium mb-2">Tracking # / PRO # (Optional)</label>
                             <Input
                               placeholder="Enter tracking number"
                               value={shipmentTrackingNumber}

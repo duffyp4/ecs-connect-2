@@ -380,7 +380,7 @@ export function OutboundShipmentModal({
                   name="trackingNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tracking Number *</FormLabel>
+                      <FormLabel>Tracking # / PRO # *</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
