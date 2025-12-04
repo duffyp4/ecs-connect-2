@@ -17,7 +17,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ClipboardList, Send, X, Info, Clock, Database, Check, ChevronsUpDown, Truck, Store, ArrowLeft, Settings, Plus } from "lucide-react";
+import { ClipboardList, Send, X, Info, Clock, Database, Check, ChevronsUpDown, Truck, Store, ArrowLeft, Settings, Plus, Package } from "lucide-react";
+import { DeliveryDispatchModal } from "@/components/delivery-dispatch-modal";
 import { cn } from "@/lib/utils";
 import type { z } from "zod";
 
@@ -30,8 +31,9 @@ export default function CSRForm() {
   const [currentTimestamp, setCurrentTimestamp] = useState<string>("");
   const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
   const [shipToSearchOpen, setShipToSearchOpen] = useState(false);
-  const [arrivalPath, setArrivalPath] = useState<'pickup' | 'direct'>('direct');
+  const [arrivalPath, setArrivalPath] = useState<'pickup' | 'direct' | 'delivery'>('direct');
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
+  const [showDeliveryModal, setShowDeliveryModal] = useState(false);
 
   // Fetch technicians
   const { data: technicians = [] } = useQuery<any[]>({
@@ -308,7 +310,7 @@ export default function CSRForm() {
                 <h3 className="text-xl font-semibold">How will items arrive at the shop?</h3>
               </div>
               
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid md:grid-cols-3 gap-6">
                 {/* Direct Shop Check-in Card */}
                 <Card 
                   className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] border-2 hover:border-[var(--ecs-primary)]"
@@ -352,6 +354,30 @@ export default function CSRForm() {
                       <h4 className="text-lg font-semibold mb-2">Dispatch Pickup</h4>
                       <p className="text-sm text-muted-foreground">
                         Send a driver to pick up items from customer location
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Direct Delivery Card */}
+                <Card 
+                  className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] border-2 hover:border-[var(--ecs-primary)]"
+                  onClick={() => {
+                    setArrivalPath('delivery');
+                    setShowDeliveryModal(true);
+                  }}
+                  data-testid="card-arrival-delivery"
+                >
+                  <CardContent className="pt-6 pb-6 text-center space-y-4">
+                    <div className="flex justify-center">
+                      <div className="p-4 bg-[var(--ecs-primary)]/10 rounded-full">
+                        <Package className="h-10 w-10 text-[var(--ecs-primary)]" />
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold mb-2">Direct Delivery</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Ship inventory parts directly to customer without service
                       </p>
                     </div>
                   </CardContent>
@@ -791,6 +817,26 @@ export default function CSRForm() {
         onLocalPartsChange={setLocalParts}
         openInAddMode={localParts.length === 0}
         shopName={form.watch("shopName")}
+      />
+
+      {/* Direct Delivery Modal */}
+      <DeliveryDispatchModal
+        open={showDeliveryModal}
+        onOpenChange={(open) => {
+          setShowDeliveryModal(open);
+          if (!open) {
+            setArrivalPath('direct');
+          }
+        }}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['/api/jobs'] });
+          toast({
+            title: "Success",
+            description: "Direct delivery job created and dispatched to driver",
+          });
+          setShowDeliveryModal(false);
+        }}
+        mode="new"
       />
     </div>
   );
