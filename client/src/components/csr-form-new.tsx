@@ -575,7 +575,7 @@ export default function CSRForm() {
 
 
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" noValidate>
                   
                   {/* PICKUP/SHIPMENT PATH - Match GoCanvas field order */}
                   {(arrivalPath === 'pickup' || arrivalPath === 'shipment') && (
@@ -1369,17 +1369,10 @@ export default function CSRForm() {
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 pt-6">
                 <Button
-                  type="button"
+                  type="submit"
                   disabled={createJobMutation.isPending}
                   className="flex-1 bg-[var(--ecs-primary)] hover:bg-[var(--ecs-primary-hover)] hover:shadow-lg hover:scale-[1.02] text-white font-medium transition-all duration-200"
                   data-testid="button-submit"
-                  onClick={() => {
-                    console.log("=== Submit button clicked ===");
-                    console.log("arrivalPath:", arrivalPath);
-                    console.log("Form errors:", form.formState.errors);
-                    // Manually trigger form submit
-                    form.handleSubmit(onSubmit)();
-                  }}
                 >
                   <Send className="mr-2 h-4 w-4" />
                   {createJobMutation.isPending ? "Creating Job..." : "Create Job"}
