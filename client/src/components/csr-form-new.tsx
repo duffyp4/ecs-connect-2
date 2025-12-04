@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ClipboardList, Send, X, Info, Clock, Database, Check, ChevronsUpDown, Truck, Store, ArrowLeft, Settings, Plus, Package } from "lucide-react";
+import { ClipboardList, Send, X, Info, Clock, Database, Check, ChevronsUpDown, Truck, Store, ArrowLeft, Settings, Plus, Package, BoxIcon } from "lucide-react";
 import { DeliveryDispatchModal } from "@/components/delivery-dispatch-modal";
 import { cn } from "@/lib/utils";
 import type { z } from "zod";
@@ -31,7 +31,7 @@ export default function CSRForm() {
   const [currentTimestamp, setCurrentTimestamp] = useState<string>("");
   const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
   const [shipToSearchOpen, setShipToSearchOpen] = useState(false);
-  const [arrivalPath, setArrivalPath] = useState<'pickup' | 'direct' | 'delivery'>('direct');
+  const [arrivalPath, setArrivalPath] = useState<'pickup' | 'direct' | 'delivery' | 'shipment'>('direct');
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
 
@@ -117,17 +117,29 @@ export default function CSRForm() {
       }
       
       // Step 2: Create the job with arrivalPath (and pickup details for pickup jobs)
-      const jobPayload = arrivalPath === 'pickup'
-        ? { 
-            ...data, 
-            arrivalPath, 
-            pickupDriverEmail, 
-            pickupNotes,
-            contactName: pickupContactName,
-            contactNumber: pickupContactNumber,
-            poNumber: pickupPoNumber
-          }
-        : { ...data, arrivalPath };
+      let jobPayload;
+      if (arrivalPath === 'pickup') {
+        jobPayload = { 
+          ...data, 
+          arrivalPath, 
+          pickupDriverEmail, 
+          pickupNotes,
+          contactName: pickupContactName,
+          contactNumber: pickupContactNumber,
+          poNumber: pickupPoNumber
+        };
+      } else if (arrivalPath === 'shipment') {
+        // Shipment uses same fields as pickup but no driver dispatch
+        jobPayload = { 
+          ...data, 
+          arrivalPath,
+          contactName: pickupContactName,
+          contactNumber: pickupContactNumber,
+          poNumber: pickupPoNumber
+        };
+      } else {
+        jobPayload = { ...data, arrivalPath };
+      }
         
       const response = await apiRequest("POST", "/api/jobs", jobPayload);
       const job = await response.json();
@@ -172,9 +184,14 @@ export default function CSRForm() {
       return job;
     },
     onSuccess: (job) => {
-      const pathDescription = arrivalPath === 'pickup' 
-        ? 'and dispatched for pickup' 
-        : 'and checked in at shop';
+      let pathDescription;
+      if (arrivalPath === 'pickup') {
+        pathDescription = 'and dispatched for pickup';
+      } else if (arrivalPath === 'shipment') {
+        pathDescription = '- awaiting inbound shipment';
+      } else {
+        pathDescription = 'and checked in at shop';
+      }
       toast({
         title: "Job Created Successfully",
         description: `Job ${job.jobId} has been created ${pathDescription}.`,
@@ -298,7 +315,7 @@ export default function CSRForm() {
         <CardHeader className="card-header">
           <h2 className="text-lg font-semibold flex items-center">
             <ClipboardList className="mr-2 h-5 w-5" />
-            {currentStep === 1 ? 'New Job' : arrivalPath === 'direct' ? 'Direct Shop Check-in' : 'Dispatch Pickup'}
+            {currentStep === 1 ? 'New Job' : arrivalPath === 'direct' ? 'Direct Shop Check-in' : arrivalPath === 'pickup' ? 'Dispatch Pickup' : 'Inbound Shipment'}
           </h2>
           <p className="text-sm opacity-90">Connected to GoCanvas</p>
         </CardHeader>
@@ -312,7 +329,7 @@ export default function CSRForm() {
                   <h3 className="text-xl font-semibold">How will items arrive at the shop?</h3>
                 </div>
                 
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid md:grid-cols-3 gap-6">
                   {/* Direct Shop Check-in Card */}
                   <Card 
                     className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] border-2 hover:border-[var(--ecs-primary)]"
@@ -356,6 +373,30 @@ export default function CSRForm() {
                         <h4 className="text-lg font-semibold mb-2">Dispatch Pickup</h4>
                         <p className="text-sm text-muted-foreground">
                           Send a driver to pick up items from customer location
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Inbound Shipment Card */}
+                  <Card 
+                    className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] border-2 hover:border-[var(--ecs-primary)]"
+                    onClick={() => {
+                      setArrivalPath('shipment');
+                      setCurrentStep(2);
+                    }}
+                    data-testid="card-arrival-shipment"
+                  >
+                    <CardContent className="pt-6 pb-6 text-center space-y-4">
+                      <div className="flex justify-center">
+                        <div className="p-4 bg-[var(--ecs-primary)]/10 rounded-full">
+                          <BoxIcon className="h-10 w-10 text-[var(--ecs-primary)]" />
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-semibold mb-2">Inbound Shipment</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Customer is shipping items to the shop via carrier
                         </p>
                       </div>
                     </CardContent>
@@ -425,8 +466,8 @@ export default function CSRForm() {
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   
-                  {/* PICKUP PATH - Match GoCanvas field order */}
-                  {arrivalPath === 'pickup' && (
+                  {/* PICKUP/SHIPMENT PATH - Match GoCanvas field order */}
+                  {(arrivalPath === 'pickup' || arrivalPath === 'shipment') && (
                     <>
                       {/* Location */}
                       <FormField
@@ -702,60 +743,64 @@ export default function CSRForm() {
                         />
                       </div>
 
-                      {/* Driver */}
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Driver *</label>
-                        <Select value={pickupDriver} onValueChange={(value) => {
-                          setPickupDriver(value);
-                          // Auto-populate driver email when driver is selected
-                          const selectedDriver = driverDetails.find(d => d.name === value);
-                          setPickupDriverEmail(selectedDriver?.email || "");
-                          setPickupFieldErrors(prev => ({ ...prev, driver: undefined }));
-                        }}>
-                          <SelectTrigger data-testid="select-pickup-driver" className={pickupFieldErrors.driver ? "border-red-500" : ""}>
-                            <SelectValue placeholder="Select driver" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {isLoadingDrivers ? (
-                              <SelectItem value="_loading" disabled>Loading drivers...</SelectItem>
-                            ) : (
-                              drivers.map((driver) => (
-                                <SelectItem key={driver} value={driver} data-testid={`option-driver-${driver}`}>
-                                  {driver}
-                                </SelectItem>
-                              ))
+                      {/* Driver - Only show for pickup path */}
+                      {arrivalPath === 'pickup' && (
+                        <>
+                          <div>
+                            <label className="block text-sm font-medium mb-2">Driver *</label>
+                            <Select value={pickupDriver} onValueChange={(value) => {
+                              setPickupDriver(value);
+                              // Auto-populate driver email when driver is selected
+                              const selectedDriver = driverDetails.find(d => d.name === value);
+                              setPickupDriverEmail(selectedDriver?.email || "");
+                              setPickupFieldErrors(prev => ({ ...prev, driver: undefined }));
+                            }}>
+                              <SelectTrigger data-testid="select-pickup-driver" className={pickupFieldErrors.driver ? "border-red-500" : ""}>
+                                <SelectValue placeholder="Select driver" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {isLoadingDrivers ? (
+                                  <SelectItem value="_loading" disabled>Loading drivers...</SelectItem>
+                                ) : (
+                                  drivers.map((driver) => (
+                                    <SelectItem key={driver} value={driver} data-testid={`option-driver-${driver}`}>
+                                      {driver}
+                                    </SelectItem>
+                                  ))
+                                )}
+                              </SelectContent>
+                            </Select>
+                            {pickupFieldErrors.driver && (
+                              <p className="text-sm text-red-500 mt-1" data-testid="error-pickup-driver">{pickupFieldErrors.driver}</p>
                             )}
-                          </SelectContent>
-                        </Select>
-                        {pickupFieldErrors.driver && (
-                          <p className="text-sm text-red-500 mt-1" data-testid="error-pickup-driver">{pickupFieldErrors.driver}</p>
-                        )}
-                      </div>
+                          </div>
 
-                      {/* Driver Email (read-only, auto-populated) */}
-                      <div>
-                        <label className="block text-sm font-medium mb-2 text-muted-foreground">Driver Email</label>
-                        <Input
-                          value={pickupDriverEmail}
-                          readOnly
-                          disabled
-                          className="bg-muted text-muted-foreground cursor-not-allowed"
-                          placeholder="Auto-populated when driver is selected"
-                          data-testid="input-driver-email"
-                        />
-                      </div>
+                          {/* Driver Email (read-only, auto-populated) */}
+                          <div>
+                            <label className="block text-sm font-medium mb-2 text-muted-foreground">Driver Email</label>
+                            <Input
+                              value={pickupDriverEmail}
+                              readOnly
+                              disabled
+                              className="bg-muted text-muted-foreground cursor-not-allowed"
+                              placeholder="Auto-populated when driver is selected"
+                              data-testid="input-driver-email"
+                            />
+                          </div>
 
-                      {/* Notes to Driver */}
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Notes to Driver (Optional)</label>
-                        <Textarea
-                          placeholder="Any special instructions for pickup..."
-                          value={pickupNotes}
-                          onChange={(e) => setPickupNotes(e.target.value)}
-                          rows={2}
-                          data-testid="input-pickup-notes"
-                        />
-                      </div>
+                          {/* Notes to Driver */}
+                          <div>
+                            <label className="block text-sm font-medium mb-2">Notes to Driver (Optional)</label>
+                            <Textarea
+                              placeholder="Any special instructions for pickup..."
+                              value={pickupNotes}
+                              onChange={(e) => setPickupNotes(e.target.value)}
+                              rows={2}
+                              data-testid="input-pickup-notes"
+                            />
+                          </div>
+                        </>
+                      )}
                     </>
                   )}
 
