@@ -41,8 +41,8 @@ const outboundShipmentSchema = z.object({
   orderNumber3: z.string().optional(),
   orderNumber4: z.string().optional(),
   orderNumber5: z.string().optional(),
-  carrier: z.string().optional(),
-  trackingNumber: z.string().optional(),
+  carrier: z.string().min(1, "Carrier is required"),
+  trackingNumber: z.string().min(1, "Tracking number is required"),
   expectedArrival: z.date().optional(),
   shippingNotes: z.string().optional(),
 });
@@ -297,7 +297,7 @@ export function OutboundShipmentModal({
                   name="carrier"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Carrier (Optional)</FormLabel>
+                      <FormLabel>Carrier *</FormLabel>
                       <Popover open={carrierOpen} onOpenChange={setCarrierOpen}>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -380,7 +380,7 @@ export function OutboundShipmentModal({
                   name="trackingNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tracking Number (Optional)</FormLabel>
+                      <FormLabel>Tracking Number *</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
