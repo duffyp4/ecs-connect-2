@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLocations } from "@/hooks/use-reference-data";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -24,6 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { Package, ChevronsUpDown, Check, Truck, CalendarIcon } from "lucide-react";
@@ -33,6 +35,7 @@ import { cn } from "@/lib/utils";
 import type { Job } from "@shared/schema";
 
 const outboundShipmentSchema = z.object({
+  location: z.string().min(1, "Location is required"),
   orderNumber: z.string().min(1, "Order number is required"),
   orderNumber2: z.string().optional(),
   orderNumber3: z.string().optional(),
@@ -63,10 +66,13 @@ export function OutboundShipmentModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [carrierOpen, setCarrierOpen] = useState(false);
   const [expectedArrivalOpen, setExpectedArrivalOpen] = useState(false);
+  
+  const { data: locations = [], isLoading: isLoadingLocations } = useLocations();
 
   const form = useForm<OutboundShipmentFormData>({
     resolver: zodResolver(outboundShipmentSchema),
     defaultValues: {
+      location: job.shopName || "",
       orderNumber: job.orderNumber || "",
       orderNumber2: job.orderNumber2 || "",
       orderNumber3: job.orderNumber3 || "",
@@ -86,6 +92,7 @@ export function OutboundShipmentModal({
       setIsSubmitting(true);
 
       await apiRequest("POST", `/api/jobs/${job.jobId}/outbound-shipment`, {
+        location: data.location,
         orderNumber: data.orderNumber,
         orderNumber2: data.orderNumber2,
         orderNumber3: data.orderNumber3,
@@ -135,6 +142,36 @@ export function OutboundShipmentModal({
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-4">
+                {/* Location */}
+                <FormField
+                  control={form.control}
+                  name="location"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Location *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-outbound-location">
+                            <SelectValue placeholder="Select location" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {isLoadingLocations ? (
+                            <SelectItem value="loading" disabled>Loading locations...</SelectItem>
+                          ) : (
+                            locations.map((location) => (
+                              <SelectItem key={location} value={location}>
+                                {location}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 {/* Order Number */}
                 <FormField
                   control={form.control}

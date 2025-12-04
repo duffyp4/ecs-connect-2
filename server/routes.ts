@@ -842,6 +842,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { jobId } = req.params;
       const { 
+        location,
         orderNumber,
         orderNumber2,
         orderNumber3,
@@ -865,6 +866,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         state: 'outbound_shipment',
         completedAt: now,
         completionMode: 'outbound_shipment',
+        shopName: location || job.shopName,
         orderNumber: orderNumber || job.orderNumber,
         orderNumber2: orderNumber2 || job.orderNumber2,
         orderNumber3: orderNumber3 || job.orderNumber3,
