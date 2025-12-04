@@ -35,6 +35,7 @@ import JobStatusBadge from "@/components/job-status-badge";
 import { CheckInModal } from "@/components/check-in-modal";
 import { DeliveryDispatchModal } from "@/components/delivery-dispatch-modal";
 import { ReadyForPickupModal } from "@/components/ready-for-pickup-modal";
+import { OutboundShipmentModal } from "@/components/outbound-shipment-modal";
 import { PartsManagementModal } from "@/components/parts-management-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -73,6 +74,7 @@ export default function JobDetail() {
   const [checkInModalOpen, setCheckInModalOpen] = useState(false);
   const [deliveryDispatchModalOpen, setDeliveryDispatchModalOpen] = useState(false);
   const [readyForPickupModalOpen, setReadyForPickupModalOpen] = useState(false);
+  const [outboundShipmentModalOpen, setOutboundShipmentModalOpen] = useState(false);
   const [partsManagementModalOpen, setPartsManagementModalOpen] = useState(false);
   const [editingPart, setEditingPart] = useState<any>(null);
   const [newComment, setNewComment] = useState("");
@@ -440,6 +442,16 @@ export default function JobDetail() {
             >
               <Send className="mr-2 h-4 w-4" />
               Dispatch for Delivery
+            </Button>
+
+            <Button 
+              onClick={() => setOutboundShipmentModalOpen(true)}
+              disabled={!isDevMode && (currentState !== 'service_complete' || isPending)}
+              className="btn-primary"
+              data-testid="button-outbound-shipment"
+            >
+              <Package className="mr-2 h-4 w-4" />
+              Outbound Shipment
             </Button>
 
             <Button 
@@ -935,6 +947,20 @@ export default function JobDetail() {
         <ReadyForPickupModal
           open={readyForPickupModalOpen}
           onOpenChange={setReadyForPickupModalOpen}
+          job={job}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}`] });
+            queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}/events`] });
+            queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/metrics"] });
+          }}
+        />
+      )}
+      {/* Outbound Shipment Modal */}
+      {job && (
+        <OutboundShipmentModal
+          open={outboundShipmentModalOpen}
+          onOpenChange={setOutboundShipmentModalOpen}
           job={job}
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}`] });
