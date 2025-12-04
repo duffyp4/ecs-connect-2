@@ -538,6 +538,23 @@ export default function JobDetail() {
                 })()}
               </div>
             </div>
+            {/* Shipment Tracking Info - Only show if carrier or tracking number exists */}
+            {(job.shipmentCarrier || job.shipmentTrackingNumber) && (
+              <>
+                {job.shipmentCarrier && (
+                  <div>
+                    <div className="text-sm text-muted-foreground">Shipping Carrier</div>
+                    <div className="font-medium" data-testid="text-shipment-carrier">{job.shipmentCarrier}</div>
+                  </div>
+                )}
+                {job.shipmentTrackingNumber && (
+                  <div>
+                    <div className="text-sm text-muted-foreground">Tracking Number</div>
+                    <div className="font-medium" data-testid="text-tracking-number">{job.shipmentTrackingNumber}</div>
+                  </div>
+                )}
+              </>
+            )}
           </CardContent>
         </Card>
       </div>

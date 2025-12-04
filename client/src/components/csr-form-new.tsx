@@ -88,6 +88,8 @@ export default function CSRForm() {
   
   // Shipment notes state (for Inbound Shipment path)
   const [shipmentNotes, setShipmentNotes] = useState<string>("");
+  const [shipmentCarrier, setShipmentCarrier] = useState<string>("");
+  const [shipmentTrackingNumber, setShipmentTrackingNumber] = useState<string>("");
 
   // Delivery fields state (for Dispatch Delivery path)
   const [deliveryDriver, setDeliveryDriver] = useState<string>("");
@@ -183,7 +185,9 @@ export default function CSRForm() {
           contactName: pickupContactName,
           contactNumber: pickupContactNumber,
           poNumber: pickupPoNumber,
-          shipmentNotes
+          shipmentNotes,
+          shipmentCarrier: shipmentCarrier || undefined,
+          shipmentTrackingNumber: shipmentTrackingNumber || undefined
         };
       } else {
         jobPayload = { ...data, arrivalPath };
@@ -255,6 +259,8 @@ export default function CSRForm() {
       setPickupPoNumber("");
       setPickupFieldErrors({});
       setShipmentNotes("");
+      setShipmentCarrier("");
+      setShipmentTrackingNumber("");
       setDeliveryDriver("");
       setDeliveryDriverEmail("");
       setDeliveryNotes("");
@@ -806,18 +812,48 @@ export default function CSRForm() {
                         />
                       </div>
 
-                      {/* Shipment Notes - Only show for shipment path */}
+                      {/* Shipment-specific fields - Only show for shipment path */}
                       {arrivalPath === 'shipment' && (
-                        <div>
-                          <label className="block text-sm font-medium mb-2">Shipment Notes (Optional)</label>
-                          <Textarea
-                            placeholder="Any notes about the incoming shipment..."
-                            value={shipmentNotes}
-                            onChange={(e) => setShipmentNotes(e.target.value)}
-                            rows={2}
-                            data-testid="input-shipment-notes"
-                          />
-                        </div>
+                        <>
+                          {/* Carrier dropdown */}
+                          <div>
+                            <label className="block text-sm font-medium mb-2">Carrier (Optional)</label>
+                            <Select value={shipmentCarrier} onValueChange={setShipmentCarrier}>
+                              <SelectTrigger data-testid="select-shipment-carrier">
+                                <SelectValue placeholder="Select carrier" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="USPS">USPS</SelectItem>
+                                <SelectItem value="UPS">UPS</SelectItem>
+                                <SelectItem value="FedEx">FedEx</SelectItem>
+                                <SelectItem value="DHL">DHL</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Tracking Number */}
+                          <div>
+                            <label className="block text-sm font-medium mb-2">Tracking Number (Optional)</label>
+                            <Input
+                              placeholder="Enter tracking number"
+                              value={shipmentTrackingNumber}
+                              onChange={(e) => setShipmentTrackingNumber(e.target.value)}
+                              data-testid="input-shipment-tracking"
+                            />
+                          </div>
+
+                          {/* Shipment Notes */}
+                          <div>
+                            <label className="block text-sm font-medium mb-2">Shipment Notes (Optional)</label>
+                            <Textarea
+                              placeholder="Any notes about the incoming shipment..."
+                              value={shipmentNotes}
+                              onChange={(e) => setShipmentNotes(e.target.value)}
+                              rows={2}
+                              data-testid="input-shipment-notes"
+                            />
+                          </div>
+                        </>
                       )}
 
                       {/* Driver - Only show for pickup path */}

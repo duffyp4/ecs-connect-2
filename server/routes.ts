@@ -500,7 +500,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new job
   app.post("/api/jobs", isAuthenticated, async (req, res) => {
     try {
-      const { arrivalPath, pickupDriverEmail, pickupNotes, shipmentNotes, ...jobData } = req.body;
+      const { arrivalPath, pickupDriverEmail, pickupNotes, shipmentNotes, shipmentCarrier, shipmentTrackingNumber, ...jobData } = req.body;
       const userId = req.user?.claims?.sub;
       
       // Validate using appropriate schema based on arrival path
@@ -514,8 +514,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // - direct: queued_for_pickup (will be checked in immediately after creation)
       const initialState = arrivalPath === 'shipment' ? 'shipment_inbound' : 'queued_for_pickup';
       
+      // Build job data with shipment fields if provided
+      const jobDataWithShipment = {
+        ...validatedData,
+        state: initialState,
+        ...(arrivalPath === 'shipment' && shipmentCarrier ? { shipmentCarrier } : {}),
+        ...(arrivalPath === 'shipment' && shipmentTrackingNumber ? { shipmentTrackingNumber } : {}),
+      };
+      
       // Create job in storage with appropriate initial state
-      const job = await storage.createJob({ ...validatedData, state: initialState });
+      const job = await storage.createJob(jobDataWithShipment);
       
       console.log(`Job ${job.jobId} created in ${job.state} state (arrival path: ${arrivalPath})`);
 
