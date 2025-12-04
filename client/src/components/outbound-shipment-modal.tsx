@@ -172,6 +172,30 @@ export function OutboundShipmentModal({
                   )}
                 />
 
+                {/* Customer Name (read-only) */}
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-muted-foreground">Customer Name</label>
+                  <Input
+                    value={job.customerName || ""}
+                    readOnly
+                    disabled
+                    className="bg-muted"
+                    data-testid="input-customer-name-readonly"
+                  />
+                </div>
+
+                {/* Customer Ship-To (read-only) */}
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-muted-foreground">Customer Ship-To</label>
+                  <Input
+                    value={job.customerShipTo || ""}
+                    readOnly
+                    disabled
+                    className="bg-muted"
+                    data-testid="input-customer-ship-to-readonly"
+                  />
+                </div>
+
                 {/* Order Number */}
                 <FormField
                   control={form.control}
