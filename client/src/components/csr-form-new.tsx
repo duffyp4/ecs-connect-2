@@ -386,7 +386,7 @@ export default function CSRForm() {
             <ClipboardList className="mr-2 h-5 w-5" />
             {currentStep === 1 ? 'New Job' : arrivalPath === 'direct' ? 'Direct Shop Check-in' : arrivalPath === 'pickup' ? 'Dispatch Pickup' : arrivalPath === 'shipment' ? 'Inbound Shipment' : 'Dispatch Delivery'}
           </h2>
-          <p className="text-sm opacity-90">Connected to GoCanvas</p>
+          <p className="text-sm opacity-90">{arrivalPath === 'shipment' ? 'Not connected to GoCanvas' : 'Connected to GoCanvas'}</p>
         </CardHeader>
         <CardContent className="pt-6 pb-6 px-4 sm:px-6 space-y-6">
           {/* Step 1: Path Selection */}
