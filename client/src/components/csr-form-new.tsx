@@ -1369,15 +1369,16 @@ export default function CSRForm() {
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 pt-6">
                 <Button
-                  type="submit"
+                  type="button"
                   disabled={createJobMutation.isPending}
                   className="flex-1 bg-[var(--ecs-primary)] hover:bg-[var(--ecs-primary-hover)] hover:shadow-lg hover:scale-[1.02] text-white font-medium transition-all duration-200"
                   data-testid="button-submit"
                   onClick={() => {
                     console.log("=== Submit button clicked ===");
+                    console.log("arrivalPath:", arrivalPath);
                     console.log("Form errors:", form.formState.errors);
-                    console.log("Form isValid:", form.formState.isValid);
-                    console.log("Form isDirty:", form.formState.isDirty);
+                    // Manually trigger form submit
+                    form.handleSubmit(onSubmit)();
                   }}
                 >
                   <Send className="mr-2 h-4 w-4" />
