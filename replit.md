@@ -47,19 +47,19 @@ The application uses a monorepo structure with `/client` (React frontend), `/ser
 - **GoCanvas Integration**: Parts pre-populate loop screen in emissions form (ID: 5695685) using dynamically mapped field IDs with multi_key grouping
 - **Edit States**: Parts editable when job state is `queued_for_pickup` or `picked_up` (BEFORE emissions dispatch)
 
-### Direct Delivery Workflow
+### Dispatch Delivery Workflow
 - **Purpose**: Enables CSRs to ship inventory parts directly to customers without going through the service workflow
 - **Use Case**: For customers who just need parts delivered (no emissions testing or service required)
-- **State Machine**: Jobs created via Direct Delivery start in `queued_for_delivery` state, skipping the entire pickup/service flow
+- **State Machine**: Jobs created via Dispatch Delivery start in `queued_for_delivery` state, skipping the entire pickup/service flow
 - **Workflow**:
-  1. CSR selects "Direct Delivery" option on the New Job form (Step 1 path selection)
+  1. CSR selects "Dispatch Delivery" option on the New Job form (in its own section below the service job options)
   2. Modal opens with: Location dropdown, Customer Name combobox, Ship-To combobox, Driver selection, Order numbers, Delivery notes
   3. Job ID is auto-generated using ECS format (e.g., `ECS-20251204195000-3011`)
   4. On submission: Job is created with `queued_for_delivery` state → Delivery is immediately dispatched to selected driver via GoCanvas
   5. Driver receives the Delivery Log in GoCanvas app and delivers parts to customer
   6. When driver completes delivery form, webhook updates job state to `delivered`
 - **API Endpoint**: `POST /api/jobs/direct-delivery` creates job and dispatches delivery in one atomic operation
-- **Component**: `DeliveryDispatchModal` supports dual modes (`existing` for regular jobs, `new` for Direct Delivery)
+- **Component**: `DeliveryDispatchModal` supports dual modes (`existing` for regular jobs, `new` for Dispatch Delivery)
 
 ### Diagnostic Infrastructure
 Diagnostic scripts in `/scripts/` assist with GoCanvas integration debugging.

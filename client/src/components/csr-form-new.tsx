@@ -305,83 +305,104 @@ export default function CSRForm() {
         <CardContent className="pt-6 pb-6 px-4 sm:px-6 space-y-6">
           {/* Step 1: Path Selection */}
           {currentStep === 1 && (
-            <div className="space-y-6">
-              <div className="text-center space-y-2">
-                <h3 className="text-xl font-semibold">How will items arrive at the shop?</h3>
+            <div className="space-y-8">
+              {/* Service Jobs Section */}
+              <div className="space-y-4">
+                <div className="text-center space-y-2">
+                  <h3 className="text-xl font-semibold">How will items arrive at the shop?</h3>
+                </div>
+                
+                <div className="grid md:grid-cols-2 gap-6">
+                  {/* Direct Shop Check-in Card */}
+                  <Card 
+                    className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] border-2 hover:border-[var(--ecs-primary)]"
+                    onClick={() => {
+                      setArrivalPath('direct');
+                      setCurrentStep(2);
+                    }}
+                    data-testid="card-arrival-direct"
+                  >
+                    <CardContent className="pt-6 pb-6 text-center space-y-4">
+                      <div className="flex justify-center">
+                        <div className="p-4 bg-[var(--ecs-primary)]/10 rounded-full">
+                          <Store className="h-10 w-10 text-[var(--ecs-primary)]" />
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-semibold mb-2">Direct Shop Check-in</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Items are already at the shop or will be dropped off directly by the customer
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Dispatch Pickup Card */}
+                  <Card 
+                    className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] border-2 hover:border-[var(--ecs-primary)]"
+                    onClick={() => {
+                      setArrivalPath('pickup');
+                      setCurrentStep(2);
+                    }}
+                    data-testid="card-arrival-pickup"
+                  >
+                    <CardContent className="pt-6 pb-6 text-center space-y-4">
+                      <div className="flex justify-center">
+                        <div className="p-4 bg-[var(--ecs-primary)]/10 rounded-full">
+                          <Truck className="h-10 w-10 text-[var(--ecs-primary)]" />
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-semibold mb-2">Dispatch Pickup</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Send a driver to pick up items from customer location
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
-              
-              <div className="grid md:grid-cols-3 gap-6">
-                {/* Direct Shop Check-in Card */}
-                <Card 
-                  className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] border-2 hover:border-[var(--ecs-primary)]"
-                  onClick={() => {
-                    setArrivalPath('direct');
-                    setCurrentStep(2);
-                  }}
-                  data-testid="card-arrival-direct"
-                >
-                  <CardContent className="pt-6 pb-6 text-center space-y-4">
-                    <div className="flex justify-center">
-                      <div className="p-4 bg-[var(--ecs-primary)]/10 rounded-full">
-                        <Store className="h-10 w-10 text-[var(--ecs-primary)]" />
-                      </div>
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-semibold mb-2">Direct Shop Check-in</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Items are already at the shop or will be dropped off directly by the customer
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
 
-                {/* Dispatch Pickup Card */}
-                <Card 
-                  className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] border-2 hover:border-[var(--ecs-primary)]"
-                  onClick={() => {
-                    setArrivalPath('pickup');
-                    setCurrentStep(2);
-                  }}
-                  data-testid="card-arrival-pickup"
-                >
-                  <CardContent className="pt-6 pb-6 text-center space-y-4">
-                    <div className="flex justify-center">
-                      <div className="p-4 bg-[var(--ecs-primary)]/10 rounded-full">
-                        <Truck className="h-10 w-10 text-[var(--ecs-primary)]" />
-                      </div>
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-semibold mb-2">Dispatch Pickup</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Send a driver to pick up items from customer location
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+              {/* Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">Or</span>
+                </div>
+              </div>
 
-                {/* Direct Delivery Card */}
-                <Card 
-                  className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] border-2 hover:border-[var(--ecs-primary)]"
-                  onClick={() => {
-                    setArrivalPath('delivery');
-                    setShowDeliveryModal(true);
-                  }}
-                  data-testid="card-arrival-delivery"
-                >
-                  <CardContent className="pt-6 pb-6 text-center space-y-4">
-                    <div className="flex justify-center">
-                      <div className="p-4 bg-[var(--ecs-primary)]/10 rounded-full">
-                        <Package className="h-10 w-10 text-[var(--ecs-primary)]" />
+              {/* Dispatch Delivery Section */}
+              <div className="space-y-4">
+                <div className="text-center space-y-2">
+                  <h3 className="text-xl font-semibold">Delivery Only (No Service)</h3>
+                </div>
+                
+                <div className="flex justify-center">
+                  <Card 
+                    className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] border-2 hover:border-[var(--ecs-primary)] max-w-md w-full"
+                    onClick={() => {
+                      setArrivalPath('delivery');
+                      setShowDeliveryModal(true);
+                    }}
+                    data-testid="card-arrival-delivery"
+                  >
+                    <CardContent className="pt-6 pb-6 text-center space-y-4">
+                      <div className="flex justify-center">
+                        <div className="p-4 bg-[var(--ecs-primary)]/10 rounded-full">
+                          <Package className="h-10 w-10 text-[var(--ecs-primary)]" />
+                        </div>
                       </div>
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-semibold mb-2">Direct Delivery</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Ship inventory parts directly to customer without service
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+                      <div>
+                        <h4 className="text-lg font-semibold mb-2">Dispatch Delivery</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Ship inventory parts directly to customer without service
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
             </div>
           )}
@@ -832,7 +853,7 @@ export default function CSRForm() {
           queryClient.invalidateQueries({ queryKey: ['/api/jobs'] });
           toast({
             title: "Success",
-            description: "Direct delivery job created and dispatched to driver",
+            description: "Dispatch delivery job created and dispatched to driver",
           });
           setShowDeliveryModal(false);
         }}

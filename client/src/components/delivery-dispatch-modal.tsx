@@ -195,7 +195,7 @@ export function DeliveryDispatchModal({
         queryClient.invalidateQueries({ queryKey: ["/api/metrics"] });
 
         toast({
-          title: "Direct Delivery Created",
+          title: "Dispatch Delivery Created",
           description: `Job ${jobId} created and delivery dispatched to ${data.driver}`,
         });
       } else {
@@ -239,7 +239,7 @@ export function DeliveryDispatchModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Truck className="h-5 w-5" />
-            {isNewMode ? "Direct Delivery" : "Dispatch for Delivery"}
+            {isNewMode ? "Dispatch Delivery" : "Dispatch for Delivery"}
           </DialogTitle>
           <DialogDescription>
             {isNewMode 
