@@ -843,7 +843,7 @@ export default function CSRForm() {
                                     />
                                   </div>
                                   <CommandList>
-                                    {["USPS", "UPS", "FedEx", "DHL"]
+                                    {["AAA Cooper", "FedEx Freight", "XPO", "R&L Carriers", "Estes Express", "Saia", "Averitt Express", "UPS", "USPS", "Central Transport", "Southeastern Freight", "Old Dominion"]
                                       .filter(carrier => 
                                         !shipmentCarrier || 
                                         carrier.toLowerCase().includes(shipmentCarrier.toLowerCase())
@@ -863,7 +863,7 @@ export default function CSRForm() {
                                         </CommandItem>
                                       ))}
                                     {shipmentCarrier && 
-                                     !["USPS", "UPS", "FedEx", "DHL"].some(carrier => 
+                                     !["AAA Cooper", "FedEx Freight", "XPO", "R&L Carriers", "Estes Express", "Saia", "Averitt Express", "UPS", "USPS", "Central Transport", "Southeastern Freight", "Old Dominion"].some(carrier => 
                                        carrier.toLowerCase() === shipmentCarrier.toLowerCase()
                                      ) && (
                                       <div className="p-2 border-t">

@@ -259,7 +259,7 @@ export function OutboundShipmentModal({
                               />
                             </div>
                             <CommandList>
-                              {["USPS", "UPS", "FedEx", "DHL"]
+                              {["AAA Cooper", "FedEx Freight", "XPO", "R&L Carriers", "Estes Express", "Saia", "Averitt Express", "UPS", "USPS", "Central Transport", "Southeastern Freight", "Old Dominion"]
                                 .filter(c => 
                                   !field.value || 
                                   c.toLowerCase().includes((field.value || "").toLowerCase())
@@ -279,7 +279,7 @@ export function OutboundShipmentModal({
                                   </CommandItem>
                                 ))}
                               {field.value && 
-                               !["USPS", "UPS", "FedEx", "DHL"].some(c => 
+                               !["AAA Cooper", "FedEx Freight", "XPO", "R&L Carriers", "Estes Express", "Saia", "Averitt Express", "UPS", "USPS", "Central Transport", "Southeastern Freight", "Old Dominion"].some(c => 
                                  c.toLowerCase() === (field.value || "").toLowerCase()
                                ) && (
                                 <div className="p-2 border-t">
