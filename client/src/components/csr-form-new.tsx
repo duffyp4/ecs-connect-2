@@ -488,10 +488,6 @@ export default function CSRForm() {
 
               {/* Dispatch Delivery Section */}
               <div className="space-y-4">
-                <div className="text-center space-y-2">
-                  <h3 className="text-xl font-semibold">Delivery Only (No Service)</h3>
-                </div>
-                
                 <div className="flex justify-center">
                   <Card 
                     className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] border-2 hover:border-[var(--ecs-primary)] max-w-md w-full"
