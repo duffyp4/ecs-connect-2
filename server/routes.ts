@@ -836,6 +836,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Mark job as outbound shipment (completed state)
+  app.post("/api/jobs/:jobId/outbound-shipment", isAuthenticated, async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const { 
+        orderNumber,
+        orderNumber2,
+        orderNumber3,
+        orderNumber4,
+        orderNumber5,
+        carrier,
+        trackingNumber,
+        shippingNotes
+      } = req.body;
+      const userId = req.user?.claims?.sub;
+
+      const job = await storage.getJobByJobId(jobId);
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+
+      // Update job with outbound shipment data and completed state
+      const now = new Date();
+      const updatedJob = await storage.updateJob(job.id, {
+        state: 'outbound_shipment',
+        completedAt: now,
+        completionMode: 'outbound_shipment',
+        orderNumber: orderNumber || job.orderNumber,
+        orderNumber2: orderNumber2 || job.orderNumber2,
+        orderNumber3: orderNumber3 || job.orderNumber3,
+        orderNumber4: orderNumber4 || job.orderNumber4,
+        orderNumber5: orderNumber5 || job.orderNumber5,
+        outboundCarrier: carrier || null,
+        outboundTrackingNumber: trackingNumber || null,
+      });
+
+      // Log the event
+      await storage.createJobEvent({
+        jobId: job.jobId,
+        eventType: 'outbound_shipment',
+        description: `Job marked as shipped${carrier ? ` via ${carrier}` : ''}${trackingNumber ? ` (Tracking: ${trackingNumber})` : ''}`,
+        actor: 'CSR',
+        actorEmail: req.user?.claims?.email as string || undefined,
+      });
+
+      // Save shipping notes as a comment if provided
+      if (shippingNotes && shippingNotes.trim()) {
+        await storage.createJobComment({
+          jobId: job.jobId,
+          userId,
+          commentText: `[Shipping Notes] ${shippingNotes.trim()}`,
+        });
+      }
+
+      console.log(`Job ${job.jobId} marked as outbound shipment`);
+      res.json(updatedJob);
+    } catch (error) {
+      console.error("Error marking job as outbound shipment:", error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to mark job as shipped" });
+    }
+  });
+
   // Create a direct delivery job (skip service, go straight to delivery)
   app.post("/api/jobs/direct-delivery", isAuthenticated, async (req, res) => {
     try {

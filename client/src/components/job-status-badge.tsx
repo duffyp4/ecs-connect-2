@@ -26,6 +26,7 @@ export default function JobStatusBadge({ status }: JobStatusBadgeProps) {
       case 'ready_for_pickup':
       case 'picked_up_from_shop':
       case 'delivered':
+      case 'outbound_shipment':
         return 'bg-green-100 text-green-800 hover:bg-green-200';
       case 'queued_for_delivery':
         return 'bg-cyan-100 text-cyan-800 hover:bg-cyan-200';
@@ -58,6 +59,8 @@ export default function JobStatusBadge({ status }: JobStatusBadgeProps) {
         return 'Queued for Delivery';
       case 'delivered':
         return 'Delivered';
+      case 'outbound_shipment':
+        return 'Outbound Shipment';
       case 'cancelled':
         return 'Cancelled';
       default:

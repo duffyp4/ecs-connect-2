@@ -260,11 +260,12 @@ export default function JobDetail() {
     }
 
     // Check if this event is completing the job
-    const completionStates = ['delivered', 'ready_for_pickup', 'picked_up_from_shop'];
+    const completionStates = ['delivered', 'ready_for_pickup', 'picked_up_from_shop', 'outbound_shipment'];
     const isCompletionEvent = 
       event.eventType === 'delivered' || 
       event.eventType === 'ready_for_pickup' ||
       event.eventType === 'picked_up_from_shop' ||
+      event.eventType === 'outbound_shipment' ||
       (event.eventType === 'state_change' && event.metadata?.newState && completionStates.includes(event.metadata.newState));
 
     if (isCompletionEvent) {
@@ -301,6 +302,8 @@ export default function JobDetail() {
           return 'Service Complete';
         case 'ready_for_pickup':
           return 'Ready for Pickup';
+        case 'outbound_shipment':
+          return 'Outbound Shipment';
         case 'queued_for_delivery':
           return 'Queued for Delivery';
         case 'delivered':
