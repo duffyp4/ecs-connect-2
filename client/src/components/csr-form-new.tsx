@@ -333,6 +333,12 @@ export default function CSRForm() {
   }, []);
 
   const onSubmit = async (data: FormData) => {
+    console.log("=== onSubmit called ===");
+    console.log("arrivalPath:", arrivalPath);
+    console.log("Form data:", data);
+    console.log("pickupContactName:", pickupContactName);
+    console.log("pickupContactNumber:", pickupContactNumber);
+    
     // For pickup and shipment paths, merge local state fields before validation
     // These fields are not controlled by react-hook-form
     let dataToValidate = data;
@@ -344,9 +350,13 @@ export default function CSRForm() {
       };
     }
     
+    console.log("dataToValidate:", dataToValidate);
+    
     // Validate using the appropriate schema
     const schema = arrivalPath === 'pickup' ? pickupJobSchema : insertJobSchema;
     const result = schema.safeParse(dataToValidate);
+    
+    console.log("Validation result:", result.success);
     
     if (!result.success) {
       // Show validation errors
@@ -370,6 +380,7 @@ export default function CSRForm() {
       return;
     }
     
+    console.log("Calling createJobMutation.mutate");
     createJobMutation.mutate(data);
   };
 
