@@ -553,19 +553,36 @@ export default function JobDetail() {
                 })()}
               </div>
             </div>
-            {/* Shipment Tracking Info - Only show if carrier or tracking number exists */}
+            {/* Inbound Shipment Tracking Info - Only show if carrier or tracking number exists */}
             {(job.shipmentCarrier || job.shipmentTrackingNumber) && (
               <>
                 {job.shipmentCarrier && (
                   <div>
-                    <div className="text-sm text-muted-foreground">Shipping Carrier</div>
+                    <div className="text-sm text-muted-foreground">Inbound Carrier</div>
                     <div className="font-medium" data-testid="text-shipment-carrier">{job.shipmentCarrier}</div>
                   </div>
                 )}
                 {job.shipmentTrackingNumber && (
                   <div>
-                    <div className="text-sm text-muted-foreground">Tracking Number</div>
+                    <div className="text-sm text-muted-foreground">Inbound Tracking Number</div>
                     <div className="font-medium" data-testid="text-tracking-number">{job.shipmentTrackingNumber}</div>
+                  </div>
+                )}
+              </>
+            )}
+            {/* Outbound Shipment Tracking Info - Only show if carrier or tracking number exists */}
+            {(job.outboundCarrier || job.outboundTrackingNumber) && (
+              <>
+                {job.outboundCarrier && (
+                  <div>
+                    <div className="text-sm text-muted-foreground">Outbound Carrier</div>
+                    <div className="font-medium" data-testid="text-outbound-carrier">{job.outboundCarrier}</div>
+                  </div>
+                )}
+                {job.outboundTrackingNumber && (
+                  <div>
+                    <div className="text-sm text-muted-foreground">Outbound Tracking Number</div>
+                    <div className="font-medium" data-testid="text-outbound-tracking-number">{job.outboundTrackingNumber}</div>
                   </div>
                 )}
               </>
