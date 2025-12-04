@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ClipboardList, Send, X, Info, Clock, Database, Check, ChevronsUpDown, Truck, Store, ArrowLeft, Settings, Plus, Package, BoxIcon } from "lucide-react";
 import { DeliveryDispatchModal } from "@/components/delivery-dispatch-modal";
@@ -88,6 +89,17 @@ export default function CSRForm() {
   // Shipment notes state (for Inbound Shipment path)
   const [shipmentNotes, setShipmentNotes] = useState<string>("");
 
+  // Delivery fields state (for Dispatch Delivery path)
+  const [deliveryDriver, setDeliveryDriver] = useState<string>("");
+  const [deliveryDriverEmail, setDeliveryDriverEmail] = useState<string>("");
+  const [deliveryNotes, setDeliveryNotes] = useState<string>("");
+  const [deliveryOrderNumber, setDeliveryOrderNumber] = useState<string>("");
+  const [deliveryOrderNumber2, setDeliveryOrderNumber2] = useState<string>("");
+  const [deliveryOrderNumber3, setDeliveryOrderNumber3] = useState<string>("");
+  const [deliveryOrderNumber4, setDeliveryOrderNumber4] = useState<string>("");
+  const [deliveryOrderNumber5, setDeliveryOrderNumber5] = useState<string>("");
+  const [deliveryFieldErrors, setDeliveryFieldErrors] = useState<{ driver?: string; orderNumber?: string }>({});
+
   // Parts management state
   const [partsModalOpen, setPartsModalOpen] = useState(false);
   const [tempJobIdForParts, setTempJobIdForParts] = useState<string>("temp-new-job");
@@ -114,7 +126,39 @@ export default function CSRForm() {
         setPickupFieldErrors({});
       }
       
-      // Step 1b: Validate parts for direct shop check-in
+      // Step 1b: Validate delivery fields BEFORE creating job
+      if (arrivalPath === 'delivery') {
+        const errors: { driver?: string; orderNumber?: string } = {};
+        if (!deliveryDriver) errors.driver = "Driver is required for delivery dispatch";
+        if (!deliveryOrderNumber) errors.orderNumber = "At least one order number is required";
+        
+        if (Object.keys(errors).length > 0) {
+          setDeliveryFieldErrors(errors);
+          throw new Error("Please complete all required delivery fields");
+        }
+        setDeliveryFieldErrors({});
+        
+        // For delivery path, use the direct-delivery endpoint
+        const deliveryPayload = {
+          location: data.shopName,
+          customerName: data.customerName,
+          customerShipTo: data.customerShipTo,
+          driver: deliveryDriver,
+          driverEmail: deliveryDriverEmail,
+          orderNumber: deliveryOrderNumber,
+          orderNumber2: deliveryOrderNumber2,
+          orderNumber3: deliveryOrderNumber3,
+          orderNumber4: deliveryOrderNumber4,
+          orderNumber5: deliveryOrderNumber5,
+          deliveryNotes,
+        };
+        
+        const response = await apiRequest("POST", "/api/jobs/direct-delivery", deliveryPayload);
+        const job = await response.json();
+        return job;
+      }
+      
+      // Step 1c: Validate parts for direct shop check-in
       if (arrivalPath === 'direct' && localParts.length === 0) {
         throw new Error("At least one part is required before checking in at shop. Please add parts to this job first.");
       }
@@ -193,6 +237,8 @@ export default function CSRForm() {
         pathDescription = 'and dispatched for pickup';
       } else if (arrivalPath === 'shipment') {
         pathDescription = '- awaiting inbound shipment';
+      } else if (arrivalPath === 'delivery') {
+        pathDescription = 'and dispatched for delivery';
       } else {
         pathDescription = 'and checked in at shop';
       }
@@ -209,6 +255,15 @@ export default function CSRForm() {
       setPickupPoNumber("");
       setPickupFieldErrors({});
       setShipmentNotes("");
+      setDeliveryDriver("");
+      setDeliveryDriverEmail("");
+      setDeliveryNotes("");
+      setDeliveryOrderNumber("");
+      setDeliveryOrderNumber2("");
+      setDeliveryOrderNumber3("");
+      setDeliveryOrderNumber4("");
+      setDeliveryOrderNumber5("");
+      setDeliveryFieldErrors({});
       setLocalParts([]);
       setArrivalPath('direct');
       queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
@@ -320,7 +375,7 @@ export default function CSRForm() {
         <CardHeader className="card-header">
           <h2 className="text-lg font-semibold flex items-center">
             <ClipboardList className="mr-2 h-5 w-5" />
-            {currentStep === 1 ? 'New Job' : arrivalPath === 'direct' ? 'Direct Shop Check-in' : arrivalPath === 'pickup' ? 'Dispatch Pickup' : 'Inbound Shipment'}
+            {currentStep === 1 ? 'New Job' : arrivalPath === 'direct' ? 'Direct Shop Check-in' : arrivalPath === 'pickup' ? 'Dispatch Pickup' : arrivalPath === 'shipment' ? 'Inbound Shipment' : 'Dispatch Delivery'}
           </h2>
           <p className="text-sm opacity-90">Connected to GoCanvas</p>
         </CardHeader>
@@ -433,7 +488,7 @@ export default function CSRForm() {
                     className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] border-2 hover:border-[var(--ecs-primary)] max-w-md w-full"
                     onClick={() => {
                       setArrivalPath('delivery');
-                      setShowDeliveryModal(true);
+                      setCurrentStep(2);
                     }}
                     data-testid="card-arrival-delivery"
                   >
@@ -839,8 +894,285 @@ export default function CSRForm() {
                 />
               )}
 
-              {/* Add Parts to Job */}
-              <div className="space-y-2">
+              {/* DISPATCH DELIVERY PATH */}
+              {arrivalPath === 'delivery' && (
+                <>
+                  {/* Location */}
+                  <FormField
+                    control={form.control}
+                    name="shopName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-1">
+                          <Database className="h-3 w-3 text-muted-foreground" /> Location *
+                        </FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-delivery-location">
+                              <SelectValue placeholder="Select location" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {isLoadingLocations ? (
+                              <SelectItem value="_loading" disabled>Loading...</SelectItem>
+                            ) : (
+                              locations.map((loc) => (
+                                <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Customer Name */}
+                  <FormField
+                    control={form.control}
+                    name="customerName"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel className="flex items-center gap-1">
+                          <Database className="h-3 w-3 text-muted-foreground" /> Customer Name *
+                        </FormLabel>
+                        <Popover open={customerSearchOpen} onOpenChange={setCustomerSearchOpen}>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn(
+                                  "w-full justify-between",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                                data-testid="select-delivery-customer"
+                              >
+                                {field.value || "Select customer..."}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full p-0" align="start">
+                            <Command>
+                              <div className="p-2">
+                                <Input
+                                  placeholder="Search customers..."
+                                  className="h-9"
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+                                    if (value) {
+                                      field.onChange(value);
+                                    }
+                                  }}
+                                />
+                              </div>
+                              <CommandList>
+                                <ScrollArea className="h-[200px]">
+                                  {isLoadingCustomers ? (
+                                    <div className="p-2 text-center text-sm text-muted-foreground">Loading...</div>
+                                  ) : (
+                                    customerNames
+                                      .filter(name => name.toLowerCase().includes((field.value || "").toLowerCase()))
+                                      .slice(0, 50)
+                                      .map((name) => (
+                                        <CommandItem
+                                          key={name}
+                                          value={name}
+                                          onSelect={() => {
+                                            field.onChange(name);
+                                            form.setValue("customerShipTo", "");
+                                            setCustomerSearchOpen(false);
+                                          }}
+                                        >
+                                          <Check className={cn("mr-2 h-4 w-4", name === field.value ? "opacity-100" : "opacity-0")} />
+                                          {name}
+                                        </CommandItem>
+                                      ))
+                                  )}
+                                </ScrollArea>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Customer Ship-To */}
+                  <FormField
+                    control={form.control}
+                    name="customerShipTo"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel className="flex items-center gap-1">
+                          <Database className="h-3 w-3 text-muted-foreground" /> Customer Ship-To *
+                        </FormLabel>
+                        <Popover open={shipToSearchOpen} onOpenChange={setShipToSearchOpen}>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn(
+                                  "w-full justify-between",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                                disabled={!customerName}
+                                data-testid="select-delivery-ship-to"
+                              >
+                                {field.value || "Select ship-to..."}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full p-0" align="start">
+                            <Command>
+                              <CommandList>
+                                <ScrollArea className="h-[200px]">
+                                  {isLoadingShipTo ? (
+                                    <div className="p-2 text-center text-sm text-muted-foreground">Loading...</div>
+                                  ) : (
+                                    shipToOptions.map((option) => (
+                                      <CommandItem
+                                        key={option}
+                                        value={option}
+                                        onSelect={() => {
+                                          field.onChange(option);
+                                          setShipToSearchOpen(false);
+                                        }}
+                                      >
+                                        <Check className={cn("mr-2 h-4 w-4", option === field.value ? "opacity-100" : "opacity-0")} />
+                                        {option}
+                                      </CommandItem>
+                                    ))
+                                  )}
+                                </ScrollArea>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Driver */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Driver *</label>
+                    <Select value={deliveryDriver} onValueChange={(value) => {
+                      setDeliveryDriver(value);
+                      const selectedDriver = driverDetails.find(d => d.name === value);
+                      setDeliveryDriverEmail(selectedDriver?.email || "");
+                      setDeliveryFieldErrors(prev => ({ ...prev, driver: undefined }));
+                    }}>
+                      <SelectTrigger data-testid="select-delivery-driver" className={deliveryFieldErrors.driver ? "border-red-500" : ""}>
+                        <SelectValue placeholder="Select driver" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {isLoadingDrivers ? (
+                          <SelectItem value="_loading" disabled>Loading drivers...</SelectItem>
+                        ) : (
+                          drivers.map((driver) => (
+                            <SelectItem key={driver} value={driver}>
+                              {driver}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                    {deliveryFieldErrors.driver && (
+                      <p className="text-sm text-red-500 mt-1">{deliveryFieldErrors.driver}</p>
+                    )}
+                  </div>
+
+                  {/* Driver Email (read-only) */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-muted-foreground">Driver Email</label>
+                    <Input
+                      value={deliveryDriverEmail}
+                      readOnly
+                      disabled
+                      className="bg-muted text-muted-foreground cursor-not-allowed"
+                      placeholder="Auto-populated when driver is selected"
+                      data-testid="input-delivery-driver-email"
+                    />
+                  </div>
+
+                  {/* Order Numbers */}
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Order Number *</label>
+                      <Input
+                        placeholder="Primary order number"
+                        value={deliveryOrderNumber}
+                        onChange={(e) => {
+                          setDeliveryOrderNumber(e.target.value);
+                          setDeliveryFieldErrors(prev => ({ ...prev, orderNumber: undefined }));
+                        }}
+                        className={deliveryFieldErrors.orderNumber ? "border-red-500" : ""}
+                        data-testid="input-delivery-order-1"
+                      />
+                      {deliveryFieldErrors.orderNumber && (
+                        <p className="text-sm text-red-500 mt-1">{deliveryFieldErrors.orderNumber}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Order Number 2 (Optional)</label>
+                      <Input
+                        placeholder="Additional order number"
+                        value={deliveryOrderNumber2}
+                        onChange={(e) => setDeliveryOrderNumber2(e.target.value)}
+                        data-testid="input-delivery-order-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Order Number 3 (Optional)</label>
+                      <Input
+                        placeholder="Additional order number"
+                        value={deliveryOrderNumber3}
+                        onChange={(e) => setDeliveryOrderNumber3(e.target.value)}
+                        data-testid="input-delivery-order-3"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Order Number 4 (Optional)</label>
+                      <Input
+                        placeholder="Additional order number"
+                        value={deliveryOrderNumber4}
+                        onChange={(e) => setDeliveryOrderNumber4(e.target.value)}
+                        data-testid="input-delivery-order-4"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Order Number 5 (Optional)</label>
+                      <Input
+                        placeholder="Additional order number"
+                        value={deliveryOrderNumber5}
+                        onChange={(e) => setDeliveryOrderNumber5(e.target.value)}
+                        data-testid="input-delivery-order-5"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Delivery Notes */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Delivery Notes (Optional)</label>
+                    <Textarea
+                      placeholder="Any special instructions for delivery..."
+                      value={deliveryNotes}
+                      onChange={(e) => setDeliveryNotes(e.target.value)}
+                      rows={2}
+                      data-testid="input-delivery-notes"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Add Parts to Job - Only show for service paths, not delivery */}
+              {arrivalPath !== 'delivery' && (
+                <div className="space-y-2">
                 <label className="text-sm font-medium">
                   {arrivalPath === 'direct' 
                     ? <>Parts * <span className="text-muted-foreground font-normal">(at least one required)</span></>
@@ -864,6 +1196,7 @@ export default function CSRForm() {
                   )}
                 </div>
               </div>
+              )}
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 pt-6">
