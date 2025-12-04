@@ -500,7 +500,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new job
   app.post("/api/jobs", isAuthenticated, async (req, res) => {
     try {
-      const { arrivalPath, pickupDriverEmail, pickupNotes, ...jobData } = req.body;
+      const { arrivalPath, pickupDriverEmail, pickupNotes, shipmentNotes, ...jobData } = req.body;
       const userId = req.user?.claims?.sub;
       
       // Validate using appropriate schema based on arrival path
@@ -549,6 +549,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await storage.deleteJob(job.id);
           throw new Error(`Failed to dispatch pickup: ${dispatchError instanceof Error ? dispatchError.message : 'Unknown error'}`);
         }
+      }
+      
+      // For shipment jobs, save shipment notes as a comment (no GoCanvas dispatch)
+      if (arrivalPath === 'shipment' && shipmentNotes && shipmentNotes.trim()) {
+        await storage.createJobComment({
+          jobId: job.jobId,
+          userId,
+          commentText: `[Shipment Notes] ${shipmentNotes.trim()}`,
+        });
+        console.log(`Shipment notes saved as comment for job ${job.jobId}`);
       }
 
       const updatedJob = await storage.getJob(job.id);

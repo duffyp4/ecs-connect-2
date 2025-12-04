@@ -84,6 +84,9 @@ export default function CSRForm() {
   const [pickupContactNumber, setPickupContactNumber] = useState<string>("");
   const [pickupPoNumber, setPickupPoNumber] = useState<string>("");
   const [pickupFieldErrors, setPickupFieldErrors] = useState<{ driver?: string }>({});
+  
+  // Shipment notes state (for Inbound Shipment path)
+  const [shipmentNotes, setShipmentNotes] = useState<string>("");
 
   // Parts management state
   const [partsModalOpen, setPartsModalOpen] = useState(false);
@@ -135,7 +138,8 @@ export default function CSRForm() {
           arrivalPath,
           contactName: pickupContactName,
           contactNumber: pickupContactNumber,
-          poNumber: pickupPoNumber
+          poNumber: pickupPoNumber,
+          shipmentNotes
         };
       } else {
         jobPayload = { ...data, arrivalPath };
@@ -204,6 +208,7 @@ export default function CSRForm() {
       setPickupContactNumber("");
       setPickupPoNumber("");
       setPickupFieldErrors({});
+      setShipmentNotes("");
       setLocalParts([]);
       setArrivalPath('direct');
       queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
@@ -742,6 +747,20 @@ export default function CSRForm() {
                           data-testid="input-pickup-po-number"
                         />
                       </div>
+
+                      {/* Shipment Notes - Only show for shipment path */}
+                      {arrivalPath === 'shipment' && (
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Shipment Notes (Optional)</label>
+                          <Textarea
+                            placeholder="Any notes about the incoming shipment..."
+                            value={shipmentNotes}
+                            onChange={(e) => setShipmentNotes(e.target.value)}
+                            rows={2}
+                            data-testid="input-shipment-notes"
+                          />
+                        </div>
+                      )}
 
                       {/* Driver - Only show for pickup path */}
                       {arrivalPath === 'pickup' && (
