@@ -397,7 +397,7 @@ export default function CSRForm() {
                       <div>
                         <h4 className="text-lg font-semibold mb-2">Dispatch Delivery</h4>
                         <p className="text-sm text-muted-foreground">
-                          Ship inventory parts directly to customer without service
+                          Send a driver to deliver parts to a customer without service
                         </p>
                       </div>
                     </CardContent>
