@@ -14,6 +14,7 @@ import JobStatusBadge from "@/components/job-status-badge";
 import { CheckInModal } from "@/components/check-in-modal";
 import { DeliveryDispatchModal } from "@/components/delivery-dispatch-modal";
 import { ReadyForPickupModal } from "@/components/ready-for-pickup-modal";
+import { OutboundShipmentModal } from "@/components/outbound-shipment-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -68,6 +69,7 @@ export default function JobList() {
   const [checkInModalOpen, setCheckInModalOpen] = useState(false);
   const [deliveryDispatchModalOpen, setDeliveryDispatchModalOpen] = useState(false);
   const [readyForPickupModalOpen, setReadyForPickupModalOpen] = useState(false);
+  const [outboundShipmentModalOpen, setOutboundShipmentModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<any | null>(null);
   const { toast } = useToast();
   
@@ -120,6 +122,7 @@ export default function JobList() {
     { value: "picked_up_from_shop", label: "Picked Up from Shop" },
     { value: "queued_for_delivery", label: "Queued for Delivery" },
     { value: "delivered", label: "Delivered" },
+    { value: "outbound_shipment", label: "Outbound Shipment" },
   ];
 
   // Debounce search query - wait 500ms after user stops typing
@@ -240,6 +243,12 @@ export default function JobList() {
         icon: <Send className="mr-2 h-4 w-4" />,
         requiresModal: true,
       });
+      actions.push({
+        id: 'outbound-shipment',
+        label: 'Outbound Shipment',
+        icon: <Package className="mr-2 h-4 w-4" />,
+        requiresModal: true,
+      });
     }
 
     if (state === 'ready_for_pickup') {
@@ -262,6 +271,8 @@ export default function JobList() {
       setDeliveryDispatchModalOpen(true);
     } else if (action.id === 'ready-pickup') {
       setReadyForPickupModalOpen(true);
+    } else if (action.id === 'outbound-shipment') {
+      setOutboundShipmentModalOpen(true);
     } else if (action.id === 'mark-picked-up') {
       actionMutation.mutate({ 
         jobId: job.jobId, 
@@ -663,6 +674,17 @@ export default function JobList() {
             job={selectedJob}
             onSuccess={() => {
               setReadyForPickupModalOpen(false);
+              setSelectedJob(null);
+              queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
+              queryClient.invalidateQueries({ queryKey: ["/api/metrics"] });
+            }}
+          />
+          <OutboundShipmentModal
+            open={outboundShipmentModalOpen}
+            onOpenChange={setOutboundShipmentModalOpen}
+            job={selectedJob}
+            onSuccess={() => {
+              setOutboundShipmentModalOpen(false);
               setSelectedJob(null);
               queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
               queryClient.invalidateQueries({ queryKey: ["/api/metrics"] });
