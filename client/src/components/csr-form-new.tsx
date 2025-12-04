@@ -562,6 +562,21 @@ export default function CSRForm() {
           {/* Step 2: Form */}
           {currentStep === 2 && (
             <>
+              {/* DEBUG: Test button outside form */}
+              <div className="p-4 bg-yellow-100 border border-yellow-400 rounded mb-4">
+                <p className="text-sm mb-2">Debug: arrivalPath = {arrivalPath}</p>
+                <Button 
+                  type="button" 
+                  onClick={() => {
+                    console.log("DEBUG BUTTON CLICKED - arrivalPath:", arrivalPath);
+                    alert("Debug button clicked! arrivalPath: " + arrivalPath);
+                  }}
+                  className="bg-yellow-500 hover:bg-yellow-600"
+                >
+                  Test Click (Debug)
+                </Button>
+              </div>
+
               {/* Job ID Display */}
               <Alert>
                 <Info className="h-4 w-4" />
