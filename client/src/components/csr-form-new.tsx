@@ -89,6 +89,8 @@ export default function CSRForm() {
   // Shipment notes state (for Inbound Shipment path)
   const [shipmentNotes, setShipmentNotes] = useState<string>("");
   const [shipmentCarrier, setShipmentCarrier] = useState<string>("");
+  const [shipmentCarrierOpen, setShipmentCarrierOpen] = useState(false);
+  const [shipmentCarrierSearch, setShipmentCarrierSearch] = useState("");
   const [shipmentTrackingNumber, setShipmentTrackingNumber] = useState<string>("");
 
   // Delivery fields state (for Dispatch Delivery path)
@@ -260,6 +262,7 @@ export default function CSRForm() {
       setPickupFieldErrors({});
       setShipmentNotes("");
       setShipmentCarrier("");
+      setShipmentCarrierSearch("");
       setShipmentTrackingNumber("");
       setDeliveryDriver("");
       setDeliveryDriverEmail("");
@@ -815,20 +818,68 @@ export default function CSRForm() {
                       {/* Shipment-specific fields - Only show for shipment path */}
                       {arrivalPath === 'shipment' && (
                         <>
-                          {/* Carrier dropdown */}
+                          {/* Carrier combobox */}
                           <div>
                             <label className="block text-sm font-medium mb-2">Carrier (Optional)</label>
-                            <Select value={shipmentCarrier} onValueChange={setShipmentCarrier}>
-                              <SelectTrigger data-testid="select-shipment-carrier">
-                                <SelectValue placeholder="Select carrier" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="USPS">USPS</SelectItem>
-                                <SelectItem value="UPS">UPS</SelectItem>
-                                <SelectItem value="FedEx">FedEx</SelectItem>
-                                <SelectItem value="DHL">DHL</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <Popover open={shipmentCarrierOpen} onOpenChange={setShipmentCarrierOpen}>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  aria-expanded={shipmentCarrierOpen}
+                                  className="w-full justify-between font-normal"
+                                  data-testid="combobox-shipment-carrier"
+                                >
+                                  {shipmentCarrier || "Select or type carrier..."}
+                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-full p-0" align="start">
+                                <Command>
+                                  <CommandInput 
+                                    placeholder="Search or type carrier..." 
+                                    value={shipmentCarrierSearch}
+                                    onValueChange={setShipmentCarrierSearch}
+                                    data-testid="input-carrier-search"
+                                  />
+                                  <CommandList>
+                                    <CommandEmpty>
+                                      {shipmentCarrierSearch ? (
+                                        <CommandItem
+                                          onSelect={() => {
+                                            setShipmentCarrier(shipmentCarrierSearch);
+                                            setShipmentCarrierOpen(false);
+                                            setShipmentCarrierSearch("");
+                                          }}
+                                          className="cursor-pointer"
+                                        >
+                                          Use "{shipmentCarrierSearch}"
+                                        </CommandItem>
+                                      ) : (
+                                        "Type a carrier name..."
+                                      )}
+                                    </CommandEmpty>
+                                    <CommandGroup>
+                                      {["USPS", "UPS", "FedEx", "DHL"].map((carrier) => (
+                                        <CommandItem
+                                          key={carrier}
+                                          value={carrier}
+                                          onSelect={() => {
+                                            setShipmentCarrier(carrier);
+                                            setShipmentCarrierOpen(false);
+                                            setShipmentCarrierSearch("");
+                                          }}
+                                          data-testid={`option-carrier-${carrier}`}
+                                        >
+                                          <Check className={cn("mr-2 h-4 w-4", shipmentCarrier === carrier ? "opacity-100" : "opacity-0")} />
+                                          {carrier}
+                                        </CommandItem>
+                                      ))}
+                                    </CommandGroup>
+                                  </CommandList>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
                           </div>
 
                           {/* Tracking Number */}
