@@ -5,6 +5,7 @@ import { goCanvasService, type FormType } from './gocanvas';
 // Job state type definition
 export type JobState = 
   | 'queued_for_pickup'
+  | 'shipment_inbound'
   | 'picked_up'
   | 'at_shop'
   | 'in_service'
@@ -20,6 +21,7 @@ const STATE_MACHINE = {
   // State transitions map: current_state -> allowed_next_states[]
   transitions: {
     'queued_for_pickup': ['picked_up', 'cancelled'],
+    'shipment_inbound': ['at_shop', 'cancelled'], // Same as picked_up - can check in at shop
     'picked_up': ['at_shop', 'cancelled'],
     'at_shop': ['in_service', 'cancelled'],
     'in_service': ['service_complete', 'cancelled'],
@@ -32,7 +34,7 @@ const STATE_MACHINE = {
   } as Record<JobState, JobState[]>,
   
   // Initial states that jobs can start in
-  initialStates: ['queued_for_pickup', 'at_shop', 'queued_for_delivery'] as JobState[],
+  initialStates: ['queued_for_pickup', 'shipment_inbound', 'at_shop', 'queued_for_delivery'] as JobState[],
   
   // Terminal states (no further transitions)
   terminalStates: ['delivered', 'cancelled'] as JobState[],
@@ -360,8 +362,8 @@ export class JobEventsService {
       throw new Error(`Job ${jobId} not found`);
     }
 
-    // Validate state (must be picked_up or queued_for_pickup for direct check-in)
-    if (job.state !== 'picked_up' && job.state !== 'queued_for_pickup') {
+    // Validate state (must be picked_up, shipment_inbound, or queued_for_pickup for direct check-in)
+    if (job.state !== 'picked_up' && job.state !== 'shipment_inbound' && job.state !== 'queued_for_pickup') {
       throw new Error(`Cannot check in: job is in ${job.state} state`);
     }
 
@@ -379,6 +381,7 @@ export class JobEventsService {
         },
       });
     }
+    // shipment_inbound goes directly to at_shop (no intermediate state needed)
 
     // Transition to at_shop (this creates the event)
     updatedJob = await this.transitionJobState(jobId, 'at_shop', options);
