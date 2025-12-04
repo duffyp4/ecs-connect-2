@@ -18,7 +18,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ClipboardList, Send, X, Info, Clock, Database, Check, ChevronsUpDown, Truck, Store, ArrowLeft, Settings, Plus, Package, BoxIcon } from "lucide-react";
+import { ClipboardList, Send, X, Info, Clock, Database, Check, ChevronsUpDown, Truck, Store, ArrowLeft, Settings, Plus, Package, BoxIcon, CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
 import { DeliveryDispatchModal } from "@/components/delivery-dispatch-modal";
 import { cn } from "@/lib/utils";
 import type { z } from "zod";
@@ -92,6 +94,8 @@ export default function CSRForm() {
   const [shipmentCarrierOpen, setShipmentCarrierOpen] = useState(false);
   const [shipmentCarrierSearch, setShipmentCarrierSearch] = useState("");
   const [shipmentTrackingNumber, setShipmentTrackingNumber] = useState<string>("");
+  const [shipmentExpectedArrival, setShipmentExpectedArrival] = useState<Date | undefined>(undefined);
+  const [shipmentExpectedArrivalOpen, setShipmentExpectedArrivalOpen] = useState(false);
 
   // Delivery fields state (for Dispatch Delivery path)
   const [deliveryDriver, setDeliveryDriver] = useState<string>("");
@@ -189,7 +193,8 @@ export default function CSRForm() {
           poNumber: pickupPoNumber,
           shipmentNotes,
           shipmentCarrier: shipmentCarrier || undefined,
-          shipmentTrackingNumber: shipmentTrackingNumber || undefined
+          shipmentTrackingNumber: shipmentTrackingNumber || undefined,
+          shipmentExpectedArrival: shipmentExpectedArrival?.toISOString() || undefined
         };
       } else {
         jobPayload = { ...data, arrivalPath };
@@ -897,6 +902,37 @@ export default function CSRForm() {
                               onChange={(e) => setShipmentTrackingNumber(e.target.value)}
                               data-testid="input-shipment-tracking"
                             />
+                          </div>
+
+                          {/* Expected Arrival Date */}
+                          <div>
+                            <label className="block text-sm font-medium mb-2">Expected Arrival Date (Optional)</label>
+                            <Popover open={shipmentExpectedArrivalOpen} onOpenChange={setShipmentExpectedArrivalOpen}>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  className={cn(
+                                    "w-full justify-start text-left font-normal",
+                                    !shipmentExpectedArrival && "text-muted-foreground"
+                                  )}
+                                  data-testid="button-shipment-expected-arrival"
+                                >
+                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                  {shipmentExpectedArrival ? format(shipmentExpectedArrival, "PPP") : "Select date..."}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={shipmentExpectedArrival}
+                                  onSelect={(date) => {
+                                    setShipmentExpectedArrival(date);
+                                    setShipmentExpectedArrivalOpen(false);
+                                  }}
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
                           </div>
 
                           {/* Shipment Notes */}

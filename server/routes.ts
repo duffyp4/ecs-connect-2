@@ -500,7 +500,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new job
   app.post("/api/jobs", isAuthenticated, async (req, res) => {
     try {
-      const { arrivalPath, pickupDriverEmail, pickupNotes, shipmentNotes, shipmentCarrier, shipmentTrackingNumber, ...jobData } = req.body;
+      const { arrivalPath, pickupDriverEmail, pickupNotes, shipmentNotes, shipmentCarrier, shipmentTrackingNumber, shipmentExpectedArrival, ...jobData } = req.body;
       const userId = req.user?.claims?.sub;
       
       // Validate using appropriate schema based on arrival path
@@ -520,6 +520,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         state: initialState,
         ...(arrivalPath === 'shipment' && shipmentCarrier ? { shipmentCarrier } : {}),
         ...(arrivalPath === 'shipment' && shipmentTrackingNumber ? { shipmentTrackingNumber } : {}),
+        ...(arrivalPath === 'shipment' && shipmentExpectedArrival ? { shipmentExpectedArrival: new Date(shipmentExpectedArrival) } : {}),
       };
       
       // Create job in storage with appropriate initial state
@@ -848,6 +849,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         orderNumber5,
         carrier,
         trackingNumber,
+        expectedArrival,
         shippingNotes
       } = req.body;
       const userId = req.user?.claims?.sub;
@@ -870,6 +872,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         orderNumber5: orderNumber5 || job.orderNumber5,
         outboundCarrier: carrier || null,
         outboundTrackingNumber: trackingNumber || null,
+        outboundExpectedArrival: expectedArrival ? new Date(expectedArrival) : null,
       });
 
       // Log the event

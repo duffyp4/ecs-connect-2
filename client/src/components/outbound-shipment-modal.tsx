@@ -26,7 +26,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
-import { Package, ChevronsUpDown, Check, Truck } from "lucide-react";
+import { Package, ChevronsUpDown, Check, Truck, CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { Job } from "@shared/schema";
 
@@ -38,6 +40,7 @@ const outboundShipmentSchema = z.object({
   orderNumber5: z.string().optional(),
   carrier: z.string().optional(),
   trackingNumber: z.string().optional(),
+  expectedArrival: z.date().optional(),
   shippingNotes: z.string().optional(),
 });
 
@@ -59,6 +62,7 @@ export function OutboundShipmentModal({
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [carrierOpen, setCarrierOpen] = useState(false);
+  const [expectedArrivalOpen, setExpectedArrivalOpen] = useState(false);
 
   const form = useForm<OutboundShipmentFormData>({
     resolver: zodResolver(outboundShipmentSchema),
@@ -70,6 +74,7 @@ export function OutboundShipmentModal({
       orderNumber5: job.orderNumber5 || "",
       carrier: "",
       trackingNumber: "",
+      expectedArrival: undefined,
       shippingNotes: "",
     },
   });
@@ -88,6 +93,7 @@ export function OutboundShipmentModal({
         orderNumber5: data.orderNumber5,
         carrier: data.carrier,
         trackingNumber: data.trackingNumber,
+        expectedArrival: data.expectedArrival?.toISOString(),
         shippingNotes: data.shippingNotes,
       });
 
@@ -321,6 +327,46 @@ export function OutboundShipmentModal({
                           data-testid="input-tracking-number"
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Expected Arrival Date */}
+                <FormField
+                  control={form.control}
+                  name="expectedArrival"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Expected Arrival Date (Optional)</FormLabel>
+                      <Popover open={expectedArrivalOpen} onOpenChange={setExpectedArrivalOpen}>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                              data-testid="button-expected-arrival"
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {field.value ? format(field.value, "PPP") : "Select date..."}
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={(date) => {
+                              field.onChange(date);
+                              setExpectedArrivalOpen(false);
+                            }}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}

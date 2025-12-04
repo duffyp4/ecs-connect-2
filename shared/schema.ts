@@ -101,12 +101,14 @@ export const jobs = pgTable("jobs", {
   deliveryNotes: text("delivery_notes"),
   
   // Inbound Shipment Data
-  shipmentCarrier: text("shipment_carrier"), // USPS, UPS, FedEx, DHL
+  shipmentCarrier: text("shipment_carrier"),
   shipmentTrackingNumber: text("shipment_tracking_number"),
+  shipmentExpectedArrival: timestamp("shipment_expected_arrival"),
   
   // Outbound Shipment Data
-  outboundCarrier: text("outbound_carrier"), // USPS, UPS, FedEx, DHL
+  outboundCarrier: text("outbound_carrier"),
   outboundTrackingNumber: text("outbound_tracking_number"),
+  outboundExpectedArrival: timestamp("outbound_expected_arrival"),
   
   deliveryDriverEmail: text("delivery_driver_email"),
   deliveryMethod: text("delivery_method"), // 'pickup' or 'delivery'
