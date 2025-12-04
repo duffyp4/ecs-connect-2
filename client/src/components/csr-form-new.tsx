@@ -847,27 +847,45 @@ export default function CSRForm() {
                                     />
                                   </div>
                                   <CommandList>
-                                    <CommandGroup heading="Common Carriers">
-                                      {["USPS", "UPS", "FedEx", "DHL"]
-                                        .filter(carrier => 
-                                          !shipmentCarrier || 
-                                          carrier.toLowerCase().includes(shipmentCarrier.toLowerCase())
-                                        )
-                                        .map((carrier) => (
-                                          <CommandItem
-                                            key={carrier}
-                                            value={carrier}
-                                            onSelect={() => {
-                                              setShipmentCarrier(carrier);
-                                              setShipmentCarrierOpen(false);
-                                            }}
-                                            data-testid={`option-carrier-${carrier}`}
-                                          >
-                                            <Check className={cn("mr-2 h-4 w-4", shipmentCarrier === carrier ? "opacity-100" : "opacity-0")} />
-                                            {carrier}
-                                          </CommandItem>
-                                        ))}
-                                    </CommandGroup>
+                                    {["USPS", "UPS", "FedEx", "DHL"]
+                                      .filter(carrier => 
+                                        !shipmentCarrier || 
+                                        carrier.toLowerCase().includes(shipmentCarrier.toLowerCase())
+                                      )
+                                      .map((carrier) => (
+                                        <CommandItem
+                                          key={carrier}
+                                          value={carrier}
+                                          onSelect={() => {
+                                            setShipmentCarrier(carrier);
+                                            setShipmentCarrierOpen(false);
+                                          }}
+                                          data-testid={`option-carrier-${carrier}`}
+                                        >
+                                          <Check className={cn("mr-2 h-4 w-4", shipmentCarrier === carrier ? "opacity-100" : "opacity-0")} />
+                                          {carrier}
+                                        </CommandItem>
+                                      ))}
+                                    {shipmentCarrier && 
+                                     !["USPS", "UPS", "FedEx", "DHL"].some(carrier => 
+                                       carrier.toLowerCase() === shipmentCarrier.toLowerCase()
+                                     ) && (
+                                      <div className="p-2 border-t">
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="w-full justify-start"
+                                          onClick={() => {
+                                            setShipmentCarrierOpen(false);
+                                          }}
+                                        >
+                                          Add "{shipmentCarrier}" as carrier
+                                        </Button>
+                                      </div>
+                                    )}
+                                    {!shipmentCarrier && (
+                                      <div className="py-6 text-center text-sm text-muted-foreground">Type to search or add a carrier</div>
+                                    )}
                                   </CommandList>
                                 </Command>
                               </PopoverContent>
