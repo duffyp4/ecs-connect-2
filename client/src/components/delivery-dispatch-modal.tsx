@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,18 +28,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Truck } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Truck, Database, ChevronsUpDown, Check, Info } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useLocations } from "@/hooks/use-reference-data";
+import { useLocations, useCustomerNames, useShipToForCustomer } from "@/hooks/use-reference-data";
+import { cn } from "@/lib/utils";
 import type { Job } from "@shared/schema";
 
 const deliveryDispatchSchema = z.object({
   location: z.string().min(1, "Location is required"),
-  customerName: z.string(),
-  customerShipTo: z.string(),
+  customerName: z.string().min(1, "Customer name is required"),
+  customerShipTo: z.string().min(1, "Customer ship-to is required"),
   orderNumber: z.string().min(1, "Order number is required"),
   orderNumber2: z.string().optional(),
   orderNumber3: z.string().optional(),
@@ -55,8 +67,28 @@ type DeliveryDispatchFormData = z.infer<typeof deliveryDispatchSchema>;
 interface DeliveryDispatchModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  job: Job;
+  job?: Job;
   onSuccess: () => void;
+  mode?: 'existing' | 'new';
+}
+
+function generateJobId(shopName: string): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  
+  const shopCodes: Record<string, string> = {
+    'Nashville': '3011',
+    'Birmingham': '3012',
+    'Byhalia': '3013',
+  };
+  const shopCode = shopCodes[shopName] || '3011';
+  
+  return `ECS-${year}${month}${day}${hours}${minutes}${seconds}-${shopCode}`;
 }
 
 export function DeliveryDispatchModal({
@@ -64,60 +96,129 @@ export function DeliveryDispatchModal({
   onOpenChange,
   job,
   onSuccess,
+  mode = 'existing',
 }: DeliveryDispatchModalProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
+  const [shipToSearchOpen, setShipToSearchOpen] = useState(false);
+  const [generatedJobId, setGeneratedJobId] = useState<string>("");
 
-  // Fetch drivers from reference data
+  const isNewMode = mode === 'new';
+
   const { data: drivers = [] } = useQuery<{ name: string; email: string }[]>({
     queryKey: ['/api/reference/driver-details'],
   });
 
-  // Fetch locations from reference data
   const { data: locations = [], isLoading: isLoadingLocations } = useLocations();
+  const { data: customerNames = [], isLoading: isLoadingCustomers } = useCustomerNames();
 
   const form = useForm<DeliveryDispatchFormData>({
     resolver: zodResolver(deliveryDispatchSchema),
     defaultValues: {
-      location: job.shopName || "",
-      customerName: job.customerName || "",
-      customerShipTo: job.customerShipTo || "",
-      orderNumber: job.orderNumber || "",
-      orderNumber2: job.orderNumber2 || "",
-      orderNumber3: job.orderNumber3 || "",
-      orderNumber4: job.orderNumber4 || "",
-      orderNumber5: job.orderNumber5 || "",
+      location: job?.shopName || "",
+      customerName: job?.customerName || "",
+      customerShipTo: job?.customerShipTo || "",
+      orderNumber: job?.orderNumber || "",
+      orderNumber2: job?.orderNumber2 || "",
+      orderNumber3: job?.orderNumber3 || "",
+      orderNumber4: job?.orderNumber4 || "",
+      orderNumber5: job?.orderNumber5 || "",
       driver: "",
       driverEmail: "",
-      deliveryNotes: job.deliveryNotes || "",
+      deliveryNotes: job?.deliveryNotes || "",
     },
   });
+
+  const watchedCustomerName = form.watch("customerName");
+  const watchedLocation = form.watch("location");
+  const { data: shipToOptions = [], isLoading: isLoadingShipTo } = useShipToForCustomer(
+    isNewMode ? watchedCustomerName : undefined
+  );
+
+  useEffect(() => {
+    if (isNewMode && watchedLocation) {
+      setGeneratedJobId(generateJobId(watchedLocation));
+    }
+  }, [isNewMode, watchedLocation]);
+
+  useEffect(() => {
+    if (isNewMode && watchedCustomerName) {
+      form.setValue("customerShipTo", "");
+    }
+  }, [isNewMode, watchedCustomerName, form]);
+
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        location: job?.shopName || "",
+        customerName: job?.customerName || "",
+        customerShipTo: job?.customerShipTo || "",
+        orderNumber: job?.orderNumber || "",
+        orderNumber2: job?.orderNumber2 || "",
+        orderNumber3: job?.orderNumber3 || "",
+        orderNumber4: job?.orderNumber4 || "",
+        orderNumber5: job?.orderNumber5 || "",
+        driver: "",
+        driverEmail: "",
+        deliveryNotes: job?.deliveryNotes || "",
+      });
+      if (isNewMode) {
+        setGeneratedJobId("");
+      }
+    }
+  }, [open, job, form, isNewMode]);
 
   const onSubmit = async (data: DeliveryDispatchFormData) => {
     try {
       setIsSubmitting(true);
 
-      // Map form data to API format
-      await apiRequest("POST", `/api/jobs/${job.jobId}/dispatch-delivery`, {
-        driverEmail: data.driverEmail,
-        deliveryAddress: data.customerShipTo,
-        deliveryNotes: data.deliveryNotes,
-        orderNumber: data.orderNumber,
-        orderNumber2: data.orderNumber2,
-        orderNumber3: data.orderNumber3,
-        orderNumber4: data.orderNumber4,
-        orderNumber5: data.orderNumber5,
-      });
+      if (isNewMode) {
+        const jobId = generatedJobId || generateJobId(data.location);
+        
+        const response = await apiRequest("POST", "/api/jobs/direct-delivery", {
+          jobId,
+          shopName: data.location,
+          customerName: data.customerName,
+          customerShipTo: data.customerShipTo,
+          driverEmail: data.driverEmail,
+          driverName: data.driver,
+          deliveryNotes: data.deliveryNotes,
+          orderNumber: data.orderNumber,
+          orderNumber2: data.orderNumber2,
+          orderNumber3: data.orderNumber3,
+          orderNumber4: data.orderNumber4,
+          orderNumber5: data.orderNumber5,
+        });
 
-      // Invalidate queries to refresh data immediately
-      queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
-      queryClient.invalidateQueries({ queryKey: [`/api/jobs/${job.jobId}/comments`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/metrics"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/metrics"] });
 
-      toast({
-        title: "Delivery Dispatched",
-        description: `Delivery dispatched to ${data.driver}`,
-      });
+        toast({
+          title: "Direct Delivery Created",
+          description: `Job ${jobId} created and delivery dispatched to ${data.driver}`,
+        });
+      } else {
+        await apiRequest("POST", `/api/jobs/${job!.jobId}/dispatch-delivery`, {
+          driverEmail: data.driverEmail,
+          deliveryAddress: data.customerShipTo,
+          deliveryNotes: data.deliveryNotes,
+          orderNumber: data.orderNumber,
+          orderNumber2: data.orderNumber2,
+          orderNumber3: data.orderNumber3,
+          orderNumber4: data.orderNumber4,
+          orderNumber5: data.orderNumber5,
+        });
+
+        queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
+        queryClient.invalidateQueries({ queryKey: [`/api/jobs/${job!.jobId}/comments`] });
+        queryClient.invalidateQueries({ queryKey: ["/api/metrics"] });
+
+        toast({
+          title: "Delivery Dispatched",
+          description: `Delivery dispatched to ${data.driver}`,
+        });
+      }
 
       onSuccess();
       onOpenChange(false);
@@ -138,10 +239,13 @@ export function DeliveryDispatchModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Truck className="h-5 w-5" />
-            Dispatch for Delivery
+            {isNewMode ? "Direct Delivery" : "Dispatch for Delivery"}
           </DialogTitle>
           <DialogDescription>
-            Select driver and provide delivery details for Job {job.jobId}
+            {isNewMode 
+              ? "Create a new job and dispatch delivery directly to customer"
+              : `Select driver and provide delivery details for Job ${job?.jobId}`
+            }
           </DialogDescription>
         </DialogHeader>
 
@@ -149,7 +253,18 @@ export function DeliveryDispatchModal({
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-4">
-                {/* Location */}
+                {isNewMode && generatedJobId && (
+                  <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>Job ID:</strong> <span className="job-id">{generatedJobId}</span>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Automatically generated based on location
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 <FormField
                   control={form.control}
                   name="location"
@@ -179,45 +294,221 @@ export function DeliveryDispatchModal({
                   )}
                 />
 
-                {/* Customer Name (pre-populated) */}
                 <FormField
                   control={form.control}
                   name="customerName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Customer Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          disabled
-                          data-testid="input-customer-name"
-                        />
-                      </FormControl>
+                      <FormLabel className="flex items-center gap-1">
+                        {isNewMode && <Database className="h-3 w-3 text-muted-foreground" />}
+                        Customer Name *
+                      </FormLabel>
+                      {isNewMode ? (
+                        <Popover open={customerSearchOpen} onOpenChange={setCustomerSearchOpen}>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={customerSearchOpen}
+                                className="w-full justify-between"
+                                data-testid="select-customer-name"
+                              >
+                                {field.value || "Select or type customer name..."}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[400px] p-0">
+                            <Command shouldFilter={false}>
+                              <div className="flex items-center border-b px-3">
+                                <Database className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                                <Input
+                                  placeholder="Search customers or enter custom name..."
+                                  value={field.value || ""}
+                                  onChange={(e) => field.onChange(e.target.value)}
+                                  className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                  data-testid="input-customer-search"
+                                />
+                              </div>
+                              <CommandList>
+                                {isLoadingCustomers ? (
+                                  <div className="py-6 text-center text-sm">Loading customers...</div>
+                                ) : (
+                                  <>
+                                    {customerNames
+                                      .filter((customer) =>
+                                        customer.toLowerCase().includes((field.value || "").toLowerCase())
+                                      )
+                                      .slice(0, 100)
+                                      .map((customer) => (
+                                        <CommandItem
+                                          key={customer}
+                                          value={customer}
+                                          onSelect={() => {
+                                            field.onChange(customer);
+                                            setCustomerSearchOpen(false);
+                                          }}
+                                        >
+                                          <Check
+                                            className={cn(
+                                              "mr-2 h-4 w-4",
+                                              field.value === customer ? "opacity-100" : "opacity-0"
+                                            )}
+                                          />
+                                          {customer}
+                                        </CommandItem>
+                                      ))}
+                                    {field.value && 
+                                     !customerNames.some(c => 
+                                       c.toLowerCase() === field.value.toLowerCase()
+                                     ) && (
+                                      <div className="p-2 border-t">
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="w-full"
+                                          onClick={() => setCustomerSearchOpen(false)}
+                                        >
+                                          Use "{field.value}" as custom name
+                                        </Button>
+                                      </div>
+                                    )}
+                                    {customerNames
+                                      .filter((c) =>
+                                        c.toLowerCase().includes((field.value || "").toLowerCase())
+                                      ).length === 0 && !field.value && (
+                                      <div className="py-6 text-center text-sm">No customers found</div>
+                                    )}
+                                  </>
+                                )}
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      ) : (
+                        <FormControl>
+                          <Input
+                            {...field}
+                            disabled
+                            data-testid="input-customer-name"
+                          />
+                        </FormControl>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                {/* Customer Ship-To (pre-populated) */}
                 <FormField
                   control={form.control}
                   name="customerShipTo"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Customer Ship-To</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          disabled
-                          data-testid="input-customer-ship-to"
-                        />
-                      </FormControl>
+                      <FormLabel className="flex items-center gap-1">
+                        {isNewMode && <Database className="h-3 w-3 text-muted-foreground" />}
+                        Customer Ship-To *
+                      </FormLabel>
+                      {isNewMode ? (
+                        <Popover open={shipToSearchOpen} onOpenChange={setShipToSearchOpen}>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={shipToSearchOpen}
+                                className="w-full justify-between"
+                                data-testid="select-ship-to"
+                                disabled={!watchedCustomerName}
+                              >
+                                {field.value || (watchedCustomerName ? "Select or type ship-to..." : "Select customer first")}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[400px] p-0">
+                            <Command shouldFilter={false}>
+                              <div className="flex items-center border-b px-3">
+                                <Database className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                                <Input
+                                  placeholder="Search ship-to or enter custom address..."
+                                  value={field.value || ""}
+                                  onChange={(e) => field.onChange(e.target.value)}
+                                  className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                  data-testid="input-ship-to-search"
+                                />
+                              </div>
+                              <CommandList>
+                                {isLoadingShipTo ? (
+                                  <div className="py-6 text-center text-sm">Loading ship-to options...</div>
+                                ) : (
+                                  <>
+                                    {shipToOptions
+                                      .filter((shipTo) =>
+                                        shipTo.toLowerCase().includes((field.value || "").toLowerCase())
+                                      )
+                                      .slice(0, 100)
+                                      .map((shipTo) => (
+                                        <CommandItem
+                                          key={shipTo}
+                                          value={shipTo}
+                                          onSelect={() => {
+                                            field.onChange(shipTo);
+                                            setShipToSearchOpen(false);
+                                          }}
+                                        >
+                                          <Check
+                                            className={cn(
+                                              "mr-2 h-4 w-4",
+                                              field.value === shipTo ? "opacity-100" : "opacity-0"
+                                            )}
+                                          />
+                                          {shipTo}
+                                        </CommandItem>
+                                      ))}
+                                    {field.value && 
+                                     !shipToOptions.some(s => 
+                                       s.toLowerCase() === field.value.toLowerCase()
+                                     ) && (
+                                      <div className="p-2 border-t">
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="w-full"
+                                          onClick={() => setShipToSearchOpen(false)}
+                                        >
+                                          Use "{field.value}" as custom address
+                                        </Button>
+                                      </div>
+                                    )}
+                                    {shipToOptions
+                                      .filter((s) =>
+                                        s.toLowerCase().includes((field.value || "").toLowerCase())
+                                      ).length === 0 && !field.value && (
+                                      <div className="py-6 text-center text-sm">
+                                        {watchedCustomerName ? "No ship-to locations found for this customer" : "Select a customer first"}
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      ) : (
+                        <FormControl>
+                          <Input
+                            {...field}
+                            disabled
+                            data-testid="input-customer-ship-to"
+                          />
+                        </FormControl>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                {/* Order Number */}
                 <FormField
                   control={form.control}
                   name="orderNumber"
@@ -236,7 +527,6 @@ export function DeliveryDispatchModal({
                   )}
                 />
 
-                {/* Order Number - #2 */}
                 <FormField
                   control={form.control}
                   name="orderNumber2"
@@ -255,7 +545,6 @@ export function DeliveryDispatchModal({
                   )}
                 />
 
-                {/* Order Number - #3 */}
                 <FormField
                   control={form.control}
                   name="orderNumber3"
@@ -274,7 +563,6 @@ export function DeliveryDispatchModal({
                   )}
                 />
 
-                {/* Order Number - #4 */}
                 <FormField
                   control={form.control}
                   name="orderNumber4"
@@ -293,7 +581,6 @@ export function DeliveryDispatchModal({
                   )}
                 />
 
-                {/* Order Number - #5 */}
                 <FormField
                   control={form.control}
                   name="orderNumber5"
@@ -312,7 +599,6 @@ export function DeliveryDispatchModal({
                   )}
                 />
 
-                {/* Driver */}
                 <FormField
                   control={form.control}
                   name="driver"
@@ -322,7 +608,6 @@ export function DeliveryDispatchModal({
                       <Select
                         onValueChange={(value) => {
                           field.onChange(value);
-                          // Auto-populate driver email when driver is selected
                           const selectedDriver = drivers.find((d) => d.name === value);
                           form.setValue("driverEmail", selectedDriver?.email || "");
                         }}
@@ -349,7 +634,6 @@ export function DeliveryDispatchModal({
                   )}
                 />
 
-                {/* Driver Email (read-only, auto-populated) */}
                 <FormField
                   control={form.control}
                   name="driverEmail"
@@ -371,7 +655,6 @@ export function DeliveryDispatchModal({
                   )}
                 />
 
-                {/* Notes to Driver */}
                 <FormField
                   control={form.control}
                   name="deliveryNotes"
@@ -411,7 +694,10 @@ export function DeliveryDispatchModal({
             data-testid="button-confirm-delivery"
             onClick={form.handleSubmit(onSubmit)}
           >
-            {isSubmitting ? "Dispatching..." : "Dispatch Delivery"}
+            {isSubmitting 
+              ? (isNewMode ? "Creating..." : "Dispatching...") 
+              : (isNewMode ? "Create & Dispatch" : "Dispatch Delivery")
+            }
           </Button>
         </DialogFooter>
       </DialogContent>
