@@ -811,6 +811,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create a direct delivery job (skip service, go straight to delivery)
+  app.post("/api/jobs/direct-delivery", isAuthenticated, async (req, res) => {
+    try {
+      const { 
+        jobId,
+        shopName,
+        customerName, 
+        customerShipTo,
+        driverEmail,
+        driverName,
+        deliveryNotes,
+        orderNumber,
+        orderNumber2,
+        orderNumber3,
+        orderNumber4,
+        orderNumber5
+      } = req.body;
+      
+      if (!jobId || !shopName || !customerName || !customerShipTo || !driverEmail) {
+        return res.status(400).json({ 
+          message: "Job ID, shop name, customer name, customer ship-to, and driver email are required" 
+        });
+      }
+
+      // Create the job with queued_for_delivery state
+      // For direct delivery jobs, we set placeholder values for required fields
+      // that aren't applicable to this workflow
+      const userEmail = req.user?.claims?.email as string || 'unknown';
+      const jobData = {
+        jobId,
+        shopName,
+        customerName,
+        customerShipTo,
+        orderNumber: orderNumber || "",
+        orderNumber2: orderNumber2 || "",
+        orderNumber3: orderNumber3 || "",
+        orderNumber4: orderNumber4 || "",
+        orderNumber5: orderNumber5 || "",
+        deliveryNotes: deliveryNotes || "",
+        state: 'queued_for_delivery',
+        // Required fields with placeholder values for direct delivery
+        userId: userEmail,
+        contactName: driverName || "Driver",
+        contactNumber: "0000000000",
+        poNumber: orderNumber || "DIRECT-DELIVERY",
+        shopHandoff: driverEmail,
+      };
+
+      const createdJob = await storage.createJob(jobData);
+      
+      // Record the initial state event
+      await storage.createJobEvent({
+        jobId: createdJob.jobId,
+        eventType: 'state_change',
+        description: 'Direct delivery job created - queued for delivery',
+        actor: 'CSR',
+        actorEmail: userEmail,
+        metadata: { driverName, driverEmail, initialState: 'queued_for_delivery' },
+      });
+
+      // Dispatch the delivery to GoCanvas
+      const updatedJob = await jobEventsService.dispatchDelivery(createdJob.jobId, {
+        driverEmail,
+        deliveryAddress: customerShipTo,
+        deliveryNotes,
+        orderNumber,
+        orderNumber2,
+        orderNumber3,
+        orderNumber4,
+        orderNumber5,
+      });
+      
+      // Add delivery notes as a comment if provided
+      const userId = req.user?.claims?.sub as string || 'unknown';
+      if (deliveryNotes && deliveryNotes.trim()) {
+        await storage.createJobComment({
+          jobId: createdJob.jobId,
+          userId,
+          commentText: `[Delivery Notes] ${deliveryNotes.trim()}`,
+        });
+      }
+      
+      res.status(201).json(updatedJob);
+    } catch (error) {
+      console.error("Error creating direct delivery job:", error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to create direct delivery job" });
+    }
+  });
+
   // Dispatch delivery for a job
   app.post("/api/jobs/:jobId/dispatch-delivery", isAuthenticated, async (req, res) => {
     try {

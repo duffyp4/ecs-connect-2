@@ -32,7 +32,7 @@ const STATE_MACHINE = {
   } as Record<JobState, JobState[]>,
   
   // Initial states that jobs can start in
-  initialStates: ['queued_for_pickup', 'at_shop'] as JobState[],
+  initialStates: ['queued_for_pickup', 'at_shop', 'queued_for_delivery'] as JobState[],
   
   // Terminal states (no further transitions)
   terminalStates: ['delivered', 'cancelled'] as JobState[],
