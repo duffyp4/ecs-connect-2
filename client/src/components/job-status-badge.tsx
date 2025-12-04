@@ -13,6 +13,8 @@ export default function JobStatusBadge({ status }: JobStatusBadgeProps) {
     switch (status.toLowerCase()) {
       case 'queued_for_pickup':
         return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
+      case 'shipment_inbound':
+        return 'bg-sky-100 text-sky-800 hover:bg-sky-200';
       case 'picked_up':
         return 'bg-indigo-100 text-indigo-800 hover:bg-indigo-200';
       case 'at_shop':
@@ -38,6 +40,8 @@ export default function JobStatusBadge({ status }: JobStatusBadgeProps) {
     switch (status.toLowerCase()) {
       case 'queued_for_pickup':
         return 'Queued for Pickup';
+      case 'shipment_inbound':
+        return 'Shipment Inbound';
       case 'picked_up':
         return 'Picked Up';
       case 'at_shop':

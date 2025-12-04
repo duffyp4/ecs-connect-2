@@ -411,7 +411,7 @@ export default function JobDetail() {
           <div className="flex flex-wrap gap-4 items-center">
             <Button 
               onClick={() => setCheckInModalOpen(true)}
-              disabled={!isDevMode && (currentState !== 'picked_up' || isPending)}
+              disabled={!isDevMode && (!['picked_up', 'shipment_inbound'].includes(currentState) || isPending)}
               className="btn-primary"
               data-testid="button-check-in"
             >
@@ -563,7 +563,7 @@ export default function JobDetail() {
                         setEditingPart(part);
                         setPartsManagementModalOpen(true);
                       }}
-                      disabled={!isDevMode && !['queued_for_pickup', 'picked_up'].includes(currentState)}
+                      disabled={!isDevMode && !['queued_for_pickup', 'picked_up', 'shipment_inbound'].includes(currentState)}
                       data-testid={`button-edit-part-${index + 1}`}
                     >
                       <Edit className="mr-2 h-4 w-4" />
