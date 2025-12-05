@@ -560,16 +560,23 @@ export class JobEventsService {
       updatedAt: new Date(),
     });
 
-    // Transition to queued_for_delivery
-    const updatedJob = await this.transitionJobState(jobId, 'queued_for_delivery', {
-      ...options,
-      metadata: {
-        ...options.metadata,
-        driverEmail: deliveryData.driverEmail,
-        dispatchId,
-        formType: 'DELIVERY',
-      },
-    });
+    // Transition to queued_for_delivery (skip if already in that state - direct delivery jobs)
+    let updatedJob: Job;
+    if (job.state === 'queued_for_delivery') {
+      // For direct delivery jobs already in queued_for_delivery, just fetch the updated job
+      updatedJob = (await storage.getJobByJobId(jobId))!;
+    } else {
+      // For regular jobs coming from service_complete, transition to queued_for_delivery
+      updatedJob = await this.transitionJobState(jobId, 'queued_for_delivery', {
+        ...options,
+        metadata: {
+          ...options.metadata,
+          driverEmail: deliveryData.driverEmail,
+          dispatchId,
+          formType: 'DELIVERY',
+        },
+      });
+    }
 
     // Record event
     await this.recordEvent(
