@@ -115,6 +115,7 @@ export default function JobList() {
   const statusOptions = [
     { value: "queued_for_pickup", label: "Queued for Pickup" },
     { value: "picked_up", label: "Picked Up" },
+    { value: "shipment_inbound", label: "Inbound Shipment" },
     { value: "at_shop", label: "At Shop" },
     { value: "in_service", label: "In Service" },
     { value: "service_complete", label: "Service Complete" },
