@@ -400,10 +400,11 @@ export const insertJobPartSchema = createInsertSchema(jobParts).omit({
   createdAt: true,
   updatedAt: true,
 }).extend({
-  // Required fields - 4 out of 11 are required for CSR entry
+  // Required fields - 3 out of 11 are required for CSR entry
+  // Note: ecsSerial is optional at job creation (can be assigned later at check-in)
   part: z.string().min(1, "Part is required"),
   process: z.string().min(1, "Process Being Performed is required"),
-  ecsSerial: z.string().min(1, "ECS Serial Number is required"),
+  ecsSerial: z.string().optional(),
   gasketClamps: z.string().min(1, "Gasket or Clamps is required"),
   // Optional CSR fields
   filterPn: z.string().optional(),
