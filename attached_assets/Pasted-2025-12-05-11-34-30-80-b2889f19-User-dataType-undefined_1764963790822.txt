@@ -1,0 +1,113 @@
+2025-12-05 11:34:30.80
+b2889f19
+User
+dataType: undefined,
+
+2025-12-05 11:34:30.80
+b2889f19
+User
+at async DatabaseStorage.getJobByJobId (file:///home/runner/workspace/dist/index.js:537:24)
+2025-12-05 11:34:30.80
+b2889f19
+User
+constraint: undefined,
+2025-12-05 11:34:30.80
+b2889f19
+User
+}
+2025-12-05 11:34:30.80
+b2889f19
+User
+at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+2025-12-05 11:34:30.80
+b2889f19
+User
+severity: 'ERROR',
+2025-12-05 11:34:30.80
+b2889f19
+User
+position: '822',
+2025-12-05 11:34:30.80
+b2889f19
+User
+detail: undefined,
+2025-12-05 11:34:30.80
+b2889f19
+User
+hint: undefined,
+2025-12-05 11:34:30.80
+b2889f19
+User
+where: undefined,
+2025-12-05 11:34:30.80
+b2889f19
+User
+internalQuery: undefined,
+2025-12-05 11:34:30.80
+b2889f19
+User
+Error fetching job: error: column "shipment_carrier" does not exist
+2025-12-05 11:34:30.80
+b2889f19
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-12-05 11:34:30.80
+b2889f19
+User
+length: 117,
+2025-12-05 11:34:30.80
+b2889f19
+User
+line: '3722',
+2025-12-05 11:34:30.80
+b2889f19
+User
+schema: undefined,
+2025-12-05 11:34:30.80
+b2889f19
+User
+routine: 'errorMissingColumn'
+2025-12-05 11:34:30.80
+b2889f19
+User
+internalPosition: undefined,
+2025-12-05 11:34:30.80
+b2889f19
+User
+table: undefined,
+2025-12-05 11:34:30.80
+b2889f19
+User
+column: undefined,
+2025-12-05 11:34:30.80
+b2889f19
+User
+at async file:///home/runner/workspace/dist/index.js:5440:19 {
+2025-12-05 11:34:30.80
+b2889f19
+User
+code: '42703',
+2025-12-05 11:34:30.80
+b2889f19
+User
+file: 'parse_relation.c',
+2025-12-05 11:34:30.80
+b2889f19
+User
+at async NeonPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+2025-12-05 11:34:30.85
+b2889f19
+User
+7:34:30 PM [express] GET /api/jobs/temp-new-job 500 in 558ms :: {"message":"Failed to fetch job"}
+2025-12-05 11:34:31.95
+b2889f19
+User
+7:34:31 PM [express] POST /api/serial/generate 200 in 354ms :: {"serialNumber":"01.12052025.19"}
+2025-12-05 11:34:32.71
+b2889f19
+User
+7:34:32 PM [express] GET /api/serial/check/01.12052025.19 304 in 175ms :: {"valid":true,"available":…
+2025-12-05 11:34:40.98
+b2889f19
+User
+dataType: undefined,
