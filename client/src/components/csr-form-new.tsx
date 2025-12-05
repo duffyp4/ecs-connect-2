@@ -1381,6 +1381,34 @@ export default function CSRForm() {
               </div>
               )}
 
+              {/* Debug: Show Form Errors */}
+              <div className="p-4 bg-red-100 border border-red-400 rounded mb-4">
+                <p className="text-sm font-bold mb-2">Debug: Form Errors</p>
+                <Button 
+                  type="button" 
+                  onClick={() => {
+                    const errors = form.formState.errors;
+                    console.log("Form errors:", errors);
+                    const errorMessages = Object.entries(errors).map(([key, value]) => `${key}: ${(value as any)?.message || 'invalid'}`).join('\n');
+                    alert("Form errors:\n" + (errorMessages || "No errors detected"));
+                  }}
+                  className="bg-red-500 hover:bg-red-600 text-white mr-2"
+                >
+                  Show Form Errors
+                </Button>
+                <Button 
+                  type="button" 
+                  onClick={() => {
+                    const values = form.getValues();
+                    console.log("Form values:", values);
+                    alert("Form values:\n" + JSON.stringify(values, null, 2));
+                  }}
+                  className="bg-blue-500 hover:bg-blue-600 text-white"
+                >
+                  Show Form Values
+                </Button>
+              </div>
+
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 pt-6">
                 <Button
