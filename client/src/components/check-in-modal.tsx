@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { insertJobSchema } from "@shared/schema";
+import { getShopCode, getTodayDateCode } from "@shared/shopCodes";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useCsrCheckInForm } from "@/hooks/use-csr-check-in-form";
@@ -24,7 +25,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { ClipboardList, Plus, AlertCircle } from "lucide-react";
+import { ClipboardList, Plus, AlertCircle, Loader2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -57,6 +58,7 @@ export function CheckInModal({
   const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
   const [shipToSearchOpen, setShipToSearchOpen] = useState(false);
   const [partsModalOpen, setPartsModalOpen] = useState(false);
+  const [generatingSerialForPartId, setGeneratingSerialForPartId] = useState<string | null>(null);
 
   // Fetch existing parts for this job
   const { data: existingParts = [], refetch: refetchParts } = useQuery<any[]>({
@@ -154,6 +156,45 @@ export function CheckInModal({
     }
   };
 
+  // Generate serial number for a specific part (inline in the table)
+  const handleGenerateSerialForPart = async (partId: string) => {
+    try {
+      setGeneratingSerialForPartId(partId);
+      
+      // Use job's shop name or form's selected shop name
+      const shopNameToUse = form.watch("shopName") || job.shopName || "Nashville";
+      const shopCode = getShopCode(shopNameToUse);
+      const dateCode = getTodayDateCode();
+      
+      // Get next serial from database
+      const response = await apiRequest("POST", `/api/serial/generate`, { shopCode, date: dateCode });
+      const data = await response.json();
+      const serialNumber = data.serialNumber;
+      
+      // Update the part with the new serial number
+      await apiRequest("PATCH", `/api/jobs/${job.jobId}/parts/${partId}`, { 
+        ecsSerial: serialNumber 
+      });
+      
+      // Refetch parts to show the updated serial
+      await refetchParts();
+      
+      toast({
+        title: "Serial Generated",
+        description: `Serial number ${serialNumber} has been assigned.`,
+      });
+    } catch (error) {
+      console.error("Failed to generate serial number:", error);
+      toast({
+        title: "Generation Failed",
+        description: "Could not generate serial number. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setGeneratingSerialForPartId(null);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh]">
@@ -218,6 +259,7 @@ export function CheckInModal({
                           <TableRow>
                             <TableHead className="w-[180px]">ECS Serial</TableHead>
                             <TableHead>Part</TableHead>
+                            <TableHead className="w-[100px]"></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -234,6 +276,28 @@ export function CheckInModal({
                                 )}
                               </TableCell>
                               <TableCell>{part.part || 'Unknown'}</TableCell>
+                              <TableCell>
+                                {!part.ecsSerial && (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleGenerateSerialForPart(part.id)}
+                                    disabled={generatingSerialForPartId === part.id}
+                                    className="border-blue-500 text-blue-600 hover:bg-blue-50 text-xs h-7"
+                                    data-testid={`button-generate-serial-${part.id}`}
+                                  >
+                                    {generatingSerialForPartId === part.id ? (
+                                      <>
+                                        <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                        ...
+                                      </>
+                                    ) : (
+                                      'Generate'
+                                    )}
+                                  </Button>
+                                )}
+                              </TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
