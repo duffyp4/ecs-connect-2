@@ -153,10 +153,11 @@ export default function CSRForm() {
         
         // For delivery path, use the direct-delivery endpoint
         const deliveryPayload = {
-          location: data.shopName,
+          jobId: generatedJobId,
+          shopName: data.shopName,
           customerName: data.customerName,
           customerShipTo: data.customerShipTo,
-          driver: deliveryDriver,
+          driverName: deliveryDriver,
           driverEmail: deliveryDriverEmail,
           orderNumber: deliveryOrderNumber,
           orderNumber2: deliveryOrderNumber2,
