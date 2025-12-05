@@ -560,16 +560,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // For shipment jobs, create the initial event and save notes as a comment
+      // For shipment jobs, record the initial event and save notes as a comment
+      // Note: Job is already created with shipment_inbound state, so we just record the event
       if (arrivalPath === 'shipment') {
-        // Create the shipment_inbound event to record the job creation
-        await jobEventsService.transitionJobState(job.jobId, 'shipment_inbound', {
+        // Record the shipment_inbound event (job is already in this state from creation)
+        await storage.createJobEvent({
+          jobId: job.jobId,
+          eventType: 'state_change',
+          description: 'Inbound shipment job created - awaiting arrival',
           actor: 'CSR',
+          actorEmail: req.user?.claims?.email as string || undefined,
           metadata: {
+            newState: 'shipment_inbound',
             carrier: shipmentCarrier || undefined,
             trackingNumber: shipmentTrackingNumber || undefined,
             expectedArrival: shipmentExpectedArrival || undefined,
-          }
+          },
         });
         console.log(`Job ${job.jobId} created in shipment_inbound state (arrival path: shipment)`);
         
