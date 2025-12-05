@@ -353,7 +353,10 @@ export default function CSRForm() {
     console.log("dataToValidate:", dataToValidate);
     
     // Validate using the appropriate schema
-    const schema = arrivalPath === 'pickup' ? pickupJobSchema : insertJobSchema;
+    // Pickup and Shipment use the same relaxed schema (no userId, poNumber, shopHandoff required)
+    // Direct uses insertJobSchema which requires those fields
+    // Delivery is handled separately above
+    const schema = (arrivalPath === 'pickup' || arrivalPath === 'shipment') ? pickupJobSchema : insertJobSchema;
     const result = schema.safeParse(dataToValidate);
     
     console.log("Validation result:", result.success);
@@ -562,21 +565,6 @@ export default function CSRForm() {
           {/* Step 2: Form */}
           {currentStep === 2 && (
             <>
-              {/* DEBUG: Test button outside form */}
-              <div className="p-4 bg-yellow-100 border border-yellow-400 rounded mb-4">
-                <p className="text-sm mb-2">Debug: arrivalPath = {arrivalPath}</p>
-                <Button 
-                  type="button" 
-                  onClick={() => {
-                    console.log("DEBUG BUTTON CLICKED - arrivalPath:", arrivalPath);
-                    alert("Debug button clicked! arrivalPath: " + arrivalPath);
-                  }}
-                  className="bg-yellow-500 hover:bg-yellow-600"
-                >
-                  Test Click (Debug)
-                </Button>
-              </div>
-
               {/* Job ID Display */}
               <Alert>
                 <Info className="h-4 w-4" />
@@ -1380,34 +1368,6 @@ export default function CSRForm() {
                 </div>
               </div>
               )}
-
-              {/* Debug: Show Form Errors */}
-              <div className="p-4 bg-red-100 border border-red-400 rounded mb-4">
-                <p className="text-sm font-bold mb-2">Debug: Form Errors</p>
-                <Button 
-                  type="button" 
-                  onClick={() => {
-                    const errors = form.formState.errors;
-                    console.log("Form errors:", errors);
-                    const errorMessages = Object.entries(errors).map(([key, value]) => `${key}: ${(value as any)?.message || 'invalid'}`).join('\n');
-                    alert("Form errors:\n" + (errorMessages || "No errors detected"));
-                  }}
-                  className="bg-red-500 hover:bg-red-600 text-white mr-2"
-                >
-                  Show Form Errors
-                </Button>
-                <Button 
-                  type="button" 
-                  onClick={() => {
-                    const values = form.getValues();
-                    console.log("Form values:", values);
-                    alert("Form values:\n" + JSON.stringify(values, null, 2));
-                  }}
-                  className="bg-blue-500 hover:bg-blue-600 text-white"
-                >
-                  Show Form Values
-                </Button>
-              </div>
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 pt-6">
