@@ -999,7 +999,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      res.status(201).json(updatedJob);
+      // Return just the job object (dispatchDelivery returns { job, dispatchId })
+      res.status(201).json(updatedJob.job);
     } catch (error) {
       console.error("Error creating direct delivery job:", error);
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to create direct delivery job" });
