@@ -931,6 +931,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         shopName,
         customerName, 
         customerShipTo,
+        contactName,
+        contactNumber,
         driverEmail,
         driverName,
         deliveryNotes,
@@ -963,27 +965,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         orderNumber5: orderNumber5 || "",
         deliveryNotes: deliveryNotes || "",
         state: 'queued_for_delivery',
-        // Required fields with placeholder values for direct delivery
+        // Required fields - use provided contact info or fall back to driver info
         userId: userEmail,
-        contactName: driverName || "Driver",
-        contactNumber: "0000000000",
+        contactName: contactName || driverName || "Driver",
+        contactNumber: contactNumber || "",
         poNumber: orderNumber || "DIRECT-DELIVERY",
         shopHandoff: driverEmail,
       };
 
       const createdJob = await storage.createJob(jobData);
-      
-      // Record the initial state event
-      await storage.createJobEvent({
-        jobId: createdJob.jobId,
-        eventType: 'state_change',
-        description: 'Direct delivery job created - queued for delivery',
-        actor: 'CSR',
-        actorEmail: userEmail,
-        metadata: { driverName, driverEmail, initialState: 'queued_for_delivery' },
-      });
 
-      // Dispatch the delivery to GoCanvas
+      // Dispatch the delivery to GoCanvas (this creates the delivery_dispatched event)
       const updatedJob = await jobEventsService.dispatchDelivery(createdJob.jobId, {
         driverEmail,
         deliveryAddress: customerShipTo,
