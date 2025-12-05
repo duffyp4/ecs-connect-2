@@ -106,6 +106,8 @@ export default function CSRForm() {
   const [deliveryDriver, setDeliveryDriver] = useState<string>("");
   const [deliveryDriverEmail, setDeliveryDriverEmail] = useState<string>("");
   const [deliveryNotes, setDeliveryNotes] = useState<string>("");
+  const [deliveryContactName, setDeliveryContactName] = useState<string>("");
+  const [deliveryContactNumber, setDeliveryContactNumber] = useState<string>("");
   const [deliveryOrderNumber, setDeliveryOrderNumber] = useState<string>("");
   const [deliveryOrderNumber2, setDeliveryOrderNumber2] = useState<string>("");
   const [deliveryOrderNumber3, setDeliveryOrderNumber3] = useState<string>("");
@@ -157,6 +159,8 @@ export default function CSRForm() {
           shopName: data.shopName,
           customerName: data.customerName,
           customerShipTo: data.customerShipTo,
+          contactName: deliveryContactName,
+          contactNumber: deliveryContactNumber,
           driverName: deliveryDriver,
           driverEmail: deliveryDriverEmail,
           orderNumber: deliveryOrderNumber,
@@ -278,6 +282,8 @@ export default function CSRForm() {
       setDeliveryDriver("");
       setDeliveryDriverEmail("");
       setDeliveryNotes("");
+      setDeliveryContactName("");
+      setDeliveryContactNumber("");
       setDeliveryOrderNumber("");
       setDeliveryOrderNumber2("");
       setDeliveryOrderNumber3("");
@@ -1287,6 +1293,39 @@ export default function CSRForm() {
                       </FormItem>
                     )}
                   />
+
+                  {/* Contact Name */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Contact Name</label>
+                    <Input
+                      placeholder="Contact person"
+                      value={deliveryContactName}
+                      onChange={(e) => setDeliveryContactName(e.target.value)}
+                      data-testid="input-delivery-contact-name"
+                    />
+                  </div>
+
+                  {/* Contact Number */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Contact Number</label>
+                    <Input
+                      placeholder="(555) 555-5555"
+                      value={deliveryContactNumber}
+                      onChange={(e) => {
+                        const digits = e.target.value.replace(/\D/g, '');
+                        const limitedDigits = digits.substring(0, 10);
+                        
+                        let formatted = '';
+                        if (limitedDigits.length === 0) formatted = '';
+                        else if (limitedDigits.length <= 3) formatted = `(${limitedDigits}`;
+                        else if (limitedDigits.length <= 6) formatted = `(${limitedDigits.substring(0, 3)}) ${limitedDigits.substring(3)}`;
+                        else formatted = `(${limitedDigits.substring(0, 3)}) ${limitedDigits.substring(3, 6)}-${limitedDigits.substring(6)}`;
+                        
+                        setDeliveryContactNumber(formatted);
+                      }}
+                      data-testid="input-delivery-contact-number"
+                    />
+                  </div>
 
                   {/* Driver */}
                   <div>
