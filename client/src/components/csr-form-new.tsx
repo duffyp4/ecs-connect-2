@@ -341,12 +341,20 @@ export default function CSRForm() {
     
     // For pickup and shipment paths, merge local state fields before validation
     // These fields are not controlled by react-hook-form
+    // Note: Contact fields are only required for pickup, not for shipment
     let dataToValidate = data;
-    if (arrivalPath === 'pickup' || arrivalPath === 'shipment') {
+    if (arrivalPath === 'pickup') {
       dataToValidate = {
         ...data,
         contactName: pickupContactName,
         contactNumber: pickupContactNumber,
+      };
+    } else if (arrivalPath === 'shipment') {
+      // For shipment, only include contact fields if provided (they're optional)
+      dataToValidate = {
+        ...data,
+        ...(pickupContactName ? { contactName: pickupContactName } : {}),
+        ...(pickupContactNumber ? { contactNumber: pickupContactNumber } : {}),
       };
     }
     
@@ -367,14 +375,18 @@ export default function CSRForm() {
       console.log("Validation errors:", errors);
       Object.entries(errors).forEach(([field, messages]) => {
         if (messages && messages.length > 0) {
-          // For pickup/shipment fields that are in local state, show toast instead of form error
-          if ((arrivalPath === 'pickup' || arrivalPath === 'shipment') && 
+          // For pickup fields that are in local state, show toast instead of form error
+          // Contact fields are only required for pickup, not for shipment
+          if (arrivalPath === 'pickup' && 
               (field === 'contactName' || field === 'contactNumber')) {
             toast({
               title: "Validation Error",
               description: messages[0],
               variant: "destructive",
             });
+          } else if (arrivalPath === 'shipment' && 
+              (field === 'contactName' || field === 'contactNumber')) {
+            // Skip contact field errors for shipment - they're optional
           } else {
             form.setError(field as any, { message: messages[0] });
           }
@@ -815,7 +827,9 @@ export default function CSRForm() {
 
                       {/* Contact Name */}
                       <div>
-                        <label className="block text-sm font-medium mb-2">Contact Name</label>
+                        <label className="block text-sm font-medium mb-2">
+                          Contact Name{arrivalPath === 'shipment' ? ' (Optional)' : ''}
+                        </label>
                         <Input
                           placeholder="Contact person"
                           value={pickupContactName}
@@ -826,7 +840,9 @@ export default function CSRForm() {
 
                       {/* Contact Number */}
                       <div>
-                        <label className="block text-sm font-medium mb-2">Contact Number</label>
+                        <label className="block text-sm font-medium mb-2">
+                          Contact Number{arrivalPath === 'shipment' ? ' (Optional)' : ''}
+                        </label>
                         <Input
                           placeholder="(555) 555-5555"
                           value={pickupContactNumber}
