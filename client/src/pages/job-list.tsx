@@ -223,7 +223,7 @@ export default function JobList() {
   const getAvailableActions = (state: string): ActionType[] => {
     const actions: ActionType[] = [];
 
-    if (state === 'picked_up') {
+    if (state === 'picked_up' || state === 'shipment_inbound') {
       actions.push({
         id: 'check-in',
         label: 'Check In at Shop',
