@@ -560,14 +560,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // For shipment jobs, save shipment notes as a comment (no GoCanvas dispatch)
-      if (arrivalPath === 'shipment' && shipmentNotes && shipmentNotes.trim()) {
-        await storage.createJobComment({
-          jobId: job.jobId,
-          userId,
-          commentText: `[Shipment Notes] ${shipmentNotes.trim()}`,
+      // For shipment jobs, create the initial event and save notes as a comment
+      if (arrivalPath === 'shipment') {
+        // Create the shipment_inbound event to record the job creation
+        await jobEventsService.transitionJobState(job.jobId, 'shipment_inbound', {
+          actor: 'CSR',
+          metadata: {
+            carrier: shipmentCarrier || undefined,
+            trackingNumber: shipmentTrackingNumber || undefined,
+            expectedArrival: shipmentExpectedArrival || undefined,
+          }
         });
-        console.log(`Shipment notes saved as comment for job ${job.jobId}`);
+        console.log(`Job ${job.jobId} created in shipment_inbound state (arrival path: shipment)`);
+        
+        // Save shipment notes as a comment if provided
+        if (shipmentNotes && shipmentNotes.trim()) {
+          await storage.createJobComment({
+            jobId: job.jobId,
+            userId,
+            commentText: `[Shipment Notes] ${shipmentNotes.trim()}`,
+          });
+          console.log(`Shipment notes saved as comment for job ${job.jobId}`);
+        }
       }
 
       const updatedJob = await storage.getJob(job.id);
