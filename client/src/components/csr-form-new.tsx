@@ -353,10 +353,10 @@ export default function CSRForm() {
     console.log("dataToValidate:", dataToValidate);
     
     // Validate using the appropriate schema
-    // Pickup and Shipment use the same relaxed schema (no userId, poNumber, shopHandoff required)
-    // Direct uses insertJobSchema which requires those fields
-    // Delivery is handled separately above
-    const schema = (arrivalPath === 'pickup' || arrivalPath === 'shipment') ? pickupJobSchema : insertJobSchema;
+    // Pickup, Shipment, and Delivery use the relaxed schema (no userId, poNumber, shopHandoff required)
+    // Only Direct uses insertJobSchema which requires those fields for shop check-in
+    // Delivery has additional validation in the mutation function
+    const schema = (arrivalPath === 'pickup' || arrivalPath === 'shipment' || arrivalPath === 'delivery') ? pickupJobSchema : insertJobSchema;
     const result = schema.safeParse(dataToValidate);
     
     console.log("Validation result:", result.success);
