@@ -584,7 +584,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await storage.createJobComment({
             jobId: job.jobId,
             userId,
-            commentText: `[Shipment Notes] ${shipmentNotes.trim()}`,
+            commentText: `[Inbound Shipment Notes] ${shipmentNotes.trim()}`,
           });
           console.log(`Shipment notes saved as comment for job ${job.jobId}`);
         }
@@ -911,7 +911,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.createJobComment({
           jobId: job.jobId,
           userId,
-          commentText: `[Shipping Notes] ${shippingNotes.trim()}`,
+          commentText: `[Outbound Shipment Notes] ${shippingNotes.trim()}`,
         });
       }
 
