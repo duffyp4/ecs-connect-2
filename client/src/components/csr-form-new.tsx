@@ -1192,7 +1192,7 @@ export default function CSRForm() {
                     control={form.control}
                     name="customerShipTo"
                     render={({ field }) => (
-                      <FormItem className="flex flex-col">
+                      <FormItem>
                         <FormLabel className="flex items-center gap-1">
                           <Database className="h-3 w-3 text-muted-foreground" /> Customer Ship-To *
                         </FormLabel>
@@ -1202,40 +1202,82 @@ export default function CSRForm() {
                               <Button
                                 variant="outline"
                                 role="combobox"
-                                className={cn(
-                                  "w-full justify-between",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                                disabled={!customerName}
+                                aria-expanded={shipToSearchOpen}
+                                className="w-full justify-between"
                                 data-testid="select-delivery-ship-to"
                               >
-                                {field.value || "Select ship-to..."}
+                                {field.value || "Select or type ship to location..."}
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
-                          <PopoverContent className="w-full p-0" align="start">
-                            <Command>
+                          <PopoverContent className="w-[400px] p-0">
+                            <Command shouldFilter={false}>
+                              <div className="flex items-center border-b px-3">
+                                <Database className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                                <Input
+                                  placeholder="Search ship to locations or enter custom location..."
+                                  value={field.value || ""}
+                                  onChange={(e) => field.onChange(e.target.value)}
+                                  className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                />
+                              </div>
                               <CommandList>
-                                <ScrollArea className="h-[200px]">
-                                  {isLoadingShipTo ? (
-                                    <div className="p-2 text-center text-sm text-muted-foreground">Loading...</div>
-                                  ) : (
-                                    shipToOptions.map((option) => (
-                                      <CommandItem
-                                        key={option}
-                                        value={option}
-                                        onSelect={() => {
-                                          field.onChange(option);
-                                          setShipToSearchOpen(false);
-                                        }}
-                                      >
-                                        <Check className={cn("mr-2 h-4 w-4", option === field.value ? "opacity-100" : "opacity-0")} />
-                                        {option}
-                                      </CommandItem>
-                                    ))
-                                  )}
-                                </ScrollArea>
+                                {isLoadingShipTo ? (
+                                  <div className="py-6 text-center text-sm">Loading ship to options...</div>
+                                ) : !customerName ? (
+                                  <div className="py-6 text-center text-sm">Select Customer first</div>
+                                ) : (
+                                  <>
+                                    {shipToOptions
+                                      .filter((shipTo) =>
+                                        shipTo.toLowerCase().includes((field.value || "").toLowerCase())
+                                      )
+                                      .slice(0, 100)
+                                      .map((shipTo) => (
+                                        <CommandItem
+                                          key={shipTo}
+                                          value={shipTo}
+                                          onSelect={() => {
+                                            field.onChange(shipTo);
+                                            setShipToSearchOpen(false);
+                                          }}
+                                        >
+                                          <Check
+                                            className={cn(
+                                              "mr-2 h-4 w-4",
+                                              field.value === shipTo ? "opacity-100" : "opacity-0"
+                                            )}
+                                          />
+                                          {shipTo}
+                                        </CommandItem>
+                                      ))}
+                                    {field.value && 
+                                     !shipToOptions.some(shipTo => 
+                                       shipTo.toLowerCase() === field.value.toLowerCase()
+                                     ) && (
+                                      <div className="p-2 border-t">
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="w-full justify-start"
+                                          onClick={() => {
+                                            setShipToSearchOpen(false);
+                                          }}
+                                        >
+                                          Add "{field.value}" as a new ship to location
+                                        </Button>
+                                      </div>
+                                    )}
+                                    {!isLoadingShipTo && 
+                                     shipToOptions
+                                       .filter((shipTo) =>
+                                         shipTo.toLowerCase().includes((field.value || "").toLowerCase())
+                                       ).length === 0 && !field.value && (
+                                      <div className="py-6 text-center text-sm">No ship to locations found</div>
+                                    )}
+                                  </>
+                                )}
                               </CommandList>
                             </Command>
                           </PopoverContent>
