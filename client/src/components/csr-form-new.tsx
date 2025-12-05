@@ -1468,6 +1468,7 @@ export default function CSRForm() {
         onLocalPartsChange={setLocalParts}
         openInAddMode={localParts.length === 0}
         shopName={form.watch("shopName")}
+        hideSerialNumber={arrivalPath === 'shipment'}
       />
 
       {/* Direct Delivery Modal */}

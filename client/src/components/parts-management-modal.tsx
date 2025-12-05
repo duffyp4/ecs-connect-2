@@ -59,6 +59,7 @@ interface PartsManagementModalProps {
   showEditLockDisclaimer?: boolean; // If true, shows disclaimer about parts being locked after shop check-in
   editingPart?: JobPart | null; // Pass a part to edit directly (from job details page)
   shopName?: string; // Optional: Pass shop name directly (for local mode when job doesn't exist yet)
+  hideSerialNumber?: boolean; // If true, hides the ECS Serial Number field (for inbound shipment path)
 }
 
 export function PartsManagementModal({
@@ -73,6 +74,7 @@ export function PartsManagementModal({
   showEditLockDisclaimer = false,
   editingPart: externalEditingPart,
   shopName: propShopName,
+  hideSerialNumber = false,
 }: PartsManagementModalProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -578,45 +580,47 @@ export function PartsManagementModal({
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="ecsSerial"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>ECS Serial Number *</FormLabel>
-                        <FormControl>
-                          <Input {...field} data-testid="input-ecs-serial" />
-                        </FormControl>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={handleGenerateSerial}
-                            disabled={isGenerating}
-                            className="border-blue-500 text-blue-600 hover:bg-blue-50"
-                            data-testid="button-generate-serial"
-                          >
-                            {isGenerating ? "Generating..." : "Generate"}
-                          </Button>
-                          {serialValidation.status === 'checking' && (
-                            <span className="text-xs text-muted-foreground">Checking...</span>
-                          )}
-                          {serialValidation.status === 'valid' && (
-                            <span className="text-xs text-green-600 font-medium" data-testid="text-serial-valid">
-                              ✓ {serialValidation.message}
-                            </span>
-                          )}
-                          {serialValidation.status === 'invalid' && (
-                            <span className="text-xs text-red-600 font-medium" data-testid="text-serial-invalid">
-                              ✗ {serialValidation.message}
-                            </span>
-                          )}
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {!hideSerialNumber && (
+                    <FormField
+                      control={form.control}
+                      name="ecsSerial"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>ECS Serial Number *</FormLabel>
+                          <FormControl>
+                            <Input {...field} data-testid="input-ecs-serial" />
+                          </FormControl>
+                          <div className="flex items-center gap-2 mt-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={handleGenerateSerial}
+                              disabled={isGenerating}
+                              className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                              data-testid="button-generate-serial"
+                            >
+                              {isGenerating ? "Generating..." : "Generate"}
+                            </Button>
+                            {serialValidation.status === 'checking' && (
+                              <span className="text-xs text-muted-foreground">Checking...</span>
+                            )}
+                            {serialValidation.status === 'valid' && (
+                              <span className="text-xs text-green-600 font-medium" data-testid="text-serial-valid">
+                                ✓ {serialValidation.message}
+                              </span>
+                            )}
+                            {serialValidation.status === 'invalid' && (
+                              <span className="text-xs text-red-600 font-medium" data-testid="text-serial-invalid">
+                                ✗ {serialValidation.message}
+                              </span>
+                            )}
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
 
                   <FormField
                     control={form.control}
