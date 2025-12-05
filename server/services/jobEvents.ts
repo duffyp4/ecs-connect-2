@@ -495,9 +495,11 @@ export class JobEventsService {
       throw new Error(`Job ${jobId} not found`);
     }
 
-    // Validate state (must be in service_complete)
-    if (job.state !== 'service_complete') {
-      throw new Error(`Cannot dispatch delivery: job is in ${job.state} state, must be in service_complete`);
+    // Validate state (must be in service_complete OR queued_for_delivery for direct delivery jobs)
+    // Direct delivery jobs start in queued_for_delivery and bypass the service workflow
+    const allowedStates = ['service_complete', 'queued_for_delivery'];
+    if (!allowedStates.includes(job.state)) {
+      throw new Error(`Cannot dispatch delivery: job is in ${job.state} state, must be in service_complete or queued_for_delivery`);
     }
 
     // Try to create GoCanvas dispatch FIRST
