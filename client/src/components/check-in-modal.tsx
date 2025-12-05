@@ -24,7 +24,15 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { ClipboardList, Plus } from "lucide-react";
+import { ClipboardList, Plus, AlertCircle } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { z } from "zod";
 import type { Job } from "@shared/schema";
@@ -201,10 +209,36 @@ export function CheckInModal({
                     <Plus className="mr-1 h-4 w-4" />
                     {existingParts.length === 0 ? 'ADD' : 'MANAGE PARTS'}
                   </Button>
+                  
+                  {/* Parts Summary Table */}
                   {existingParts.length > 0 && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {existingParts.length} part{existingParts.length !== 1 ? 's' : ''} added
-                    </p>
+                    <div className="mt-3 border rounded-md">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-[180px]">ECS Serial</TableHead>
+                            <TableHead>Part</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {existingParts.map((part, index) => (
+                            <TableRow key={part.id || index}>
+                              <TableCell className="font-mono text-sm">
+                                {part.ecsSerial ? (
+                                  part.ecsSerial
+                                ) : (
+                                  <span className="flex items-center gap-1 text-amber-600">
+                                    <AlertCircle className="h-3 w-3" />
+                                    <span className="text-xs">Not assigned</span>
+                                  </span>
+                                )}
+                              </TableCell>
+                              <TableCell>{part.part || 'Unknown'}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   )}
                 </div>
               </div>
