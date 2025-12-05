@@ -1,0 +1,80 @@
+2025-12-05T19:14:36Z info: Deployment: 98f4c17e-34dd-4bfa-8cb4-4850782035d9
+2025-12-05T19:14:36Z info: Build: b2889f19-a212-41fe-bf3e-f8905d31cda4
+2025-12-05T19:14:36Z info: Connecting to builder
+2025-12-05T19:14:36Z info: Builder connected
+2025-12-05T19:14:37Z info: Installing packages
+2025-12-05T19:14:38Z info: Starting Build
+
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+
+vite v5.4.19 building for production...
+
+transforming...
+
+Browserslist: browsers data (caniuse-lite) is 14 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+✓ 2707 modules transformed.
+
+rendering chunks...
+
+computing gzip size...
+
+../dist/public/index.html                   0.66 kB │ gzip:   0.40 kB
+
+../dist/public/assets/index-yNBT3EwF.css   73.62 kB │ gzip:  13.03 kB
+
+../dist/public/assets/index-BWPTSBTw.js   780.71 kB │ gzip: 218.43 kB
+
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+✓ built in 10.57s
+
+
+  dist/index.js  253.7kb
+
+⚡ Done in 416ms
+
+npm notice
+npm notice New major version of npm available! 10.8.2 -> 11.6.4
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.4
+npm notice To update run: npm install -g npm@11.6.4
+npm notice
+
+2025-12-05T19:14:54Z info: Pushing pid1 binary layer...
+2025-12-05T19:14:56Z info: Pushing Repl layer...
+2025-12-05T19:14:56Z info: Pushing hosting layer...
+2025-12-05T19:14:56Z info: Retrieved cached nix layer
+2025-12-05T19:14:56Z info: Created hosting layer
+2025-12-05T19:14:56Z info: Created pid1 binary layer
+2025-12-05T19:15:26Z info: Created Repl layer
+2025-12-05T19:15:28Z info: Pushed image manifest
+2025-12-05T19:15:30Z info: Pushed soci index manifest
+2025-12-05T19:15:33Z info: Creating Autoscale service
+2025-12-05T19:15:55Z info: Waiting for service to be ready
+metasidecar: loaded enterprise status from environment is_enterprise=false
+> NODE_ENV=production node dist/index.js
+🌍 ===== ENVIRONMENT DEBUG INFO =====
+> rest-express@1.0.0 start
+⚡ Webhook mode enabled - polling disabled
+✅ GoCanvas initialized: Field mapping is current (Form: 5702557, 192 fields)
+7:15:51 PM [express] serving on port 5000
+starting up user application
+forwarding local port 5000 to external port 80 (mapped as 1104)
+Node.js timezone: UTC
+UTC offset (minutes): 0
+📋 Connected to GoCanvas
+Process TZ env var: undefined
+Webhook Mode: webhook
+Server timezone offset: GMT+0000
+Date.now() sample: 2025-12-05T19:15:51.850Z
+Local time sample: 12/5/2025, 7:15:51 PM
+=========================================
+2025-12-05T19:15:57Z info: Deployment successful
