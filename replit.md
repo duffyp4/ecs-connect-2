@@ -57,3 +57,13 @@ The application uses a monorepo structure with `/client` (React frontend), `/ser
 
 ### Timezone Services
 - **API**: TimeZone API for GPS coordinate to timezone conversion.
+
+## Documentation
+
+### Ghost Parts History
+See `GHOST_PARTS_HISTORY.md` for consolidated documentation of all "ghost parts" investigations, including:
+- September 2025: Conditional logic triggers causing required field errors
+- November 2025: Internal form validation change (Cleaning Phase requirement)
+- December 2025: Serial number mismatch from manual GoCanvas edits
+
+**Key insight:** "Ghost parts" can have multiple root causes. Always check for form changes and manual edits before assuming a code bug.
