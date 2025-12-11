@@ -24,7 +24,9 @@ The application uses a monorepo structure with `/client` (React frontend), `/ser
 - **GoCanvas Integration**: Supports three forms (Emissions Service Log, Pickup Log, Delivery Log) with dynamic field mapping and dispatches.
 - **Job Tracking**: Records completion timestamps, calculates turnaround times, and synchronizes to Google Sheets.
 - **Parts Management System**: Allows CSRs to add part details to jobs, with auto-generated and editable ECS Serial Numbers, and integrates with GoCanvas loop screens. Parts become read-only after check-in.
-- **Dispatch Delivery Workflow**: Enables direct delivery of parts, starting jobs in a `queued_for_delivery` state and dispatching immediately via GoCanvas.
+  - **Serial Number Format**: `XX.MMDDYYYY.ZZ` where XX=shop code (2 digits with leading zero), MMDDYYYY=8-digit date, ZZ=daily sequence (2 digits with leading zero). Example: `01.12092025.01`
+  - **Parts Loop Fields**: Part name, process, filter PN, PO number, mileage, unit/VIN, gasket/clamps, EC/EG/EK checkboxes. Uses `multi_key` (serial number) to associate fields with specific part rows in GoCanvas.
+- **Dispatch Delivery Workflow**: Enables direct delivery of parts, starting jobs in a `queued_for_delivery` state and dispatching immediately via GoCanvas. Includes Contact Name and Contact Number fields with phone formatting.
 - **Inbound Shipment Workflow**: Creates jobs for customer-shipped parts, starting in a `shipment_inbound` state, bypassing driver pickup.
 - **Outbound Shipment Workflow**: Allows shipping completed parts back to customers via carriers, marking the job as `outbound_shipment` (a terminal state).
 
@@ -67,3 +69,7 @@ See `GHOST_PARTS_HISTORY.md` for consolidated documentation of all "ghost parts"
 - December 2025: Serial number mismatch from manual GoCanvas edits
 
 **Key insight:** "Ghost parts" can have multiple root causes. Always check for form changes and manual edits before assuming a code bug.
+
+### Known Issues
+
+**PO Number Dual-Mapping (Low Priority):** Job-level PO Number is sent to both `'PO Number (Check In)'` (correct) and `'PO Number'` parts loop field (incorrect, without multi_key). GoCanvas silently ignores the parts loop value since it lacks a multi_key. No visible impact, but should be cleaned up. Affected lines: 820 and 1514 in `server/services/gocanvas.ts`.
