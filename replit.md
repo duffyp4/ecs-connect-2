@@ -73,3 +73,33 @@ See `GHOST_PARTS_HISTORY.md` for consolidated documentation of all "ghost parts"
 ### Known Issues
 
 **PO Number Dual-Mapping (Low Priority):** Job-level PO Number is sent to both `'PO Number (Check In)'` (correct) and `'PO Number'` parts loop field (incorrect, without multi_key). GoCanvas silently ignores the parts loop value since it lacks a multi_key. No visible impact, but should be cleaned up. Affected lines: 820 and 1514 in `server/services/gocanvas.ts`.
+
+## Key Files Reference
+
+| Area | Primary Files |
+|------|---------------|
+| **Database Schema** | `shared/schema.ts` |
+| **API Routes** | `server/routes.ts` |
+| **GoCanvas Dispatch** | `server/services/gocanvas.ts` |
+| **Field Mapping** | `shared/fieldMapper.ts`, `gocanvas_field_map_*.json` |
+| **Job State Machine** | `server/services/jobEvents.ts` |
+| **Parts Management UI** | `client/src/components/parts-management-modal.tsx` |
+| **Job Creation Form** | `client/src/components/csr-form-new.tsx` |
+| **Shop Codes** | `shared/shopCodes.ts` |
+
+## Environment Variables
+
+### Required
+- `DATABASE_URL` - PostgreSQL connection string
+- `GOCANVAS_USERNAME`, `GOCANVAS_PASSWORD` - GoCanvas API credentials
+- `GOCANVAS_FORM_ID_EMISSIONS`, `GOCANVAS_FORM_ID_PICKUP`, `GOCANVAS_FORM_ID_DELIVERY` - Form IDs
+
+### Optional
+- `WEBHOOK_MODE` - `polling`, `hybrid`, or `push` (default: polling)
+- `DRY_RUN` - Set to `true` to skip actual GoCanvas API calls (for testing)
+
+## Development Commands
+
+- `npm run dev` - Start development server (frontend + backend)
+- `npm run db:push` - Push schema changes to database
+- `npm run db:push --force` - Force push schema (use when db:push warns about data loss)
