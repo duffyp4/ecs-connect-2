@@ -6,6 +6,7 @@ export const SHOP_CODE_MAP: Record<string, string> = {
   "ECS Atlanta": "02",
   "ECS Dallas": "03",
   "ECS Chicago": "04",
+  "ECS Corporate": "99",
 };
 
 export const SHOP_NAMES = Object.keys(SHOP_CODE_MAP) as Array<keyof typeof SHOP_CODE_MAP>;
