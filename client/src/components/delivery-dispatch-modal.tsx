@@ -156,10 +156,7 @@ export function DeliveryDispatchModal({
       setIsSubmitting(true);
 
       if (isNewMode) {
-        const jobId = generatedJobId || generateJobId(data.location);
-        
         const response = await apiRequest("POST", "/api/jobs/direct-delivery", {
-          jobId,
           shopName: data.location,
           customerName: data.customerName,
           customerShipTo: data.customerShipTo,
@@ -172,13 +169,16 @@ export function DeliveryDispatchModal({
           orderNumber4: data.orderNumber4,
           orderNumber5: data.orderNumber5,
         });
+        
+        // Use the actual jobId from the response, not the pre-generated one
+        const createdJob = await response.json();
 
         queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
         queryClient.invalidateQueries({ queryKey: ["/api/metrics"] });
 
         toast({
           title: "Dispatch Delivery Created",
-          description: `Job ${jobId} created and delivery dispatched to ${data.driver}`,
+          description: `Job ${createdJob.jobId} created and delivery dispatched to ${data.driver}`,
         });
       } else {
         await apiRequest("POST", `/api/jobs/${job!.jobId}/dispatch-delivery`, {

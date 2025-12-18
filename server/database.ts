@@ -5,6 +5,7 @@ import { eq, desc, and, sql as drizzleSql } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { IStorage } from "./storage";
 import ws from "ws";
+import { generateJobId } from "@shared/shopCodes";
 
 export interface WhitelistWithRole extends Whitelist {
   role?: string | null;
@@ -32,7 +33,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createJob(insertJob: InsertJob): Promise<Job> {
-    const jobId = this.generateJobId();
+    // Generate Job ID using the centralized format: ECS-YYYYMMDDHHMMSS-XX (shop code)
+    // Uses shopName from the job data to ensure consistent shop code
+    const jobId = generateJobId(insertJob.shopName);
     const result = await this.db.insert(jobs).values({
       jobId,
       gocanvasSynced: "false",
@@ -278,12 +281,6 @@ export class DatabaseStorage implements IStorage {
     await this.db.delete(jobParts).where(eq(jobParts.id, id));
   }
 
-  private generateJobId(): string {
-    const now = new Date();
-    const timestamp = now.toISOString().replace(/[-T:\.Z]/g, '').slice(0, 14);
-    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    return `ECS-${timestamp}-${random}`;
-  }
 
   // ECS Serial Number methods
   // Peek at next serial number WITHOUT reserving it
