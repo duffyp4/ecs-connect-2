@@ -1,13 +1,14 @@
 // Shop name to shop code mapping
 // Shop code format: 2-digit code used in ECS Serial Numbers (XX.MMDDYYYY.ZZ)
 export const SHOP_CODE_MAP: Record<string, string> = {
-  "Nashville": "01",
-  "Birmingham": "02",
-  "Charlotte": "03",
-  "Knoxville": "04",
-  "Chattanooga": "05",
-  // Add more shop codes as needed
+  "ECS Memphis": "00",
+  "ECS Nashville": "01",
+  "ECS Atlanta": "02",
+  "ECS Dallas": "03",
+  "ECS Chicago": "04",
 };
+
+export const SHOP_NAMES = Object.keys(SHOP_CODE_MAP) as Array<keyof typeof SHOP_CODE_MAP>;
 
 // Get shop code from shop name
 export function getShopCode(shopName: string): string {
