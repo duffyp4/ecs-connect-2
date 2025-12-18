@@ -24,7 +24,7 @@
     },
     {
       "id": 726424694,
-      "label": "Location",
+      "label": "Shop Name",
       "required": true,
       "type": "Single Choice"
     },
@@ -99,7 +99,7 @@
     "Job ID": 726424691,
     "Dispatch Date": 726424692,
     "Dispatch Time": 726424693,
-    "Location": 726424694,
+    "Shop Name": 726424694,
     "Customer Name": 726424695,
     "Customer Ship-To": 726424696,
     "Contact Name": 726424697,
