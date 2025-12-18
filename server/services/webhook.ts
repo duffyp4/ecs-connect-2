@@ -1,5 +1,5 @@
 import { parseStringPromise } from 'xml2js';
-import { goCanvasService, FORM_IDS } from './gocanvas';
+import { goCanvasService, FORM_IDS, getAllKnownFormIds, getFormTypeFromId } from './gocanvas';
 import { jobEventsService } from './jobEvents';
 import { updatePartsFromSubmission, handleAdditionalComments } from './parts-update';
 
@@ -352,22 +352,27 @@ export class WebhookService {
 
     console.log(`📋 Processing submission for Job ID: ${jobId}, Form: ${formId}`);
 
-    // Route to appropriate handler based on form ID
-    switch (formId) {
-      case FORM_IDS.PICKUP:
+    // Determine form type from ID (works for current and historical form versions)
+    const formType = getFormTypeFromId(formId);
+    
+    if (!formType) {
+      console.warn('⚠️ Unknown form ID in webhook:', formId);
+      return;
+    }
+
+    // Route to appropriate handler based on form type
+    switch (formType) {
+      case 'PICKUP':
         await this.handlePickupCompletion(jobId, submissionData);
         break;
       
-      case FORM_IDS.EMISSIONS:
+      case 'EMISSIONS':
         await this.handleServiceCompletion(jobId, submissionData);
         break;
       
-      case FORM_IDS.DELIVERY:
+      case 'DELIVERY':
         await this.handleDeliveryCompletion(jobId, submissionData);
         break;
-      
-      default:
-        console.warn('⚠️ Unknown form ID in webhook:', formId);
     }
   }
 
@@ -398,8 +403,8 @@ export class WebhookService {
         dispatchItemId: notification.dispatchItemId,
       });
       
-      // Filter: Only process webhooks for our 3 target forms
-      const targetFormIds: string[] = [FORM_IDS.PICKUP, FORM_IDS.EMISSIONS, FORM_IDS.DELIVERY];
+      // Filter: Only process webhooks for our 3 target forms (current + historical versions)
+      const targetFormIds: string[] = getAllKnownFormIds();
       if (!targetFormIds.includes(notification.formId)) {
         console.log(`⏭️ Ignoring webhook for non-target form: ${notification.formId} (${notification.formName})`);
         webhookMetrics.ignoredForms++;

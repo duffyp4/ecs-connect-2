@@ -43,7 +43,7 @@ The application uses a monorepo structure with `/client` (React frontend), `/ser
 
 ### GoCanvas Integration
 - **API**: Basic Authentication for Forms, Submissions, and Reference Data APIs.
-- **Form IDs**: Configured via environment variables (`GOCANVAS_FORM_ID_EMISSIONS`, `GOCANVAS_FORM_ID_PICKUP`, `GOCANVAS_FORM_ID_DELIVERY`).
+- **Form IDs**: Managed in `shared/formVersions.ts` (NOT environment variables - see Architecture Decisions below).
 - **Dynamic Field Mapping**: Uses JSON files and `shared/fieldMapper.ts` for dynamic field ID lookups.
 - **Push Notifications**: XML-based API v2 submission notifications.
 
@@ -85,18 +85,49 @@ See `GHOST_PARTS_HISTORY.md` for consolidated documentation of all "ghost parts"
 | **Job State Machine** | `server/services/jobEvents.ts` |
 | **Parts Management UI** | `client/src/components/parts-management-modal.tsx` |
 | **Job Creation Form** | `client/src/components/csr-form-new.tsx` |
-| **Shop Codes** | `shared/shopCodes.ts` |
+| **Shop Codes & Job IDs** | `shared/shopCodes.ts` |
+| **Form Version History** | `shared/formVersions.ts` |
 
 ## Environment Variables
 
 ### Required
 - `DATABASE_URL` - PostgreSQL connection string
 - `GOCANVAS_USERNAME`, `GOCANVAS_PASSWORD` - GoCanvas API credentials
-- `GOCANVAS_FORM_ID_EMISSIONS`, `GOCANVAS_FORM_ID_PICKUP`, `GOCANVAS_FORM_ID_DELIVERY` - Form IDs
 
 ### Optional
 - `WEBHOOK_MODE` - `polling`, `hybrid`, or `push` (default: polling)
 - `DRY_RUN` - Set to `true` to skip actual GoCanvas API calls (for testing)
+
+## Architecture Decisions
+
+### GoCanvas Form IDs in Code, Not Env Vars (December 2024)
+
+**Decision:** Store GoCanvas form IDs in `shared/formVersions.ts`, not environment variables.
+
+**Reasons:**
+1. Form IDs aren't secrets - no security reason to hide them
+2. They're the same in dev and production
+3. They must stay in sync with field mappings - storing them together prevents mistakes
+4. We need version history for webhooks to catch submissions from older form versions
+5. Git tracks code changes but not env var changes
+
+**Update Workflow:**
+When updating a GoCanvas form, tell the agent: *"Remap the [EMISSIONS/PICKUP/DELIVERY] form to new ID [new_id]"*
+
+The agent will automatically:
+1. Move the current ID to history array in `formVersions.ts`
+2. Set the new ID as current
+3. Call GoCanvas API to get new field mappings
+4. Update the corresponding `gocanvas_field_map_*.json` file
+
+### Job ID Format (December 2024)
+
+**Decision:** All job IDs use format `ECS-YYYYMMDDHHMMSS-XX` where XX is the 2-digit shop code.
+
+**Reasons:**
+1. Consistent format across all 4 job creation paths
+2. Shop code embedded for easy identification
+3. Centralized generator in `shared/shopCodes.ts`
 
 ## Development Commands
 
@@ -125,7 +156,7 @@ All shops will submit to the same GoCanvas forms (Emissions Service Log, Pickup 
 | **User Access Control** | High | Filter jobs by user's assigned shop(s). Use GoCanvas reference data for shop assignments. |
 | **UI Shop Filtering** | High | Add shop selector to job list, dashboard. Let users filter by shop. |
 | **Dashboard Metrics** | Medium | Per-shop statistics, ability to compare shops. |
-| **Job ID Format** | Low | Unify to include shop code: `ECS-YYYYMMDDHHMMSS-{shopCode}`. Currently inconsistent between forms. |
+| **Job ID Format** | ✅ Done | Unified to `ECS-YYYYMMDDHHMMSS-XX` format with 2-digit shop code. |
 | **Google Sheets** | Low | Add "Shop" column to existing sheet, or create per-shop sheets. |
 | **Technician Dropdown** | Medium | Confirm if technicians are shop-specific. May need to filter dropdown by shop. |
 

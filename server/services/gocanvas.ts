@@ -2,16 +2,25 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { fieldMapper } from '@shared/fieldMapper';
+import { 
+  FORM_VERSIONS, 
+  getCurrentFormId, 
+  getAllFormIds, 
+  getAllKnownFormIds,
+  getFormTypeFromId,
+  type FormType 
+} from '@shared/formVersions';
 
-// GoCanvas Form IDs - loaded from environment variables for easy configuration
-// To update: Change values in the Secrets tab, then restart the server
+// Re-export for backwards compatibility
+// FORM_IDS now reads from formVersions.ts instead of environment variables
+// See shared/formVersions.ts for architecture decision documentation
 export const FORM_IDS = {
-  EMISSIONS: process.env.GOCANVAS_FORM_ID_EMISSIONS || '5695685',
-  PICKUP: process.env.GOCANVAS_FORM_ID_PICKUP || '5640587',
-  DELIVERY: process.env.GOCANVAS_FORM_ID_DELIVERY || '5657146',
+  EMISSIONS: getCurrentFormId('EMISSIONS'),
+  PICKUP: getCurrentFormId('PICKUP'),
+  DELIVERY: getCurrentFormId('DELIVERY'),
 } as const;
 
-export type FormType = keyof typeof FORM_IDS;
+export { FormType, getAllFormIds, getAllKnownFormIds, getFormTypeFromId };
 
 // In-memory GoCanvas API metrics (reset on server restart)
 // This is observe-only and should never break the integration
