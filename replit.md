@@ -103,3 +103,35 @@ See `GHOST_PARTS_HISTORY.md` for consolidated documentation of all "ghost parts"
 - `npm run dev` - Start development server (frontend + backend)
 - `npm run db:push` - Push schema changes to database
 - `npm run db:push --force` - Force push schema (use when db:push warns about data loss)
+
+## Multi-Shop Expansion (Planned)
+
+Currently deployed for Nashville only. Planning to add Birmingham, Charlotte, Knoxville, Chattanooga, and potentially more shops.
+
+### What's Already Shop-Aware
+- **Shop codes** in `shared/shopCodes.ts` - 5 shops already defined with 2-digit codes
+- **Jobs have `shopName` field** - Each job tracks its shop
+- **Serial number format** - `XX.MMDDYYYY.ZZ` includes shop code
+- **`ecs_serial_tracking` table** - Has `shopCode` column for per-shop sequence tracking
+- **GoCanvas reference data** - Shop/user associations managed in GoCanvas
+
+### Confirmed: Shared GoCanvas Forms
+All shops will submit to the same GoCanvas forms (Emissions Service Log, Pickup Log, Delivery Log). No per-shop form configuration needed.
+
+### Changes Needed for Multi-Shop
+
+| Area | Priority | Description |
+|------|----------|-------------|
+| **User Access Control** | High | Filter jobs by user's assigned shop(s). Use GoCanvas reference data for shop assignments. |
+| **UI Shop Filtering** | High | Add shop selector to job list, dashboard. Let users filter by shop. |
+| **Dashboard Metrics** | Medium | Per-shop statistics, ability to compare shops. |
+| **Job ID Format** | Low | Unify to include shop code: `ECS-YYYYMMDDHHMMSS-{shopCode}`. Currently inconsistent between forms. |
+| **Google Sheets** | Low | Add "Shop" column to existing sheet, or create per-shop sheets. |
+| **Technician Dropdown** | Medium | Confirm if technicians are shop-specific. May need to filter dropdown by shop. |
+
+### Key Files for Multi-Shop Work
+- `shared/shopCodes.ts` - Shop code mappings (add new shops here)
+- `server/services/referenceData.ts` - Loads shop/user associations from GoCanvas
+- `client/src/pages/job-list.tsx` - Job list filtering
+- `client/src/components/csr-form-new.tsx` - Job creation form
+- `server/storage.ts` - Database queries (add shop filtering)
