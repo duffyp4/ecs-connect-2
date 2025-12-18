@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { insertJobSchema, pickupJobSchema } from "@shared/schema";
+import { generateJobId } from "@shared/shopCodes";
 import { type LocalPart } from "@/components/parts-management-modal";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -327,17 +328,12 @@ export default function CSRForm() {
     return () => clearInterval(interval);
   }, []);
 
-  // Generate preview job ID
+  // Generate preview job ID when shop changes
   useEffect(() => {
-    const generateJobId = () => {
-      const now = new Date();
-      const timestamp = now.toISOString().replace(/[-T:\.Z]/g, '').slice(0, 14);
-      const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-      return `ECS-${timestamp}-${random}`;
-    };
-
-    setGeneratedJobId(generateJobId());
-  }, []);
+    if (shopName) {
+      setGeneratedJobId(generateJobId(shopName));
+    }
+  }, [shopName]);
 
   const onSubmit = async (data: FormData) => {
     console.log("=== onSubmit called ===");
@@ -414,12 +410,9 @@ export default function CSRForm() {
     setPickupContactName("");
     setPickupContactNumber("");
     setPickupPoNumber("");
-    setGeneratedJobId(() => {
-      const now = new Date();
-      const timestamp = now.toISOString().replace(/[-T:\.Z]/g, '').slice(0, 14);
-      const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-      return `ECS-${timestamp}-${random}`;
-    });
+    if (shopName) {
+      setGeneratedJobId(generateJobId(shopName));
+    }
   };
 
   return (

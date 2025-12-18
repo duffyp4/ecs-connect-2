@@ -29,3 +29,12 @@ export function getTodayDateCode(): string {
   const year = now.getFullYear();
   return `${month}${day}${year}`;
 }
+
+// Generate a unique Job ID with shop code
+// Format: ECS-YYYYMMDDHHMMSS-XX (where XX is the 2-digit shop code)
+export function generateJobId(shopName: string): string {
+  const now = new Date();
+  const timestamp = now.toISOString().replace(/[-T:\.Z]/g, '').slice(0, 14);
+  const shopCode = getShopCode(shopName);
+  return `ECS-${timestamp}-${shopCode}`;
+}
