@@ -28,8 +28,8 @@ export const FORM_VERSIONS = {
     history: [] as string[],
   },
   PICKUP: {
-    current: '5640587',
-    history: [] as string[],
+    current: '5657148',
+    history: ['5640587'] as string[],
   },
   DELIVERY: {
     current: '5657146',
