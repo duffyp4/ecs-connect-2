@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useCsrCheckInForm } from "@/hooks/use-csr-check-in-form";
 import { useTimezone } from "@/hooks/useTimezone";
 import { useLocations } from "@/hooks/use-reference-data";
+import { useAuth } from "@/hooks/useAuth";
 import { CsrCheckInFormFields } from "@/components/csr-check-in-form-fields";
 import { PartsManagementModal } from "@/components/parts-management-modal";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ type FormData = z.infer<typeof insertJobSchema>;
 export default function CSRForm() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { homeShop } = useAuth();
   const [generatedJobId, setGeneratedJobId] = useState<string>("");
   const [currentTimestamp, setCurrentTimestamp] = useState<string>("");
   const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
@@ -329,6 +331,13 @@ export default function CSRForm() {
     const interval = setInterval(updateTimestamp, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Set default shop to user's homeShop when it loads
+  useEffect(() => {
+    if (homeShop && !form.getValues("shopName")) {
+      form.setValue("shopName", homeShop);
+    }
+  }, [homeShop, form]);
 
   // Generate preview job ID when shop changes
   useEffect(() => {
