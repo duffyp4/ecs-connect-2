@@ -78,16 +78,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/admin/whitelist', isAuthenticated, isAdmin, async (req, res) => {
     try {
-      const { email, role } = req.body;
+      const { email, role, homeShop } = req.body;
       if (!email) {
         return res.status(400).json({ message: "Email is required" });
+      }
+      if (!homeShop) {
+        return res.status(400).json({ message: "Home shop is required" });
       }
 
       const validRoles = ['driver', 'technician', 'csr', 'admin'];
       const userRole = role && validRoles.includes(role) ? role : 'csr';
 
       const userId = req.user.claims.sub;
-      const entry = await storage.addToWhitelist({ email, role: userRole, addedBy: userId });
+      const entry = await storage.addToWhitelist({ email, role: userRole, homeShop, addedBy: userId });
       res.json(entry);
     } catch (error: any) {
       console.error("Error adding to whitelist:", error);

@@ -67,8 +67,8 @@ export default function AdminPage() {
   });
 
   const addMutation = useMutation({
-    mutationFn: async ({ email, role }: { email: string; role: string }) => {
-      return apiRequest('POST', '/api/admin/whitelist', { email, role });
+    mutationFn: async ({ email, role, homeShop }: { email: string; role: string; homeShop: string }) => {
+      return apiRequest('POST', '/api/admin/whitelist', { email, role, homeShop });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/whitelist'] });
@@ -149,8 +149,8 @@ export default function AdminPage() {
 
   const handleAddEmail = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newEmail.trim()) return;
-    addMutation.mutate({ email: newEmail.trim(), role: newRole });
+    if (!newEmail.trim() || !newHomeShop) return;
+    addMutation.mutate({ email: newEmail.trim(), role: newRole, homeShop: newHomeShop });
   };
 
   const handleRemoveEmail = (email: string) => {
@@ -219,6 +219,18 @@ export default function AdminPage() {
               </SelectTrigger>
               <SelectContent>
                 {roleOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={newHomeShop} onValueChange={setNewHomeShop}>
+              <SelectTrigger className="w-36" data-testid="select-new-home-shop">
+                <SelectValue placeholder="Home Shop" />
+              </SelectTrigger>
+              <SelectContent>
+                {shopOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>
