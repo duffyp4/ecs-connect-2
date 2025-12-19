@@ -1333,9 +1333,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all jobs
   app.get("/api/jobs", isAuthenticated, async (req, res) => {
     try {
-      const { status, search, dateFrom, dateTo, sortBy, sortOrder, page, pageSize } = req.query;
+      const { shop, status, search, dateFrom, dateTo, sortBy, sortOrder, page, pageSize } = req.query;
       
       let jobs = await storage.getAllJobs();
+      
+      // Filter by shop name
+      if (shop && typeof shop === 'string' && shop.trim() && shop !== 'all') {
+        jobs = jobs.filter(job => job.shopName === shop);
+      }
       
       // Filter by status (supports comma-separated values for multi-select)
       if (status && typeof status === 'string' && status.trim()) {
@@ -1571,9 +1576,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all parts with job information
   app.get("/api/parts", isAuthenticated, async (req, res) => {
     try {
-      const { status, diagnosis, partStatus, search, dateFrom, dateTo, sortBy, sortOrder, page, pageSize } = req.query;
+      const { shop, status, diagnosis, partStatus, search, dateFrom, dateTo, sortBy, sortOrder, page, pageSize } = req.query;
       
       let parts = await storage.getAllJobParts();
+      
+      // Filter by shop name
+      if (shop && typeof shop === 'string' && shop.trim() && shop !== 'all') {
+        parts = parts.filter(part => part.job && part.job.shopName === shop);
+      }
       
       // Filter by job status
       if (status && typeof status === 'string' && status.trim()) {
