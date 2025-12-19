@@ -75,7 +75,7 @@ export function CheckInModal({
       userId: job.userId || "",
       permissionToStart: job.permissionToStart || "",
       permissionDeniedStop: job.permissionDeniedStop || "",
-      // shopName is NOT pre-populated - user selects it during check-in
+      shopName: job.shopName || "",
       customerName: job.customerName || "",
       customerShipTo: job.customerShipTo || "",
       p21ShipToId: job.p21ShipToId || "",
@@ -231,7 +231,7 @@ export function CheckInModal({
                 setCustomerSearchOpen={setCustomerSearchOpen}
                 shipToSearchOpen={shipToSearchOpen}
                 setShipToSearchOpen={setShipToSearchOpen}
-                disabledFields={["customerName", "customerShipTo"]}
+                disabledFields={["shopName", "customerName", "customerShipTo"]}
               />
 
               {/* Add/Manage Parts */}
