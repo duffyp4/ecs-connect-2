@@ -84,7 +84,7 @@ export default function JobList() {
   const isUserTypingRef = useRef<boolean>(false);
   const isInitializedRef = useRef<boolean>(false);
   
-  // Initialize state from URL on mount
+  // Initialize state from URL on mount, with session persistence for shop filter
   useEffect(() => {
     if (!isInitializedRef.current) {
       const params = new URLSearchParams(window.location.search);
@@ -98,7 +98,18 @@ export default function JobList() {
       const size = params.get('pageSize');
       const shop = params.get('shop');
       
-      if (shop) setShopFilter(shop);
+      // Shop filter priority: URL param > sessionStorage > homeShop
+      if (shop) {
+        setShopFilter(shop);
+      } else {
+        const savedShop = sessionStorage.getItem('ecs-shop-filter');
+        if (savedShop) {
+          setShopFilter(savedShop);
+        } else if (homeShop && canFilterByShop) {
+          setShopFilter(homeShop);
+        }
+      }
+      
       if (status) {
         const statuses = status.split(',');
         setStatusFilter(statuses);
@@ -117,7 +128,14 @@ export default function JobList() {
       
       isInitializedRef.current = true;
     }
-  }, []);
+  }, [homeShop, canFilterByShop]);
+  
+  // Persist shop filter changes to sessionStorage
+  useEffect(() => {
+    if (isInitializedRef.current && shopFilter) {
+      sessionStorage.setItem('ecs-shop-filter', shopFilter);
+    }
+  }, [shopFilter]);
   
   // Available status options
   const statusOptions = [
