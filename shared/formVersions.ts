@@ -11,16 +11,25 @@
  * 4. We need version history for webhooks to catch submissions from older form versions
  * 5. Git tracks changes to this file (env var changes are invisible)
  * 
+ * HISTORY MANAGEMENT:
+ * - Each form keeps a rolling window of the last 20 historical form IDs
+ * - When adding a new form ID, the current ID moves to the front of history
+ * - If history exceeds 20 entries, the oldest (last) entry is removed
+ * - This ensures we catch submissions from recent form versions without unbounded growth
+ * 
  * UPDATE WORKFLOW:
  * When updating a GoCanvas form, tell the agent:
  * "Remap the [EMISSIONS/PICKUP/DELIVERY] form to new ID [new_id]"
  * 
  * The agent will:
- * 1. Move the current ID to the history array
- * 2. Set the new ID as current
- * 3. Call GoCanvas API to get new field mappings
- * 4. Update the corresponding gocanvas_field_map_*.json file
+ * 1. Move the current ID to the FRONT of the history array
+ * 2. If history has more than 20 entries, remove the oldest (last) entry
+ * 3. Set the new ID as current
+ * 4. Call GoCanvas API to get new field mappings
+ * 5. Update the corresponding gocanvas_field_map_*.json file
  */
+
+export const MAX_FORM_HISTORY = 20;
 
 export const FORM_VERSIONS = {
   EMISSIONS: {
