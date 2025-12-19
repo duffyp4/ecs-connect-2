@@ -41,8 +41,8 @@ export const FORM_VERSIONS = {
     history: ['5640587'] as string[],
   },
   DELIVERY: {
-    current: '5657146',
-    history: [] as string[],
+    current: '5714828',
+    history: ['5657146'] as string[],
   },
 } as const;
 
