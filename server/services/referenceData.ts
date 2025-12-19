@@ -95,9 +95,9 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getShopsForUser(userId: string): Promise<string[]> {
     await this.ensureDataLoaded();
     
-    // Find all shops/locations for the given user name (column 0: Name, column 1: Location)
+    // Find all shops/locations for the given user by Dispatch Email (column 2: Dispatch Email, column 1: Location)
     const shops = this.shopData
-      .filter(row => row[0] === userId)
+      .filter(row => row[2] === userId) // Dispatch Email is column 2
       .map(row => row[1]) // Location is column 1
       .filter(Boolean);
     
@@ -115,10 +115,10 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getUsersForShop(shopName: string): Promise<string[]> {
     await this.ensureDataLoaded();
     
-    // Find all users for the given shop name (column 1: Location, column 0: Name)
+    // Find all users for the given shop name (column 1: Location, column 2: Dispatch Email)
     const users = this.shopData
       .filter(row => row[1] === shopName) // Location is column 1
-      .map(row => row[0]) // Name is column 0
+      .map(row => row[2]) // Dispatch Email is column 2
       .filter(Boolean);
     
     return Array.from(new Set(users)).sort();
@@ -127,8 +127,8 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getPermissionForUser(userId: string): Promise<string> {
     await this.ensureDataLoaded();
     
-    // Find permission for user (column 4: "Permission to Start") from 1017141
-    const shopRow = this.shopData.find(row => row[0] === userId);
+    // Find permission for user by Dispatch Email (column 2), return column 4: "Permission to Start" from 1017141
+    const shopRow = this.shopData.find(row => row[2] === userId);
     return shopRow ? shopRow[4] || '' : '';
   }
 
