@@ -47,6 +47,19 @@ The application uses a monorepo structure with `/client` (React frontend), `/ser
 - **Dynamic Field Mapping**: Uses JSON files and `shared/fieldMapper.ts` for dynamic field ID lookups.
 - **Push Notifications**: XML-based API v2 submission notifications.
 
+### GoCanvas Reference Data (December 2024)
+
+| ID | Name | Purpose | Column Mapping |
+|----|------|---------|----------------|
+| **1017141** | ECS Team CSRs | Shop Name dropdown | 0=Name, 1=Location, 2=Dispatch Email, 3=Handoff Email, 4=Permission to Start |
+| **1017142** | ECS Team Technicians | Shop Handoff dropdown | 0=Name, 1=Location, 2=Dispatch Email, 3=Handoff Email, 4=Permission to Start |
+| **1017125** | Customer List | Customer Name, Ship To, etc. | 0=User Group, 1=Corp Name, 2=Customer ID, 3=Customer Name, 4=Ship2 Add1, 5=Ship2 City, 6=Ship2 ID, 7=Ship to Combined, 8=Ship2 Contact, 9=Specific Instructions, 10=Default Service, 11=Send Clamps/Gaskets?, 12=Customer Notes |
+| **343087** | Drivers | Driver list | - |
+| **947586** | ECS Locations - Drivers | Pickup/Delivery Location dropdown | - |
+| **246465** | Parts | Parts list | - |
+| **176530** | Process | Process options | - |
+| **452576** | Emission_pn_w kits | Filter Part Numbers | - |
+
 ### Google Sheets Sync
 - **Authentication**: Service Account.
 
