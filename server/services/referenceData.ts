@@ -60,8 +60,9 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
       const driversResponse = await goCanvasService.getReferenceDataById('343087');
       this.driversData = driversResponse.rows || [];
       
-      // Load ECS Locations - Drivers (ID: 947586)
-      const locationsResponse = await goCanvasService.getReferenceDataById('947586');
+      // Load ECS Locations (ID: 1017140) - for Pickup/Delivery Shop Name dropdown
+      // Columns: [Name(0), Location(1), ...]
+      const locationsResponse = await goCanvasService.getReferenceDataById('1017140');
       this.locationsData = locationsResponse.rows || [];
       
       // Load Parts (ID: 246465)
@@ -463,9 +464,9 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getLocations(): Promise<string[]> {
     await this.ensureDataLoaded();
     
-    // Extract location names from column 0 of ECS Locations reference data (ID: 947586)
+    // Extract location names from column 1 (Location) of ECS Locations reference data (ID: 1017140)
     const locations = Array.from(new Set(this.locationsData
-      .map(row => row[0])
+      .map(row => row[1])
       .filter(value => this.isValidValue(value))
     ));
     
