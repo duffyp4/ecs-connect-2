@@ -87,9 +87,9 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getShopUsers(): Promise<string[]> {
     await this.ensureDataLoaded();
     
-    // Extract unique CSR names (column 0: Name) from 1017141
-    const userIds = Array.from(new Set(this.shopData.map(row => row[0]).filter(Boolean)));
-    return userIds.sort();
+    // Shop Handoff uses technician dispatch emails from 1017142 (column 2: Dispatch Email)
+    const emails = Array.from(new Set(this.technicianData.map(row => row[2]).filter(Boolean)));
+    return emails.sort();
   }
 
   async getShopsForUser(userId: string): Promise<string[]> {
@@ -130,28 +130,6 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
     // Find permission for user (column 4: "Permission to Start") from 1017141
     const shopRow = this.shopData.find(row => row[0] === userId);
     return shopRow ? shopRow[4] || '' : '';
-  }
-
-  // Get technicians for Shop Handoff dropdown (from 1017142)
-  async getTechniciansForShop(shopName: string): Promise<string[]> {
-    await this.ensureDataLoaded();
-    
-    // Find all technicians for the given shop (column 1: Location, column 2: Dispatch Email)
-    const technicians = this.technicianData
-      .filter(row => row[1] === shopName) // Location is column 1
-      .map(row => row[2]) // Dispatch Email is column 2
-      .filter(Boolean);
-    
-    return Array.from(new Set(technicians)).sort();
-  }
-
-  // Get all technician dispatch emails for Shop Handoff dropdown (from 1017142)
-  async getAllTechnicians(): Promise<string[]> {
-    await this.ensureDataLoaded();
-    
-    // Get all unique dispatch emails (column 2) from 1017142
-    const technicians = Array.from(new Set(this.technicianData.map(row => row[2]).filter(Boolean)));
-    return technicians.sort();
   }
 
   async getCustomerNames(): Promise<string[]> {
