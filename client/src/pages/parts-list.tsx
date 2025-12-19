@@ -195,7 +195,7 @@ export default function PartsList() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6 max-w-full overflow-hidden">
       <div className="space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           <div>
@@ -229,8 +229,8 @@ export default function PartsList() {
           </Select>
         </div>
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-          <div className="relative flex-1 sm:max-w-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2">
+          <div className="relative sm:col-span-2 lg:col-span-2">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               ref={searchInputRef}
@@ -239,7 +239,7 @@ export default function PartsList() {
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => { isUserTypingRef.current = true; }}
               onBlur={() => { isUserTypingRef.current = false; }}
-              className="pl-10"
+              className="pl-10 w-full"
               data-testid="input-search-parts"
               autoComplete="off"
             />
@@ -257,7 +257,7 @@ export default function PartsList() {
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="w-full sm:w-48 justify-between"
+                className="w-full justify-between"
                 data-testid="button-status-filter"
               >
                 <span className="truncate">
@@ -327,7 +327,7 @@ export default function PartsList() {
             placeholder="From Date"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
-            className="w-full sm:w-40"
+            className="w-full"
             data-testid="input-date-from"
           />
 
@@ -336,7 +336,7 @@ export default function PartsList() {
             placeholder="To Date"
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
-            className="w-full sm:w-40"
+            className="w-full"
             data-testid="input-date-to"
           />
 
@@ -345,7 +345,7 @@ export default function PartsList() {
             setSortBy(field);
             setSortOrder(order);
           }}>
-            <SelectTrigger className="w-full sm:w-56" data-testid="select-sort">
+            <SelectTrigger className="w-full" data-testid="select-sort">
               <ArrowUpDown className="mr-2 h-4 w-4" />
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
