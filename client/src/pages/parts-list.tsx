@@ -210,10 +210,10 @@ export default function PartsList() {
           <div className="flex items-center gap-2">
             <Select value={shopFilter} onValueChange={setShopFilter}>
               <SelectTrigger 
-                className="w-full sm:w-56 bg-[var(--ecs-primary)] text-white border-[var(--ecs-primary)] hover:bg-[var(--ecs-primary-hover)] font-medium"
+                className="w-full sm:w-56 border-2 border-[var(--ecs-primary)] text-[var(--ecs-dark)] bg-white hover:bg-gray-50 font-medium"
                 data-testid="select-shop-filter"
               >
-                <Building2 className="mr-2 h-4 w-4" />
+                <Building2 className="mr-2 h-4 w-4 text-[var(--ecs-primary)]" />
                 <SelectValue placeholder="All Shops" />
               </SelectTrigger>
               <SelectContent>
