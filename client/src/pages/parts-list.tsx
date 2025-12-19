@@ -197,19 +197,18 @@ export default function PartsList() {
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-[var(--ecs-dark)] flex items-center">
               <Package className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
-              <span className="hidden sm:inline">All Parts</span>
-              <span className="sm:hidden">Parts</span>
+              All Parts
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground">Complete list of all parts</p>
           </div>
           
           <Select value={shopFilter} onValueChange={setShopFilter}>
             <SelectTrigger 
-              className="w-full sm:w-44 border-2 border-[var(--ecs-primary)] text-[var(--ecs-dark)] bg-white hover:bg-gray-50 font-medium"
+              className="w-full sm:w-48 border-2 border-[var(--ecs-primary)] text-[var(--ecs-dark)] bg-white hover:bg-gray-50 font-medium"
               data-testid="select-shop-filter"
             >
               <Building2 className="mr-2 h-4 w-4 text-[var(--ecs-primary)]" />
