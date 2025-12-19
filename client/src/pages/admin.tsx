@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trash2, UserPlus, Shield, Activity } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Whitelist } from "@shared/schema";
@@ -14,6 +15,13 @@ import type { Whitelist } from "@shared/schema";
 interface WhitelistWithRole extends Whitelist {
   role?: string | null;
 }
+
+const roleOptions = [
+  { value: "csr", label: "CSR" },
+  { value: "driver", label: "Driver" },
+  { value: "technician", label: "Technician" },
+  { value: "admin", label: "Admin" },
+];
 
 interface GoCanvasMetrics {
   now: string;
@@ -40,6 +48,7 @@ interface WebhookMetrics {
 
 export default function AdminPage() {
   const [newEmail, setNewEmail] = useState("");
+  const [newRole, setNewRole] = useState<string>("csr");
   const { toast } = useToast();
 
   const { data: whitelistEntries, isLoading } = useQuery<WhitelistWithRole[]>({
@@ -47,8 +56,8 @@ export default function AdminPage() {
   });
 
   const addMutation = useMutation({
-    mutationFn: async (email: string) => {
-      return apiRequest('POST', '/api/admin/whitelist', { email });
+    mutationFn: async ({ email, role }: { email: string; role: string }) => {
+      return apiRequest('POST', '/api/admin/whitelist', { email, role });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/whitelist'] });
@@ -87,10 +96,30 @@ export default function AdminPage() {
     },
   });
 
+  const updateRoleMutation = useMutation({
+    mutationFn: async ({ email, role }: { email: string; role: string }) => {
+      return apiRequest('PATCH', `/api/admin/whitelist/${encodeURIComponent(email)}/role`, { role });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/whitelist'] });
+      toast({
+        title: "Role updated",
+        description: "The user's role has been updated.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update role",
+        description: error.message || "An error occurred",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleAddEmail = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEmail.trim()) return;
-    addMutation.mutate(newEmail.trim());
+    addMutation.mutate({ email: newEmail.trim(), role: newRole });
   };
 
   const handleRemoveEmail = (email: string) => {
@@ -144,15 +173,27 @@ export default function AdminPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <form onSubmit={handleAddEmail} className="flex gap-2">
+          <form onSubmit={handleAddEmail} className="flex gap-2 flex-wrap">
             <Input
               type="email"
               placeholder="Enter email address"
               value={newEmail}
               onChange={(e) => setNewEmail(e.target.value)}
-              className="flex-1"
+              className="flex-1 min-w-[200px]"
               data-testid="input-new-email"
             />
+            <Select value={newRole} onValueChange={setNewRole}>
+              <SelectTrigger className="w-36" data-testid="select-new-role">
+                <SelectValue placeholder="Select role" />
+              </SelectTrigger>
+              <SelectContent>
+                {roleOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button 
               type="submit" 
               disabled={addMutation.isPending}
@@ -183,7 +224,22 @@ export default function AdminPage() {
                     <TableRow key={entry.id} data-testid={`row-whitelist-${entry.email}`}>
                       <TableCell className="font-medium">{entry.email}</TableCell>
                       <TableCell>
-                        {entry.role === 'admin' ? 'admin' : entry.role === 'user' ? 'user' : 'Not Signed In'}
+                        <Select
+                          value={entry.role || "csr"}
+                          onValueChange={(role) => updateRoleMutation.mutate({ email: entry.email, role })}
+                          disabled={updateRoleMutation.isPending}
+                        >
+                          <SelectTrigger className="w-32" data-testid={`select-role-${entry.email}`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {roleOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {entry.createdAt ? new Date(entry.createdAt).toLocaleDateString() : 'N/A'}

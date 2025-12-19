@@ -7,9 +7,7 @@ import { IStorage } from "./storage";
 import ws from "ws";
 import { generateJobId } from "@shared/shopCodes";
 
-export interface WhitelistWithRole extends Whitelist {
-  role?: string | null;
-}
+export type WhitelistWithRole = Whitelist;
 
 neonConfig.webSocketConstructor = ws;
 
@@ -200,13 +198,21 @@ export class DatabaseStorage implements IStorage {
       .select({
         id: whitelist.id,
         email: whitelist.email,
+        role: whitelist.role,
         addedBy: whitelist.addedBy,
         createdAt: whitelist.createdAt,
-        role: users.role,
       })
-      .from(whitelist)
-      .leftJoin(users, eq(whitelist.email, users.email));
+      .from(whitelist);
     return result;
+  }
+
+  async updateWhitelistRole(email: string, role: string): Promise<Whitelist | undefined> {
+    const result = await this.db
+      .update(whitelist)
+      .set({ role: role as any })
+      .where(eq(whitelist.email, email.toLowerCase()))
+      .returning();
+    return result[0];
   }
 
   // Job Comment methods

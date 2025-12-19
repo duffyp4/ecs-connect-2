@@ -78,13 +78,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/admin/whitelist', isAuthenticated, isAdmin, async (req, res) => {
     try {
-      const { email } = req.body;
+      const { email, role } = req.body;
       if (!email) {
         return res.status(400).json({ message: "Email is required" });
       }
 
+      const validRoles = ['driver', 'technician', 'csr', 'admin'];
+      const userRole = role && validRoles.includes(role) ? role : 'csr';
+
       const userId = req.user.claims.sub;
-      const entry = await storage.addToWhitelist({ email, addedBy: userId });
+      const entry = await storage.addToWhitelist({ email, role: userRole, addedBy: userId });
       res.json(entry);
     } catch (error: any) {
       console.error("Error adding to whitelist:", error);
@@ -103,6 +106,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error removing from whitelist:", error);
       res.status(500).json({ message: "Failed to remove email from whitelist" });
+    }
+  });
+
+  app.patch('/api/admin/whitelist/:email/role', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { email } = req.params;
+      const { role } = req.body;
+      const validRoles = ['driver', 'technician', 'csr', 'admin'];
+      if (!role || !validRoles.includes(role)) {
+        return res.status(400).json({ message: "Invalid role. Must be one of: driver, technician, csr, admin" });
+      }
+      const entry = await storage.updateWhitelistRole(decodeURIComponent(email), role);
+      res.json(entry);
+    } catch (error) {
+      console.error("Error updating whitelist role:", error);
+      res.status(500).json({ message: "Failed to update role" });
     }
   });
 
