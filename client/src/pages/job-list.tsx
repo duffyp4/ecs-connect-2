@@ -9,8 +9,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { List, Store, Package, Send, ChevronDown, Search, ArrowUpDown, Check } from "lucide-react";
+import { List, Store, Package, Send, ChevronDown, Search, ArrowUpDown, Check, Building2 } from "lucide-react";
 import JobStatusBadge from "@/components/job-status-badge";
+import { useLocations } from "@/hooks/use-reference-data";
 import { CheckInModal } from "@/components/check-in-modal";
 import { DeliveryDispatchModal } from "@/components/delivery-dispatch-modal";
 import { ReadyForPickupModal } from "@/components/ready-for-pickup-modal";
@@ -55,11 +56,14 @@ type PaginatedResponse = {
 };
 
 export default function JobList() {
+  const [shopFilter, setShopFilter] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [tempStatusFilter, setTempStatusFilter] = useState<string[]>([]);
   const [statusFilterOpen, setStatusFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>('');
+  
+  const { data: locations = [], isLoading: isLoadingLocations } = useLocations();
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('initiatedAt');
@@ -90,7 +94,9 @@ export default function JobList() {
       const order = params.get('sortOrder');
       const page = params.get('page');
       const size = params.get('pageSize');
+      const shop = params.get('shop');
       
+      if (shop) setShopFilter(shop);
       if (status) {
         const statuses = status.split(',');
         setStatusFilter(statuses);
@@ -142,6 +148,7 @@ export default function JobList() {
     if (!isInitializedRef.current) return;
     
     const newSearch = updateQueryParams({
+      shop: shopFilter || null,
       status: statusFilter.length > 0 ? statusFilter : null,
       search: debouncedSearchQuery || null,
       dateFrom: dateFrom || null,
@@ -155,15 +162,16 @@ export default function JobList() {
     // Update URL without triggering navigation
     const newUrl = '/jobs' + newSearch;
     window.history.replaceState({}, '', newUrl);
-  }, [statusFilter, debouncedSearchQuery, dateFrom, dateTo, sortBy, sortOrder, currentPage, pageSize]);
+  }, [shopFilter, statusFilter, debouncedSearchQuery, dateFrom, dateTo, sortBy, sortOrder, currentPage, pageSize]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [statusFilter, debouncedSearchQuery, dateFrom, dateTo, sortBy, sortOrder]);
+  }, [shopFilter, statusFilter, debouncedSearchQuery, dateFrom, dateTo, sortBy, sortOrder]);
 
   const { data: response, isLoading, isFetching } = useQuery<PaginatedResponse>({
     queryKey: ["/api/jobs", {
+      ...(shopFilter && { shop: shopFilter }),
       ...(statusFilter.length > 0 && { status: statusFilter.join(',') }),
       ...(debouncedSearchQuery && { search: debouncedSearchQuery }),
       ...(dateFrom && { dateFrom }),
@@ -312,6 +320,41 @@ export default function JobList() {
               <span className="sm:hidden">Jobs</span>
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground">Complete list of all service jobs</p>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Select value={shopFilter} onValueChange={setShopFilter}>
+              <SelectTrigger 
+                className="w-full sm:w-56 bg-[var(--ecs-primary)] text-white border-[var(--ecs-primary)] hover:bg-[var(--ecs-primary-hover)] font-medium"
+                data-testid="select-shop-filter"
+              >
+                <Building2 className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="All Shops" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Shops</SelectItem>
+                {isLoadingLocations ? (
+                  <SelectItem value="_loading" disabled>Loading...</SelectItem>
+                ) : (
+                  locations.map((location) => (
+                    <SelectItem key={location} value={location}>
+                      {location}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+            {shopFilter && shopFilter !== 'all' && (
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setShopFilter('')}
+                className="text-muted-foreground hover:text-foreground"
+                data-testid="button-clear-shop-filter"
+              >
+                Clear
+              </Button>
+            )}
           </div>
         </div>
 
