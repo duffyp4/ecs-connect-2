@@ -453,6 +453,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get drivers for a specific shop (filtered by shop name)
+  app.get("/api/reference/shop/:shopName/drivers", async (req, res) => {
+    try {
+      const { shopName } = req.params;
+      const drivers = await referenceDataService.getDriversForShop(decodeURIComponent(shopName));
+      res.json(drivers);
+    } catch (error) {
+      console.error("Failed to get drivers for shop:", error);
+      res.status(500).json({ error: "Failed to fetch drivers for shop" });
+    }
+  });
+
   // Get locations from ECS Locations - Drivers reference data
   app.get("/api/reference/locations", async (req, res) => {
     try {

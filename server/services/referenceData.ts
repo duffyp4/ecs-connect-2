@@ -461,6 +461,22 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
     return driverDetails;
   }
 
+  async getDriversForShop(shopName: string): Promise<{ name: string; email: string }[]> {
+    await this.ensureDataLoaded();
+    
+    // Return drivers filtered by shop name from reference data (ID: 1017140)
+    // Column 0: Name, Column 1: Location (shop), Column 2: Dispatch Email
+    const driverDetails = this.locationsData
+      .filter(row => row[1] === shopName) // Filter by Location (column 1)
+      .map(row => ({
+        name: row[0],
+        email: row[2] || ''
+      }))
+      .filter(driver => this.isValidValue(driver.name));
+    
+    return driverDetails;
+  }
+
   async getLocations(): Promise<string[]> {
     await this.ensureDataLoaded();
     

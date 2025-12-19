@@ -15,7 +15,8 @@ import {
   useCustomerSpecificData, 
   useAllShops, 
   useUsersForShop, 
-  useDriverDetails 
+  useDriverDetails,
+  useDriversForShop 
 } from "@/hooks/use-reference-data";
 import type { z } from "zod";
 
@@ -49,6 +50,8 @@ export interface CsrCheckInFormData {
     isLoadingProcesses: boolean;
     driverDetails: Array<{ name: string; email: string }>;
     isLoadingDrivers: boolean;
+    driversForShop: Array<{ name: string; email: string }>;
+    isLoadingDriversForShop: boolean;
   };
   watchedFields: {
     userId: string;
@@ -113,6 +116,7 @@ export function useCsrCheckInForm(options: UseCsrCheckInFormOptions = {}): CsrCh
   const { data: customerInstructionsData } = useCustomerInstructions(customerName || undefined, customerShipTo || undefined);
   const { data: customerSpecificData } = useCustomerSpecificData(customerName || undefined, customerShipTo || undefined);
   const { data: driverDetails = [], isLoading: isLoadingDrivers } = useDriverDetails();
+  const { data: driversForShop = [], isLoading: isLoadingDriversForShop } = useDriversForShop(shopName || undefined);
   const shopHandoff = form.watch("shopHandoff") || "";
 
   // Auto-populate permission when user changes
@@ -229,6 +233,8 @@ export function useCsrCheckInForm(options: UseCsrCheckInFormOptions = {}): CsrCh
       isLoadingProcesses,
       driverDetails,
       isLoadingDrivers,
+      driversForShop,
+      isLoadingDriversForShop,
     },
     watchedFields: {
       userId,

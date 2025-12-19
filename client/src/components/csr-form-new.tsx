@@ -70,6 +70,8 @@ export default function CSRForm() {
     isLoadingProcesses,
     driverDetails,
     isLoadingDrivers,
+    driversForShop,
+    isLoadingDriversForShop,
   } = referenceData;
   
   // Extract watched fields
@@ -82,8 +84,8 @@ export default function CSRForm() {
   const { getTodayInTimezone } = useTimezone();
   const today = getTodayInTimezone();
   
-  // Map drivers for the driver select dropdown
-  const drivers = driverDetails.map(d => d.name);
+  // Map drivers for the driver select dropdown (filtered by selected shop)
+  const drivers = driversForShop.map(d => d.name);
 
   // Pickup fields state
   const [pickupDriver, setPickupDriver] = useState<string>("");
@@ -1015,7 +1017,7 @@ export default function CSRForm() {
                             <Select value={pickupDriver} onValueChange={(value) => {
                               setPickupDriver(value);
                               // Auto-populate driver email when driver is selected
-                              const selectedDriver = driverDetails.find(d => d.name === value);
+                              const selectedDriver = driversForShop.find(d => d.name === value);
                               setPickupDriverEmail(selectedDriver?.email || "");
                               setPickupFieldErrors(prev => ({ ...prev, driver: undefined }));
                             }}>
@@ -1023,8 +1025,12 @@ export default function CSRForm() {
                                 <SelectValue placeholder="Select driver" />
                               </SelectTrigger>
                               <SelectContent>
-                                {isLoadingDrivers ? (
+                                {isLoadingDriversForShop ? (
                                   <SelectItem value="_loading" disabled>Loading drivers...</SelectItem>
+                                ) : !shopName ? (
+                                  <SelectItem value="_no_shop" disabled>Select a shop first</SelectItem>
+                                ) : drivers.length === 0 ? (
+                                  <SelectItem value="_no_drivers" disabled>No drivers for this shop</SelectItem>
                                 ) : (
                                   drivers.map((driver) => (
                                     <SelectItem key={driver} value={driver} data-testid={`option-driver-${driver}`}>
@@ -1325,7 +1331,7 @@ export default function CSRForm() {
                     <label className="block text-sm font-medium mb-2">Driver *</label>
                     <Select value={deliveryDriver} onValueChange={(value) => {
                       setDeliveryDriver(value);
-                      const selectedDriver = driverDetails.find(d => d.name === value);
+                      const selectedDriver = driversForShop.find(d => d.name === value);
                       setDeliveryDriverEmail(selectedDriver?.email || "");
                       setDeliveryFieldErrors(prev => ({ ...prev, driver: undefined }));
                     }}>
@@ -1333,8 +1339,12 @@ export default function CSRForm() {
                         <SelectValue placeholder="Select driver" />
                       </SelectTrigger>
                       <SelectContent>
-                        {isLoadingDrivers ? (
+                        {isLoadingDriversForShop ? (
                           <SelectItem value="_loading" disabled>Loading drivers...</SelectItem>
+                        ) : !shopName ? (
+                          <SelectItem value="_no_shop" disabled>Select a shop first</SelectItem>
+                        ) : drivers.length === 0 ? (
+                          <SelectItem value="_no_drivers" disabled>No drivers for this shop</SelectItem>
                         ) : (
                           drivers.map((driver) => (
                             <SelectItem key={driver} value={driver}>

@@ -226,6 +226,21 @@ export function useDriverDetails() {
   });
 }
 
+// Get drivers filtered by shop name for pickup/delivery
+export function useDriversForShop(shopName: string | undefined) {
+  return useQuery({
+    queryKey: ['reference', 'drivers', shopName],
+    queryFn: async () => {
+      if (!shopName) return [];
+      const response = await fetch(`/api/reference/shop/${encodeURIComponent(shopName)}/drivers`);
+      if (!response.ok) throw new Error('Failed to fetch drivers for shop');
+      return response.json() as Promise<{ name: string; email: string }[]>;
+    },
+    enabled: !!shopName,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 // Get locations from ECS Locations - Drivers reference data
 export function useLocations() {
   return useQuery({

@@ -44,7 +44,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Truck, Database, ChevronsUpDown, Check, Info } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useLocations, useCustomerNames, useShipToForCustomer } from "@/hooks/use-reference-data";
+import { useLocations, useCustomerNames, useShipToForCustomer, useDriversForShop } from "@/hooks/use-reference-data";
 import { cn } from "@/lib/utils";
 import type { Job } from "@shared/schema";
 import { generateJobId } from "@shared/shopCodes";
@@ -88,10 +88,6 @@ export function DeliveryDispatchModal({
 
   const isNewMode = mode === 'new';
 
-  const { data: drivers = [] } = useQuery<{ name: string; email: string }[]>({
-    queryKey: ['/api/reference/driver-details'],
-  });
-
   const { data: locations = [], isLoading: isLoadingLocations } = useLocations();
   const { data: customerNames = [], isLoading: isLoadingCustomers } = useCustomerNames();
 
@@ -117,6 +113,7 @@ export function DeliveryDispatchModal({
   const { data: shipToOptions = [], isLoading: isLoadingShipTo } = useShipToForCustomer(
     isNewMode ? watchedCustomerName : undefined
   );
+  const { data: drivers = [], isLoading: isLoadingDrivers } = useDriversForShop(watchedLocation || undefined);
 
   useEffect(() => {
     if (isNewMode && watchedLocation) {
@@ -601,14 +598,22 @@ export function DeliveryDispatchModal({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {drivers.map((driver) => (
-                            <SelectItem
-                              key={driver.name}
-                              value={driver.name}
-                            >
-                              {driver.name}
-                            </SelectItem>
-                          ))}
+                          {isLoadingDrivers ? (
+                            <SelectItem value="_loading" disabled>Loading drivers...</SelectItem>
+                          ) : !watchedLocation ? (
+                            <SelectItem value="_no_location" disabled>Select a location first</SelectItem>
+                          ) : drivers.length === 0 ? (
+                            <SelectItem value="_no_drivers" disabled>No drivers for this location</SelectItem>
+                          ) : (
+                            drivers.map((driver) => (
+                              <SelectItem
+                                key={driver.name}
+                                value={driver.name}
+                              >
+                                {driver.name}
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />
