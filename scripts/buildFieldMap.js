@@ -8,22 +8,16 @@
 //   node scripts/buildFieldMap.js delivery 5657146
 
 import { writeFileSync } from 'fs';
+import { FORM_IDS } from '../shared/formVersions.ts';
 
 const BASE_URL = "https://api.gocanvas.com/api/v3";
 
 // Valid form types
 const VALID_FORM_TYPES = ['emissions', 'pickup', 'delivery'];
 
-// Map form types to their environment variable names
-const FORM_TYPE_ENV_VARS = {
-  emissions: 'GOCANVAS_FORM_ID_EMISSIONS',
-  pickup: 'GOCANVAS_FORM_ID_PICKUP',
-  delivery: 'GOCANVAS_FORM_ID_DELIVERY'
-};
-
 // Parse command line arguments
 const FORM_TYPE = process.argv[2];
-const FORM_ID = process.argv[3] || (FORM_TYPE && process.env[FORM_TYPE_ENV_VARS[FORM_TYPE]]);
+const FORM_ID = process.argv[3] || (FORM_TYPE && FORM_IDS[FORM_TYPE]?.current);
 const USERNAME = process.env.GOCANVAS_USERNAME;
 const PASSWORD = process.env.GOCANVAS_PASSWORD;
 
@@ -48,7 +42,7 @@ if (!FORM_TYPE || !VALID_FORM_TYPES.includes(FORM_TYPE)) {
 
 if (!FORM_ID) {
   console.error('❌ Missing form ID');
-  console.error(`Please provide form ID as second argument or set ${FORM_TYPE_ENV_VARS[FORM_TYPE]} environment variable`);
+  console.error(`Please provide form ID as second argument or update FORM_IDS.${FORM_TYPE}.current in shared/formVersions.ts`);
   console.error('Example: node scripts/buildFieldMap.js emissions 5695685');
   process.exit(1);
 }
