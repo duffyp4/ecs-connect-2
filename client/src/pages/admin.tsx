@@ -275,15 +275,14 @@ export default function AdminPage() {
                       </TableCell>
                       <TableCell>
                         <Select
-                          value={entry.homeShop || "_none"}
-                          onValueChange={(shop) => updateHomeShopMutation.mutate({ email: entry.email, homeShop: shop === "_none" ? null : shop })}
+                          value={entry.homeShop || "ECS Nashville"}
+                          onValueChange={(shop) => updateHomeShopMutation.mutate({ email: entry.email, homeShop: shop })}
                           disabled={updateHomeShopMutation.isPending}
                         >
                           <SelectTrigger className="w-36" data-testid={`select-shop-${entry.email}`}>
                             <SelectValue placeholder="Select shop" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="_none">No Shop</SelectItem>
                             {shopOptions.map((option) => (
                               <SelectItem key={option.value} value={option.value}>
                                 {option.label}
