@@ -87,7 +87,7 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getShopUsers(): Promise<string[]> {
     await this.ensureDataLoaded();
     
-    // Extract unique Shop User IDs (column 0)
+    // Extract unique CSR names (column 0: Name) from 1017141
     const userIds = Array.from(new Set(this.shopData.map(row => row[0]).filter(Boolean)));
     return userIds.sort();
   }
@@ -95,10 +95,10 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getShopsForUser(userId: string): Promise<string[]> {
     await this.ensureDataLoaded();
     
-    // Find all shops for the given user ID
+    // Find all shops/locations for the given user name (column 0: Name, column 1: Location)
     const shops = this.shopData
       .filter(row => row[0] === userId)
-      .map(row => row[1]) // Shop name is column 1
+      .map(row => row[1]) // Location is column 1
       .filter(Boolean);
     
     return Array.from(new Set(shops)).sort();
@@ -107,7 +107,7 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getAllShops(): Promise<string[]> {
     await this.ensureDataLoaded();
     
-    // Get all unique shop names from column 1 (Shop)
+    // Get all unique shop names from column 1 (Location) from 1017141
     const shops = Array.from(new Set(this.shopData.map(row => row[1]).filter(Boolean)));
     return shops.sort();
   }
@@ -115,10 +115,10 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getUsersForShop(shopName: string): Promise<string[]> {
     await this.ensureDataLoaded();
     
-    // Find all users for the given shop name
+    // Find all users for the given shop name (column 1: Location, column 0: Name)
     const users = this.shopData
-      .filter(row => row[1] === shopName) // Shop name is column 1
-      .map(row => row[0]) // User ID is column 0
+      .filter(row => row[1] === shopName) // Location is column 1
+      .map(row => row[0]) // Name is column 0
       .filter(Boolean);
     
     return Array.from(new Set(users)).sort();
@@ -127,26 +127,48 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getPermissionForUser(userId: string): Promise<string> {
     await this.ensureDataLoaded();
     
-    // Find permission for user (column 3: "Permission to Start")
+    // Find permission for user (column 4: "Permission to Start") from 1017141
     const shopRow = this.shopData.find(row => row[0] === userId);
-    return shopRow ? shopRow[3] || '' : '';
+    return shopRow ? shopRow[4] || '' : '';
+  }
+
+  // Get technicians for Shop Handoff dropdown (from 1017142)
+  async getTechniciansForShop(shopName: string): Promise<string[]> {
+    await this.ensureDataLoaded();
+    
+    // Find all technicians for the given shop (column 1: Location, column 2: Dispatch Email)
+    const technicians = this.technicianData
+      .filter(row => row[1] === shopName) // Location is column 1
+      .map(row => row[2]) // Dispatch Email is column 2
+      .filter(Boolean);
+    
+    return Array.from(new Set(technicians)).sort();
+  }
+
+  // Get all technician dispatch emails for Shop Handoff dropdown (from 1017142)
+  async getAllTechnicians(): Promise<string[]> {
+    await this.ensureDataLoaded();
+    
+    // Get all unique dispatch emails (column 2) from 1017142
+    const technicians = Array.from(new Set(this.technicianData.map(row => row[2]).filter(Boolean)));
+    return technicians.sort();
   }
 
   async getCustomerNames(): Promise<string[]> {
     await this.ensureDataLoaded();
     
-    // Extract unique Customer Names (column 2)
-    const customerNames = Array.from(new Set(this.customerData.map(row => row[2]).filter(Boolean)));
+    // Extract unique Customer Names (column 1: Corp Name) from 1017125
+    const customerNames = Array.from(new Set(this.customerData.map(row => row[1]).filter(Boolean)));
     return customerNames.sort();
   }
 
   async getShipToForCustomer(customerName: string): Promise<string[]> {
     await this.ensureDataLoaded();
     
-    // Find all Ship To options for the customer (column 5: "Ship to Combined")
+    // Find all Ship To options for the customer (column 7: "Ship to Combined") from 1017125
     const shipToOptions = this.customerData
-      .filter(row => row[2] === customerName)
-      .map(row => row[5]) // "Ship to Combined" column
+      .filter(row => row[1] === customerName) // Corp Name is column 1
+      .map(row => row[7]) // "Ship to Combined" is column 7
       .filter(Boolean);
     
     return Array.from(new Set(shipToOptions)).sort();
@@ -155,9 +177,9 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getP21ShipToIdForCustomer(customerName: string, shipTo: string): Promise<string> {
     await this.ensureDataLoaded();
     
-    // Find P21 Ship to ID for specific customer and ship to (column 6: "Ship2 ID")
+    // Find P21 Ship to ID for specific customer and ship to (column 6: "Ship2 ID") from 1017125
     const customerRow = this.customerData.find(row => 
-      row[2] === customerName && row[5] === shipTo
+      row[1] === customerName && row[7] === shipTo // Corp Name is col 1, Ship to Combined is col 7
     );
     
     return customerRow ? customerRow[6] || '' : '';
@@ -166,10 +188,10 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getShip2IdsForCustomerShipTo(customerName: string, shipTo: string): Promise<string[]> {
     await this.ensureDataLoaded();
     
-    // Find all Ship2 IDs for specific customer and ship to (column 6: "Ship2 ID")
+    // Find all Ship2 IDs for specific customer and ship to (column 6: "Ship2 ID") from 1017125
     const ship2Ids = this.customerData
-      .filter(row => row[2] === customerName && row[5] === shipTo)
-      .map(row => row[6]) // "Ship2 ID" column
+      .filter(row => row[1] === customerName && row[7] === shipTo) // Corp Name col 1, Ship to Combined col 7
+      .map(row => row[6]) // "Ship2 ID" is column 6
       .filter(Boolean);
     
     return Array.from(new Set(ship2Ids)).sort();
@@ -178,17 +200,17 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getCustomerInstructions(customerName: string): Promise<string> {
     await this.ensureDataLoaded();
     
-    // Find specific instructions for customer (column 8: "Specific Instructions For This Customer?")
-    const customerRow = this.customerData.find(row => row[2] === customerName);
-    return customerRow ? customerRow[8] || '' : '';
+    // Find specific instructions for customer (column 9: "Specific Instructions For This Customer?") from 1017125
+    const customerRow = this.customerData.find(row => row[1] === customerName); // Corp Name is column 1
+    return customerRow ? customerRow[9] || '' : '';
   }
 
   async getTechComments(): Promise<string[]> {
     await this.ensureDataLoaded();
     
-    // Extract unique values from Customer Notes (column 11)
+    // Extract unique values from Customer Notes (column 12) from 1017125
     const comments = Array.from(new Set(this.customerData
-      .map(row => row[11])
+      .map(row => row[12])
       .filter(value => this.isValidValue(value))
     ));
     
@@ -206,21 +228,20 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
     return {
       sampleRows,
       columns: {
-        col7: Array.from(new Set(this.customerData.map(row => row[7]).filter(v => this.isValidValue(v)))),
-        col8: Array.from(new Set(this.customerData.map(row => row[8]).filter(v => this.isValidValue(v)))),
         col9: Array.from(new Set(this.customerData.map(row => row[9]).filter(v => this.isValidValue(v)))),
         col10: Array.from(new Set(this.customerData.map(row => row[10]).filter(v => this.isValidValue(v)))),
-        col11: Array.from(new Set(this.customerData.map(row => row[11]).filter(v => this.isValidValue(v))))
+        col11: Array.from(new Set(this.customerData.map(row => row[11]).filter(v => this.isValidValue(v)))),
+        col12: Array.from(new Set(this.customerData.map(row => row[12]).filter(v => this.isValidValue(v))))
       }
     };
   }
 
-  async getColumn11Data() {
+  async getColumn12Data() {
     await this.ensureDataLoaded();
     
-    // Get all unique values from column 11 with their frequency
-    const col11Values = this.customerData.map(row => row[11]);
-    const validValues = col11Values.filter(v => this.isValidValue(v));
+    // Get all unique values from column 12 (Customer Notes) with their frequency
+    const col12Values = this.customerData.map(row => row[12]);
+    const validValues = col12Values.filter(v => this.isValidValue(v));
     const uniqueValues = Array.from(new Set(validValues));
     
     // Count occurrences of each value
@@ -230,17 +251,17 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
     })).sort((a, b) => b.count - a.count);
     
     return {
-      totalRows: col11Values.length,
+      totalRows: col12Values.length,
       validValues: validValues.length,
       uniqueValues: uniqueValues.length,
       values: uniqueValues.slice(0, 20), // First 20 unique values
       valueCounts: valueCounts.slice(0, 10), // Top 10 most frequent values
       sampleData: this.customerData
-        .filter(row => this.isValidValue(row[11]))
+        .filter(row => this.isValidValue(row[12]))
         .slice(0, 5)
         .map(row => ({
-          customerName: row[2],
-          column11Value: row[11]
+          customerName: row[1], // Corp Name is column 1
+          column12Value: row[12]
         }))
     };
   }
@@ -255,14 +276,16 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
       return { error: "No data found" };
     }
     
+    // Updated column headers for 1017125
     const columnHeaders = [
+      'User Group',
       'Corp Name',
       'Customer ID', 
       'Customer Name',
       'Ship2 Add1',
       'Ship2 City', 
-      'Ship to Combined',
       'Ship2 ID',
+      'Ship to Combined',
       'Ship2 Contact',
       'Specific Instructions For This Customer?',
       'Default Service', 
@@ -286,21 +309,23 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getCustomerRecord(customerName: string) {
     await this.ensureDataLoaded();
     
-    // Find all records for this customer
-    const customerRecords = this.customerData.filter(row => row[2] === customerName);
+    // Find all records for this customer (column 1: Corp Name)
+    const customerRecords = this.customerData.filter(row => row[1] === customerName);
     
     if (customerRecords.length === 0) {
       return { error: `Customer "${customerName}" not found` };
     }
     
+    // Updated column headers for 1017125
     const columnHeaders = [
+      'User Group',
       'Corp Name',
       'Customer ID', 
       'Customer Name',
       'Ship2 Add1',
       'Ship2 City', 
-      'Ship to Combined',
       'Ship2 ID',
+      'Ship to Combined',
       'Ship2 Contact',
       'Specific Instructions For This Customer?',
       'Default Service', 
@@ -331,15 +356,15 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
     // Find the specific customer record that matches both name and ship-to address
     let customerRow;
     if (shipToAddress) {
-      // Try to find exact match with ship-to address (column 5: "Ship to Combined")
+      // Try to find exact match with ship-to address (column 7: "Ship to Combined")
       customerRow = this.customerData.find(row => 
-        row[2] === customerName && row[5] && row[5].includes(shipToAddress.split(' (')[0])
+        row[1] === customerName && row[7] && row[7].includes(shipToAddress.split(' (')[0])
       );
     }
     
     // Fallback to any record for the customer if no ship-to match found
     if (!customerRow) {
-      customerRow = this.customerData.find(row => row[2] === customerName);
+      customerRow = this.customerData.find(row => row[1] === customerName);
     }
     
     if (!customerRow) {
@@ -352,10 +377,10 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
     }
     
     return {
-      preferredProcess: customerRow[9] || '',  // Column 9: Default Service
-      sendClampsGaskets: customerRow[10] || '', // Column 10: Send Clamps/Gaskets?
-      customerNotes: customerRow[11] || '',     // Column 11: Customer Notes
-      ship2Contact: customerRow[7] || ''        // Column 7: Ship2 Contact
+      preferredProcess: customerRow[10] || '',  // Column 10: Default Service
+      sendClampsGaskets: customerRow[11] || '', // Column 11: Send Clamps/Gaskets?
+      customerNotes: customerRow[12] || '',     // Column 12: Customer Notes
+      ship2Contact: customerRow[8] || ''        // Column 8: Ship2 Contact
     };
   }
 
@@ -371,28 +396,27 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
     // Find the specific customer record that matches both name and ship-to address
     let customerRow;
     if (shipToAddress) {
-      // Try to find exact match with ship-to address (column 5: "Ship to Combined")
+      // Try to find exact match with ship-to address (column 7: "Ship to Combined")
       customerRow = this.customerData.find(row => 
-        row[2] === customerName && row[5] && row[5].includes(shipToAddress.split(' (')[0])
+        row[1] === customerName && row[7] && row[7].includes(shipToAddress.split(' (')[0])
       );
     }
     
     // Fallback to any record for the customer if no ship-to match found
     if (!customerRow) {
-      customerRow = this.customerData.find(row => row[2] === customerName);
+      customerRow = this.customerData.find(row => row[1] === customerName);
     }
     
-    const instructions = customerRow ? customerRow[8] || '' : '';
+    const instructions = customerRow ? customerRow[9] || '' : ''; // Column 9: Specific Instructions
     return this.isValidValue(instructions) ? instructions : '';
   }
 
   async getSendClampsGaskets(): Promise<string[]> {
     await this.ensureDataLoaded();
     
-    // CONFIRMED: Column 10 is "Send Clamps/Gaskets?" per your screenshot
-    // Values: Test clamp gaskets, Yes (plus blanks and #N/A that get filtered out)
+    // Column 11 is "Send Clamps/Gaskets?" in 1017125
     const options = Array.from(new Set(this.customerData
-      .map(row => row[10])
+      .map(row => row[11])
       .filter(value => this.isValidValue(value))
     ));
     
@@ -402,9 +426,9 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getPreferredProcesses(): Promise<string[]> {
     await this.ensureDataLoaded();
     
-    // CORRECTED: Column 9 contains "Default Service" values per screenshot  
+    // Column 10 is "Default Service" in 1017125
     const processes = Array.from(new Set(this.customerData
-      .map(row => row[9])
+      .map(row => row[10])
       .filter(value => this.isValidValue(value))
     ));
     
@@ -414,9 +438,9 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getCustomerNotes(): Promise<string[]> {
     await this.ensureDataLoaded();
     
-    // Customer Notes should be from column 11 based on field mapping
+    // Column 12 is "Customer Notes" in 1017125
     const notes = Array.from(new Set(this.customerData
-      .map(row => row[11])
+      .map(row => row[12])
       .filter(value => this.isValidValue(value))
     ));
     
