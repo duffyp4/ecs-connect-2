@@ -20,6 +20,7 @@ export interface ReferenceDataService {
 
 class GoCanvasReferenceDataService implements ReferenceDataService {
   private shopData: any[] = [];
+  private technicianData: any[] = [];
   private customerData: any[] = [];
   private driversData: any[] = [];
   private locationsData: any[] = [];
@@ -38,12 +39,21 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
     try {
       console.log('Loading reference data from GoCanvas...');
       
-      // Load Workflow Shops (ID: 608300)
-      const shopsResponse = await goCanvasService.getReferenceDataById('608300');
+      // Load ECS Team CSRs (ID: 1017141) - for Shop Name dropdown
+      // Columns: [Name(0), Location(1), Dispatch Email(2), Handoff Email(3), Permission to Start(4)]
+      const shopsResponse = await goCanvasService.getReferenceDataById('1017141');
       this.shopData = shopsResponse.rows || [];
       
-      // Load Workflow Customer Name (ID: 608480)
-      const customersResponse = await goCanvasService.getReferenceDataById('608480');
+      // Load ECS Team Technicians (ID: 1017142) - for Shop Handoff dropdown
+      // Columns: [Name(0), Location(1), Dispatch Email(2), Handoff Email(3), Permission to Start(4)]
+      const techniciansResponse = await goCanvasService.getReferenceDataById('1017142');
+      this.technicianData = techniciansResponse.rows || [];
+      
+      // Load Customer List (ID: 1017125) - for Customer Name, Ship To, etc.
+      // Columns: [User Group(0), Corp Name(1), Customer ID(2), Customer Name(3), Ship2 Add1(4), 
+      //           Ship2 City(5), Ship2 ID(6), Ship to Combined(7), Ship2 Contact(8),
+      //           Specific Instructions(9), Default Service(10), Send Clamps/Gaskets(11), Customer Notes(12)]
+      const customersResponse = await goCanvasService.getReferenceDataById('1017125');
       this.customerData = customersResponse.rows || [];
       
       // Load Drivers (ID: 343087)
@@ -67,7 +77,7 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
       this.filterPartNumbersData = filterPartNumbersResponse.rows || [];
       
       this.lastFetched = now;
-      console.log(`Loaded ${this.shopData.length} shop records, ${this.customerData.length} customer records, ${this.driversData.length} driver records, ${this.locationsData.length} location records, ${this.partsData.length} parts records, ${this.processData.length} process records, and ${this.filterPartNumbersData.length} filter part number records`);
+      console.log(`Loaded ${this.shopData.length} shop records, ${this.technicianData.length} technician records, ${this.customerData.length} customer records, ${this.driversData.length} driver records, ${this.locationsData.length} location records, ${this.partsData.length} parts records, ${this.processData.length} process records, and ${this.filterPartNumbersData.length} filter part number records`);
     } catch (error) {
       console.error('Failed to load reference data:', error);
       throw error;
