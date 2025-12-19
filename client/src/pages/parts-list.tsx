@@ -208,7 +208,7 @@ export default function PartsList() {
           
           <Select value={shopFilter} onValueChange={setShopFilter}>
             <SelectTrigger 
-              className="w-full sm:w-48 border-2 border-[var(--ecs-primary)] text-[var(--ecs-dark)] bg-white hover:bg-gray-50 font-medium"
+              className="w-full lg:w-48 border-2 border-[var(--ecs-primary)] text-[var(--ecs-dark)] bg-white hover:bg-gray-50 font-medium"
               data-testid="select-shop-filter"
             >
               <Building2 className="mr-2 h-4 w-4 text-[var(--ecs-primary)]" />
@@ -229,7 +229,7 @@ export default function PartsList() {
           </Select>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           <div className="relative flex-1 sm:max-w-xs">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
