@@ -779,7 +779,7 @@ export class GoCanvasService {
           { data: jobData.jobId, labels: ['Job ID'] },
           { data: dispatchDate, labels: ['Dispatch Date'] },
           { data: dispatchTime, labels: ['Dispatch Time'] },
-          { data: jobData.shopName, labels: ['Location'] }, // Connected to reference_data_id=947586
+          { data: jobData.shopName, labels: ['Shop Name'] }, // Connected to reference_data_id=1017140
           { data: jobData.customerName, labels: ['Customer Name'] }, // Connected to Workflow Customer Name table
           { data: jobData.customerShipTo, labels: ['Customer Ship-To'] }, // Connected to same table, "ship to combined" field
           { data: jobData.contactName, labels: ['Contact Name'] },
@@ -798,7 +798,7 @@ export class GoCanvasService {
           { data: jobData.jobId, labels: ['Job ID'] },
           { data: deliveryDispatchDate, labels: ['Dispatch Date'] },
           { data: deliveryDispatchTime, labels: ['Dispatch Time'] },
-          { data: jobData.shopName, labels: ['Location'] },
+          { data: jobData.shopName, labels: ['Shop Name'] }, // Connected to reference_data_id=1017140
           { data: jobData.customerName, labels: ['Customer Name'] },
           { data: jobData.customerShipTo, labels: ['Customer Ship-To'] },
           { data: jobData.orderNumber, labels: ['Order Number'] },
