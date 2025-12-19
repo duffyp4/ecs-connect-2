@@ -25,12 +25,12 @@ const roleOptions = [
 ];
 
 const shopOptions = [
-  { value: "ECS Memphis", label: "ECS Memphis" },
-  { value: "ECS Nashville", label: "ECS Nashville" },
-  { value: "ECS Atlanta", label: "ECS Atlanta" },
-  { value: "ECS Dallas", label: "ECS Dallas" },
-  { value: "ECS Chicago", label: "ECS Chicago" },
-  { value: "ECS Corporate", label: "ECS Corporate" },
+  { value: "ECS - Memphis", label: "ECS - Memphis" },
+  { value: "ECS - Nashville", label: "ECS - Nashville" },
+  { value: "ECS - Atlanta", label: "ECS - Atlanta" },
+  { value: "ECS - Dallas", label: "ECS - Dallas" },
+  { value: "ECS - Chicago", label: "ECS - Chicago" },
+  { value: "ECS - Corporate", label: "ECS - Corporate" },
 ];
 
 interface GoCanvasMetrics {
@@ -287,7 +287,7 @@ export default function AdminPage() {
                       </TableCell>
                       <TableCell>
                         <Select
-                          value={entry.homeShop || "ECS Nashville"}
+                          value={entry.homeShop || "ECS - Nashville"}
                           onValueChange={(shop) => updateHomeShopMutation.mutate({ email: entry.email, homeShop: shop })}
                           disabled={updateHomeShopMutation.isPending}
                         >
