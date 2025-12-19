@@ -1381,15 +1381,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all jobs
-  app.get("/api/jobs", isAuthenticated, async (req, res) => {
+  app.get("/api/jobs", isAuthenticated, async (req: any, res) => {
     try {
       const { shop, status, search, dateFrom, dateTo, sortBy, sortOrder, page, pageSize } = req.query;
       
+      // Get user's whitelist role and homeShop for access control
+      let effectiveShop = shop;
+      const userId = req.user?.claims?.sub;
+      if (userId) {
+        const user = await storage.getUser(userId);
+        if (user?.email) {
+          const whitelistEntry = await storage.getWhitelistByEmail(user.email);
+          if (whitelistEntry && ['driver', 'technician'].includes(whitelistEntry.role || '')) {
+            // Drivers and technicians can only see their homeShop's jobs
+            effectiveShop = whitelistEntry.homeShop || 'all';
+          }
+        }
+      }
+      
       let jobs = await storage.getAllJobs();
       
-      // Filter by shop name
-      if (shop && typeof shop === 'string' && shop.trim() && shop !== 'all') {
-        jobs = jobs.filter(job => job.shopName === shop);
+      // Filter by shop name (enforced for drivers/technicians)
+      if (effectiveShop && typeof effectiveShop === 'string' && effectiveShop.trim() && effectiveShop !== 'all') {
+        jobs = jobs.filter(job => job.shopName === effectiveShop);
       }
       
       // Filter by status (supports comma-separated values for multi-select)
@@ -1624,15 +1638,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all parts with job information
-  app.get("/api/parts", isAuthenticated, async (req, res) => {
+  app.get("/api/parts", isAuthenticated, async (req: any, res) => {
     try {
       const { shop, status, diagnosis, partStatus, search, dateFrom, dateTo, sortBy, sortOrder, page, pageSize } = req.query;
       
+      // Get user's whitelist role and homeShop for access control
+      let effectiveShop = shop;
+      const userId = req.user?.claims?.sub;
+      if (userId) {
+        const user = await storage.getUser(userId);
+        if (user?.email) {
+          const whitelistEntry = await storage.getWhitelistByEmail(user.email);
+          if (whitelistEntry && ['driver', 'technician'].includes(whitelistEntry.role || '')) {
+            // Drivers and technicians can only see their homeShop's parts
+            effectiveShop = whitelistEntry.homeShop || 'all';
+          }
+        }
+      }
+      
       let parts = await storage.getAllJobParts();
       
-      // Filter by shop name
-      if (shop && typeof shop === 'string' && shop.trim() && shop !== 'all') {
-        parts = parts.filter(part => part.job && part.job.shopName === shop);
+      // Filter by shop name (enforced for drivers/technicians)
+      if (effectiveShop && typeof effectiveShop === 'string' && effectiveShop.trim() && effectiveShop !== 'all') {
+        parts = parts.filter(part => part.job && part.job.shopName === effectiveShop);
       }
       
       // Filter by job status
