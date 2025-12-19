@@ -40,7 +40,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
-      res.json(user);
+      
+      // Also fetch whitelist entry to get job role and homeShop
+      let whitelistRole = null;
+      let homeShop = null;
+      if (user?.email) {
+        const whitelistEntry = await storage.getWhitelistByEmail(user.email);
+        if (whitelistEntry) {
+          whitelistRole = whitelistEntry.role;
+          homeShop = whitelistEntry.homeShop;
+        }
+      }
+      
+      res.json({
+        ...user,
+        whitelistRole,
+        homeShop,
+      });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });

@@ -10,6 +10,7 @@ export interface IStorage {
   
   // Whitelist methods
   isEmailWhitelisted(email: string): Promise<boolean>;
+  getWhitelistByEmail(email: string): Promise<Whitelist | undefined>;
   addToWhitelist(whitelist: InsertWhitelist): Promise<Whitelist>;
   removeFromWhitelist(email: string): Promise<void>;
   getAllWhitelist(): Promise<WhitelistWithRole[]>;

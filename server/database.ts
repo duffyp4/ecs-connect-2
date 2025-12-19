@@ -176,6 +176,14 @@ export class DatabaseStorage implements IStorage {
     return result.length > 0;
   }
 
+  async getWhitelistByEmail(email: string): Promise<Whitelist | undefined> {
+    const result = await this.db
+      .select()
+      .from(whitelist)
+      .where(eq(whitelist.email, email.toLowerCase()));
+    return result[0];
+  }
+
   async addToWhitelist(insertWhitelist: InsertWhitelist): Promise<Whitelist> {
     const result = await this.db
       .insert(whitelist)
