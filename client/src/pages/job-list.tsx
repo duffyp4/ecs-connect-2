@@ -18,6 +18,7 @@ import { ReadyForPickupModal } from "@/components/ready-for-pickup-modal";
 import { OutboundShipmentModal } from "@/components/outbound-shipment-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 // Helper functions for URL query parameters
 function parseQueryParams(search: string): URLSearchParams {
@@ -56,6 +57,7 @@ type PaginatedResponse = {
 };
 
 export default function JobList() {
+  const { canFilterByShop, homeShop } = useAuth();
   const [shopFilter, setShopFilter] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [tempStatusFilter, setTempStatusFilter] = useState<string[]>([]);
@@ -321,27 +323,34 @@ export default function JobList() {
             <p className="text-sm sm:text-base text-muted-foreground">Complete list of all service jobs</p>
           </div>
           
-          <Select value={shopFilter} onValueChange={setShopFilter}>
-            <SelectTrigger 
-              className="w-full lg:w-48 border-2 border-[var(--ecs-primary)] text-[var(--ecs-dark)] bg-white hover:bg-gray-50 font-medium"
-              data-testid="select-shop-filter"
-            >
-              <Building2 className="mr-2 h-4 w-4 text-[var(--ecs-primary)]" />
-              <SelectValue placeholder="All Shops" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Shops</SelectItem>
-              {isLoadingLocations ? (
-                <SelectItem value="_loading" disabled>Loading...</SelectItem>
-              ) : (
-                locations.map((location) => (
-                  <SelectItem key={location} value={location}>
-                    {location}
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
+          {canFilterByShop ? (
+            <Select value={shopFilter} onValueChange={setShopFilter}>
+              <SelectTrigger 
+                className="w-full lg:w-48 border-2 border-[var(--ecs-primary)] text-[var(--ecs-dark)] bg-white hover:bg-gray-50 font-medium"
+                data-testid="select-shop-filter"
+              >
+                <Building2 className="mr-2 h-4 w-4 text-[var(--ecs-primary)]" />
+                <SelectValue placeholder="All Shops" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Shops</SelectItem>
+                {isLoadingLocations ? (
+                  <SelectItem value="_loading" disabled>Loading...</SelectItem>
+                ) : (
+                  locations.map((location) => (
+                    <SelectItem key={location} value={location}>
+                      {location}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          ) : homeShop ? (
+            <div className="flex items-center gap-2 px-3 py-2 border-2 border-[var(--ecs-primary)] rounded-md bg-white font-medium text-[var(--ecs-dark)]">
+              <Building2 className="h-4 w-4 text-[var(--ecs-primary)]" />
+              <span>{homeShop}</span>
+            </div>
+          ) : null}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2">
