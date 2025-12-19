@@ -145,17 +145,17 @@ export function OutboundShipmentModal({
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-4">
-                {/* Location */}
+                {/* Shop Name */}
                 <FormField
                   control={form.control}
                   name="location"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Location *</FormLabel>
+                      <FormLabel>Shop Name *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger data-testid="select-outbound-location">
-                            <SelectValue placeholder="Select location" />
+                            <SelectValue placeholder="Select shop" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>

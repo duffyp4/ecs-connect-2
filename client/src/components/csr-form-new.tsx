@@ -595,19 +595,19 @@ export default function CSRForm() {
                   {/* PICKUP/SHIPMENT PATH - Match GoCanvas field order */}
                   {(arrivalPath === 'pickup' || arrivalPath === 'shipment') && (
                     <>
-                      {/* Location */}
+                      {/* Shop Name */}
                       <FormField
                         control={form.control}
                         name="shopName"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="flex items-center gap-1">
-                              <Database className="h-3 w-3 text-muted-foreground" /> Location *
+                              <Database className="h-3 w-3 text-muted-foreground" /> Shop Name *
                             </FormLabel>
                             <Select onValueChange={field.onChange} value={field.value || ""}>
                               <FormControl>
                                 <SelectTrigger data-testid="select-shop-name">
-                                  <SelectValue placeholder="Select location" />
+                                  <SelectValue placeholder="Select shop" />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
@@ -1084,19 +1084,19 @@ export default function CSRForm() {
               {/* DISPATCH DELIVERY PATH */}
               {arrivalPath === 'delivery' && (
                 <>
-                  {/* Location */}
+                  {/* Shop Name */}
                   <FormField
                     control={form.control}
                     name="shopName"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="flex items-center gap-1">
-                          <Database className="h-3 w-3 text-muted-foreground" /> Location *
+                          <Database className="h-3 w-3 text-muted-foreground" /> Shop Name *
                         </FormLabel>
                         <Select onValueChange={field.onChange} value={field.value || ""}>
                           <FormControl>
                             <SelectTrigger data-testid="select-delivery-location">
-                              <SelectValue placeholder="Select location" />
+                              <SelectValue placeholder="Select shop" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>

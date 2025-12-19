@@ -252,11 +252,11 @@ export function DeliveryDispatchModal({
                   name="location"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Location *</FormLabel>
+                      <FormLabel>Shop Name *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger data-testid="select-location">
-                            <SelectValue placeholder="Select location" />
+                            <SelectValue placeholder="Select shop" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
