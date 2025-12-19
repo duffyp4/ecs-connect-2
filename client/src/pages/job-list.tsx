@@ -312,53 +312,38 @@ export default function JobList() {
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-[var(--ecs-dark)] flex items-center">
-              <List className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
-              <span className="hidden sm:inline">All Jobs</span>
-              <span className="sm:hidden">Jobs</span>
-            </h1>
-            <p className="text-sm sm:text-base text-muted-foreground">Complete list of all service jobs</p>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Select value={shopFilter} onValueChange={setShopFilter}>
-              <SelectTrigger 
-                className="w-full sm:w-56 border-2 border-[var(--ecs-primary)] text-[var(--ecs-dark)] bg-white hover:bg-gray-50 font-medium"
-                data-testid="select-shop-filter"
-              >
-                <Building2 className="mr-2 h-4 w-4 text-[var(--ecs-primary)]" />
-                <SelectValue placeholder="All Shops" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Shops</SelectItem>
-                {isLoadingLocations ? (
-                  <SelectItem value="_loading" disabled>Loading...</SelectItem>
-                ) : (
-                  locations.map((location) => (
-                    <SelectItem key={location} value={location}>
-                      {location}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-            {shopFilter && shopFilter !== 'all' && (
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => setShopFilter('')}
-                className="text-muted-foreground hover:text-foreground"
-                data-testid="button-clear-shop-filter"
-              >
-                Clear
-              </Button>
-            )}
-          </div>
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-[var(--ecs-dark)] flex items-center">
+            <List className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
+            <span className="hidden sm:inline">All Jobs</span>
+            <span className="sm:hidden">Jobs</span>
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Complete list of all service jobs</p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2">
+          <Select value={shopFilter} onValueChange={setShopFilter}>
+            <SelectTrigger 
+              className="w-full sm:w-44 border-2 border-[var(--ecs-primary)] text-[var(--ecs-dark)] bg-white hover:bg-gray-50 font-medium"
+              data-testid="select-shop-filter"
+            >
+              <Building2 className="mr-2 h-4 w-4 text-[var(--ecs-primary)]" />
+              <SelectValue placeholder="All Shops" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Shops</SelectItem>
+              {isLoadingLocations ? (
+                <SelectItem value="_loading" disabled>Loading...</SelectItem>
+              ) : (
+                locations.map((location) => (
+                  <SelectItem key={location} value={location}>
+                    {location}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+          
           <div className="relative flex-1 sm:max-w-xs">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
