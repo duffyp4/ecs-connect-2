@@ -87,6 +87,14 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getShopUsers(): Promise<string[]> {
     await this.ensureDataLoaded();
     
+    // User ID uses CSR dispatch emails from 1017141 (column 2: Dispatch Email)
+    const emails = Array.from(new Set(this.shopData.map(row => row[2]).filter(Boolean)));
+    return emails.sort();
+  }
+
+  async getTechnicianEmails(): Promise<string[]> {
+    await this.ensureDataLoaded();
+    
     // Shop Handoff uses technician dispatch emails from 1017142 (column 2: Dispatch Email)
     const emails = Array.from(new Set(this.technicianData.map(row => row[2]).filter(Boolean)));
     return emails.sort();
@@ -115,8 +123,8 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getUsersForShop(shopName: string): Promise<string[]> {
     await this.ensureDataLoaded();
     
-    // Find all users for the given shop name (column 1: Location, column 2: Dispatch Email)
-    const users = this.shopData
+    // Shop Handoff: Find all technician dispatch emails for the given shop (column 1: Location, column 2: Dispatch Email) from 1017142
+    const users = this.technicianData
       .filter(row => row[1] === shopName) // Location is column 1
       .map(row => row[2]) // Dispatch Email is column 2
       .filter(Boolean);
