@@ -14,6 +14,7 @@ import type { Whitelist } from "@shared/schema";
 
 interface WhitelistWithRole extends Whitelist {
   role?: string | null;
+  homeShop?: string | null;
 }
 
 const roleOptions = [
@@ -21,6 +22,15 @@ const roleOptions = [
   { value: "driver", label: "Driver" },
   { value: "technician", label: "Technician" },
   { value: "admin", label: "Admin" },
+];
+
+const shopOptions = [
+  { value: "ECS Memphis", label: "ECS Memphis" },
+  { value: "ECS Nashville", label: "ECS Nashville" },
+  { value: "ECS Atlanta", label: "ECS Atlanta" },
+  { value: "ECS Dallas", label: "ECS Dallas" },
+  { value: "ECS Chicago", label: "ECS Chicago" },
+  { value: "ECS Corporate", label: "ECS Corporate" },
 ];
 
 interface GoCanvasMetrics {
@@ -49,6 +59,7 @@ interface WebhookMetrics {
 export default function AdminPage() {
   const [newEmail, setNewEmail] = useState("");
   const [newRole, setNewRole] = useState<string>("csr");
+  const [newHomeShop, setNewHomeShop] = useState<string>("");
   const { toast } = useToast();
 
   const { data: whitelistEntries, isLoading } = useQuery<WhitelistWithRole[]>({
@@ -110,6 +121,26 @@ export default function AdminPage() {
     onError: (error: any) => {
       toast({
         title: "Failed to update role",
+        description: error.message || "An error occurred",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateHomeShopMutation = useMutation({
+    mutationFn: async ({ email, homeShop }: { email: string; homeShop: string | null }) => {
+      return apiRequest('PATCH', `/api/admin/whitelist/${encodeURIComponent(email)}/home-shop`, { homeShop });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/whitelist'] });
+      toast({
+        title: "Home shop updated",
+        description: "The user's home shop has been updated.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update home shop",
         description: error.message || "An error occurred",
         variant: "destructive",
       });
@@ -215,6 +246,7 @@ export default function AdminPage() {
                   <TableRow>
                     <TableHead>Email Address</TableHead>
                     <TableHead>Role</TableHead>
+                    <TableHead>Home Shop</TableHead>
                     <TableHead>Added</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -234,6 +266,25 @@ export default function AdminPage() {
                           </SelectTrigger>
                           <SelectContent>
                             {roleOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          value={entry.homeShop || "_none"}
+                          onValueChange={(shop) => updateHomeShopMutation.mutate({ email: entry.email, homeShop: shop === "_none" ? null : shop })}
+                          disabled={updateHomeShopMutation.isPending}
+                        >
+                          <SelectTrigger className="w-36" data-testid={`select-shop-${entry.email}`}>
+                            <SelectValue placeholder="Select shop" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="_none">No Shop</SelectItem>
+                            {shopOptions.map((option) => (
                               <SelectItem key={option.value} value={option.value}>
                                 {option.label}
                               </SelectItem>

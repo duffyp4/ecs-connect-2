@@ -39,6 +39,7 @@ export const whitelist = pgTable("whitelist", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: varchar("email").notNull().unique(),
   role: varchar("role").$type<WhitelistRole>().default("csr"),
+  homeShop: varchar("home_shop"),
   addedBy: varchar("added_by"),
   createdAt: timestamp("created_at").defaultNow(),
 });

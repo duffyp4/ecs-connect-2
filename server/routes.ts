@@ -125,6 +125,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch('/api/admin/whitelist/:email/home-shop', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { email } = req.params;
+      const { homeShop } = req.body;
+      const entry = await storage.updateWhitelistHomeShop(decodeURIComponent(email), homeShop || null);
+      res.json(entry);
+    } catch (error) {
+      console.error("Error updating whitelist home shop:", error);
+      res.status(500).json({ message: "Failed to update home shop" });
+    }
+  });
+
   // Admin: Make user an admin
   app.post('/api/admin/users/:userId/make-admin', isAuthenticated, isAdmin, async (req, res) => {
     try {

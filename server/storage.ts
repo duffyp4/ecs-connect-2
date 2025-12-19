@@ -14,6 +14,7 @@ export interface IStorage {
   removeFromWhitelist(email: string): Promise<void>;
   getAllWhitelist(): Promise<WhitelistWithRole[]>;
   updateWhitelistRole(email: string, role: string): Promise<Whitelist | undefined>;
+  updateWhitelistHomeShop(email: string, homeShop: string | null): Promise<Whitelist | undefined>;
   
   // Job methods
   getJob(id: string): Promise<Job | undefined>;

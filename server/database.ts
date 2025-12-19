@@ -199,6 +199,7 @@ export class DatabaseStorage implements IStorage {
         id: whitelist.id,
         email: whitelist.email,
         role: whitelist.role,
+        homeShop: whitelist.homeShop,
         addedBy: whitelist.addedBy,
         createdAt: whitelist.createdAt,
       })
@@ -210,6 +211,15 @@ export class DatabaseStorage implements IStorage {
     const result = await this.db
       .update(whitelist)
       .set({ role: role as any })
+      .where(eq(whitelist.email, email.toLowerCase()))
+      .returning();
+    return result[0];
+  }
+
+  async updateWhitelistHomeShop(email: string, homeShop: string | null): Promise<Whitelist | undefined> {
+    const result = await this.db
+      .update(whitelist)
+      .set({ homeShop })
       .where(eq(whitelist.email, email.toLowerCase()))
       .returning();
     return result[0];
