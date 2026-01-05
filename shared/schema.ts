@@ -397,6 +397,10 @@ export const jobParts = pgTable("job_parts", {
   diagnosis: text("diagnosis"), // Internal diagnosis tracking
   status: text("status"), // Internal status tracking
   
+  // Raw GoCanvas submission fields - stores ALL fields from GoCanvas for this part
+  // This enables the "View All Fields" modal to show every field value
+  rawGocanvasFields: jsonb("raw_gocanvas_fields"), // Array of {label, value, entry_id}
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -429,6 +433,12 @@ export const insertJobPartSchema = createInsertSchema(jobParts).omit({
   // Optional ECS internal fields (editable at any time)
   diagnosis: z.string().optional(),
   status: z.string().optional(),
+  // Raw GoCanvas fields for detailed modal view
+  rawGocanvasFields: z.array(z.object({
+    label: z.string(),
+    value: z.string().nullable(),
+    entry_id: z.number().optional(),
+  })).optional(),
 });
 
 export type InsertJobPart = z.infer<typeof insertJobPartSchema>;
