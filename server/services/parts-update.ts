@@ -31,6 +31,9 @@ export async function updatePartsFromSubmission(
     // Just group all responses by multi_key - no complex position-based slicing needed!
     const partsBySerial = new Map<string, any>();
     
+    // Also collect ALL raw fields for each part (for the detailed modal view)
+    const rawFieldsBySerial = new Map<string, Array<{label: string, value: string | null, entry_id?: number}>>();
+    
     // First pass: Find all unique serial numbers from responses with multi_key
     // The title field (ECS Serial) has no multi_key, but its VALUE is the serial
     // All other fields have multi_key = serial number
@@ -42,7 +45,14 @@ export async function updatePartsFromSubmission(
           const serialNumber = response.value;
           if (!partsBySerial.has(serialNumber)) {
             partsBySerial.set(serialNumber, { ecsSerial: serialNumber });
+            rawFieldsBySerial.set(serialNumber, []);
           }
+          // Add the ECS Serial as the first raw field
+          rawFieldsBySerial.get(serialNumber)?.push({
+            label: response.label || 'ECS Serial Number',
+            value: response.value ?? null,
+            entry_id: response.entry_id,
+          });
         }
         continue;
       }
@@ -52,7 +62,15 @@ export async function updatePartsFromSubmission(
       // Initialize part data if not exists
       if (!partsBySerial.has(serialNumber)) {
         partsBySerial.set(serialNumber, { ecsSerial: serialNumber });
+        rawFieldsBySerial.set(serialNumber, []);
       }
+      
+      // Store ALL raw fields for this part (for detailed modal view)
+      rawFieldsBySerial.get(serialNumber)?.push({
+        label: response.label || `Field ${response.entry_id}`,
+        value: response.value ?? null,
+        entry_id: response.entry_id,
+      });
       
       const partData = partsBySerial.get(serialNumber);
       const entryId = response.entry_id;
@@ -146,6 +164,13 @@ export async function updatePartsFromSubmission(
       if (goCanvasData.requireRepairs !== undefined) partData.requireRepairs = goCanvasData.requireRepairs;
       if (goCanvasData.failedReason !== undefined) partData.failedReason = goCanvasData.failedReason;
       if (goCanvasData.repairsPerformed !== undefined) partData.repairsPerformed = goCanvasData.repairsPerformed;
+      
+      // Include ALL raw fields for the detailed modal view
+      const rawFields = rawFieldsBySerial.get(serialNumber) || [];
+      if (rawFields.length > 0) {
+        partData.rawGocanvasFields = rawFields;
+        console.log(`   Captured ${rawFields.length} raw GoCanvas fields for part ${serialNumber}`);
+      }
       
       if (existingPart) {
         // Update existing part with GoCanvas data
