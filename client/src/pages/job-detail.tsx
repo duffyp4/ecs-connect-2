@@ -37,6 +37,7 @@ import { DeliveryDispatchModal } from "@/components/delivery-dispatch-modal";
 import { ReadyForPickupModal } from "@/components/ready-for-pickup-modal";
 import { OutboundShipmentModal } from "@/components/outbound-shipment-modal";
 import { PartsManagementModal } from "@/components/parts-management-modal";
+import { PartDetailModal } from "@/components/part-detail-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTimezone } from "@/hooks/useTimezone";
@@ -78,6 +79,9 @@ export default function JobDetail() {
   const [partsManagementModalOpen, setPartsManagementModalOpen] = useState(false);
   const [editingPart, setEditingPart] = useState<any>(null);
   const [newComment, setNewComment] = useState("");
+  const [partDetailModalOpen, setPartDetailModalOpen] = useState(false);
+  const [selectedPartForDetail, setSelectedPartForDetail] = useState<any>(null);
+  const [selectedPartIndex, setSelectedPartIndex] = useState<number>(0);
 
   const { data: job, isLoading: jobLoading } = useQuery<any>({
     queryKey: [`/api/jobs/${jobId}`],
@@ -608,7 +612,17 @@ export default function JobDetail() {
               {parts.map((part, index) => (
                 <div key={part.id} className="border rounded-lg p-4 space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-[var(--ecs-primary)]">Part {index + 1}</h3>
+                    <button
+                      className="font-semibold text-[var(--ecs-primary)] hover:underline cursor-pointer text-left"
+                      onClick={() => {
+                        setSelectedPartForDetail(part);
+                        setSelectedPartIndex(index);
+                        setPartDetailModalOpen(true);
+                      }}
+                      data-testid={`button-view-part-${index + 1}`}
+                    >
+                      Part {index + 1}
+                    </button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -1010,6 +1024,18 @@ export default function JobDetail() {
           }}
         />
       )}
+      {/* Part Detail Modal - Shows all GoCanvas fields for a specific part */}
+      <PartDetailModal
+        part={selectedPartForDetail}
+        partIndex={selectedPartIndex}
+        open={partDetailModalOpen}
+        onOpenChange={(open) => {
+          setPartDetailModalOpen(open);
+          if (!open) {
+            setSelectedPartForDetail(null);
+          }
+        }}
+      />
     </div>
   );
 }
