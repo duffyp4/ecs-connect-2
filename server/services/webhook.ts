@@ -1,7 +1,6 @@
 import { parseStringPromise } from 'xml2js';
-import { goCanvasService, FORM_IDS, getAllKnownFormIds, getFormTypeFromId } from './gocanvas';
-import { jobEventsService } from './jobEvents';
-import { updatePartsFromSubmission, handleAdditionalComments } from './parts-update';
+import { goCanvasService, getAllKnownFormIds } from './gocanvas';
+import { processCompletedSubmission } from './submissionProcessor';
 
 // In-memory metrics for webhooks
 export const webhookMetrics = {
@@ -103,280 +102,6 @@ export class WebhookService {
   }
 
   /**
-   * Extract Job ID from submission responses
-   */
-  private extractJobId(responses: any[]): string | null {
-    if (!Array.isArray(responses)) {
-      return null;
-    }
-
-    // Search for field labeled "Job ID" containing ECS-formatted ID
-    const jobIdField = responses.find(r => 
-      r.label?.toLowerCase().includes('job') && 
-      r.value?.startsWith('ECS-')
-    );
-    
-    return jobIdField?.value || null;
-  }
-
-  /**
-   * Handle pickup form completion
-   */
-  private async handlePickupCompletion(jobId: string, submissionData: any): Promise<void> {
-    try {
-      console.log(`✅ Pickup form completed for job ${jobId} (webhook)`);
-      
-      await jobEventsService.markPickedUp(
-        jobId,
-        1, // Default item count (actual count not available from form)
-        {
-          metadata: {
-            submittedAt: submissionData.submitted_at ? new Date(submissionData.submitted_at) : new Date(),
-            autoDetected: true,
-            source: 'push_notification',
-          },
-        }
-      );
-
-      // Extract driver notes from submission and add as job comment
-      if (submissionData?.responses && Array.isArray(submissionData.responses)) {
-        const driverNotesField = submissionData.responses.find((r: any) => 
-          r.label === 'Driver Notes'
-        );
-        
-        if (driverNotesField?.value && driverNotesField.value.trim()) {
-          const { storage } = await import('../storage');
-          const { goCanvasService } = await import('./gocanvas');
-          
-          // Get driver name from GoCanvas user API
-          let submitterName = 'Driver';
-          if (submissionData.user_id) {
-            try {
-              const userData = await goCanvasService.getGoCanvasUserById(submissionData.user_id);
-              const firstName = userData.first_name || '';
-              const lastName = userData.last_name || '';
-              submitterName = `${firstName} ${lastName}`.trim() || `User ${submissionData.user_id}`;
-              submitterName += ' (Driver)';
-            } catch (error) {
-              console.warn(`Could not fetch GoCanvas user ${submissionData.user_id}:`, error);
-              submitterName = `Driver (ID: ${submissionData.user_id})`;
-            }
-          }
-          
-          await storage.createJobComment({
-            jobId,
-            userId: submitterName,
-            commentText: `[Driver Notes] ${driverNotesField.value.trim()}`,
-          });
-          
-          console.log(`✅ Added driver notes as job comment for ${jobId} by ${submitterName}`);
-        }
-      }
-    } catch (error) {
-      console.error(`Error handling pickup completion for job ${jobId}:`, error);
-      throw error;
-    }
-  }
-
-  /**
-   * Handle service form completion
-   */
-  private async handleServiceCompletion(jobId: string, submissionData: any): Promise<void> {
-    try {
-      const submittedAt = submissionData.submitted_at ? new Date(submissionData.submitted_at) : new Date();
-      
-      console.log(`✅ Service form completed for job ${jobId} (webhook)`);
-      
-      // Get job to check current state
-      const { storage } = await import('../storage');
-      const job = await storage.getJobByJobId(jobId);
-      
-      if (!job) {
-        console.error(`Job ${jobId} not found`);
-        return;
-      }
-
-      // Get handoff time from GPS field for accurate "Service Started" timestamp
-      let handoffTime: Date | null = null;
-      
-      try {
-        // Extract GPS field directly from submission data (no extra API call needed!)
-        const gpsField = submissionData.responses?.find((f: any) => f.label === 'New GPS');
-        
-        if (gpsField?.value) {
-          const timeMatch = gpsField.value.match(/Time:(\d+\.?\d*)/);
-          
-          if (timeMatch && timeMatch[1]) {
-            const unixTimestamp = parseFloat(timeMatch[1]);
-            const timestampMs = unixTimestamp > 10000000000 ? unixTimestamp : unixTimestamp * 1000;
-            handoffTime = new Date(timestampMs);
-            
-            if (isNaN(handoffTime.getTime()) || 
-                handoffTime.getFullYear() < 2020 || 
-                handoffTime.getFullYear() > 2100) {
-              console.warn(`Invalid GPS timestamp parsed: "${timeMatch[1]}" → year ${handoffTime.getFullYear()}`);
-              handoffTime = null;
-            } else {
-              console.log(`✅ Found handoff time from GPS field: ${handoffTime.toISOString()}`);
-            }
-          }
-        }
-      } catch (error) {
-        console.warn(`Could not retrieve handoff time from GPS: ${error}`);
-      }
-
-      // If still at_shop, transition through in_service to service_complete
-      if (job.state === 'at_shop') {
-        console.log(`✅ Service completed for job ${jobId} (at_shop), transitioning through in_service to service_complete`);
-        
-        await jobEventsService.transitionJobState(jobId, 'in_service', {
-          actor: 'Technician',
-          timestamp: handoffTime || undefined,
-          metadata: {
-            autoDetected: true,
-            source: 'push_notification',
-            handoffTime: handoffTime?.toISOString(),
-          },
-        });
-        
-        await jobEventsService.transitionJobState(jobId, 'service_complete', {
-          actor: 'System',
-          timestamp: submittedAt,
-          metadata: {
-            completedAt: submittedAt,
-            autoDetected: true,
-            source: 'push_notification',
-          },
-        });
-      } 
-      // If already in_service, transition to service_complete
-      else if (job.state === 'in_service') {
-        console.log(`✅ Service form completed for job ${jobId}, transitioning to service_complete`);
-        
-        await jobEventsService.transitionJobState(jobId, 'service_complete', {
-          actor: 'System',
-          timestamp: submittedAt,
-          metadata: {
-            completedAt: submittedAt,
-            autoDetected: true,
-            source: 'push_notification',
-          },
-        });
-      }
-      
-      // Extract and update parts data from submission (using shared service)
-      if (submissionData?.responses) {
-        console.log('📦 Extracting parts data from GoCanvas submission (webhook)...');
-        await updatePartsFromSubmission(jobId, submissionData.responses, storage);
-      }
-      
-      // Extract "Additional Comments" and add as job comment (using shared service)
-      if (submissionData?.responses && Array.isArray(submissionData.responses)) {
-        await handleAdditionalComments(jobId, submissionData.responses, submissionData.user_id, storage);
-      }
-      
-      // Note: "Note to Tech about Customer or service:" is captured at check-in time
-      // (see POST /api/jobs/:jobId/check-in route) - not captured here to avoid duplicates
-    } catch (error) {
-      console.error(`Error handling service completion for job ${jobId}:`, error);
-      throw error;
-    }
-  }
-
-  /**
-   * Handle delivery form completion
-   */
-  private async handleDeliveryCompletion(jobId: string, submissionData: any): Promise<void> {
-    try {
-      console.log(`✅ Delivery form completed for job ${jobId} (webhook)`);
-      
-      await jobEventsService.markDelivered(jobId, {
-        timestamp: submissionData.submitted_at ? new Date(submissionData.submitted_at) : undefined,
-        metadata: {
-          submittedAt: submissionData.submitted_at ? new Date(submissionData.submitted_at) : new Date(),
-          autoDetected: true,
-          source: 'push_notification',
-        },
-      });
-      
-      // Extract driver notes from delivery form completion
-      if (submissionData?.responses && Array.isArray(submissionData.responses)) {
-        const driverNotesField = submissionData.responses.find((r: any) => 
-          r.label === 'Driver Notes'
-        );
-        
-        if (driverNotesField?.value && driverNotesField.value.trim()) {
-          const { storage } = await import('../storage');
-          const { goCanvasService } = await import('./gocanvas');
-          
-          // Get submitter name for author attribution
-          let submitterName = 'Unknown User';
-          try {
-            const userId = submissionData.user_id || submissionData.UserId;
-            if (userId) {
-              submitterName = await goCanvasService.getUserDisplayName(userId);
-            }
-          } catch (error) {
-            console.error('Error getting submitter name for delivery driver notes:', error);
-          }
-          
-          await storage.createJobComment({
-            jobId,
-            userId: submitterName,
-            commentText: `[Driver Notes] ${driverNotesField.value.trim()}`,
-          });
-          
-          console.log(`✅ Added delivery driver notes as job comment for ${jobId} by ${submitterName}`);
-        }
-      }
-    } catch (error) {
-      console.error(`Error handling delivery completion for job ${jobId}:`, error);
-      throw error;
-    }
-  }
-
-  /**
-   * Handle submission completion based on form type
-   */
-  private async handleSubmissionCompleted(
-    formId: string,
-    submissionData: any
-  ): Promise<void> {
-    // Extract Job ID from submission responses
-    const jobId = this.extractJobId(submissionData.responses || []);
-    
-    if (!jobId) {
-      console.warn('⚠️ No Job ID found in submission:', submissionData.id);
-      return;
-    }
-
-    console.log(`📋 Processing submission for Job ID: ${jobId}, Form: ${formId}`);
-
-    // Determine form type from ID (works for current and historical form versions)
-    const formType = getFormTypeFromId(formId);
-    
-    if (!formType) {
-      console.warn('⚠️ Unknown form ID in webhook:', formId);
-      return;
-    }
-
-    // Route to appropriate handler based on form type
-    switch (formType) {
-      case 'PICKUP':
-        await this.handlePickupCompletion(jobId, submissionData);
-        break;
-      
-      case 'EMISSIONS':
-        await this.handleServiceCompletion(jobId, submissionData);
-        break;
-      
-      case 'DELIVERY':
-        await this.handleDeliveryCompletion(jobId, submissionData);
-        break;
-    }
-  }
-
-  /**
    * Process GoCanvas webhook
    */
   async processGoCanvasWebhook(
@@ -447,8 +172,16 @@ export class WebhookService {
         responses,
       };
       
-      // Process submission
-      await this.handleSubmissionCompleted(notification.formId, enrichedSubmissionData);
+      // Process submission using unified processor
+      const result = await processCompletedSubmission(
+        notification.formId, 
+        enrichedSubmissionData, 
+        'push_notification'
+      );
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to process submission');
+      }
       
       // Update metrics
       webhookMetrics.totalProcessed++;
