@@ -539,6 +539,10 @@ export default function JobDetail() {
               </div>
             </div>
             <div>
+              <div className="text-sm text-muted-foreground">PO Number</div>
+              <div className="font-medium" data-testid="text-po-number">{job.poNumber || 'N/A'}</div>
+            </div>
+            <div>
               <div className="text-sm text-muted-foreground">Order Number(s)</div>
               <div className="font-medium" data-testid="text-order-numbers">
                 {(() => {
