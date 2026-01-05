@@ -2,8 +2,7 @@ import { storage } from '../storage';
 import { jobEventsService } from './jobEvents';
 import { goCanvasService } from './gocanvas';
 import { getFormTypeFromId } from '@shared/formVersions';
-import { updatePartsFromSubmission } from './parts-update';
-import { handleAdditionalComments } from './comments-handler';
+import { updatePartsFromSubmission, handleAdditionalComments } from './parts-update';
 
 export type FormType = 'PICKUP' | 'EMISSIONS' | 'DELIVERY';
 export type SubmissionSource = 'push_notification' | 'manual_check' | 'polling';
