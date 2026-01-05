@@ -59,7 +59,7 @@ export function PartDetailModal({
                     {field.label}
                   </div>
                   <div className="font-medium">
-                    {field.value && field.value.trim() !== "" ? field.value : "-"}
+                    {field.value != null && String(field.value).trim() !== "" ? String(field.value) : "-"}
                   </div>
                 </div>
               ))}
