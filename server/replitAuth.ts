@@ -99,7 +99,7 @@ export async function setupAuth(app: Express) {
   if (isDev) {
     console.log("[Auth] Development mode - using mock authentication");
 
-    // Ensure dev user exists in database
+    // Ensure dev user exists in database and whitelist
     await storage.upsertUser({
       id: DEV_USER.claims.sub,
       email: DEV_USER.claims.email,
@@ -107,6 +107,16 @@ export async function setupAuth(app: Express) {
       lastName: DEV_USER.claims.last_name,
       profileImageUrl: DEV_USER.claims.profile_image_url,
     });
+
+    // Add dev user to whitelist if not already there
+    const isWhitelisted = await storage.isEmailWhitelisted(DEV_USER.claims.email);
+    if (!isWhitelisted) {
+      await storage.addToWhitelist({
+        email: DEV_USER.claims.email,
+        role: "admin", // Give dev user admin access
+      });
+      console.log("[Auth] Added dev user to whitelist");
+    }
 
     passport.serializeUser((user: Express.User, cb) => cb(null, user));
     passport.deserializeUser((user: Express.User, cb) => cb(null, user));
