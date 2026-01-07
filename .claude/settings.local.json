@@ -3,7 +3,16 @@
     "allow": [
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git config:*)"
+      "Bash(git config:*)",
+      "Bash(npm run dev:*)",
+      "Bash(pkill:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill -9)",
+      "Bash(cat:*)",
+      "Bash(curl:*)",
+      "Bash(claude mcp list:*)",
+      "Bash(netstat:*)",
+      "Bash(ss:*)"
     ]
   }
 }
