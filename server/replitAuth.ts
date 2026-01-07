@@ -8,6 +8,23 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
+const isDev = process.env.NODE_ENV === "development";
+
+// Mock user for development mode
+const DEV_USER = {
+  claims: {
+    sub: "dev-user-123",
+    email: "dev@example.com",
+    first_name: "Dev",
+    last_name: "User",
+    profile_image_url: null,
+    exp: Math.floor(Date.now() / 1000) + 86400 * 365, // 1 year from now
+  },
+  access_token: "dev-access-token",
+  refresh_token: "dev-refresh-token",
+  expires_at: Math.floor(Date.now() / 1000) + 86400 * 365,
+};
+
 const getOidcConfig = memoize(
   async () => {
     return await client.discovery(
@@ -78,6 +95,47 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // Development mode: bypass OAuth and auto-login with mock user
+  if (isDev) {
+    console.log("[Auth] Development mode - using mock authentication");
+
+    // Ensure dev user exists in database
+    await storage.upsertUser({
+      id: DEV_USER.claims.sub,
+      email: DEV_USER.claims.email,
+      firstName: DEV_USER.claims.first_name,
+      lastName: DEV_USER.claims.last_name,
+      profileImageUrl: DEV_USER.claims.profile_image_url,
+    });
+
+    passport.serializeUser((user: Express.User, cb) => cb(null, user));
+    passport.deserializeUser((user: Express.User, cb) => cb(null, user));
+
+    // Auto-login route for dev mode
+    app.get("/api/login", (req, res) => {
+      req.login(DEV_USER, (err) => {
+        if (err) {
+          console.error("Dev login error:", err);
+          return res.status(500).json({ message: "Login failed" });
+        }
+        res.redirect("/");
+      });
+    });
+
+    app.get("/api/callback", (_req, res) => {
+      res.redirect("/");
+    });
+
+    app.get("/api/logout", (req, res) => {
+      req.logout(() => {
+        res.redirect("/");
+      });
+    });
+
+    return;
+  }
+
+  // Production mode: full OAuth flow
   const config = await getOidcConfig();
 
   const verify: VerifyFunction = async (
@@ -85,13 +143,13 @@ export async function setupAuth(app: Express) {
     verified: passport.AuthenticateCallback
   ) => {
     const result = await upsertUser(tokens.claims());
-    
+
     if (!result.allowed) {
       // Authentication failed due to whitelist check
       verified(new Error(result.message || "Access denied"), null);
       return;
     }
-    
+
     const user = {};
     updateUserSession(user, tokens);
     verified(null, user);
