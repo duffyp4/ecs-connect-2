@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Bolt, Plus, BarChart3, List, Package, FileText, User, LogOut, Menu, X, Code, Settings, Shield, Bookmark, Tabs2 } from "lucide-react";
+import { Bolt, Plus, BarChart3, List, Package, FileText, User, LogOut, Menu, X, Code, Settings, Shield, Bookmark, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -183,7 +183,7 @@ export default function Layout({ children }: LayoutProps) {
                     className={`nav-link flex items-center space-x-2 ${location === '/jobs-demo-tabs' ? 'active' : ''}`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    <Tabs2 className="h-4 w-4" />
+                    <Layers className="h-4 w-4" />
                     <span>Demo: Tab Sessions</span>
                   </div>
                 </Link>
