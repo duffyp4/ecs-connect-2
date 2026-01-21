@@ -16,11 +16,6 @@ import { Landing } from "@/pages/landing";
 import { AccessDenied } from "@/pages/access-denied";
 import Layout from "@/components/layout";
 import { DevModeProvider } from "@/contexts/DevModeContext";
-import { lazy, Suspense } from "react";
-
-// Lazy load demo pages (dev mode only)
-const JobListDemoSavedViews = lazy(() => import("@/pages/job-list-demo-saved-views"));
-const JobListDemoTabs = lazy(() => import("@/pages/job-list-demo-tabs"));
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -55,21 +50,6 @@ function Router() {
         <Route path="/jobs/:id" component={JobDetail} />
         <Route path="/settings" component={Settings} />
         <Route path="/admin" component={AdminPage} />
-        {/* Demo routes (dev mode only) */}
-        {import.meta.env.DEV && (
-          <>
-            <Route path="/jobs-demo-saved-views">
-              <Suspense fallback={<div className="p-8">Loading demo...</div>}>
-                <JobListDemoSavedViews />
-              </Suspense>
-            </Route>
-            <Route path="/jobs-demo-tabs">
-              <Suspense fallback={<div className="p-8">Loading demo...</div>}>
-                <JobListDemoTabs />
-              </Suspense>
-            </Route>
-          </>
-        )}
         <Route component={NotFound} />
       </Switch>
     </Layout>
