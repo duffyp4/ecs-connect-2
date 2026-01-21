@@ -2235,6 +2235,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============ Job List Tabs API ============
+  
+  // Get user's tabs
+  app.get("/api/user/tabs", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.email || req.user.claims.sub;
+      const tabs = await storage.getUserTabs(userId);
+      res.json(tabs);
+    } catch (error) {
+      console.error("Error fetching user tabs:", error);
+      res.status(500).json({ message: "Failed to fetch tabs" });
+    }
+  });
+
+  // Create a new tab
+  app.post("/api/user/tabs", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.email || req.user.claims.sub;
+      const { name, filters, isPinned, position } = req.body;
+      
+      const tab = await storage.createTab({
+        userId,
+        name: name || "New Tab",
+        filters: filters || {},
+        isPinned: isPinned ? 1 : 0,
+        position: position || 0,
+      });
+      
+      res.json(tab);
+    } catch (error) {
+      console.error("Error creating tab:", error);
+      res.status(500).json({ message: "Failed to create tab" });
+    }
+  });
+
+  // Update a tab
+  app.patch("/api/user/tabs/:tabId", isAuthenticated, async (req: any, res) => {
+    try {
+      const { tabId } = req.params;
+      const { name, filters, isPinned, position } = req.body;
+      
+      const updates: any = {};
+      if (name !== undefined) updates.name = name;
+      if (filters !== undefined) updates.filters = filters;
+      if (isPinned !== undefined) updates.isPinned = isPinned ? 1 : 0;
+      if (position !== undefined) updates.position = position;
+      
+      const tab = await storage.updateTab(tabId, updates);
+      if (!tab) {
+        return res.status(404).json({ message: "Tab not found" });
+      }
+      
+      res.json(tab);
+    } catch (error) {
+      console.error("Error updating tab:", error);
+      res.status(500).json({ message: "Failed to update tab" });
+    }
+  });
+
+  // Delete a tab
+  app.delete("/api/user/tabs/:tabId", isAuthenticated, async (req: any, res) => {
+    try {
+      const { tabId } = req.params;
+      await storage.deleteTab(tabId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting tab:", error);
+      res.status(500).json({ message: "Failed to delete tab" });
+    }
+  });
+
+  // Reorder tabs
+  app.post("/api/user/tabs/reorder", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.email || req.user.claims.sub;
+      const { tabIds } = req.body;
+      
+      if (!Array.isArray(tabIds)) {
+        return res.status(400).json({ message: "tabIds must be an array" });
+      }
+      
+      await storage.reorderTabs(userId, tabIds);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error reordering tabs:", error);
+      res.status(500).json({ message: "Failed to reorder tabs" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

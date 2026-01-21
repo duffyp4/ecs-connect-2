@@ -1,4 +1,4 @@
-import { type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent, type User, type UpsertUser, type Whitelist, type InsertWhitelist, type JobComment, type InsertJobComment, type JobPart, type InsertJobPart } from "@shared/schema";
+import { type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent, type User, type UpsertUser, type Whitelist, type InsertWhitelist, type JobComment, type InsertJobComment, type JobPart, type InsertJobPart, type JobListTab, type InsertJobListTab } from "@shared/schema";
 import { DatabaseStorage, type WhitelistWithRole } from "./database";
 
 export interface IStorage {
@@ -55,6 +55,13 @@ export interface IStorage {
   generateNextSerialNumber(shopCode: string, date: string): Promise<string>;
   isSerialNumberAvailable(serialNumber: string): Promise<boolean>;
   reserveSerialNumber(shopCode: string, date: string, sequence: number, serialNumber: string): Promise<void>;
+  
+  // Job List Tab methods
+  getUserTabs(userId: string): Promise<JobListTab[]>;
+  createTab(tab: InsertJobListTab): Promise<JobListTab>;
+  updateTab(id: string, updates: Partial<JobListTab>): Promise<JobListTab | undefined>;
+  deleteTab(id: string): Promise<void>;
+  reorderTabs(userId: string, tabIds: string[]): Promise<void>;
 }
 
 export const storage = new DatabaseStorage();

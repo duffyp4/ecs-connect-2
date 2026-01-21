@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { Pool, neonConfig } from "@neondatabase/serverless";
-import { jobs, technicians, jobEvents, users, whitelist, jobComments, jobParts, ecsSerialTracking, type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent, type User, type UpsertUser, type Whitelist, type InsertWhitelist, type JobComment, type InsertJobComment, type JobPart, type InsertJobPart } from "@shared/schema";
+import { jobs, technicians, jobEvents, users, whitelist, jobComments, jobParts, ecsSerialTracking, jobListTabs, type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent, type User, type UpsertUser, type Whitelist, type InsertWhitelist, type JobComment, type InsertJobComment, type JobPart, type InsertJobPart, type JobListTab, type InsertJobListTab } from "@shared/schema";
 import { eq, desc, and, sql as drizzleSql } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { IStorage } from "./storage";
@@ -462,6 +462,39 @@ export class DatabaseStorage implements IStorage {
           eq(ecsSerialTracking.shopCode, shopCode),
           eq(ecsSerialTracking.date, date)
         ));
+    }
+  }
+
+  // Job List Tab methods
+  async getUserTabs(userId: string): Promise<JobListTab[]> {
+    const result = await this.db.select().from(jobListTabs)
+      .where(eq(jobListTabs.userId, userId))
+      .orderBy(jobListTabs.position);
+    return result;
+  }
+
+  async createTab(tab: InsertJobListTab): Promise<JobListTab> {
+    const result = await this.db.insert(jobListTabs).values(tab).returning();
+    return result[0];
+  }
+
+  async updateTab(id: string, updates: Partial<JobListTab>): Promise<JobListTab | undefined> {
+    const result = await this.db.update(jobListTabs)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(jobListTabs.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteTab(id: string): Promise<void> {
+    await this.db.delete(jobListTabs).where(eq(jobListTabs.id, id));
+  }
+
+  async reorderTabs(userId: string, tabIds: string[]): Promise<void> {
+    for (let i = 0; i < tabIds.length; i++) {
+      await this.db.update(jobListTabs)
+        .set({ position: i, updatedAt: new Date() })
+        .where(and(eq(jobListTabs.id, tabIds[i]), eq(jobListTabs.userId, userId)));
     }
   }
 

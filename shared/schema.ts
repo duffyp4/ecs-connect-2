@@ -509,3 +509,24 @@ export const ecsSerialTracking = pgTable("ecs_serial_tracking", {
 });
 
 export type EcsSerialTracking = typeof ecsSerialTracking.$inferSelect;
+
+// Job List Tabs - stores user's tab sessions for job list filtering
+export const jobListTabs = pgTable("job_list_tabs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(), // user email or ID
+  name: varchar("name", { length: 100 }).notNull(),
+  filters: jsonb("filters").notNull(), // FilterState object
+  isPinned: integer("is_pinned").notNull().default(0), // 0=false, 1=true (boolean as integer for SQLite compat)
+  position: integer("position").notNull().default(0), // for ordering tabs
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertJobListTabSchema = createInsertSchema(jobListTabs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertJobListTab = z.infer<typeof insertJobListTabSchema>;
+export type JobListTab = typeof jobListTabs.$inferSelect;
