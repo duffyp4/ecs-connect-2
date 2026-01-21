@@ -19,6 +19,7 @@ import { OutboundShipmentModal } from "@/components/outbound-shipment-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import JobListTabs, { type FilterState } from "@/components/job-list-tabs";
 
 // Helper functions for URL query parameters
 function parseQueryParams(search: string): URLSearchParams {
@@ -83,6 +84,33 @@ export default function JobList() {
   const wasFetchingRef = useRef<boolean>(false);
   const isUserTypingRef = useRef<boolean>(false);
   const isInitializedRef = useRef<boolean>(false);
+
+  // Current filters object for tabs integration
+  const currentFilters: FilterState = {
+    shop: shopFilter,
+    status: statusFilter,
+    search: searchQuery,
+    dateFrom,
+    dateTo,
+    sortBy,
+    sortOrder: sortOrder as 'asc' | 'desc',
+    pageSize,
+  };
+
+  // Handler for when a tab is selected or filters should change
+  const handleFiltersChange = (filters: FilterState) => {
+    setShopFilter(filters.shop || '');
+    setStatusFilter(filters.status || []);
+    setTempStatusFilter(filters.status || []);
+    setSearchQuery(filters.search || '');
+    setDebouncedSearchQuery(filters.search || '');
+    setDateFrom(filters.dateFrom || '');
+    setDateTo(filters.dateTo || '');
+    setSortBy(filters.sortBy || 'initiatedAt');
+    setSortOrder(filters.sortOrder || 'desc');
+    setPageSize(filters.pageSize || 25);
+    setCurrentPage(1);
+  };
   
   // Initialize state from URL on mount, with session persistence for shop filter
   useEffect(() => {
@@ -331,6 +359,12 @@ export default function JobList() {
 
   return (
     <div className="space-y-4 sm:space-y-6 max-w-full overflow-hidden">
+      {/* Tab Sessions Bar */}
+      <JobListTabs 
+        currentFilters={currentFilters}
+        onFiltersChange={handleFiltersChange}
+      />
+
       <div className="space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           <div>
