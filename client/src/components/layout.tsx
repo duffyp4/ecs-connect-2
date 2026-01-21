@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Bolt, Plus, BarChart3, List, Package, FileText, User, LogOut, Menu, X, Code, Settings, Shield, Bookmark, Layers } from "lucide-react";
+import { Bolt, Plus, BarChart3, List, Package, FileText, User, LogOut, Menu, X, Code, Settings, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -158,38 +158,6 @@ export default function Layout({ children }: LayoutProps) {
               );
             })}
           </nav>
-
-          {/* Demo Pages - Only visible in development */}
-          {isDevelopment && (
-            <div className="mt-4">
-              <Separator className="mb-3" />
-              <div className="px-2 mb-2">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Filter Demos (Dev Only)
-                </p>
-              </div>
-              <nav className="space-y-1">
-                <Link href="/jobs-demo-saved-views">
-                  <div
-                    className={`nav-link flex items-center space-x-2 ${location === '/jobs-demo-saved-views' ? 'active' : ''}`}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <Bookmark className="h-4 w-4" />
-                    <span>Demo: Saved Views</span>
-                  </div>
-                </Link>
-                <Link href="/jobs-demo-tabs">
-                  <div
-                    className={`nav-link flex items-center space-x-2 ${location === '/jobs-demo-tabs' ? 'active' : ''}`}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <Layers className="h-4 w-4" />
-                    <span>Demo: Tab Sessions</span>
-                  </div>
-                </Link>
-              </nav>
-            </div>
-          )}
 
           {/* Dev Mode Toggle - Only visible in development */}
           {isDevelopment && (
