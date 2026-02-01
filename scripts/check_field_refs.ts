@@ -32,7 +32,7 @@ const fieldsToCheck = [
 
 async function checkFieldRefs() {
   try {
-    const formId = '5716092';
+    const formId = '5718455'; // NEW Emissions form ID
     console.log(`Fetching Emissions Service Log form (${formId})...\n`);
     
     const formDetails = await goCanvasService.getFormDetails(formId);
@@ -44,6 +44,7 @@ async function checkFieldRefs() {
     
     console.log('╔══════════════════════════════════════════════════════════════════════════════════╗');
     console.log('║                    FIELD REFERENCE DATA CONNECTIONS                              ║');
+    console.log('║                    Form ID: 5718455 (NEW)                                        ║');
     console.log('╠══════════════════════════════════════════════════════════════════════════════════╣');
     console.log('║ Field Name                          │ Ref Data ID  │ Column                      ║');
     console.log('╠─────────────────────────────────────┼──────────────┼─────────────────────────────╣');
