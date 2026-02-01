@@ -33,8 +33,8 @@ export const MAX_FORM_HISTORY = 20;
 
 export const FORM_VERSIONS = {
   EMISSIONS: {
-    current: '5716092',
-    history: ['5695685'] as string[],
+    current: '5718455',
+    history: ['5716092', '5695685'] as string[],
   },
   PICKUP: {
     current: '5657148',

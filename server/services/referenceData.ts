@@ -73,8 +73,8 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
       const processResponse = await goCanvasService.getReferenceDataById('176530');
       this.processData = processResponse.rows || [];
       
-      // Load Emission_pn_w kits (ID: 452576)
-      const filterPartNumbersResponse = await goCanvasService.getReferenceDataById('452576');
+      // Load ECS PN Cross Reference w/ Clamps & Gaskets (ID: 1031258) - replaces old 452576
+      const filterPartNumbersResponse = await goCanvasService.getReferenceDataById('1031258');
       this.filterPartNumbersData = filterPartNumbersResponse.rows || [];
       
       this.lastFetched = now;
@@ -516,9 +516,10 @@ class GoCanvasReferenceDataService implements ReferenceDataService {
   async getFilterPartNumbers(): Promise<string[]> {
     await this.ensureDataLoaded();
     
-    // Extract OE PN from column 0 of Emission_pn_w kits reference data (ID: 452576)
+    // Extract Other MFG Part # from column 1 of ECS PN Cross Reference (ID: 1031258)
+    // Column 0 = ECS Part #, Column 1 = Other MFG Part # (used for Filter Part Number lookup)
     const filterPartNumbers = Array.from(new Set(this.filterPartNumbersData
-      .map(row => row[0])
+      .map(row => row[1])
       .filter(value => this.isValidValue(value))
     ));
     
