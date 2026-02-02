@@ -126,14 +126,22 @@ export default function JobListTabs({ currentFilters, onFiltersChange }: JobList
 
   // Set active tab on initial load - only runs ONCE using ref guard
   useEffect(() => {
+    console.log('[TabsInit] Running - hasInitialized:', hasInitializedFiltersRef.current, 'tabs.length:', tabs.length);
     // Use ref to ensure this only runs once, even if dependencies change
-    if (hasInitializedFiltersRef.current) return;
-    if (tabs.length === 0) return;
+    if (hasInitializedFiltersRef.current) {
+      console.log('[TabsInit] Skipped - already initialized');
+      return;
+    }
+    if (tabs.length === 0) {
+      console.log('[TabsInit] Skipped - no tabs yet');
+      return;
+    }
     
     hasInitializedFiltersRef.current = true;
     
     const savedTabId = sessionStorage.getItem('ecs-active-tab-id');
     const foundTab = savedTabId ? tabs.find(t => t.id === savedTabId) : null;
+    console.log('[TabsInit] EXECUTING - setting filters from tab:', foundTab?.name || tabs[0]?.name);
     
     if (foundTab) {
       setActiveTabId(foundTab.id);
@@ -170,6 +178,7 @@ export default function JobListTabs({ currentFilters, onFiltersChange }: JobList
 
   const handleTabClick = (tabId: string) => {
     const tab = tabs.find(t => t.id === tabId);
+    console.log('[TabClick] Clicked tab:', tab?.name, 'filters:', tab?.filters);
     if (tab) {
       setActiveTabId(tabId);
       onFiltersChange(tab.filters);
