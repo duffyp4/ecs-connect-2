@@ -125,9 +125,11 @@ export default function JobListTabs({ currentFilters, onFiltersChange }: JobList
 
   // Set active tab on initial load
   useEffect(() => {
+    console.log('[TabsEffect] Running - tabs.length:', tabs.length, 'activeTabId:', activeTabId);
     if (tabs.length > 0 && !activeTabId) {
       const savedTabId = sessionStorage.getItem('ecs-active-tab-id');
       const foundTab = savedTabId ? tabs.find(t => t.id === savedTabId) : null;
+      console.log('[TabsEffect] EXECUTING BODY - will call onFiltersChange with:', foundTab?.filters || tabs[0]?.filters);
       if (foundTab) {
         setActiveTabId(foundTab.id);
         onFiltersChange(foundTab.filters);
@@ -135,6 +137,8 @@ export default function JobListTabs({ currentFilters, onFiltersChange }: JobList
         setActiveTabId(tabs[0].id);
         onFiltersChange(tabs[0].filters);
       }
+    } else {
+      console.log('[TabsEffect] Skipped - guard failed');
     }
   }, [tabs, activeTabId, onFiltersChange]);
 
