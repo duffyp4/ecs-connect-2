@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link, useSearch, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -98,9 +98,8 @@ export default function JobList() {
   };
 
   // Handler for when a tab is selected or filters should change
-  const handleFiltersChange = (filters: FilterState) => {
-    console.log('[handleFiltersChange] Called with shop:', filters.shop, 'status:', filters.status);
-    console.log('[handleFiltersChange] Current shopFilter before change:', shopFilter);
+  // Wrapped in useCallback to prevent unnecessary effect re-runs in JobListTabs
+  const handleFiltersChange = useCallback((filters: FilterState) => {
     setShopFilter(filters.shop || '');
     setStatusFilter(filters.status || []);
     setTempStatusFilter(filters.status || []);
@@ -112,7 +111,7 @@ export default function JobList() {
     setSortOrder(filters.sortOrder || 'desc');
     setPageSize(filters.pageSize || 25);
     setCurrentPage(1);
-  };
+  }, []);
   
   // Initialize state from URL on mount, with session persistence for shop filter
   useEffect(() => {
@@ -378,10 +377,7 @@ export default function JobList() {
           </div>
           
           {canFilterByShop ? (
-            <Select value={shopFilter} onValueChange={(val) => {
-              console.log('[ShopDropdown] User selected:', val, 'Current shopFilter:', shopFilter);
-              setShopFilter(val);
-            }}>
+            <Select value={shopFilter} onValueChange={setShopFilter}>
               <SelectTrigger 
                 className="w-full lg:w-48 border-2 border-[var(--ecs-primary)] text-[var(--ecs-dark)] bg-white hover:bg-gray-50 font-medium"
                 data-testid="select-shop-filter"
@@ -506,8 +502,6 @@ export default function JobList() {
                 <Button
                   className="w-full"
                   onClick={() => {
-                    console.log('[StatusFilter] Apply clicked - tempStatusFilter:', tempStatusFilter);
-                    console.log('[StatusFilter] Current statusFilter before change:', statusFilter);
                     setStatusFilter(tempStatusFilter);
                     setStatusFilterOpen(false);
                   }}

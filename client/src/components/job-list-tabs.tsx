@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -80,6 +80,7 @@ export default function JobListTabs({ currentFilters, onFiltersChange }: JobList
   const [renamingTabId, setRenamingTabId] = useState<string | null>(null);
   const [newTabName, setNewTabName] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
+  const hasInitializedFiltersRef = useRef(false);
 
   const { data: tabs = [], isLoading } = useQuery<JobListTab[]>({
     queryKey: ['/api/user/tabs'],
@@ -123,24 +124,25 @@ export default function JobListTabs({ currentFilters, onFiltersChange }: JobList
     }
   }, [isLoading, tabs.length, isInitialized]);
 
-  // Set active tab on initial load
+  // Set active tab on initial load - only runs ONCE using ref guard
   useEffect(() => {
-    console.log('[TabsEffect] Running - tabs.length:', tabs.length, 'activeTabId:', activeTabId);
-    if (tabs.length > 0 && !activeTabId) {
-      const savedTabId = sessionStorage.getItem('ecs-active-tab-id');
-      const foundTab = savedTabId ? tabs.find(t => t.id === savedTabId) : null;
-      console.log('[TabsEffect] EXECUTING BODY - will call onFiltersChange with:', foundTab?.filters || tabs[0]?.filters);
-      if (foundTab) {
-        setActiveTabId(foundTab.id);
-        onFiltersChange(foundTab.filters);
-      } else {
-        setActiveTabId(tabs[0].id);
-        onFiltersChange(tabs[0].filters);
-      }
+    // Use ref to ensure this only runs once, even if dependencies change
+    if (hasInitializedFiltersRef.current) return;
+    if (tabs.length === 0) return;
+    
+    hasInitializedFiltersRef.current = true;
+    
+    const savedTabId = sessionStorage.getItem('ecs-active-tab-id');
+    const foundTab = savedTabId ? tabs.find(t => t.id === savedTabId) : null;
+    
+    if (foundTab) {
+      setActiveTabId(foundTab.id);
+      onFiltersChange(foundTab.filters);
     } else {
-      console.log('[TabsEffect] Skipped - guard failed');
+      setActiveTabId(tabs[0].id);
+      onFiltersChange(tabs[0].filters);
     }
-  }, [tabs, activeTabId, onFiltersChange]);
+  }, [tabs, onFiltersChange]);
 
   // Save active tab to session storage
   useEffect(() => {
