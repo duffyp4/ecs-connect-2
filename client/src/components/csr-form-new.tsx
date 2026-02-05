@@ -880,7 +880,7 @@ export default function CSRForm() {
 
                       {/* Email */}
                       <div>
-                        <label className="block text-sm font-medium mb-2">Email (Optional)</label>
+                        <label className="block text-sm font-medium mb-2">Contact Email</label>
                         <Input
                           type="email"
                           placeholder="customer@example.com"

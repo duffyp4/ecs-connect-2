@@ -733,6 +733,28 @@ export function CsrCheckInFormFields({
             );
           }}
         />
+
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Contact Email</FormLabel>
+              <FormControl>
+                <Input 
+                  type="email"
+                  placeholder="customer@example.com" 
+                  {...field} 
+                  value={field.value || ""} 
+                  data-testid="input-email"
+                  disabled={isFieldDisabled('email')}
+                  className={isFieldDisabled('email') ? "bg-muted" : ""}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
 
       {/* PO Number */}

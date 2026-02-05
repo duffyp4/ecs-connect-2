@@ -496,7 +496,7 @@ export function DeliveryDispatchModal({
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email (Optional)</FormLabel>
+                      <FormLabel>Contact Email</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
