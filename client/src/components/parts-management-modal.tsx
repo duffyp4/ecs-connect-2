@@ -386,42 +386,47 @@ export function PartsManagementModal({
     try {
       setIsSubmitting(true);
       
-      // Generate a new serial number
-      const shopNameToUse = propShopName || job?.shopName || "Nashville";
-      const shopCode = getShopCode(shopNameToUse);
-      const dateCode = getTodayDateCode();
+      let newSerial = "";
       
-      // Get next serial from database
-      const response = await apiRequest("POST", `/api/serial/generate`, { shopCode, date: dateCode });
-      const data = await response.json();
-      let newSerial = data.serialNumber;
-      
-      // If in local mode, also check local parts array and increment if needed
-      if (mode === 'local' && localParts && localParts.length > 0) {
-        const localSerials = localParts
-          .map(p => p.ecsSerial)
-          .filter(s => s && s.startsWith(`${shopCode}.${dateCode}.`));
+      // Only generate a serial number if the original part has one
+      // (e.g., inbound shipment parts don't have serials until check-in)
+      if (part.ecsSerial) {
+        const shopNameToUse = propShopName || job?.shopName || "Nashville";
+        const shopCode = getShopCode(shopNameToUse);
+        const dateCode = getTodayDateCode();
         
-        const localSequences = localSerials
-          .map(serial => {
-            const match = serial?.match(/\.(\d{2})$/);
-            return match ? parseInt(match[1], 10) : 0;
-          })
-          .filter(seq => !isNaN(seq));
+        // Get next serial from database
+        const response = await apiRequest("POST", `/api/serial/generate`, { shopCode, date: dateCode });
+        const data = await response.json();
+        newSerial = data.serialNumber;
         
-        if (localSequences.length > 0) {
-          const maxLocalSeq = Math.max(...localSequences);
-          const suggestedMatch = newSerial.match(/\.(\d{2})$/);
-          const suggestedSeq = suggestedMatch ? parseInt(suggestedMatch[1], 10) : 0;
+        // If in local mode, also check local parts array and increment if needed
+        if (mode === 'local' && localParts && localParts.length > 0) {
+          const localSerials = localParts
+            .map(p => p.ecsSerial)
+            .filter(s => s && s.startsWith(`${shopCode}.${dateCode}.`));
           
-          if (maxLocalSeq >= suggestedSeq) {
-            const nextSeq = maxLocalSeq + 1;
-            newSerial = `${shopCode}.${dateCode}.${String(nextSeq).padStart(2, '0')}`;
+          const localSequences = localSerials
+            .map(serial => {
+              const match = serial?.match(/\.(\d{2})$/);
+              return match ? parseInt(match[1], 10) : 0;
+            })
+            .filter(seq => !isNaN(seq));
+          
+          if (localSequences.length > 0) {
+            const maxLocalSeq = Math.max(...localSequences);
+            const suggestedMatch = newSerial.match(/\.(\d{2})$/);
+            const suggestedSeq = suggestedMatch ? parseInt(suggestedMatch[1], 10) : 0;
+            
+            if (maxLocalSeq >= suggestedSeq) {
+              const nextSeq = maxLocalSeq + 1;
+              newSerial = `${shopCode}.${dateCode}.${String(nextSeq).padStart(2, '0')}`;
+            }
           }
         }
       }
       
-      // Copy all part data except serial number (convert null to undefined)
+      // Copy all part data (keep serial empty if original had none)
       const duplicateData: LocalPart = {
         part: part.part || "",
         process: part.process || "",
@@ -442,7 +447,9 @@ export function PartsManagementModal({
         onLocalPartsChange?.([...(localParts || []), newPart]);
         toast({
           title: "Part Duplicated",
-          description: `Created duplicate with serial ${newSerial}`,
+          description: newSerial 
+            ? `Created duplicate with serial ${newSerial}` 
+            : "Created duplicate (no serial - will be assigned at check-in)",
         });
       } else {
         // API mode: save to server
@@ -452,7 +459,9 @@ export function PartsManagementModal({
         });
         toast({
           title: "Part Duplicated",
-          description: `Created duplicate with serial ${newSerial}`,
+          description: newSerial 
+            ? `Created duplicate with serial ${newSerial}` 
+            : "Created duplicate (no serial - will be assigned at check-in)",
         });
         queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}/parts`] });
         refetch();
