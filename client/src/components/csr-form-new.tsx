@@ -95,6 +95,7 @@ export default function CSRForm() {
   const [pickupNotes, setPickupNotes] = useState<string>("");
   const [pickupContactName, setPickupContactName] = useState<string>("");
   const [pickupContactNumber, setPickupContactNumber] = useState<string>("");
+  const [pickupEmail, setPickupEmail] = useState<string>("");
   const [pickupPoNumber, setPickupPoNumber] = useState<string>("");
   const [pickupFieldErrors, setPickupFieldErrors] = useState<{ driver?: string }>({});
   
@@ -196,6 +197,7 @@ export default function CSRForm() {
           pickupNotes,
           contactName: pickupContactName,
           contactNumber: pickupContactNumber,
+          email: pickupEmail || undefined,
           poNumber: pickupPoNumber
         };
       } else if (arrivalPath === 'shipment') {
@@ -205,6 +207,7 @@ export default function CSRForm() {
           arrivalPath,
           contactName: pickupContactName,
           contactNumber: pickupContactNumber,
+          email: pickupEmail || undefined,
           poNumber: pickupPoNumber,
           shipmentNotes,
           shipmentCarrier: shipmentCarrier || undefined,
@@ -278,6 +281,7 @@ export default function CSRForm() {
       setPickupNotes("");
       setPickupContactName("");
       setPickupContactNumber("");
+      setPickupEmail("");
       setPickupPoNumber("");
       setPickupFieldErrors({});
       setShipmentNotes("");
@@ -420,6 +424,7 @@ export default function CSRForm() {
     setPickupNotes("");
     setPickupContactName("");
     setPickupContactNumber("");
+    setPickupEmail("");
     setPickupPoNumber("");
     if (shopName) {
       setGeneratedJobId(generateJobId(shopName));
@@ -870,6 +875,18 @@ export default function CSRForm() {
                             setPickupContactNumber(formatted);
                           }}
                           data-testid="input-pickup-contact-number"
+                        />
+                      </div>
+
+                      {/* Email */}
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Email (Optional)</label>
+                        <Input
+                          type="email"
+                          placeholder="customer@example.com"
+                          value={pickupEmail}
+                          onChange={(e) => setPickupEmail(e.target.value)}
+                          data-testid="input-pickup-email"
                         />
                       </div>
 

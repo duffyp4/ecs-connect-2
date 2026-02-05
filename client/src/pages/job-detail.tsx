@@ -520,6 +520,10 @@ export default function JobDetail() {
               <div className="text-sm text-muted-foreground">Contact Number</div>
               <div className="font-medium">{job.contactNumber || 'N/A'}</div>
             </div>
+            <div>
+              <div className="text-sm text-muted-foreground">Email</div>
+              <div className="font-medium">{job.email || 'N/A'}</div>
+            </div>
           </CardContent>
         </Card>
 
