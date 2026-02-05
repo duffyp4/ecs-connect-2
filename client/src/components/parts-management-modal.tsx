@@ -36,7 +36,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Package, Trash2, Edit, Plus, Database, ChevronsUpDown, Check, Info } from "lucide-react";
+import { Package, Trash2, Edit, Plus, Database, ChevronsUpDown, Check, Info, Copy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
@@ -381,6 +381,95 @@ export function PartsManagementModal({
     }
   };
 
+  const handleDuplicate = async (part: JobPart | LocalPart) => {
+    try {
+      setIsSubmitting(true);
+      
+      // Generate a new serial number
+      const shopNameToUse = propShopName || job?.shopName || "Nashville";
+      const shopCode = getShopCode(shopNameToUse);
+      const dateCode = getTodayDateCode();
+      
+      // Get next serial from database
+      const response = await apiRequest("POST", `/api/serial/generate`, { shopCode, date: dateCode });
+      const data = await response.json();
+      let newSerial = data.serialNumber;
+      
+      // If in local mode, also check local parts array and increment if needed
+      if (mode === 'local' && localParts && localParts.length > 0) {
+        const localSerials = localParts
+          .map(p => p.ecsSerial)
+          .filter(s => s && s.startsWith(`${shopCode}.${dateCode}.`));
+        
+        const localSequences = localSerials
+          .map(serial => {
+            const match = serial?.match(/\.(\d{2})$/);
+            return match ? parseInt(match[1], 10) : 0;
+          })
+          .filter(seq => !isNaN(seq));
+        
+        if (localSequences.length > 0) {
+          const maxLocalSeq = Math.max(...localSequences);
+          const suggestedMatch = newSerial.match(/\.(\d{2})$/);
+          const suggestedSeq = suggestedMatch ? parseInt(suggestedMatch[1], 10) : 0;
+          
+          if (maxLocalSeq >= suggestedSeq) {
+            const nextSeq = maxLocalSeq + 1;
+            newSerial = `${shopCode}.${dateCode}.${String(nextSeq).padStart(2, '0')}`;
+          }
+        }
+      }
+      
+      // Copy all part data except serial number
+      const duplicateData: LocalPart = {
+        part: part.part,
+        process: part.process,
+        ecsSerial: newSerial,
+        filterPn: part.filterPn,
+        poNumber: part.poNumber,
+        mileage: part.mileage,
+        unitVin: part.unitVin,
+        gasketClamps: part.gasketClamps,
+        ec: part.ec,
+        eg: part.eg,
+        ek: part.ek,
+      };
+
+      if (mode === 'local') {
+        // Local mode: add to local parts array
+        const newPart = { ...duplicateData, tempId: Date.now().toString() };
+        onLocalPartsChange?.([...(localParts || []), newPart]);
+        toast({
+          title: "Part Duplicated",
+          description: `Created duplicate with serial ${newSerial}`,
+        });
+      } else {
+        // API mode: save to server
+        await apiRequest("POST", `/api/jobs/${jobId}/parts`, {
+          jobId,
+          ...duplicateData,
+        });
+        toast({
+          title: "Part Duplicated",
+          description: `Created duplicate with serial ${newSerial}`,
+        });
+        queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}/parts`] });
+        refetch();
+      }
+      
+      onSuccess?.();
+    } catch (error) {
+      console.error("Part duplicate error:", error);
+      toast({
+        title: "Duplicate Failed",
+        description: error instanceof Error ? error.message : "Failed to duplicate part",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleAddNew = () => {
     form.reset({
       jobId,
@@ -494,6 +583,17 @@ export function PartsManagementModal({
                           data-testid={`button-edit-part-${partKey}`}
                         >
                           <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDuplicate(part)}
+                          disabled={isSubmitting}
+                          data-testid={`button-duplicate-part-${partKey}`}
+                          title="Duplicate part"
+                        >
+                          <Copy className="h-4 w-4" />
                         </Button>
                         <Button
                           type="button"
