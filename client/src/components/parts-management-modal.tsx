@@ -420,19 +420,19 @@ export function PartsManagementModal({
         }
       }
       
-      // Copy all part data except serial number
+      // Copy all part data except serial number (convert null to undefined)
       const duplicateData: LocalPart = {
-        part: part.part,
-        process: part.process,
+        part: part.part || "",
+        process: part.process || "",
         ecsSerial: newSerial,
-        filterPn: part.filterPn,
-        poNumber: part.poNumber,
-        mileage: part.mileage,
-        unitVin: part.unitVin,
-        gasketClamps: part.gasketClamps,
-        ec: part.ec,
-        eg: part.eg,
-        ek: part.ek,
+        filterPn: part.filterPn || undefined,
+        poNumber: part.poNumber || undefined,
+        mileage: part.mileage || undefined,
+        unitVin: part.unitVin || undefined,
+        gasketClamps: part.gasketClamps || "",
+        ec: part.ec || undefined,
+        eg: part.eg || undefined,
+        ek: part.ek || undefined,
       };
 
       if (mode === 'local') {
