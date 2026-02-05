@@ -9,6 +9,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Package, Search, ArrowUpDown, ChevronDown, Building2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import JobStatusBadge from "@/components/job-status-badge";
 import { useLocations } from "@/hooks/use-reference-data";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -416,7 +417,13 @@ export default function PartsList() {
                   parts.map((part) => (
                     <tr
                       key={part.id}
-                      className="border-b hover:bg-gray-50"
+                      className={cn(
+                        "border-b",
+                        part.status === "W.O.A" && "bg-yellow-100 hover:bg-yellow-200",
+                        part.status === "Approved" && "bg-green-100 hover:bg-green-200",
+                        part.status === "Failed" && "bg-red-100 hover:bg-red-200",
+                        !["W.O.A", "Approved", "Failed"].includes(part.status || "") && "hover:bg-gray-50"
+                      )}
                       data-testid={`row-part-${part.id}`}
                     >
                       <td className="p-4">
