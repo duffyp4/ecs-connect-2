@@ -522,7 +522,7 @@ export function PartsManagementModal({
     if (sourceIndex === destIndex) return;
     
     // Reorder the parts array
-    const reorderedParts = Array.from(parts);
+    const reorderedParts = [...parts] as (JobPart | LocalPart)[];
     const [movedPart] = reorderedParts.splice(sourceIndex, 1);
     reorderedParts.splice(destIndex, 0, movedPart);
     
