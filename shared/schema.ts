@@ -73,6 +73,7 @@ export const jobs = pgTable("jobs", {
   noteToTechAboutCustomer: text("note_to_tech_about_customer"),
   contactName: text("contact_name").notNull(),
   contactNumber: text("contact_number").notNull(),
+  email: text("email"),
   poNumber: text("po_number").notNull(),
   serialNumbers: text("serial_numbers"),
   techCustomerQuestionInquiry: text("tech_customer_question_inquiry"),
