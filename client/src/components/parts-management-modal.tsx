@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
 import { insertJobPartSchema, type JobPart, type InsertJobPart, type Job } from "@shared/schema";
 import { getShopCode, getTodayDateCode } from "@shared/shopCodes";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -36,7 +37,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Package, Trash2, Edit, Plus, Database, ChevronsUpDown, Check, Info, Copy } from "lucide-react";
+import { Package, Trash2, Edit, Plus, Database, ChevronsUpDown, Check, Info, Copy, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
@@ -502,6 +503,96 @@ export function PartsManagementModal({
     }
   };
 
+  // Handle drag and drop reordering with serial number reassignment
+  const handleDragEnd = async (result: DropResult) => {
+    if (!result.destination) return;
+    
+    const sourceIndex = result.source.index;
+    const destIndex = result.destination.index;
+    
+    if (sourceIndex === destIndex) return;
+    
+    // Reorder the parts array
+    const reorderedParts = Array.from(parts);
+    const [movedPart] = reorderedParts.splice(sourceIndex, 1);
+    reorderedParts.splice(destIndex, 0, movedPart);
+    
+    // Extract all serial numbers and sort them
+    const serials = reorderedParts
+      .map(p => p.ecsSerial)
+      .filter((s): s is string => !!s);
+    
+    // Sort serials to get sequential order
+    const sortedSerials = [...serials].sort((a, b) => {
+      // Extract the sequence number at the end (after last dot)
+      const seqA = parseInt(a.split('.').pop() || '0', 10);
+      const seqB = parseInt(b.split('.').pop() || '0', 10);
+      return seqA - seqB;
+    });
+    
+    // Reassign serials to match visual order (top = lowest, bottom = highest)
+    const updatedParts = reorderedParts.map((part, index) => ({
+      ...part,
+      ecsSerial: sortedSerials[index] || part.ecsSerial,
+    }));
+    
+    try {
+      setIsSubmitting(true);
+      
+      if (mode === 'local') {
+        // Local mode: update local parts array with new order and serials
+        const localUpdated = updatedParts.map(p => {
+          if ('tempId' in p) {
+            return {
+              part: p.part || "",
+              process: p.process || "",
+              ecsSerial: p.ecsSerial || "",
+              filterPn: p.filterPn || undefined,
+              poNumber: p.poNumber || undefined,
+              mileage: p.mileage || undefined,
+              unitVin: p.unitVin || undefined,
+              gasketClamps: p.gasketClamps || "",
+              ec: p.ec || undefined,
+              eg: p.eg || undefined,
+              ek: p.ek || undefined,
+              tempId: p.tempId,
+            } as LocalPart;
+          }
+          return p;
+        });
+        onLocalPartsChange?.(localUpdated as LocalPart[]);
+        toast({
+          title: "Parts Reordered",
+          description: "Serial numbers have been reassigned to match the new order.",
+        });
+      } else {
+        // API mode: update each part's serial number on the server
+        for (const part of updatedParts) {
+          if ('id' in part && part.id) {
+            await apiRequest("PATCH", `/api/jobs/${jobId}/parts/${part.id}`, {
+              ecsSerial: part.ecsSerial,
+            });
+          }
+        }
+        toast({
+          title: "Parts Reordered",
+          description: "Serial numbers have been reassigned to match the new order.",
+        });
+        queryClient.invalidateQueries({ queryKey: [`/api/jobs/${jobId}/parts`] });
+        refetch();
+      }
+    } catch (error) {
+      console.error("Reorder error:", error);
+      toast({
+        title: "Reorder Failed",
+        description: error instanceof Error ? error.message : "Failed to reorder parts",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[95vw] sm:max-w-[90vw] md:max-w-3xl lg:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
@@ -550,65 +641,93 @@ export function PartsManagementModal({
                 </div>
               )}
 
-              {parts.map((part) => {
-                const partKey = 'id' in part ? part.id : part.tempId || 'unknown';
-                return (
-                  <div
-                    key={partKey}
-                    className="border rounded-lg p-4 space-y-2"
-                    data-testid={`card-part-${partKey}`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1 flex-1">
-                        <div className="font-medium">{part.part || "Unnamed Part"}</div>
-                        <div className="text-sm text-muted-foreground grid grid-cols-2 gap-x-4 gap-y-1">
-                          {part.process && <div><span className="font-medium">Process:</span> {part.process}</div>}
-                          {part.ecsSerial && <div><span className="font-medium">ECS Serial:</span> {part.ecsSerial}</div>}
-                          {part.filterPn && <div><span className="font-medium">Filter PN:</span> {part.filterPn}</div>}
-                          {part.poNumber && <div><span className="font-medium">PO:</span> {part.poNumber}</div>}
-                          {part.mileage && <div><span className="font-medium">Mileage:</span> {part.mileage}</div>}
-                          {part.unitVin && <div><span className="font-medium">Unit/VIN:</span> {part.unitVin}</div>}
-                          {part.gasketClamps && <div><span className="font-medium">Gasket/Clamps:</span> {part.gasketClamps}</div>}
-                          {part.ec && <div><span className="font-medium">EC:</span> {part.ec}</div>}
-                          {part.eg && <div><span className="font-medium">EG:</span> {part.eg}</div>}
-                          {part.ek && <div><span className="font-medium">EK:</span> {part.ek}</div>}
-                        </div>
-                      </div>
-                      <div className="flex gap-2 ml-4">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setEditingPart(part)}
-                          data-testid={`button-edit-part-${partKey}`}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDuplicate(part)}
-                          disabled={isSubmitting}
-                          data-testid={`button-duplicate-part-${partKey}`}
-                          title="Duplicate part"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDelete(part)}
-                          data-testid={`button-delete-part-${partKey}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+              <DragDropContext onDragEnd={handleDragEnd}>
+                <Droppable droppableId="parts-list">
+                  {(provided) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className="space-y-2"
+                    >
+                      {parts.map((part, index) => {
+                        const partKey = 'id' in part ? String(part.id) : part.tempId || `unknown-${index}`;
+                        return (
+                          <Draggable key={partKey} draggableId={partKey} index={index}>
+                            {(provided, snapshot) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                className={cn(
+                                  "border rounded-lg p-4 space-y-2 bg-background",
+                                  snapshot.isDragging && "shadow-lg ring-2 ring-primary"
+                                )}
+                                data-testid={`card-part-${partKey}`}
+                              >
+                                <div className="flex justify-between items-start">
+                                  <div
+                                    {...provided.dragHandleProps}
+                                    className="flex items-center mr-3 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground"
+                                    title="Drag to reorder"
+                                  >
+                                    <GripVertical className="h-5 w-5" />
+                                  </div>
+                                  <div className="space-y-1 flex-1">
+                                    <div className="font-medium">{part.part || "Unnamed Part"}</div>
+                                    <div className="text-sm text-muted-foreground grid grid-cols-2 gap-x-4 gap-y-1">
+                                      {part.process && <div><span className="font-medium">Process:</span> {part.process}</div>}
+                                      {part.ecsSerial && <div><span className="font-medium">ECS Serial:</span> {part.ecsSerial}</div>}
+                                      {part.filterPn && <div><span className="font-medium">Filter PN:</span> {part.filterPn}</div>}
+                                      {part.poNumber && <div><span className="font-medium">PO:</span> {part.poNumber}</div>}
+                                      {part.mileage && <div><span className="font-medium">Mileage:</span> {part.mileage}</div>}
+                                      {part.unitVin && <div><span className="font-medium">Unit/VIN:</span> {part.unitVin}</div>}
+                                      {part.gasketClamps && <div><span className="font-medium">Gasket/Clamps:</span> {part.gasketClamps}</div>}
+                                      {part.ec && <div><span className="font-medium">EC:</span> {part.ec}</div>}
+                                      {part.eg && <div><span className="font-medium">EG:</span> {part.eg}</div>}
+                                      {part.ek && <div><span className="font-medium">EK:</span> {part.ek}</div>}
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-2 ml-4">
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => setEditingPart(part)}
+                                      data-testid={`button-edit-part-${partKey}`}
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleDuplicate(part)}
+                                      disabled={isSubmitting}
+                                      data-testid={`button-duplicate-part-${partKey}`}
+                                      title="Duplicate part"
+                                    >
+                                      <Copy className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleDelete(part)}
+                                      data-testid={`button-delete-part-${partKey}`}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </Draggable>
+                        );
+                      })}
+                      {provided.placeholder}
                     </div>
-                  </div>
-                );
-              })}
+                  )}
+                </Droppable>
+              </DragDropContext>
             </div>
           </ScrollArea>
         )}
