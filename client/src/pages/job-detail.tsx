@@ -1,6 +1,7 @@
 import { useParams, useLocation } from "wouter";
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -749,7 +750,14 @@ export default function JobDetail() {
                           });
                         }}
                       >
-                        <SelectTrigger data-testid={`select-status-${index + 1}`}>
+                        <SelectTrigger 
+                          data-testid={`select-status-${index + 1}`}
+                          className={cn(
+                            part.status === "W.O.A" && "bg-yellow-100 border-yellow-300",
+                            part.status === "Approved" && "bg-green-100 border-green-300",
+                            part.status === "Failed" && "bg-red-100 border-red-300"
+                          )}
+                        >
                           <SelectValue placeholder="Select status..." />
                         </SelectTrigger>
                         <SelectContent>
