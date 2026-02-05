@@ -53,6 +53,7 @@ const deliveryDispatchSchema = z.object({
   location: z.string().min(1, "Location is required"),
   customerName: z.string().min(1, "Customer name is required"),
   customerShipTo: z.string().min(1, "Customer ship-to is required"),
+  email: z.string().optional(),
   orderNumber: z.string().min(1, "Order number is required"),
   orderNumber2: z.string().optional(),
   orderNumber3: z.string().optional(),
@@ -97,6 +98,7 @@ export function DeliveryDispatchModal({
       location: job?.shopName || "",
       customerName: job?.customerName || "",
       customerShipTo: job?.customerShipTo || "",
+      email: job?.email || "",
       orderNumber: job?.orderNumber || "",
       orderNumber2: job?.orderNumber2 || "",
       orderNumber3: job?.orderNumber3 || "",
@@ -133,6 +135,7 @@ export function DeliveryDispatchModal({
         location: job?.shopName || "",
         customerName: job?.customerName || "",
         customerShipTo: job?.customerShipTo || "",
+        email: job?.email || "",
         orderNumber: job?.orderNumber || "",
         orderNumber2: job?.orderNumber2 || "",
         orderNumber3: job?.orderNumber3 || "",
@@ -483,6 +486,26 @@ export function DeliveryDispatchModal({
                           />
                         </FormControl>
                       )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email (Optional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="email"
+                          placeholder="customer@example.com"
+                          disabled={!isNewMode}
+                          data-testid="input-email"
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
