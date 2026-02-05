@@ -1489,9 +1489,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const paginatedJobs = jobs.slice(startIndex, endIndex);
       
+      // Fetch parts for each paginated job to calculate part status priority
+      // Priority: W.O.A (yellow) > Failed (red) > All Approved (green)
+      const jobsWithPartStatus = await Promise.all(
+        paginatedJobs.map(async (job) => {
+          const parts = await storage.getJobParts(job.jobId);
+          let partStatusPriority: 'woa' | 'failed' | 'approved' | null = null;
+          
+          if (parts.length > 0) {
+            const hasWOA = parts.some(p => p.status === 'W.O.A');
+            const hasFailed = parts.some(p => p.status === 'Failed');
+            const allApproved = parts.every(p => p.status === 'Approved');
+            
+            if (hasWOA) {
+              partStatusPriority = 'woa';
+            } else if (hasFailed) {
+              partStatusPriority = 'failed';
+            } else if (allApproved) {
+              partStatusPriority = 'approved';
+            }
+          }
+          
+          return { ...job, partStatusPriority };
+        })
+      );
+      
       // Return paginated response
       res.json({
-        data: paginatedJobs,
+        data: jobsWithPartStatus,
         total,
         page: currentPage,
         pageSize: itemsPerPage,

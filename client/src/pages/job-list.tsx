@@ -10,6 +10,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { List, Store, Package, Send, ChevronDown, Search, ArrowUpDown, Check, Building2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import JobStatusBadge from "@/components/job-status-badge";
 import { useLocations } from "@/hooks/use-reference-data";
 import { CheckInModal } from "@/components/check-in-modal";
@@ -584,7 +585,16 @@ export default function JobList() {
                     const availableActions = getAvailableActions(job.state);
                     
                     return (
-                      <tr key={job.id} className="border-b hover:bg-gray-50">
+                      <tr 
+                        key={job.id} 
+                        className={cn(
+                          "border-b",
+                          job.partStatusPriority === 'woa' && "bg-yellow-100 hover:bg-yellow-200",
+                          job.partStatusPriority === 'failed' && "bg-red-100 hover:bg-red-200",
+                          job.partStatusPriority === 'approved' && "bg-green-100 hover:bg-green-200",
+                          !job.partStatusPriority && "hover:bg-gray-50"
+                        )}
+                      >
                         <td className="p-4">
                           <Link href={`/jobs/${job.jobId}`}>
                             <span className="job-id cursor-pointer hover:underline" data-testid={`link-job-${job.jobId}`}>{job.customerShipTo || 'N/A'}</span>
