@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Bolt, Plus, BarChart3, List, Package, FileText, User, LogOut, Menu, X, Code, Settings, Shield } from "lucide-react";
+import { Bolt, Plus, BarChart3, List, Package, FileText, User, LogOut, Menu, X, Code, Settings, Shield, Wrench, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -24,7 +24,7 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const [location] = useLocation();
-  const { user } = useAuth();
+  const { user, whitelistRole } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isDevMode, toggleDevMode } = useDevMode();
   const isDevelopment = import.meta.env.MODE !== 'production';
@@ -46,12 +46,28 @@ export default function Layout({ children }: LayoutProps) {
     return "User";
   };
 
-  const navigationItems = [
-    { href: "/", label: "New Job", icon: Plus },
-    { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
-    { href: "/jobs", label: "Job List", icon: List },
-    { href: "/parts", label: "Parts List", icon: Package },
-  ];
+  const getNavigationItems = () => {
+    switch (whitelistRole) {
+      case "technician":
+        return [
+          { href: "/tech", label: "My Jobs", icon: Wrench },
+        ];
+      case "driver":
+        return [
+          { href: "/driver", label: "My Routes", icon: Truck },
+        ];
+      default:
+        // CSR and admin see full navigation
+        return [
+          { href: "/", label: "New Job", icon: Plus },
+          { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
+          { href: "/jobs", label: "Job List", icon: List },
+          { href: "/parts", label: "Parts List", icon: Package },
+        ];
+    }
+  };
+
+  const navigationItems = getNavigationItems();
 
   return (
     <div className="min-h-screen bg-[var(--ecs-light)]">

@@ -12,6 +12,10 @@ import PartsList from "@/pages/parts-list";
 import JobDetail from "@/pages/job-detail";
 import Settings from "@/pages/settings";
 import AdminPage from "@/pages/admin";
+import TechDashboard from "@/pages/tech-dashboard";
+import DriverDashboard from "@/pages/driver-dashboard";
+import PickupForm from "@/pages/pickup-form";
+import DeliveryForm from "@/pages/delivery-form";
 import { Landing } from "@/pages/landing";
 import { AccessDenied } from "@/pages/access-denied";
 import Layout from "@/components/layout";
@@ -41,6 +45,10 @@ function AuthenticatedApp() {
         <Route path="/jobs/:id" component={JobDetail} />
         <Route path="/settings" component={Settings} />
         <Route path="/admin" component={AdminPage} />
+        <Route path="/tech" component={TechDashboard} />
+        <Route path="/driver" component={DriverDashboard} />
+        <Route path="/pickup-form/:id" component={PickupForm} />
+        <Route path="/delivery-form/:id" component={DeliveryForm} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
@@ -79,6 +87,10 @@ function Router() {
           <Route path="/jobs/:id" component={JobDetail} />
           <Route path="/settings" component={Settings} />
           <Route path="/admin" component={AdminPage} />
+          <Route path="/tech" component={TechDashboard} />
+          <Route path="/driver" component={DriverDashboard} />
+          <Route path="/pickup-form/:id" component={PickupForm} />
+          <Route path="/delivery-form/:id" component={DeliveryForm} />
           <Route component={NotFound} />
         </Switch>
       </Layout>

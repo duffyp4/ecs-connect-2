@@ -5,33 +5,33 @@
 - [x] Create tasks/todo.md and tasks/lessons.md
 
 ## Phase 0: Platform Setup (Railway + Clerk)
-- [ ] Remove Replit-specific plugins from vite.config.ts and package.json
-- [ ] Install Clerk packages (@clerk/clerk-react, @clerk/express)
-- [ ] Create server/clerkAuth.ts with Clerk middleware + dev mode fallback
-- [ ] Update server/index.ts to use Clerk middleware
-- [ ] Update server/routes.ts - replace isAuthenticated/isAdmin middleware
-- [ ] Update client/src/App.tsx - wrap with ClerkProvider
-- [ ] Update client/src/hooks/useAuth.ts - use Clerk's useUser()/useAuth()
-- [ ] Update client/src/pages/landing.tsx - use Clerk's SignIn component
-- [ ] Remove server/replitAuth.ts and server/auth.ts
-- [ ] Remove openid-client, passport, passport-local dependencies
+- [x] Remove Replit-specific plugins from vite.config.ts and package.json
+- [x] Install Clerk packages (@clerk/clerk-react, @clerk/express)
+- [x] Create server/clerkAuth.ts with Clerk middleware + dev mode fallback
+- [x] Update server/index.ts to use Clerk middleware
+- [x] Update server/routes.ts - replace isAuthenticated/isAdmin middleware
+- [x] Update client/src/App.tsx - wrap with ClerkProvider
+- [x] Update client/src/hooks/useAuth.ts - use Clerk's useUser()/useAuth()
+- [x] Update client/src/pages/landing.tsx - use Clerk's SignIn component
+- [x] Remove server/replitAuth.ts and server/auth.ts
+- [x] Remove openid-client, passport, passport-local dependencies
 - [ ] Verify app builds and type-checks
 
 ## Phase 1: Database Schema & API Foundation
-- [ ] Add form_submissions table to shared/schema.ts
-- [ ] Add form submission types and validation schemas
-- [ ] Update server/storage.ts with form submission methods
-- [ ] Update server/database.ts with form submission queries
-- [ ] Create server/services/formDispatch.ts
-- [ ] Add form submission REST endpoints to server/routes.ts
+- [x] Add form_submissions table to shared/schema.ts
+- [x] Add form submission types and validation schemas
+- [x] Update server/storage.ts with form submission methods
+- [x] Update server/database.ts with form submission queries
+- [x] Create server/services/formDispatch.ts
+- [x] Add form submission REST endpoints to server/routes.ts
 - [ ] Run db:push to apply schema changes
 
 ## Phase 2: PWA + Pickup & Delivery Forms
-- [ ] Add vite-plugin-pwa to vite.config.ts
-- [ ] Create client/public/manifest.json + icons
-- [ ] Create client/src/lib/offlineQueue.ts (IndexedDB-backed)
-- [ ] Create client/src/lib/gpsCapture.ts
-- [ ] Create server/services/notificationService.ts (WebSocket)
+- [x] Add vite-plugin-pwa to vite.config.ts
+- [x] Create client/public/manifest.json + icons
+- [x] Create client/src/lib/offlineQueue.ts (IndexedDB-backed)
+- [x] Create client/src/lib/gpsCapture.ts
+- [x] Create server/services/notificationService.ts (WebSocket)
 - [ ] Create client/src/pages/tech-dashboard.tsx
 - [ ] Create client/src/pages/driver-dashboard.tsx
 - [ ] Create client/src/components/forms/pickup-form.tsx
