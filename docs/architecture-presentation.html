@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ECS Connect v2 - Architecture & Personas</title>
+  <style>
+    :root {
+      --primary: #1e40af;
+      --primary-light: #3b82f6;
+      --primary-bg: #eff6ff;
+      --dark: #1e293b;
+      --gray: #64748b;
+      --light: #f8fafc;
+      --border: #e2e8f0;
+      --green: #16a34a;
+      --green-bg: #f0fdf4;
+      --orange: #ea580c;
+      --orange-bg: #fff7ed;
+      --purple: #7c3aed;
+      --purple-bg: #f5f3ff;
+      --red: #dc2626;
+      --red-bg: #fef2f2;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: var(--dark);
+      background: var(--light);
+      line-height: 1.6;
+    }
+
+    /* Slide container */
+    .slide {
+      min-height: 100vh;
+      padding: 60px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .slide + .slide {
+      border-top: 3px solid var(--primary);
+    }
+
+    /* Title slide */
+    .title-slide {
+      text-align: center;
+      background: linear-gradient(135deg, var(--primary) 0%, #3730a3 100%);
+      color: white;
+      max-width: 100%;
+      padding: 80px 40px;
+    }
+
+    .title-slide h1 {
+      font-size: 3.5rem;
+      font-weight: 800;
+      margin-bottom: 16px;
+      letter-spacing: -1px;
+    }
+
+    .title-slide .subtitle {
+      font-size: 1.4rem;
+      opacity: 0.9;
+      margin-bottom: 40px;
+    }
+
+    .title-slide .badges {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .title-slide .badge {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 8px 20px;
+      border-radius: 50px;
+      font-size: 0.9rem;
+    }
+
+    /* Section headers */
+    h2 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--primary);
+    }
+
+    h3 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .section-subtitle {
+      font-size: 1.1rem;
+      color: var(--gray);
+      margin-bottom: 40px;
+    }
+
+    /* Cards */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-top: 24px;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+
+    .card-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      margin-bottom: 16px;
+    }
+
+    .card p {
+      color: var(--gray);
+      font-size: 0.95rem;
+      margin-top: 8px;
+    }
+
+    /* Persona cards */
+    .persona-card {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .persona-card .role-tag {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 50px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+
+    .persona-card ul {
+      list-style: none;
+      margin-top: 12px;
+    }
+
+    .persona-card li {
+      padding: 6px 0;
+      padding-left: 24px;
+      position: relative;
+      font-size: 0.9rem;
+      color: var(--gray);
+    }
+
+    .persona-card li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 13px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    /* Color themes */
+    .theme-blue .card-icon { background: var(--primary-bg); }
+    .theme-blue .role-tag { background: var(--primary-bg); color: var(--primary); }
+    .theme-blue li::before { background: var(--primary-light); }
+
+    .theme-green .card-icon { background: var(--green-bg); }
+    .theme-green .role-tag { background: var(--green-bg); color: var(--green); }
+    .theme-green li::before { background: var(--green); }
+
+    .theme-orange .card-icon { background: var(--orange-bg); }
+    .theme-orange .role-tag { background: var(--orange-bg); color: var(--orange); }
+    .theme-orange li::before { background: var(--orange); }
+
+    .theme-purple .card-icon { background: var(--purple-bg); }
+    .theme-purple .role-tag { background: var(--purple-bg); color: var(--purple); }
+    .theme-purple li::before { background: var(--purple); }
+
+    /* Architecture diagram */
+    .arch-diagram {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px;
+      margin-top: 24px;
+    }
+
+    .arch-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin: 16px 0;
+      flex-wrap: wrap;
+    }
+
+    .arch-box {
+      padding: 14px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-align: center;
+      min-width: 160px;
+      border: 2px solid;
+    }
+
+    .arch-arrow {
+      font-size: 1.5rem;
+      color: var(--gray);
+    }
+
+    .arch-arrow-down {
+      text-align: center;
+      font-size: 1.5rem;
+      color: var(--gray);
+      margin: 8px 0;
+    }
+
+    .arch-label {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--gray);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+      margin: 24px 0 8px;
+    }
+
+    .arch-box.user { background: var(--primary-bg); border-color: var(--primary-light); color: var(--primary); }
+    .arch-box.app { background: var(--purple-bg); border-color: var(--purple); color: var(--purple); }
+    .arch-box.server { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+    .arch-box.db { background: var(--orange-bg); border-color: var(--orange); color: var(--orange); }
+    .arch-box.external { background: var(--red-bg); border-color: var(--red); color: var(--red); }
+    .arch-box.crossed { text-decoration: line-through; opacity: 0.5; }
+
+    /* Flow diagram */
+    .flow-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-top: 24px;
+    }
+
+    .flow-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+    }
+
+    .flow-line {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 40px;
+    }
+
+    .flow-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 3px solid var(--primary-light);
+      background: white;
+      flex-shrink: 0;
+    }
+
+    .flow-connector {
+      width: 2px;
+      height: 40px;
+      background: var(--border);
+    }
+
+    .flow-content {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      flex: 1;
+      margin-bottom: 8px;
+    }
+
+    .flow-content h4 {
+      font-size: 0.95rem;
+      margin-bottom: 4px;
+    }
+
+    .flow-content p {
+      font-size: 0.85rem;
+      color: var(--gray);
+    }
+
+    .flow-content .actor {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 50px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .actor-csr { background: var(--primary-bg); color: var(--primary); }
+    .actor-system { background: var(--green-bg); color: var(--green); }
+    .actor-tech { background: var(--purple-bg); color: var(--purple); }
+    .actor-driver { background: var(--orange-bg); color: var(--orange); }
+
+    /* Tech stack */
+    .stack-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .stack-item {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .stack-item .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--gray);
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .stack-item .value {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .stack-item .detail {
+      font-size: 0.8rem;
+      color: var(--gray);
+      margin-top: 4px;
+    }
+
+    /* Comparison */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 24px;
+    }
+
+    .compare-col h3 {
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid;
+    }
+
+    .compare-col.old h3 { border-color: var(--red); color: var(--red); }
+    .compare-col.new h3 { border-color: var(--green); color: var(--green); }
+
+    .compare-col ul {
+      list-style: none;
+    }
+
+    .compare-col li {
+      padding: 8px 0;
+      padding-left: 28px;
+      position: relative;
+      font-size: 0.9rem;
+    }
+
+    .compare-col.old li::before {
+      content: '\2717';
+      position: absolute;
+      left: 0;
+      color: var(--red);
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+
+    .compare-col.new li::before {
+      content: '\2713';
+      position: absolute;
+      left: 0;
+      color: var(--green);
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+
+    /* Feature flag */
+    .flag-box {
+      background: white;
+      border: 2px dashed var(--primary-light);
+      border-radius: 16px;
+      padding: 32px;
+      margin-top: 24px;
+      text-align: center;
+    }
+
+    .flag-box code {
+      display: inline-block;
+      background: var(--dark);
+      color: #22d3ee;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-family: 'SF Mono', Monaco, monospace;
+      margin: 16px 0;
+    }
+
+    .flag-box .desc {
+      color: var(--gray);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Screen mockup */
+    .screen-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-top: 24px;
+    }
+
+    .screen-mockup {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .screen-bar {
+      background: var(--primary);
+      color: white;
+      padding: 10px 16px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .screen-bar .dots {
+      display: flex;
+      gap: 4px;
+    }
+
+    .screen-bar .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.4);
+    }
+
+    .screen-body {
+      padding: 20px;
+    }
+
+    .mock-nav {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .mock-nav-item {
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .mock-nav-item.active {
+      background: var(--primary-bg);
+      color: var(--primary);
+    }
+
+    .mock-nav-item:not(.active) {
+      color: var(--gray);
+    }
+
+    .mock-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+
+    .mock-card-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .mock-card-title {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .mock-badge {
+      padding: 2px 10px;
+      border-radius: 50px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .mock-badge.new { background: #fef3c7; color: #92400e; }
+    .mock-badge.progress { background: #dbeafe; color: #1e40af; }
+    .mock-badge.pickup { background: #ffedd5; color: #9a3412; }
+    .mock-badge.delivery { background: #ede9fe; color: #5b21b6; }
+
+    .mock-detail {
+      font-size: 0.8rem;
+      color: var(--gray);
+    }
+
+    .mock-btn {
+      display: block;
+      width: 100%;
+      padding: 8px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .mock-field {
+      margin-bottom: 12px;
+    }
+
+    .mock-field label {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--gray);
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+
+    .mock-field .input {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 0.85rem;
+      width: 100%;
+      background: var(--light);
+    }
+
+    .mock-field .readonly {
+      background: #f1f5f9;
+      color: var(--gray);
+    }
+
+    .mock-accordion {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .mock-accordion-header {
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    /* Navigation */
+    nav.page-nav {
+      position: fixed;
+      top: 0;
+      right: 0;
+      left: 0;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+      padding: 0 40px;
+    }
+
+    nav.page-nav ul {
+      display: flex;
+      gap: 4px;
+      list-style: none;
+      max-width: 1200px;
+      margin: 0 auto;
+      overflow-x: auto;
+    }
+
+    nav.page-nav a {
+      display: block;
+      padding: 14px 16px;
+      text-decoration: none;
+      color: var(--gray);
+      font-size: 0.85rem;
+      font-weight: 500;
+      white-space: nowrap;
+      border-bottom: 2px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    nav.page-nav a:hover {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    .slide:first-of-type { padding-top: 0; }
+    .slide:nth-child(2) { padding-top: 100px; }
+
+    @media (max-width: 768px) {
+      .slide { padding: 40px 20px; }
+      .title-slide h1 { font-size: 2.2rem; }
+      .compare-grid { grid-template-columns: 1fr; }
+      h2 { font-size: 1.6rem; }
+      nav.page-nav { padding: 0 16px; }
+      nav.page-nav a { padding: 12px 10px; font-size: 0.75rem; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="page-nav">
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#personas">Personas</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#dataflow">Data Flow</a></li>
+    <li><a href="#screens">Screens</a></li>
+    <li><a href="#stack">Tech Stack</a></li>
+    <li><a href="#comparison">Old vs New</a></li>
+    <li><a href="#flag">Feature Flag</a></li>
+  </ul>
+</nav>
+
+<!-- SLIDE 1: Title -->
+<div class="slide title-slide" id="overview">
+  <h1>ECS Connect v2</h1>
+  <p class="subtitle">Job Tracking & Workflow Management for Emissions Services</p>
+  <div class="badges">
+    <span class="badge">Progressive Web App</span>
+    <span class="badge">Offline-First</span>
+    <span class="badge">Real-Time Notifications</span>
+    <span class="badge">Native Mobile Forms</span>
+  </div>
+</div>
+
+<!-- SLIDE 2: Personas -->
+<div class="slide" id="personas">
+  <h2>Who Uses ECS Connect?</h2>
+  <p class="section-subtitle">Four roles interact with the system at different stages of the job lifecycle.</p>
+
+  <div class="card-grid">
+    <!-- CSR -->
+    <div class="card persona-card theme-blue">
+      <div class="card-icon theme-blue">&#128187;</div>
+      <span class="role-tag">CSR</span>
+      <h3>Customer Service Rep</h3>
+      <p>Creates jobs, dispatches forms, manages the job lifecycle from their desktop.</p>
+      <ul>
+        <li>Creates new jobs with customer & part details</li>
+        <li>Dispatches pickup forms to drivers</li>
+        <li>Checks in jobs and assigns technicians</li>
+        <li>Dispatches delivery forms when service is complete</li>
+        <li>Monitors job progress on the dashboard</li>
+      </ul>
+    </div>
+
+    <!-- Technician -->
+    <div class="card persona-card theme-purple">
+      <div class="card-icon theme-purple">&#128295;</div>
+      <span class="role-tag">Technician</span>
+      <h3>Shop Technician</h3>
+      <p>Performs emissions service on parts at the shop. Uses a phone or tablet.</p>
+      <ul>
+        <li>Receives emissions service log on their device</li>
+        <li>Reviews pre-filled job and part information</li>
+        <li>Records pass/fail results for each part</li>
+        <li>Notes repairs performed and failure reasons</li>
+        <li>Submits completed form (works offline too)</li>
+      </ul>
+    </div>
+
+    <!-- Driver -->
+    <div class="card persona-card theme-orange">
+      <div class="card-icon theme-orange">&#128666;</div>
+      <span class="role-tag">Driver</span>
+      <h3>Pickup & Delivery Driver</h3>
+      <p>Picks up parts from customers and delivers completed parts back.</p>
+      <ul>
+        <li>Sees assigned pickups and deliveries on their phone</li>
+        <li>Fills in item count and pickup notes</li>
+        <li>Records who received the delivery</li>
+        <li>GPS location captured automatically</li>
+        <li>Can submit forms even without cell service</li>
+      </ul>
+    </div>
+
+    <!-- Admin -->
+    <div class="card persona-card theme-green">
+      <div class="card-icon theme-green">&#128272;</div>
+      <span class="role-tag">Admin</span>
+      <h3>Administrator</h3>
+      <p>Manages users, monitors metrics, and oversees operations.</p>
+      <ul>
+        <li>Manages the user whitelist and role assignments</li>
+        <li>Views operational dashboard and KPIs</li>
+        <li>Has full access to all CSR capabilities</li>
+        <li>Manages shop and technician configuration</li>
+        <li>Controls feature flags and system settings</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3: Architecture -->
+<div class="slide" id="architecture">
+  <h2>System Architecture</h2>
+  <p class="section-subtitle">How the pieces fit together.</p>
+
+  <div class="arch-diagram">
+    <div class="arch-label">Users</div>
+    <div class="arch-row">
+      <div class="arch-box user">&#128187; CSR / Admin<br><small>Desktop Browser</small></div>
+      <div class="arch-box user">&#128295; Technician<br><small>Phone / Tablet PWA</small></div>
+      <div class="arch-box user">&#128666; Driver<br><small>Phone PWA</small></div>
+    </div>
+
+    <div class="arch-arrow-down">&darr;&nbsp;&nbsp; HTTPS + WebSocket &nbsp;&nbsp;&darr;</div>
+
+    <div class="arch-label">Application</div>
+    <div class="arch-row">
+      <div class="arch-box app">React + Vite<br><small>Single Page App</small></div>
+      <div class="arch-arrow">&harr;</div>
+      <div class="arch-box server">Express Server<br><small>API + WebSocket</small></div>
+    </div>
+
+    <div class="arch-arrow-down">&darr;</div>
+
+    <div class="arch-label">Services</div>
+    <div class="arch-row">
+      <div class="arch-box server">Clerk Auth<br><small>JWT Tokens</small></div>
+      <div class="arch-box server">Form Dispatch<br><small>Native Forms</small></div>
+      <div class="arch-box server">Job Events<br><small>State Machine</small></div>
+      <div class="arch-box server">Notifications<br><small>WebSocket</small></div>
+    </div>
+
+    <div class="arch-arrow-down">&darr;</div>
+
+    <div class="arch-label">Data</div>
+    <div class="arch-row">
+      <div class="arch-box db">Neon PostgreSQL<br><small>Drizzle ORM</small></div>
+      <div class="arch-box db">IndexedDB<br><small>Offline Queue</small></div>
+    </div>
+
+    <div class="arch-arrow-down" style="margin-top: 24px; color: var(--red);">&darr; legacy (feature flag) &darr;</div>
+    <div class="arch-row">
+      <div class="arch-box external crossed">GoCanvas API<br><small>Being Replaced</small></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4: Data Flow -->
+<div class="slide" id="dataflow">
+  <h2>Job Lifecycle</h2>
+  <p class="section-subtitle">Follow a job from creation to delivery.</p>
+
+  <div class="flow-container">
+    <div class="flow-step">
+      <div class="flow-line">
+        <div class="flow-dot"></div>
+        <div class="flow-connector"></div>
+      </div>
+      <div class="flow-content">
+        <span class="actor actor-csr">CSR</span>
+        <h4>Job Created</h4>
+        <p>CSR fills out customer info, adds parts, and selects arrival path (pickup, direct drop-off, or shipment).</p>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-line">
+        <div class="flow-dot"></div>
+        <div class="flow-connector"></div>
+      </div>
+      <div class="flow-content">
+        <span class="actor actor-csr">CSR</span>
+        <h4>Pickup Dispatched</h4>
+        <p>A pickup form is created in the database and a WebSocket notification is sent to the driver's phone.</p>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-line">
+        <div class="flow-dot"></div>
+        <div class="flow-connector"></div>
+      </div>
+      <div class="flow-content">
+        <span class="actor actor-driver">DRIVER</span>
+        <h4>Pickup Completed</h4>
+        <p>Driver opens the form on their phone, confirms item count, adds notes. GPS captured automatically. Job moves to "picked up".</p>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-line">
+        <div class="flow-dot"></div>
+        <div class="flow-connector"></div>
+      </div>
+      <div class="flow-content">
+        <span class="actor actor-csr">CSR</span>
+        <h4>Shop Check-In</h4>
+        <p>CSR checks the job in at the shop, assigns a technician. An emissions service log form is dispatched to the tech.</p>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-line">
+        <div class="flow-dot"></div>
+        <div class="flow-connector"></div>
+      </div>
+      <div class="flow-content">
+        <span class="actor actor-tech">TECHNICIAN</span>
+        <h4>Service Performed</h4>
+        <p>Tech opens the form, sees all pre-filled job and part info. For each part, records pass/fail, repairs, and ECS part number. Submits when done.</p>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-line">
+        <div class="flow-dot"></div>
+        <div class="flow-connector"></div>
+      </div>
+      <div class="flow-content">
+        <span class="actor actor-system">SYSTEM</span>
+        <h4>Parts Updated</h4>
+        <p>Server processes the submission: updates each part's pass/fail status, records repairs, transitions job to "service complete".</p>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-line">
+        <div class="flow-dot"></div>
+        <div class="flow-connector"></div>
+      </div>
+      <div class="flow-content">
+        <span class="actor actor-csr">CSR</span>
+        <h4>Delivery Dispatched</h4>
+        <p>CSR dispatches a delivery form to a driver with delivery address and order numbers.</p>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-line">
+        <div class="flow-dot"></div>
+      </div>
+      <div class="flow-content">
+        <span class="actor actor-driver">DRIVER</span>
+        <h4>Delivery Completed</h4>
+        <p>Driver delivers parts, records who received them, adds notes. Job moves to "delivered". Lifecycle complete.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5: Screen Mockups -->
+<div class="slide" id="screens">
+  <h2>What Each Role Sees</h2>
+  <p class="section-subtitle">Role-based navigation shows each user exactly what they need.</p>
+
+  <div class="screen-grid">
+    <!-- Tech Dashboard -->
+    <div class="screen-mockup">
+      <div class="screen-bar">
+        <span>Technician View</span>
+        <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      </div>
+      <div class="screen-body">
+        <div class="mock-nav">
+          <div class="mock-nav-item active">My Jobs</div>
+        </div>
+        <div style="font-weight:600; font-size:1.1rem; margin-bottom:12px;">My Jobs</div>
+        <div style="font-size:0.8rem; color:var(--gray); margin-bottom:16px;">Emissions service forms assigned to you</div>
+        <div class="mock-card">
+          <div class="mock-card-header">
+            <span class="mock-card-title">Job 01-01302025-003</span>
+            <span class="mock-badge new">New</span>
+          </div>
+          <div class="mock-detail">Customer: ABC Manufacturing</div>
+          <div class="mock-detail">Shop: Houston Main</div>
+          <div class="mock-btn">Start Form</div>
+        </div>
+        <div class="mock-card">
+          <div class="mock-card-header">
+            <span class="mock-card-title">Job 01-01292025-001</span>
+            <span class="mock-badge progress">In Progress</span>
+          </div>
+          <div class="mock-detail">Customer: Delta Corp</div>
+          <div class="mock-detail">Shop: Houston Main</div>
+          <div class="mock-btn">Continue Form</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Driver Dashboard -->
+    <div class="screen-mockup">
+      <div class="screen-bar">
+        <span>Driver View</span>
+        <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      </div>
+      <div class="screen-body">
+        <div class="mock-nav">
+          <div class="mock-nav-item active">My Routes</div>
+        </div>
+        <div style="font-weight:600; font-size:1.1rem; margin-bottom:12px;">My Pickups & Deliveries</div>
+        <div style="font-size:0.8rem; color:var(--gray); margin-bottom:16px;">Pickup and delivery forms assigned to you</div>
+        <div class="mock-card">
+          <div class="mock-card-header">
+            <span class="mock-card-title">Job 01-01302025-005</span>
+            <div><span class="mock-badge pickup">Pickup</span> <span class="mock-badge new">New</span></div>
+          </div>
+          <div class="mock-detail">Customer: XYZ Industries</div>
+          <div class="mock-detail">&#128205; 1234 Industrial Blvd, Houston TX</div>
+          <div class="mock-btn">Start Pickup</div>
+        </div>
+        <div class="mock-card">
+          <div class="mock-card-header">
+            <span class="mock-card-title">Job 01-01282025-002</span>
+            <div><span class="mock-badge delivery">Delivery</span> <span class="mock-badge new">New</span></div>
+          </div>
+          <div class="mock-detail">Customer: ABC Manufacturing</div>
+          <div class="mock-detail">&#128205; 5678 Commerce Dr, Dallas TX</div>
+          <div class="mock-btn">Start Delivery</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Emissions Form -->
+    <div class="screen-mockup">
+      <div class="screen-bar">
+        <span>Emissions Service Log</span>
+        <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      </div>
+      <div class="screen-body">
+        <div style="font-weight:600; font-size:1rem; margin-bottom:12px;">&#128295; Emissions Service Log</div>
+
+        <div class="mock-card" style="background:var(--light);">
+          <div style="font-size:0.75rem; font-weight:600; color:var(--gray); text-transform:uppercase; margin-bottom:8px;">Job Information</div>
+          <div class="mock-detail">Job ID: 01-01302025-003</div>
+          <div class="mock-detail">Customer: ABC Manufacturing</div>
+          <div class="mock-detail">Contact: John Smith - (555) 123-4567</div>
+        </div>
+
+        <div style="font-weight:600; font-size:0.9rem; margin:12px 0 8px;">Parts (3)</div>
+        <div class="mock-accordion">
+          <div class="mock-accordion-header">
+            <span>DPF &nbsp; &#9989;</span>
+            <span style="color:var(--gray); font-weight:400; font-size:0.8rem;">01-01302025-001 &nbsp; &#9660;</span>
+          </div>
+        </div>
+        <div class="mock-accordion">
+          <div class="mock-accordion-header">
+            <span>DOC</span>
+            <span style="color:var(--gray); font-weight:400; font-size:0.8rem;">01-01302025-002 &nbsp; &#9654;</span>
+          </div>
+        </div>
+        <div class="mock-accordion">
+          <div class="mock-accordion-header">
+            <span>SCR</span>
+            <span style="color:var(--gray); font-weight:400; font-size:0.8rem;">01-01302025-003 &nbsp; &#9654;</span>
+          </div>
+        </div>
+
+        <div class="mock-btn" style="margin-top:16px;">Complete Service Log</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6: Tech Stack -->
+<div class="slide" id="stack">
+  <h2>Technology Stack</h2>
+  <p class="section-subtitle">Modern, proven technologies chosen for reliability and developer experience.</p>
+
+  <div class="stack-grid">
+    <div class="stack-item">
+      <div class="label">Frontend</div>
+      <div class="value">React 18 + Vite</div>
+      <div class="detail">Fast builds, hot reload, TypeScript</div>
+    </div>
+    <div class="stack-item">
+      <div class="label">Styling</div>
+      <div class="value">Tailwind + Shadcn</div>
+      <div class="detail">Utility CSS + Radix UI components</div>
+    </div>
+    <div class="stack-item">
+      <div class="label">Routing</div>
+      <div class="value">Wouter</div>
+      <div class="detail">Lightweight client-side routing</div>
+    </div>
+    <div class="stack-item">
+      <div class="label">Forms</div>
+      <div class="value">React Hook Form + Zod</div>
+      <div class="detail">Type-safe validation</div>
+    </div>
+    <div class="stack-item">
+      <div class="label">Data Fetching</div>
+      <div class="value">TanStack Query</div>
+      <div class="detail">Caching, refetching, mutations</div>
+    </div>
+    <div class="stack-item">
+      <div class="label">Backend</div>
+      <div class="value">Express.js</div>
+      <div class="detail">Node.js API server</div>
+    </div>
+    <div class="stack-item">
+      <div class="label">Database</div>
+      <div class="value">Neon PostgreSQL</div>
+      <div class="detail">Serverless Postgres + Drizzle ORM</div>
+    </div>
+    <div class="stack-item">
+      <div class="label">Auth</div>
+      <div class="value">Clerk</div>
+      <div class="detail">JWT tokens, user management UI</div>
+    </div>
+    <div class="stack-item">
+      <div class="label">Real-Time</div>
+      <div class="value">WebSocket (ws)</div>
+      <div class="detail">Instant dispatch notifications</div>
+    </div>
+    <div class="stack-item">
+      <div class="label">Offline</div>
+      <div class="value">IndexedDB + Service Worker</div>
+      <div class="detail">Queue submissions, cache assets</div>
+    </div>
+    <div class="stack-item">
+      <div class="label">PWA</div>
+      <div class="value">vite-plugin-pwa</div>
+      <div class="detail">Install to home screen, works offline</div>
+    </div>
+    <div class="stack-item">
+      <div class="label">Hosting</div>
+      <div class="value">Railway</div>
+      <div class="detail">Auto-deploy, WebSocket support, SSL</div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7: Old vs New -->
+<div class="slide" id="comparison">
+  <h2>What Changed</h2>
+  <p class="section-subtitle">Replacing external dependencies with native capabilities.</p>
+
+  <div class="compare-grid">
+    <div class="compare-col old">
+      <h3>Before (GoCanvas)</h3>
+      <ul>
+        <li>$49-79/user/month for GoCanvas licenses</li>
+        <li>Forms dispatched via GoCanvas API with field ID mapping</li>
+        <li>XML webhooks parsed with xml2js</li>
+        <li>Field map JSON files regenerated when forms change</li>
+        <li>Separate GoCanvas mobile app required</li>
+        <li>Round-trip: API dispatch &rarr; mobile app &rarr; XML webhook &rarr; parse</li>
+        <li>2,900 lines of integration code</li>
+        <li>Replit hosting with cold starts</li>
+        <li>Replit OIDC auth with passport sessions</li>
+      </ul>
+    </div>
+    <div class="compare-col new">
+      <h3>After (Native)</h3>
+      <ul>
+        <li>No per-user form fees</li>
+        <li>Forms are React components with type-safe validation</li>
+        <li>Direct database writes via REST API</li>
+        <li>Schema changes are code changes (Drizzle + Zod)</li>
+        <li>Same ECS Connect PWA for all roles</li>
+        <li>Direct: submit form &rarr; update database</li>
+        <li>~3,500 lines of native form components</li>
+        <li>Railway with always-on hosting</li>
+        <li>Clerk auth with JWT tokens and user dashboard</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8: Feature Flag -->
+<div class="slide" id="flag">
+  <h2>Safe Migration</h2>
+  <p class="section-subtitle">A feature flag lets you switch between GoCanvas and native forms instantly.</p>
+
+  <div class="flag-box">
+    <h3>The Toggle</h3>
+    <code>USE_NATIVE_FORMS=true</code>
+    <p class="desc">
+      When set to <strong>true</strong>, all three form types (pickup, delivery, emissions) are dispatched through the native system.
+      When <strong>false</strong> or unset, everything goes through GoCanvas as before.
+      Flip it back instantly if anything goes wrong.
+    </p>
+  </div>
+
+  <div class="card-grid" style="margin-top: 32px;">
+    <div class="card theme-green">
+      <div class="card-icon theme-green">&#128640;</div>
+      <h3>Phase 1: Test on Staging</h3>
+      <p>Deploy to Railway with USE_NATIVE_FORMS=true. Test all three form types end-to-end while Replit production stays on GoCanvas.</p>
+    </div>
+    <div class="card theme-blue">
+      <div class="card-icon theme-blue">&#128260;</div>
+      <h3>Phase 2: Switch Production</h3>
+      <p>Once validated, set USE_NATIVE_FORMS=true in production. GoCanvas webhook endpoint stays active as a safety net.</p>
+    </div>
+    <div class="card theme-purple">
+      <div class="card-icon theme-purple">&#128465;</div>
+      <h3>Phase 3: Clean Up</h3>
+      <p>After running native forms for a week with no issues, remove ~2,900 lines of GoCanvas integration code and cancel GoCanvas licenses.</p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
