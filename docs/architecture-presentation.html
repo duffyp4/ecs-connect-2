@@ -697,12 +697,124 @@
       font-style: italic;
     }
 
-    /* Two-column grid for larger screens section */
-    .screen-grid-2x3 {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 24px;
+    /* Device-aware layout for screens section */
+    .screens-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
       margin-top: 24px;
+    }
+
+    .screens-row {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* Desktop device frame */
+    .device-desktop {
+      width: 100%;
+      max-width: 720px;
+    }
+
+    .device-desktop .screen-mockup {
+      border-radius: 12px 12px 0 0;
+    }
+
+    .device-desktop .device-stand {
+      width: 120px;
+      height: 24px;
+      background: linear-gradient(to bottom, var(--border), #d1d5db);
+      margin: 0 auto;
+      border-radius: 0 0 4px 4px;
+    }
+
+    .device-desktop .device-base {
+      width: 180px;
+      height: 8px;
+      background: linear-gradient(to bottom, #d1d5db, #e5e7eb);
+      margin: 0 auto;
+      border-radius: 0 0 8px 8px;
+    }
+
+    .device-desktop .screen-bar {
+      border-radius: 12px 12px 0 0;
+    }
+
+    /* Tablet device frame */
+    .device-tablet {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .device-tablet .screen-mockup {
+      border: 3px solid #1f2937;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .device-tablet .screen-bar {
+      border-radius: 0;
+    }
+
+    .device-tablet .device-home {
+      width: 40px;
+      height: 6px;
+      background: #d1d5db;
+      border-radius: 3px;
+      margin: 8px auto;
+    }
+
+    /* Phone device frame */
+    .device-phone {
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .device-phone .screen-mockup {
+      border: 3px solid #1f2937;
+      border-radius: 28px;
+      overflow: hidden;
+    }
+
+    .device-phone .screen-bar {
+      border-radius: 0;
+    }
+
+    .device-phone .device-notch {
+      width: 80px;
+      height: 6px;
+      background: #1f2937;
+      border-radius: 0 0 8px 8px;
+      margin: 0 auto;
+      position: relative;
+      top: -1px;
+    }
+
+    .device-phone .device-home {
+      width: 36px;
+      height: 5px;
+      background: #d1d5db;
+      border-radius: 3px;
+      margin: 6px auto 8px;
+    }
+
+    /* Device label */
+    .device-label {
+      text-align: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--gray);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+
+    .device-label span {
+      background: var(--light);
+      padding: 3px 12px;
+      border-radius: 4px;
     }
 
     /* Navigation */
@@ -1005,315 +1117,349 @@
 <!-- SLIDE 5: Screen Mockups -->
 <div class="slide" id="screens">
   <h2>What Each Role Sees</h2>
-  <p class="section-subtitle">Role-based navigation shows each user exactly what they need &mdash; nothing more.</p>
+  <p class="section-subtitle">Role-based navigation shows each user exactly what they need &mdash; nothing more. Each mockup reflects the actual device used in the field.</p>
 
-  <div class="screen-grid-2x3">
+  <div class="screens-layout">
 
-    <!-- 1. CSR / Admin Dashboard -->
-    <div>
-      <div class="screen-mockup">
-        <div class="screen-bar">
-          <span>CSR / Admin View</span>
-          <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <!-- ROW 1: Desktop — CSR & Admin -->
+    <div class="screens-row">
+
+      <!-- CSR Desktop -->
+      <div class="device-desktop">
+        <div class="device-label"><span>Desktop &mdash; Office</span></div>
+        <div class="screen-mockup">
+          <div class="screen-bar">
+            <span>CSR View &mdash; Job List</span>
+            <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+          </div>
+          <div class="screen-body">
+            <div class="mock-nav">
+              <div class="mock-nav-item">New Job</div>
+              <div class="mock-nav-item">Dashboard</div>
+              <div class="mock-nav-item active">Job List</div>
+              <div class="mock-nav-item">Parts List</div>
+            </div>
+            <div class="annotation blue">CSR &amp; Admin see full navigation</div>
+            <div style="font-weight:600; font-size:1rem; margin:12px 0 8px;">Job List</div>
+            <table class="mock-table">
+              <tr>
+                <th>Job ID</th>
+                <th>Customer</th>
+                <th>Status</th>
+                <th>Parts</th>
+              </tr>
+              <tr class="row-blue">
+                <td style="font-weight:600;">01-01302025-003</td>
+                <td>ABC Mfg</td>
+                <td><span class="mock-status at-shop">At Shop</span></td>
+                <td>3</td>
+              </tr>
+              <tr class="row-amber">
+                <td style="font-weight:600;">01-01302025-005</td>
+                <td>XYZ Ind</td>
+                <td><span class="mock-status in-service">In Service</span></td>
+                <td>2</td>
+              </tr>
+              <tr class="row-green">
+                <td style="font-weight:600;">01-01282025-002</td>
+                <td>Delta Corp</td>
+                <td><span class="mock-status complete">Service Complete</span></td>
+                <td>4</td>
+              </tr>
+              <tr>
+                <td style="font-weight:600;">01-01282025-001</td>
+                <td>GHI Ltd</td>
+                <td><span class="mock-status pending">Pending Pickup</span></td>
+                <td>1</td>
+              </tr>
+            </table>
+            <div style="margin-top:10px;">
+              <div class="annotation">Rows color-coded by part approval status</div>
+            </div>
+            <div style="display:flex; gap:8px; margin-top:12px;">
+              <div class="mock-btn" style="flex:1; font-size:0.7rem; padding:6px;">Check In</div>
+              <div class="mock-btn" style="flex:1; font-size:0.7rem; padding:6px; background:var(--orange);">Dispatch Pickup</div>
+              <div class="mock-btn" style="flex:1; font-size:0.7rem; padding:6px; background:#7c3aed;">Dispatch Delivery</div>
+            </div>
+            <div class="annotation purple">CSR dispatches forms to techs &amp; drivers from here</div>
+          </div>
         </div>
-        <div class="screen-body">
-          <div class="mock-nav">
-            <div class="mock-nav-item">New Job</div>
-            <div class="mock-nav-item">Dashboard</div>
-            <div class="mock-nav-item active">Job List</div>
-            <div class="mock-nav-item">Parts List</div>
-          </div>
-          <div class="annotation blue">CSR &amp; Admin see full navigation</div>
-          <div style="font-weight:600; font-size:1rem; margin:12px 0 8px;">Job List</div>
-          <table class="mock-table">
-            <tr>
-              <th>Job ID</th>
-              <th>Customer</th>
-              <th>Status</th>
-              <th>Parts</th>
-            </tr>
-            <tr class="row-blue">
-              <td style="font-weight:600;">01-01302025-003</td>
-              <td>ABC Mfg</td>
-              <td><span class="mock-status at-shop">At Shop</span></td>
-              <td>3</td>
-            </tr>
-            <tr class="row-amber">
-              <td style="font-weight:600;">01-01302025-005</td>
-              <td>XYZ Ind</td>
-              <td><span class="mock-status in-service">In Service</span></td>
-              <td>2</td>
-            </tr>
-            <tr class="row-green">
-              <td style="font-weight:600;">01-01282025-002</td>
-              <td>Delta Corp</td>
-              <td><span class="mock-status complete">Service Complete</span></td>
-              <td>4</td>
-            </tr>
-            <tr>
-              <td style="font-weight:600;">01-01282025-001</td>
-              <td>GHI Ltd</td>
-              <td><span class="mock-status pending">Pending Pickup</span></td>
-              <td>1</td>
-            </tr>
-          </table>
-          <div style="margin-top:10px;">
-            <div class="annotation">Rows color-coded by part approval status</div>
-          </div>
-          <div style="display:flex; gap:8px; margin-top:12px;">
-            <div class="mock-btn" style="flex:1; font-size:0.7rem; padding:6px;">Check In</div>
-            <div class="mock-btn" style="flex:1; font-size:0.7rem; padding:6px; background:var(--orange);">Dispatch Pickup</div>
-            <div class="mock-btn" style="flex:1; font-size:0.7rem; padding:6px; background:#7c3aed;">Dispatch Delivery</div>
-          </div>
-          <div class="annotation purple">CSR dispatches forms to techs &amp; drivers from here</div>
-        </div>
+        <div class="device-stand"></div>
+        <div class="device-base"></div>
+        <div class="screen-subtitle">CSRs manage the entire job lifecycle from their office desktop</div>
       </div>
-      <div class="screen-subtitle">CSRs manage the entire job lifecycle from desktop</div>
+
     </div>
 
-    <!-- 2. Technician Dashboard -->
-    <div>
-      <div class="screen-mockup">
-        <div class="screen-bar">
-          <span>Technician View</span>
-          <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-        </div>
-        <div class="screen-body">
-          <div class="mock-nav">
-            <div class="mock-nav-item active">My Jobs</div>
+    <!-- ROW 2: Desktop — Admin -->
+    <div class="screens-row">
+
+      <div class="device-desktop">
+        <div class="device-label"><span>Desktop &mdash; Office</span></div>
+        <div class="screen-mockup">
+          <div class="screen-bar">
+            <span>Admin View &mdash; Dashboard</span>
+            <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
           </div>
-          <div class="annotation blue">Tech sees only &ldquo;My Jobs&rdquo; &mdash; one nav item</div>
-          <div style="font-weight:600; font-size:1.1rem; margin:12px 0 4px;">My Jobs</div>
-          <div style="font-size:0.8rem; color:var(--gray); margin-bottom:16px;">Emissions service forms assigned to you</div>
-          <div class="mock-card">
-            <div class="mock-card-header">
-              <span class="mock-card-title">Job 01-01302025-003</span>
-              <span class="mock-badge new">New</span>
+          <div class="screen-body">
+            <div class="mock-nav">
+              <div class="mock-nav-item">New Job</div>
+              <div class="mock-nav-item active">Dashboard</div>
+              <div class="mock-nav-item">Job List</div>
+              <div class="mock-nav-item">Parts List</div>
             </div>
-            <div class="mock-detail">Customer: ABC Manufacturing</div>
-            <div class="mock-detail">Shop: Houston Main &bull; 3 parts</div>
-            <div class="mock-btn">Start Form</div>
-          </div>
-          <div class="mock-card">
-            <div class="mock-card-header">
-              <span class="mock-card-title">Job 01-01292025-001</span>
-              <span class="mock-badge progress">In Progress</span>
-            </div>
-            <div class="mock-detail">Customer: Delta Corp</div>
-            <div class="mock-detail">Shop: Houston Main &bull; 4 parts</div>
-            <div class="mock-btn">Continue Form</div>
-          </div>
-        </div>
-      </div>
-      <div class="screen-subtitle">Technicians see only their assigned emissions forms</div>
-    </div>
+            <div class="annotation green">Admin sees all CSR screens + admin tools</div>
+            <div style="font-weight:600; font-size:1rem; margin:12px 0 8px;">Dashboard</div>
 
-    <!-- 3. Driver Dashboard -->
-    <div>
-      <div class="screen-mockup">
-        <div class="screen-bar">
-          <span>Driver View</span>
-          <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-        </div>
-        <div class="screen-body">
-          <div class="mock-nav">
-            <div class="mock-nav-item active">My Routes</div>
-          </div>
-          <div class="annotation blue">Driver sees only &ldquo;My Routes&rdquo; &mdash; one nav item</div>
-          <div style="font-weight:600; font-size:1.1rem; margin:12px 0 4px;">My Pickups &amp; Deliveries</div>
-          <div style="font-size:0.8rem; color:var(--gray); margin-bottom:16px;">Assigned pickup and delivery forms</div>
-          <div class="mock-card">
-            <div class="mock-card-header">
-              <span class="mock-card-title">Job 01-01302025-005</span>
-              <div><span class="mock-badge pickup">Pickup</span> <span class="mock-badge new">New</span></div>
-            </div>
-            <div class="mock-detail">Customer: XYZ Industries</div>
-            <div class="mock-detail">&#128205; 1234 Industrial Blvd, Houston TX</div>
-            <div class="mock-btn">Start Pickup</div>
-          </div>
-          <div class="mock-card">
-            <div class="mock-card-header">
-              <span class="mock-card-title">Job 01-01282025-002</span>
-              <div><span class="mock-badge delivery">Delivery</span> <span class="mock-badge new">New</span></div>
-            </div>
-            <div class="mock-detail">Customer: ABC Manufacturing</div>
-            <div class="mock-detail">&#128205; 5678 Commerce Dr, Dallas TX</div>
-            <div class="mock-btn">Start Delivery</div>
-          </div>
-        </div>
-      </div>
-      <div class="screen-subtitle">Drivers see only their pickups and deliveries</div>
-    </div>
-
-    <!-- 4. Pickup Form (Driver fills out) -->
-    <div>
-      <div class="screen-mockup">
-        <div class="screen-bar">
-          <span>Pickup Form</span>
-          <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-        </div>
-        <div class="screen-body">
-          <div style="font-weight:600; font-size:1rem; margin-bottom:12px;">&#128666; Pickup Form</div>
-
-          <div class="mock-card" style="background:#f1f5f9;">
-            <div style="font-size:0.7rem; font-weight:600; color:var(--gray); text-transform:uppercase; margin-bottom:6px;">Job Information</div>
-            <div class="mock-detail">Job ID: 01-01302025-005</div>
-            <div class="mock-detail">Customer: XYZ Industries</div>
-            <div class="mock-detail">Address: 1234 Industrial Blvd, Houston TX</div>
-            <div class="mock-detail">Contact: Jane Doe &bull; (555) 987-6543</div>
-            <div class="annotation" style="margin-top:6px;">Pre-filled by CSR &mdash; read-only</div>
-          </div>
-
-          <div style="margin-top:14px;">
-            <div class="mock-field">
-              <label>Item Count *</label>
-              <div class="input" style="background:white; border:2px solid var(--primary);">3</div>
-            </div>
-            <div class="mock-field">
-              <label>Driver Notes</label>
-              <div class="mock-textarea">Picked up from loading dock B...</div>
-            </div>
-            <div class="annotation green">Driver only fills in these two fields</div>
-          </div>
-
-          <div class="mock-btn" style="margin-top:12px;">Submit Pickup</div>
-          <div class="annotation" style="margin-top:6px;">GPS captured automatically &bull; Works offline</div>
-        </div>
-      </div>
-      <div class="screen-subtitle">Minimal input &mdash; driver fills 2 fields, the rest is pre-filled</div>
-    </div>
-
-    <!-- 5. Emissions Form (expanded accordion) -->
-    <div>
-      <div class="screen-mockup">
-        <div class="screen-bar">
-          <span>Emissions Service Log</span>
-          <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-        </div>
-        <div class="screen-body">
-          <div style="font-weight:600; font-size:1rem; margin-bottom:12px;">&#128295; Emissions Service Log</div>
-
-          <div class="mock-card" style="background:#f1f5f9;">
-            <div style="font-size:0.7rem; font-weight:600; color:var(--gray); text-transform:uppercase; margin-bottom:6px;">Job Information</div>
-            <div class="mock-detail">Job ID: 01-01302025-003</div>
-            <div class="mock-detail">Customer: ABC Manufacturing</div>
-            <div class="mock-detail">Contact: John Smith &bull; (555) 123-4567</div>
-            <div class="mock-detail">Shop: Houston Main &bull; Tech: Mike R.</div>
-            <div class="annotation" style="margin-top:6px;">~20 pre-filled fields &mdash; read-only</div>
-          </div>
-
-          <div style="font-weight:600; font-size:0.9rem; margin:14px 0 8px;">Parts (3)</div>
-
-          <!-- Part 1 - EXPANDED -->
-          <div class="mock-accordion expanded">
-            <div class="mock-accordion-header">
-              <span>DPF &nbsp; &#9989;</span>
-              <span style="color:var(--gray); font-weight:400; font-size:0.8rem;">01-01302025-001 &nbsp; &#9660;</span>
-            </div>
-            <div class="mock-accordion-body">
-              <div style="background:#f1f5f9; border-radius:6px; padding:10px; margin:8px 0;">
-                <div style="font-size:0.65rem; font-weight:600; color:var(--gray); text-transform:uppercase; margin-bottom:4px;">CSR Pre-filled</div>
-                <div class="mock-detail">Process: DPF Cleaning</div>
-                <div class="mock-detail">Filter P/N: 5801655090</div>
-                <div class="mock-detail">OEM Manufacturer: Cummins</div>
-                <div class="annotation" style="margin-top:4px;">Read-only &mdash; CSR entered this</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; margin-bottom:14px;">
+              <div class="mock-card" style="text-align:center; padding:12px;">
+                <div style="font-size:1.5rem; font-weight:700; color:var(--primary);">24</div>
+                <div style="font-size:0.7rem; color:var(--gray);">Active Jobs</div>
               </div>
-              <div style="margin-top:10px;">
-                <div style="font-size:0.65rem; font-weight:600; color:var(--primary); text-transform:uppercase; margin-bottom:6px;">Technician Fills In</div>
-                <div class="mock-field">
-                  <label>ECS Part Number</label>
-                  <div class="input" style="background:white;">ECS-DPF-20250130-001</div>
+              <div class="mock-card" style="text-align:center; padding:12px;">
+                <div style="font-size:1.5rem; font-weight:700; color:#16a34a;">18</div>
+                <div style="font-size:0.7rem; color:var(--gray);">Completed Today</div>
+              </div>
+              <div class="mock-card" style="text-align:center; padding:12px;">
+                <div style="font-size:1.5rem; font-weight:700; color:#ea580c;">3</div>
+                <div style="font-size:0.7rem; color:var(--gray);">Pending Pickup</div>
+              </div>
+              <div class="mock-card" style="text-align:center; padding:12px;">
+                <div style="font-size:1.5rem; font-weight:700; color:#7c3aed;">5</div>
+                <div style="font-size:0.7rem; color:var(--gray);">Out for Delivery</div>
+              </div>
+            </div>
+
+            <div class="mock-card">
+              <div style="font-size:0.75rem; font-weight:600; color:var(--gray); text-transform:uppercase; margin-bottom:8px;">User Whitelist</div>
+              <div class="mock-detail">mike@ecsconnect.com &mdash; technician</div>
+              <div class="mock-detail">sarah@ecsconnect.com &mdash; csr</div>
+              <div class="mock-detail">tom@ecsconnect.com &mdash; driver</div>
+              <div class="annotation purple" style="margin-top:6px;">Admin manages roles &amp; user access</div>
+            </div>
+          </div>
+        </div>
+        <div class="device-stand"></div>
+        <div class="device-base"></div>
+        <div class="screen-subtitle">Admin has full access plus user management &amp; operational metrics</div>
+      </div>
+
+    </div>
+
+    <!-- ROW 3: Tablet — Technician dashboard + Emissions form -->
+    <div class="screens-row">
+
+      <!-- Tech Dashboard (tablet) -->
+      <div class="device-tablet">
+        <div class="device-label"><span>Tablet &mdash; Shop Floor</span></div>
+        <div class="screen-mockup">
+          <div class="screen-bar">
+            <span>Technician View</span>
+            <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+          </div>
+          <div class="screen-body">
+            <div class="mock-nav">
+              <div class="mock-nav-item active">My Jobs</div>
+            </div>
+            <div class="annotation blue">Tech sees only &ldquo;My Jobs&rdquo; &mdash; one nav item</div>
+            <div style="font-weight:600; font-size:1.1rem; margin:12px 0 4px;">My Jobs</div>
+            <div style="font-size:0.8rem; color:var(--gray); margin-bottom:16px;">Emissions service forms assigned to you</div>
+            <div class="mock-card">
+              <div class="mock-card-header">
+                <span class="mock-card-title">Job 01-01302025-003</span>
+                <span class="mock-badge new">New</span>
+              </div>
+              <div class="mock-detail">Customer: ABC Manufacturing</div>
+              <div class="mock-detail">Shop: Houston Main &bull; 3 parts</div>
+              <div class="mock-btn">Start Form</div>
+            </div>
+            <div class="mock-card">
+              <div class="mock-card-header">
+                <span class="mock-card-title">Job 01-01292025-001</span>
+                <span class="mock-badge progress">In Progress</span>
+              </div>
+              <div class="mock-detail">Customer: Delta Corp</div>
+              <div class="mock-detail">Shop: Houston Main &bull; 4 parts</div>
+              <div class="mock-btn">Continue Form</div>
+            </div>
+          </div>
+          <div class="device-home"></div>
+        </div>
+        <div class="screen-subtitle">Technicians see only their assigned emissions forms</div>
+      </div>
+
+      <!-- Emissions Form (tablet) -->
+      <div class="device-tablet">
+        <div class="device-label"><span>Tablet &mdash; Shop Floor</span></div>
+        <div class="screen-mockup">
+          <div class="screen-bar">
+            <span>Emissions Service Log</span>
+            <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+          </div>
+          <div class="screen-body">
+            <div style="font-weight:600; font-size:1rem; margin-bottom:12px;">&#128295; Emissions Service Log</div>
+
+            <div class="mock-card" style="background:#f1f5f9;">
+              <div style="font-size:0.7rem; font-weight:600; color:var(--gray); text-transform:uppercase; margin-bottom:6px;">Job Information</div>
+              <div class="mock-detail">Job ID: 01-01302025-003</div>
+              <div class="mock-detail">Customer: ABC Manufacturing</div>
+              <div class="mock-detail">Contact: John Smith &bull; (555) 123-4567</div>
+              <div class="mock-detail">Shop: Houston Main &bull; Tech: Mike R.</div>
+              <div class="annotation" style="margin-top:6px;">~20 pre-filled fields &mdash; read-only</div>
+            </div>
+
+            <div style="font-weight:600; font-size:0.9rem; margin:14px 0 8px;">Parts (3)</div>
+
+            <!-- Part 1 - EXPANDED -->
+            <div class="mock-accordion expanded">
+              <div class="mock-accordion-header">
+                <span>DPF &nbsp; &#9989;</span>
+                <span style="color:var(--gray); font-weight:400; font-size:0.8rem;">01-01302025-001 &nbsp; &#9660;</span>
+              </div>
+              <div class="mock-accordion-body">
+                <div style="background:#f1f5f9; border-radius:6px; padding:10px; margin:8px 0;">
+                  <div style="font-size:0.65rem; font-weight:600; color:var(--gray); text-transform:uppercase; margin-bottom:4px;">CSR Pre-filled</div>
+                  <div class="mock-detail">Process: DPF Cleaning</div>
+                  <div class="mock-detail">Filter P/N: 5801655090</div>
+                  <div class="mock-detail">OEM Manufacturer: Cummins</div>
+                  <div class="annotation" style="margin-top:4px;">Read-only &mdash; CSR entered this</div>
                 </div>
-                <div class="mock-field">
-                  <label>Pass or Fail *</label>
-                  <div class="mock-select">Fail &#9662;</div>
-                </div>
-                <div class="mock-field" style="background:#fef2f2; border-radius:6px; padding:8px; margin:-4px 0 12px;">
-                  <label style="color:#dc2626;">Failed Reason *</label>
-                  <div class="mock-select" style="border-color:#fca5a5;">Cracked substrate &#9662;</div>
-                  <div class="annotation" style="background:#fee2e2; color:#991b1b; margin-top:4px;">Appears only when &ldquo;Fail&rdquo; is selected</div>
-                </div>
-                <div class="mock-field">
-                  <label>Require Repairs?</label>
-                  <div class="mock-select">No &#9662;</div>
+                <div style="margin-top:10px;">
+                  <div style="font-size:0.65rem; font-weight:600; color:var(--primary); text-transform:uppercase; margin-bottom:6px;">Technician Fills In</div>
+                  <div class="mock-field">
+                    <label>ECS Part Number</label>
+                    <div class="input" style="background:white;">ECS-DPF-20250130-001</div>
+                  </div>
+                  <div class="mock-field">
+                    <label>Pass or Fail *</label>
+                    <div class="mock-select">Fail &#9662;</div>
+                  </div>
+                  <div class="mock-field" style="background:#fef2f2; border-radius:6px; padding:8px; margin:-4px 0 12px;">
+                    <label style="color:#dc2626;">Failed Reason *</label>
+                    <div class="mock-select" style="border-color:#fca5a5;">Cracked substrate &#9662;</div>
+                    <div class="annotation" style="background:#fee2e2; color:#991b1b; margin-top:4px;">Appears only when &ldquo;Fail&rdquo; is selected</div>
+                  </div>
+                  <div class="mock-field">
+                    <label>Require Repairs?</label>
+                    <div class="mock-select">No &#9662;</div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Part 2 - collapsed -->
-          <div class="mock-accordion">
-            <div class="mock-accordion-header">
-              <span>DOC</span>
-              <span style="color:var(--gray); font-weight:400; font-size:0.8rem;">01-01302025-002 &nbsp; &#9654;</span>
+            <!-- Part 2 - collapsed -->
+            <div class="mock-accordion">
+              <div class="mock-accordion-header">
+                <span>DOC</span>
+                <span style="color:var(--gray); font-weight:400; font-size:0.8rem;">01-01302025-002 &nbsp; &#9654;</span>
+              </div>
             </div>
-          </div>
-          <!-- Part 3 - collapsed -->
-          <div class="mock-accordion">
-            <div class="mock-accordion-header">
-              <span>SCR</span>
-              <span style="color:var(--gray); font-weight:400; font-size:0.8rem;">01-01302025-003 &nbsp; &#9654;</span>
+            <!-- Part 3 - collapsed -->
+            <div class="mock-accordion">
+              <div class="mock-accordion-header">
+                <span>SCR</span>
+                <span style="color:var(--gray); font-weight:400; font-size:0.8rem;">01-01302025-003 &nbsp; &#9654;</span>
+              </div>
             </div>
-          </div>
 
-          <div class="mock-field" style="margin-top:14px;">
-            <label>Additional Comments</label>
-            <div class="mock-textarea">Customer requested rush turnaround...</div>
-          </div>
+            <div class="mock-field" style="margin-top:14px;">
+              <label>Additional Comments</label>
+              <div class="mock-textarea">Customer requested rush turnaround...</div>
+            </div>
 
-          <div class="mock-btn" style="margin-top:8px;">Complete Service Log</div>
-          <div class="annotation" style="margin-top:6px;">GPS captured automatically &bull; Works offline</div>
+            <div class="mock-btn" style="margin-top:8px;">Complete Service Log</div>
+            <div class="annotation" style="margin-top:6px;">GPS captured automatically &bull; Works offline</div>
+          </div>
+          <div class="device-home"></div>
         </div>
+        <div class="screen-subtitle">Expanded part shows read-only CSR data + tech-editable fields</div>
       </div>
-      <div class="screen-subtitle">Expanded part shows read-only CSR data + tech-editable fields</div>
+
     </div>
 
-    <!-- 6. Admin View -->
-    <div>
-      <div class="screen-mockup">
-        <div class="screen-bar">
-          <span>Admin View</span>
-          <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-        </div>
-        <div class="screen-body">
-          <div class="mock-nav">
-            <div class="mock-nav-item">New Job</div>
-            <div class="mock-nav-item active">Dashboard</div>
-            <div class="mock-nav-item">Job List</div>
-            <div class="mock-nav-item">Parts List</div>
-          </div>
-          <div class="annotation green">Admin sees all CSR screens + admin tools</div>
-          <div style="font-weight:600; font-size:1rem; margin:12px 0 8px;">Dashboard</div>
+    <!-- ROW 4: Phone — Driver dashboard + Pickup form -->
+    <div class="screens-row">
 
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
-            <div class="mock-card" style="text-align:center; padding:12px;">
-              <div style="font-size:1.5rem; font-weight:700; color:var(--primary);">24</div>
-              <div style="font-size:0.7rem; color:var(--gray);">Active Jobs</div>
+      <!-- Driver Dashboard (phone) -->
+      <div class="device-phone">
+        <div class="device-label"><span>Phone &mdash; On the Road</span></div>
+        <div class="screen-mockup">
+          <div class="device-notch"></div>
+          <div class="screen-bar">
+            <span>Driver View</span>
+            <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+          </div>
+          <div class="screen-body">
+            <div class="mock-nav">
+              <div class="mock-nav-item active">My Routes</div>
             </div>
-            <div class="mock-card" style="text-align:center; padding:12px;">
-              <div style="font-size:1.5rem; font-weight:700; color:#16a34a;">18</div>
-              <div style="font-size:0.7rem; color:var(--gray);">Completed Today</div>
+            <div class="annotation blue">Driver sees only &ldquo;My Routes&rdquo;</div>
+            <div style="font-weight:600; font-size:1rem; margin:10px 0 4px;">My Pickups &amp; Deliveries</div>
+            <div style="font-size:0.75rem; color:var(--gray); margin-bottom:14px;">Assigned pickup and delivery forms</div>
+            <div class="mock-card">
+              <div class="mock-card-header">
+                <span class="mock-card-title" style="font-size:0.8rem;">01-01302025-005</span>
+                <div><span class="mock-badge pickup">Pickup</span></div>
+              </div>
+              <div class="mock-detail">XYZ Industries</div>
+              <div class="mock-detail">&#128205; 1234 Industrial Blvd</div>
+              <div class="mock-btn" style="font-size:0.75rem;">Start Pickup</div>
             </div>
-            <div class="mock-card" style="text-align:center; padding:12px;">
-              <div style="font-size:1.5rem; font-weight:700; color:#ea580c;">3</div>
-              <div style="font-size:0.7rem; color:var(--gray);">Pending Pickup</div>
-            </div>
-            <div class="mock-card" style="text-align:center; padding:12px;">
-              <div style="font-size:1.5rem; font-weight:700; color:#7c3aed;">5</div>
-              <div style="font-size:0.7rem; color:var(--gray);">Out for Delivery</div>
+            <div class="mock-card">
+              <div class="mock-card-header">
+                <span class="mock-card-title" style="font-size:0.8rem;">01-01282025-002</span>
+                <div><span class="mock-badge delivery">Delivery</span></div>
+              </div>
+              <div class="mock-detail">ABC Manufacturing</div>
+              <div class="mock-detail">&#128205; 5678 Commerce Dr</div>
+              <div class="mock-btn" style="font-size:0.75rem;">Start Delivery</div>
             </div>
           </div>
-
-          <div class="mock-card">
-            <div style="font-size:0.75rem; font-weight:600; color:var(--gray); text-transform:uppercase; margin-bottom:8px;">User Whitelist</div>
-            <div class="mock-detail">mike@ecsconnect.com &mdash; technician</div>
-            <div class="mock-detail">sarah@ecsconnect.com &mdash; csr</div>
-            <div class="mock-detail">tom@ecsconnect.com &mdash; driver</div>
-            <div class="annotation purple" style="margin-top:6px;">Admin manages roles &amp; user access</div>
-          </div>
+          <div class="device-home"></div>
         </div>
+        <div class="screen-subtitle">Drivers see pickups and deliveries</div>
       </div>
-      <div class="screen-subtitle">Admin has full access plus user management &amp; metrics</div>
+
+      <!-- Pickup Form (phone) -->
+      <div class="device-phone">
+        <div class="device-label"><span>Phone &mdash; At Customer Site</span></div>
+        <div class="screen-mockup">
+          <div class="device-notch"></div>
+          <div class="screen-bar">
+            <span>Pickup Form</span>
+            <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+          </div>
+          <div class="screen-body">
+            <div style="font-weight:600; font-size:0.95rem; margin-bottom:10px;">&#128666; Pickup Form</div>
+
+            <div class="mock-card" style="background:#f1f5f9; padding:10px;">
+              <div style="font-size:0.65rem; font-weight:600; color:var(--gray); text-transform:uppercase; margin-bottom:4px;">Job Info</div>
+              <div class="mock-detail">Job: 01-01302025-005</div>
+              <div class="mock-detail">XYZ Industries</div>
+              <div class="mock-detail">1234 Industrial Blvd</div>
+              <div class="annotation" style="margin-top:4px; font-size:0.6rem;">Pre-filled by CSR &mdash; read-only</div>
+            </div>
+
+            <div style="margin-top:12px;">
+              <div class="mock-field">
+                <label>Item Count *</label>
+                <div class="input" style="background:white; border:2px solid var(--primary); font-size:0.8rem;">3</div>
+              </div>
+              <div class="mock-field">
+                <label>Driver Notes</label>
+                <div class="mock-textarea" style="font-size:0.75rem; min-height:36px;">Loading dock B...</div>
+              </div>
+              <div class="annotation green" style="font-size:0.6rem;">Driver fills only these 2 fields</div>
+            </div>
+
+            <div class="mock-btn" style="margin-top:10px; font-size:0.75rem;">Submit Pickup</div>
+            <div class="annotation" style="margin-top:5px; font-size:0.6rem;">GPS auto-captured &bull; Works offline</div>
+          </div>
+          <div class="device-home"></div>
+        </div>
+        <div class="screen-subtitle">Minimal input &mdash; 2 fields, the rest is pre-filled</div>
+      </div>
+
     </div>
 
   </div>
