@@ -8,6 +8,7 @@ import { jobTrackerService } from "./services/jobTracker";
 import { referenceDataService } from "./services/referenceData";
 import { jobEventsService } from "./services/jobEvents";
 import { setupAuth, isAuthenticated, getRequestUserId, requireUserId, getRequestUserEmail, getRequestUserName, syncClerkUser } from "./clerkAuth";
+import { formDispatchService } from "./services/formDispatch";
 import { webhookService, webhookMetrics } from "./services/webhook";
 import { updatePartsFromSubmission, handleAdditionalComments } from "./services/parts-update";
 import { processCompletedSubmission } from "./services/submissionProcessor";
@@ -2343,6 +2344,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error reordering tabs:", error);
       res.status(500).json({ message: "Failed to reorder tabs" });
+    }
+  });
+
+  // ============ Form Submissions API (Native replacement for GoCanvas) ============
+
+  // Create a new form dispatch
+  app.post("/api/form-submissions", isAuthenticated, async (req: any, res) => {
+    try {
+      const { jobId, formType, assignedTo } = req.body;
+      const assignedBy = await getRequestUserEmail(req) || requireUserId(req);
+
+      if (!jobId || !formType || !assignedTo) {
+        return res.status(400).json({ message: "jobId, formType, and assignedTo are required" });
+      }
+
+      const submission = await formDispatchService.createDispatch(
+        formType,
+        jobId,
+        assignedTo,
+        assignedBy,
+      );
+
+      res.status(201).json(submission);
+    } catch (error) {
+      console.error("Error creating form dispatch:", error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to create dispatch" });
+    }
+  });
+
+  // Get forms assigned to a user (for tech/driver mobile dashboard)
+  app.get("/api/form-submissions/assigned/:email", isAuthenticated, async (req: any, res) => {
+    try {
+      const { email } = req.params;
+      const submissions = await storage.getFormSubmissionsAssignedTo(email);
+      res.json(submissions);
+    } catch (error) {
+      console.error("Error fetching assigned forms:", error);
+      res.status(500).json({ message: "Failed to fetch assigned forms" });
+    }
+  });
+
+  // Get form submissions for a job
+  app.get("/api/form-submissions/job/:jobId", isAuthenticated, async (req: any, res) => {
+    try {
+      const { jobId } = req.params;
+      const submissions = await storage.getFormSubmissionsByJob(jobId);
+      res.json(submissions);
+    } catch (error) {
+      console.error("Error fetching job form submissions:", error);
+      res.status(500).json({ message: "Failed to fetch form submissions" });
+    }
+  });
+
+  // Get a single form submission
+  app.get("/api/form-submissions/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const submission = await storage.getFormSubmission(id);
+      if (!submission) {
+        return res.status(404).json({ message: "Form submission not found" });
+      }
+      res.json(submission);
+    } catch (error) {
+      console.error("Error fetching form submission:", error);
+      res.status(500).json({ message: "Failed to fetch form submission" });
+    }
+  });
+
+  // Mark form as in progress (tech/driver opened it)
+  app.patch("/api/form-submissions/:id/start", isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const submission = await formDispatchService.startSubmission(id);
+      res.json(submission);
+    } catch (error) {
+      console.error("Error starting form submission:", error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to start submission" });
+    }
+  });
+
+  // Complete a form submission (tech/driver submits their data)
+  app.post("/api/form-submissions/:id/complete", isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { responseData, gps, deviceInfo, offline } = req.body;
+
+      if (!responseData) {
+        return res.status(400).json({ message: "responseData is required" });
+      }
+
+      const submission = await formDispatchService.completeSubmission(
+        id,
+        responseData,
+        gps,
+        deviceInfo,
+        offline,
+      );
+
+      res.json(submission);
+    } catch (error) {
+      console.error("Error completing form submission:", error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to complete submission" });
     }
   });
 

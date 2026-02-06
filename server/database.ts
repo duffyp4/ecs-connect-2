@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { Pool, neonConfig } from "@neondatabase/serverless";
-import { jobs, technicians, jobEvents, users, whitelist, jobComments, jobParts, ecsSerialTracking, jobListTabs, type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent, type User, type UpsertUser, type Whitelist, type InsertWhitelist, type JobComment, type InsertJobComment, type JobPart, type InsertJobPart, type JobListTab, type InsertJobListTab } from "@shared/schema";
+import { jobs, technicians, jobEvents, users, whitelist, jobComments, jobParts, ecsSerialTracking, jobListTabs, formSubmissions, type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent, type User, type UpsertUser, type Whitelist, type InsertWhitelist, type JobComment, type InsertJobComment, type JobPart, type InsertJobPart, type JobListTab, type InsertJobListTab, type FormSubmission, type InsertFormSubmission } from "@shared/schema";
 import { eq, desc, and, sql as drizzleSql } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { IStorage } from "./storage";
@@ -496,6 +496,43 @@ export class DatabaseStorage implements IStorage {
         .set({ position: i, updatedAt: new Date() })
         .where(and(eq(jobListTabs.id, tabIds[i]), eq(jobListTabs.userId, userId)));
     }
+  }
+
+  // Form Submission methods
+  async createFormSubmission(submission: InsertFormSubmission): Promise<FormSubmission> {
+    const result = await this.db.insert(formSubmissions).values({
+      id: randomUUID(),
+      ...submission,
+    }).returning();
+    return result[0];
+  }
+
+  async getFormSubmission(id: string): Promise<FormSubmission | undefined> {
+    const result = await this.db.select().from(formSubmissions).where(eq(formSubmissions.id, id));
+    return result[0];
+  }
+
+  async getFormSubmissionsByJob(jobId: string): Promise<FormSubmission[]> {
+    return await this.db.select().from(formSubmissions)
+      .where(eq(formSubmissions.jobId, jobId))
+      .orderBy(desc(formSubmissions.dispatchedAt));
+  }
+
+  async getFormSubmissionsAssignedTo(email: string): Promise<FormSubmission[]> {
+    return await this.db.select().from(formSubmissions)
+      .where(and(
+        eq(formSubmissions.assignedTo, email),
+        // Only return active (non-completed) submissions
+      ))
+      .orderBy(desc(formSubmissions.dispatchedAt));
+  }
+
+  async updateFormSubmission(id: string, updates: Partial<FormSubmission>): Promise<FormSubmission | undefined> {
+    const result = await this.db.update(formSubmissions)
+      .set(updates)
+      .where(eq(formSubmissions.id, id))
+      .returning();
+    return result[0];
   }
 
   // Initialize with sample technicians if none exist

@@ -1,4 +1,4 @@
-import { type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent, type User, type UpsertUser, type Whitelist, type InsertWhitelist, type JobComment, type InsertJobComment, type JobPart, type InsertJobPart, type JobListTab, type InsertJobListTab } from "@shared/schema";
+import { type Job, type InsertJob, type Technician, type InsertTechnician, type JobEvent, type InsertJobEvent, type User, type UpsertUser, type Whitelist, type InsertWhitelist, type JobComment, type InsertJobComment, type JobPart, type InsertJobPart, type JobListTab, type InsertJobListTab, type FormSubmission, type InsertFormSubmission } from "@shared/schema";
 import { DatabaseStorage, type WhitelistWithRole } from "./database";
 
 export interface IStorage {
@@ -62,6 +62,13 @@ export interface IStorage {
   updateTab(id: string, updates: Partial<JobListTab>): Promise<JobListTab | undefined>;
   deleteTab(id: string): Promise<void>;
   reorderTabs(userId: string, tabIds: string[]): Promise<void>;
+
+  // Form Submission methods
+  createFormSubmission(submission: InsertFormSubmission): Promise<FormSubmission>;
+  getFormSubmission(id: string): Promise<FormSubmission | undefined>;
+  getFormSubmissionsByJob(jobId: string): Promise<FormSubmission[]>;
+  getFormSubmissionsAssignedTo(email: string): Promise<FormSubmission[]>;
+  updateFormSubmission(id: string, updates: Partial<FormSubmission>): Promise<FormSubmission | undefined>;
 }
 
 export const storage = new DatabaseStorage();

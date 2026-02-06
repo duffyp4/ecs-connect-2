@@ -531,3 +531,65 @@ export const insertJobListTabSchema = createInsertSchema(jobListTabs).omit({
 
 export type InsertJobListTab = z.infer<typeof insertJobListTabSchema>;
 export type JobListTab = typeof jobListTabs.$inferSelect;
+
+// Form Submissions - replaces GoCanvas dispatch/webhook round-trip with native forms
+export const formSubmissionTypes = ["emissions", "pickup", "delivery"] as const;
+export type FormSubmissionType = typeof formSubmissionTypes[number];
+
+export const formSubmissionStatuses = ["dispatched", "in_progress", "completed"] as const;
+export type FormSubmissionStatus = typeof formSubmissionStatuses[number];
+
+export const formSubmissions = pgTable("form_submissions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  jobId: varchar("job_id", { length: 50 }).notNull(), // ECS-formatted job ID
+  formType: text("form_type").$type<FormSubmissionType>().notNull(), // emissions, pickup, delivery
+  status: text("status").$type<FormSubmissionStatus>().notNull().default("dispatched"),
+
+  // Assignment
+  assignedTo: text("assigned_to").notNull(), // email of tech/driver
+  assignedBy: text("assigned_by").notNull(), // email of CSR who dispatched
+
+  // Form data
+  prefilledData: jsonb("prefilled_data"), // Read-only fields pre-populated from job
+  responseData: jsonb("response_data"), // Tech/driver-filled fields (submitted form data)
+
+  // GPS capture
+  gpsLatitude: text("gps_latitude"),
+  gpsLongitude: text("gps_longitude"),
+  gpsAccuracy: text("gps_accuracy"),
+  gpsTimestamp: timestamp("gps_timestamp"),
+
+  // Timestamps
+  dispatchedAt: timestamp("dispatched_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  syncedAt: timestamp("synced_at"), // when offline submission was synced to server
+
+  // Device info
+  deviceInfo: jsonb("device_info"), // { platform, userAgent, screen, etc. }
+  offlineSubmission: text("offline_submission").default("false"), // was this submitted offline?
+});
+
+export const insertFormSubmissionSchema = createInsertSchema(formSubmissions).omit({
+  id: true,
+  dispatchedAt: true,
+  startedAt: true,
+  completedAt: true,
+  syncedAt: true,
+}).extend({
+  jobId: z.string().min(1, "Job ID is required"),
+  formType: z.enum(formSubmissionTypes),
+  status: z.enum(formSubmissionStatuses).optional(),
+  assignedTo: z.string().email("Valid email required for assigned tech/driver"),
+  assignedBy: z.string().min(1, "Assigned by is required"),
+  prefilledData: z.record(z.unknown()).optional(),
+  responseData: z.record(z.unknown()).optional(),
+  gpsLatitude: z.string().optional(),
+  gpsLongitude: z.string().optional(),
+  gpsAccuracy: z.string().optional(),
+  deviceInfo: z.record(z.unknown()).optional(),
+  offlineSubmission: z.string().optional(),
+});
+
+export type InsertFormSubmission = z.infer<typeof insertFormSubmissionSchema>;
+export type FormSubmission = typeof formSubmissions.$inferSelect;
