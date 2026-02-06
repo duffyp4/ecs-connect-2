@@ -1,5 +1,6 @@
 import { storage } from "../storage";
 import { jobEventsService } from "./jobEvents";
+import { notificationService } from "./notificationService";
 import type { FormSubmissionType, InsertFormSubmission, FormSubmission, Job, JobPart } from "@shared/schema";
 
 /**
@@ -49,6 +50,14 @@ class FormDispatchService {
       actorEmail: assignedBy,
       metadata: { formSubmissionId: submission.id },
     });
+
+    // Send real-time notification to the assigned tech/driver
+    notificationService.notifyFormAssigned(
+      assignedTo,
+      String(submission.id),
+      jobId,
+      formType,
+    );
 
     return submission;
   }
