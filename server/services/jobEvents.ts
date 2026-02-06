@@ -1,6 +1,9 @@
 import { storage } from '../storage';
 import { type Job, type InsertJobEvent } from '@shared/schema';
 import { goCanvasService, type FormType } from './gocanvas';
+import { formDispatchService } from './formDispatch';
+
+const USE_NATIVE_FORMS = process.env.USE_NATIVE_FORMS === 'true';
 
 // Job state type definition
 export type JobState = 
@@ -244,8 +247,29 @@ export class JobEventsService {
       throw new Error(`Cannot dispatch pickup: job is in ${job.state} state, must be in queued_for_pickup`);
     }
 
-    // Try to create GoCanvas dispatch FIRST
-    // This ensures we only update the database if GoCanvas accepts the dispatch
+    if (USE_NATIVE_FORMS) {
+      // Native forms: create form_submission and notify via WebSocket
+      const actorEmail = options.actorEmail || 'system';
+      const submission = await formDispatchService.createDispatch(
+        'pickup',
+        job.jobId,
+        params.driverEmail,
+        actorEmail,
+      );
+
+      // Update job with driver info
+      await storage.updateJob(job.id, {
+        pickupDriverEmail: params.driverEmail,
+        pickupNotes: params.pickupNotes || '',
+        updatedAt: new Date(),
+      });
+
+      const updatedJob = await storage.getJobByJobId(jobId);
+      if (!updatedJob) throw new Error(`Failed to get updated job ${jobId}`);
+      return updatedJob;
+    }
+
+    // GoCanvas dispatch path (legacy)
     let dispatchId: string;
     try {
       console.log('🚀 Attempting GoCanvas pickup dispatch BEFORE updating database...');
@@ -273,12 +297,12 @@ export class JobEventsService {
       console.log(`✅ GoCanvas pickup dispatch successful: ${dispatchId}`);
     } catch (gocanvasError) {
       console.error("❌ GoCanvas pickup dispatch failed:", gocanvasError);
-      
+
       // Throw error with clear message - do NOT update the database
-      const errorMessage = gocanvasError instanceof Error 
-        ? gocanvasError.message 
+      const errorMessage = gocanvasError instanceof Error
+        ? gocanvasError.message
         : "Failed to dispatch to GoCanvas";
-      
+
       throw new Error(`Cannot dispatch pickup: GoCanvas dispatch failed. ${errorMessage}. The job has NOT been dispatched. Please verify the driver email is valid in GoCanvas and try again.`);
     }
 
@@ -309,11 +333,11 @@ export class JobEventsService {
 
     // Get updated job
     const updatedJob = await storage.getJobByJobId(jobId);
-    
+
     if (!updatedJob) {
       throw new Error(`Failed to get updated job ${jobId}`);
     }
-    
+
     return updatedJob;
   }
 
@@ -502,8 +526,41 @@ export class JobEventsService {
       throw new Error(`Cannot dispatch delivery: job is in ${job.state} state, must be in service_complete or queued_for_delivery`);
     }
 
-    // Try to create GoCanvas dispatch FIRST
-    // This ensures we only update the database if GoCanvas accepts the dispatch
+    if (USE_NATIVE_FORMS) {
+      // Native forms: create form_submission and notify via WebSocket
+      const actorEmail = options.actorEmail || 'system';
+      const submission = await formDispatchService.createDispatch(
+        'delivery',
+        job.jobId,
+        deliveryData.driverEmail,
+        actorEmail,
+      );
+
+      // Update job with delivery info
+      await storage.updateJob(job.id, {
+        deliveryDriverEmail: deliveryData.driverEmail,
+        deliveryAddress: deliveryData.deliveryAddress,
+        deliveryNotes: deliveryData.deliveryNotes,
+        orderNumber: deliveryData.orderNumber,
+        orderNumber2: deliveryData.orderNumber2,
+        orderNumber3: deliveryData.orderNumber3,
+        orderNumber4: deliveryData.orderNumber4,
+        orderNumber5: deliveryData.orderNumber5,
+        updatedAt: new Date(),
+      });
+
+      // Transition to queued_for_delivery (skip if already in that state)
+      let updatedJob: Job;
+      if (job.state === 'queued_for_delivery') {
+        updatedJob = (await storage.getJobByJobId(jobId))!;
+      } else {
+        updatedJob = await this.transitionJobState(jobId, 'queued_for_delivery', options);
+      }
+
+      return { job: updatedJob, dispatchId: submission.id };
+    }
+
+    // GoCanvas dispatch path (legacy)
     let dispatchId: string;
     try {
       console.log('🚀 Attempting GoCanvas delivery dispatch BEFORE updating database...');
@@ -537,12 +594,12 @@ export class JobEventsService {
       console.log(`✅ GoCanvas delivery dispatch successful: ${dispatchId}`);
     } catch (gocanvasError) {
       console.error("❌ GoCanvas delivery dispatch failed:", gocanvasError);
-      
+
       // Throw error with clear message - do NOT update the database
-      const errorMessage = gocanvasError instanceof Error 
-        ? gocanvasError.message 
+      const errorMessage = gocanvasError instanceof Error
+        ? gocanvasError.message
         : "Failed to dispatch to GoCanvas";
-      
+
       throw new Error(`Cannot dispatch delivery: GoCanvas dispatch failed. ${errorMessage}. The job has NOT been dispatched. Please verify the driver email is valid in GoCanvas and try again.`);
     }
 

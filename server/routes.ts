@@ -787,50 +787,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Job not found after update" });
       }
       
-      // STEP 1: Try to create GoCanvas dispatch FIRST
-      // This ensures we only check in if GoCanvas accepts the dispatch
-      let submissionId: string | null = null;
-      try {
-        console.log('🚀 Attempting GoCanvas dispatch BEFORE checking in...');
-        submissionId = await goCanvasService.dispatchEmissionsForm(refreshedJob, storage);
-        
-        // Check if dispatch was actually successful
-        // Handle both string and non-string return values safely
-        const submissionIdStr = String(submissionId || '');
-        if (!submissionId || submissionIdStr.startsWith('skip-')) {
-          throw new Error('GoCanvas dispatch was skipped or failed - check GoCanvas credentials and configuration');
+      const USE_NATIVE_FORMS = process.env.USE_NATIVE_FORMS === 'true';
+
+      let updatedJob;
+      if (USE_NATIVE_FORMS) {
+        // Native forms: create form_submission and notify via WebSocket
+        const actorEmail = await getRequestUserEmail(req) || 'system';
+        const submission = await formDispatchService.createDispatch(
+          'emissions',
+          refreshedJob.jobId,
+          shopHandoff,
+          actorEmail,
+        );
+
+        // Check in the job
+        updatedJob = await jobEventsService.checkInAtShop(refreshedJob.jobId, {
+          metadata: {
+            userId: validationResult.data.userId || refreshedJob.userId,
+            shopHandoff: shopHandoff,
+            formSubmissionId: submission.id,
+          },
+        });
+      } else {
+        // GoCanvas dispatch path (legacy)
+        let submissionId: string | null = null;
+        try {
+          console.log('🚀 Attempting GoCanvas dispatch BEFORE checking in...');
+          submissionId = await goCanvasService.dispatchEmissionsForm(refreshedJob, storage);
+
+          const submissionIdStr = String(submissionId || '');
+          if (!submissionId || submissionIdStr.startsWith('skip-')) {
+            throw new Error('GoCanvas dispatch was skipped or failed - check GoCanvas credentials and configuration');
+          }
+
+          console.log(`✅ GoCanvas dispatch successful: ${submissionId}`);
+        } catch (gocanvasError) {
+          console.error("❌ GoCanvas dispatch failed:", gocanvasError);
+
+          const errorMessage = gocanvasError instanceof Error
+            ? gocanvasError.message
+            : "Failed to dispatch to GoCanvas";
+
+          return res.status(500).json({
+            message: `Cannot check in: GoCanvas dispatch failed. ${errorMessage}`,
+            details: "The job has NOT been checked in. Please verify the technician email is valid in GoCanvas and try again."
+          });
         }
-        
-        console.log(`✅ GoCanvas dispatch successful: ${submissionId}`);
-      } catch (gocanvasError) {
-        console.error("❌ GoCanvas dispatch failed:", gocanvasError);
-        
-        // Return error to user - do NOT check in the job
-        const errorMessage = gocanvasError instanceof Error 
-          ? gocanvasError.message 
-          : "Failed to dispatch to GoCanvas";
-        
-        return res.status(500).json({
-          message: `Cannot check in: GoCanvas dispatch failed. ${errorMessage}`,
-          details: "The job has NOT been checked in. Please verify the technician email is valid in GoCanvas and try again."
+
+        updatedJob = await jobEventsService.checkInAtShop(refreshedJob.jobId, {
+          metadata: {
+            userId: validationResult.data.userId || refreshedJob.userId,
+            shopHandoff: shopHandoff,
+          },
+        });
+
+        await storage.updateJob(updatedJob.id, {
+          gocanvasDispatchId: submissionId,
+          gocanvasSynced: "true",
         });
       }
       
-      // STEP 2: Only if GoCanvas succeeded, update job status and create event
-      const updatedJob = await jobEventsService.checkInAtShop(refreshedJob.jobId, {
-        metadata: {
-          userId: validationResult.data.userId || refreshedJob.userId,
-          shopHandoff: shopHandoff,
-        },
-      });
-      
-      // STEP 3: Update GoCanvas sync status
-      await storage.updateJob(updatedJob.id, {
-        gocanvasDispatchId: submissionId,
-        gocanvasSynced: "true",
-      });
-      
-      console.log(`✅ Job ${updatedJob.jobId} checked in successfully with GoCanvas submission ${submissionId}`);
+      console.log(`✅ Job ${updatedJob.jobId} checked in successfully (${USE_NATIVE_FORMS ? 'native forms' : 'GoCanvas'})`);
       
       // Extract "Note to Tech about Customer or service:" and add as job comment
       // Check both req.body (from form submission) and refreshedJob (from database)

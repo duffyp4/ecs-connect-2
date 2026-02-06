@@ -49,10 +49,11 @@
 - [x] Server-side processing in formDispatch.ts
 
 ## Phase 4: Migration & Cutover
-- [ ] Add USE_NATIVE_FORMS feature flag
-- [ ] Update jobEvents.ts to use formDispatch when flag enabled
-- [ ] Update check-in-modal.tsx for native dispatch
-- [ ] Update delivery-dispatch-modal.tsx for native dispatch
+- [x] Add USE_NATIVE_FORMS feature flag
+- [x] Update jobEvents.ts to use formDispatch when flag enabled
+- [x] Update routes.ts check-in endpoint for native dispatch
+- [ ] Update check-in-modal.tsx for native dispatch (no client changes needed - server handles routing)
+- [ ] Update delivery-dispatch-modal.tsx for native dispatch (no client changes needed - server handles routing)
 - [ ] Parallel operation logging
 - [ ] CSR portal shows native submission status
 
