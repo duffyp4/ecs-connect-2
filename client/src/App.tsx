@@ -16,6 +16,7 @@ import TechDashboard from "@/pages/tech-dashboard";
 import DriverDashboard from "@/pages/driver-dashboard";
 import PickupForm from "@/pages/pickup-form";
 import DeliveryForm from "@/pages/delivery-form";
+import EmissionsForm from "@/pages/emissions-form";
 import { Landing } from "@/pages/landing";
 import { AccessDenied } from "@/pages/access-denied";
 import Layout from "@/components/layout";
@@ -49,6 +50,7 @@ function AuthenticatedApp() {
         <Route path="/driver" component={DriverDashboard} />
         <Route path="/pickup-form/:id" component={PickupForm} />
         <Route path="/delivery-form/:id" component={DeliveryForm} />
+        <Route path="/emissions-form/:id" component={EmissionsForm} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
@@ -91,6 +93,7 @@ function Router() {
           <Route path="/driver" component={DriverDashboard} />
           <Route path="/pickup-form/:id" component={PickupForm} />
           <Route path="/delivery-form/:id" component={DeliveryForm} />
+        <Route path="/emissions-form/:id" component={EmissionsForm} />
           <Route component={NotFound} />
         </Switch>
       </Layout>

@@ -32,21 +32,21 @@
 - [x] Create client/src/lib/offlineQueue.ts (IndexedDB-backed)
 - [x] Create client/src/lib/gpsCapture.ts
 - [x] Create server/services/notificationService.ts (WebSocket)
-- [ ] Create client/src/pages/tech-dashboard.tsx
-- [ ] Create client/src/pages/driver-dashboard.tsx
-- [ ] Create client/src/components/forms/pickup-form.tsx
-- [ ] Create client/src/components/forms/delivery-form.tsx
-- [ ] Add /tech and /driver routes to App.tsx
+- [x] Create client/src/pages/tech-dashboard.tsx
+- [x] Create client/src/pages/driver-dashboard.tsx
+- [x] Create client/src/pages/pickup-form.tsx
+- [x] Create client/src/pages/delivery-form.tsx
+- [x] Add /tech and /driver routes to App.tsx
 - [ ] Test offline submission + sync
 
 ## Phase 3: Emissions Service Log Form
-- [ ] Create client/src/components/forms/emissions-service-form.tsx
-- [ ] Create client/src/components/forms/parts-loop-section.tsx
-- [ ] Implement read-only CSR section (~20 pre-filled fields)
-- [ ] Implement parts loop with useFieldArray
-- [ ] Add collapsible accordion per part for mobile UX
-- [ ] GPS auto-capture on submit
-- [ ] Server-side processing in formDispatch.ts
+- [x] Create client/src/pages/emissions-form.tsx
+- [x] Create client/src/components/forms/parts-loop-section.tsx
+- [x] Implement read-only CSR section (~20 pre-filled fields)
+- [x] Implement parts loop with collapsible accordion
+- [x] Add collapsible accordion per part for mobile UX
+- [x] GPS auto-capture on submit
+- [x] Server-side processing in formDispatch.ts
 
 ## Phase 4: Migration & Cutover
 - [ ] Add USE_NATIVE_FORMS feature flag
