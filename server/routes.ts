@@ -7,28 +7,28 @@ import { googleSheetsService } from "./services/googleSheets";
 import { jobTrackerService } from "./services/jobTracker";
 import { referenceDataService } from "./services/referenceData";
 import { jobEventsService } from "./services/jobEvents";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated, getRequestUserId, requireUserId, getRequestUserEmail, getRequestUserName, syncClerkUser } from "./clerkAuth";
 import { webhookService, webhookMetrics } from "./services/webhook";
 import { updatePartsFromSubmission, handleAdditionalComments } from "./services/parts-update";
 import { processCompletedSubmission } from "./services/submissionProcessor";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup Replit Auth
+  // Setup Clerk Auth
   await setupAuth(app);
 
   // Middleware to check if user is admin
   const isAdmin = async (req: any, res: any, next: any) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getRequestUserId(req);
       if (!userId) {
         return res.status(401).json({ message: "Not authenticated" });
       }
-      
+
       const user = await storage.getUser(userId);
       if (!user || user.role !== 'admin') {
         return res.status(403).json({ message: "Admin access required" });
       }
-      
+
       next();
     } catch (error) {
       console.error("Error checking admin status:", error);
@@ -36,23 +36,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   };
 
-  // Auth routes - get authenticated user info
+  // Auth routes - get authenticated user info (also syncs Clerk user to our DB)
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      
+      // Sync Clerk user to local database (creates if first login)
+      const user = await syncClerkUser(req);
+      if (!user) {
+        return res.status(403).json({ message: "Access denied - not whitelisted" });
+      }
+
       // Also fetch whitelist entry to get job role and homeShop
       let whitelistRole = null;
       let homeShop = null;
-      if (user?.email) {
+      if (user.email) {
         const whitelistEntry = await storage.getWhitelistByEmail(user.email);
         if (whitelistEntry) {
           whitelistRole = whitelistEntry.role;
           homeShop = whitelistEntry.homeShop;
         }
       }
-      
+
       res.json({
         ...user,
         whitelistRole,
@@ -67,7 +70,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update user timezone preference
   app.patch('/api/auth/user/timezone', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = requireUserId(req);
       const { timezone } = req.body;
       
       if (!timezone) {
@@ -106,7 +109,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validRoles = ['driver', 'technician', 'csr', 'admin'];
       const userRole = role && validRoles.includes(role) ? role : 'csr';
 
-      const userId = req.user.claims.sub;
+      const userId = requireUserId(req);
       const entry = await storage.addToWhitelist({ email, role: userRole, homeShop, addedBy: userId });
       res.json(entry);
     } catch (error: any) {
@@ -564,7 +567,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/jobs", isAuthenticated, async (req, res) => {
     try {
       const { arrivalPath, pickupDriverEmail, pickupNotes, shipmentNotes, shipmentCarrier, shipmentTrackingNumber, shipmentExpectedArrival, ...jobData } = req.body;
-      const userId = req.user?.claims?.sub;
+      const userId = requireUserId(req);
       
       // Validate using appropriate schema based on arrival path
       // Shipment uses same schema as pickup (same fields, but no driver dispatch)
@@ -632,7 +635,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           eventType: 'state_change',
           description: 'Inbound shipment job created - awaiting arrival',
           actor: 'CSR',
-          actorEmail: req.user?.claims?.email as string || undefined,
+          actorEmail: await getRequestUserEmail(req) || undefined,
           metadata: {
             newState: 'shipment_inbound',
             carrier: shipmentCarrier || undefined,
@@ -672,7 +675,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { jobId } = req.params;
       const { driverEmail, pickupNotes } = req.body;
-      const userId = req.user.claims.sub;
+      const userId = requireUserId(req);
       
       if (!driverEmail) {
         return res.status(400).json({ message: "Driver email is required" });
@@ -833,13 +836,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const noteToTech = req.body.noteToTechAboutCustomer || refreshedJob.noteToTechAboutCustomer;
       if (noteToTech && noteToTech.trim()) {
         try {
-          const user = req.user as any;
-          // User claims contain first_name/last_name from OIDC
-          const firstName = user?.claims?.first_name;
-          const lastName = user?.claims?.last_name;
-          const userName = firstName && lastName 
-            ? `${firstName} ${lastName}` 
-            : user?.claims?.email || 'system';
+          const userName = await getRequestUserName(req);
           
           await storage.createJobComment({
             jobId: updatedJob.jobId,
@@ -936,7 +933,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         expectedArrival,
         shippingNotes
       } = req.body;
-      const userId = req.user?.claims?.sub;
+      const userId = requireUserId(req);
 
       const job = await storage.getJobByJobId(jobId);
       if (!job) {
@@ -966,7 +963,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         eventType: 'outbound_shipment',
         description: `Job marked as shipped${carrier ? ` via ${carrier}` : ''}${trackingNumber ? ` (Tracking: ${trackingNumber})` : ''}`,
         actor: 'CSR',
-        actorEmail: req.user?.claims?.email as string || undefined,
+        actorEmail: await getRequestUserEmail(req) || undefined,
       });
 
       // Save shipping notes as a comment if provided
@@ -1016,7 +1013,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // For direct delivery jobs, we set placeholder values for required fields
       // that aren't applicable to this workflow
       // Note: Job ID is auto-generated from shopName in database.ts
-      const userEmail = req.user?.claims?.email as string || 'unknown';
+      const userEmail = await getRequestUserEmail(req) || 'unknown';
       const jobData = {
         shopName,
         customerName,
@@ -1051,7 +1048,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Add delivery notes as a comment if provided
-      const userId = req.user?.claims?.sub as string || 'unknown';
+      const userId = requireUserId(req);
       if (deliveryNotes && deliveryNotes.trim()) {
         await storage.createJobComment({
           jobId: createdJob.jobId,
@@ -1104,7 +1101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Add delivery notes as a comment if provided
-      const userId = req.user.claims.sub;
+      const userId = requireUserId(req);
       if (deliveryNotes && deliveryNotes.trim()) {
         await storage.createJobComment({
           jobId: job.jobId,
@@ -1226,7 +1223,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { jobId } = req.params;
       const { commentText } = req.body;
-      const userId = req.user.claims.sub;
+      const userId = requireUserId(req);
       
       if (!commentText || !commentText.trim()) {
         return res.status(400).json({ message: "Comment text is required" });
@@ -1388,7 +1385,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get user's whitelist role and homeShop for access control
       let effectiveShop = shop;
-      const userId = req.user?.claims?.sub;
+      const userId = requireUserId(req);
       if (userId) {
         const user = await storage.getUser(userId);
         if (user?.email) {
@@ -1670,7 +1667,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get user's whitelist role and homeShop for access control
       let effectiveShop = shop;
-      const userId = req.user?.claims?.sub;
+      const userId = requireUserId(req);
       if (userId) {
         const user = await storage.getUser(userId);
         if (user?.email) {
@@ -2265,7 +2262,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's tabs
   app.get("/api/user/tabs", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.email || req.user.claims.sub;
+      const userId = await getRequestUserEmail(req) || requireUserId(req);
       const tabs = await storage.getUserTabs(userId);
       res.json(tabs);
     } catch (error) {
@@ -2277,7 +2274,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new tab
   app.post("/api/user/tabs", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.email || req.user.claims.sub;
+      const userId = await getRequestUserEmail(req) || requireUserId(req);
       const { name, filters, isPinned, position } = req.body;
       
       const tab = await storage.createTab({
@@ -2334,7 +2331,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Reorder tabs
   app.post("/api/user/tabs/reorder", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.email || req.user.claims.sub;
+      const userId = await getRequestUserEmail(req) || requireUserId(req);
       const { tabIds } = req.body;
       
       if (!Array.isArray(tabIds)) {

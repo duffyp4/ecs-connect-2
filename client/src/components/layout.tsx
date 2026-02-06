@@ -14,6 +14,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { useDevMode } from "@/contexts/DevModeContext";
 import { Switch } from "@/components/ui/switch";
+import { SignOutButton } from "@clerk/clerk-react";
+
+const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -110,13 +113,22 @@ export default function Layout({ children }: LayoutProps) {
                   </Link>
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem 
-                onClick={handleLogout}
-                data-testid="button-logout"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </DropdownMenuItem>
+              {CLERK_PUBLISHABLE_KEY ? (
+                <SignOutButton>
+                  <DropdownMenuItem data-testid="button-logout">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Logout
+                  </DropdownMenuItem>
+                </SignOutButton>
+              ) : (
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  data-testid="button-logout"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

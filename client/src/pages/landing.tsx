@@ -1,5 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SignIn } from "@clerk/clerk-react";
+
+const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 export function Landing() {
   const handleLogin = () => {
@@ -19,28 +22,34 @@ export function Landing() {
           </p>
         </div>
 
-        {/* Login Card */}
-        <Card className="border-2 border-[var(--ecs-primary)]">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Welcome Back</CardTitle>
-            <CardDescription>
-              Sign in to access your dashboard and manage jobs
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center space-y-4">
-            <Button 
-              onClick={handleLogin}
-              size="lg"
-              className="btn-primary w-full max-w-sm"
-              data-testid="button-login"
-            >
-              Sign In
-            </Button>
-            <p className="text-sm text-muted-foreground text-center">
-              Use your Google, GitHub, or email account to sign in
-            </p>
-          </CardContent>
-        </Card>
+        {/* Login */}
+        {CLERK_PUBLISHABLE_KEY ? (
+          <div className="flex justify-center">
+            <SignIn routing="hash" />
+          </div>
+        ) : (
+          <Card className="border-2 border-[var(--ecs-primary)]">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl">Welcome Back</CardTitle>
+              <CardDescription>
+                Sign in to access your dashboard and manage jobs
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center space-y-4">
+              <Button
+                onClick={handleLogin}
+                size="lg"
+                className="btn-primary w-full max-w-sm"
+                data-testid="button-login"
+              >
+                Sign In (Dev Mode)
+              </Button>
+              <p className="text-sm text-muted-foreground text-center">
+                Development mode - click to auto-login
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

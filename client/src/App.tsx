@@ -16,11 +16,13 @@ import { Landing } from "@/pages/landing";
 import { AccessDenied } from "@/pages/access-denied";
 import Layout from "@/components/layout";
 import { DevModeProvider } from "@/contexts/DevModeContext";
+import { ClerkProvider, SignedIn, SignedOut } from "@clerk/clerk-react";
 
-function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-  // Show loading state while checking authentication
+function AuthenticatedApp() {
+  const { isLoading } = useAuth();
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -29,17 +31,6 @@ function Router() {
     );
   }
 
-  // Show login page if not authenticated
-  if (!isAuthenticated) {
-    return (
-      <Switch>
-        <Route path="/access-denied" component={AccessDenied} />
-        <Route component={Landing} />
-      </Switch>
-    );
-  }
-
-  // Show main app if authenticated
   return (
     <Layout>
       <Switch>
@@ -56,8 +47,62 @@ function Router() {
   );
 }
 
-function App() {
+function Router() {
+  // When Clerk is not configured (dev mode), bypass Clerk entirely
+  if (!CLERK_PUBLISHABLE_KEY) {
+    const { isAuthenticated, isLoading } = useAuth();
+
+    if (isLoading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        </div>
+      );
+    }
+
+    if (!isAuthenticated) {
+      return (
+        <Switch>
+          <Route path="/access-denied" component={AccessDenied} />
+          <Route component={Landing} />
+        </Switch>
+      );
+    }
+
+    return (
+      <Layout>
+        <Switch>
+          <Route path="/" component={Home} />
+          <Route path="/dashboard" component={Dashboard} />
+          <Route path="/jobs" component={JobList} />
+          <Route path="/parts" component={PartsList} />
+          <Route path="/jobs/:id" component={JobDetail} />
+          <Route path="/settings" component={Settings} />
+          <Route path="/admin" component={AdminPage} />
+          <Route component={NotFound} />
+        </Switch>
+      </Layout>
+    );
+  }
+
+  // With Clerk configured, use Clerk's SignedIn/SignedOut components
   return (
+    <>
+      <SignedOut>
+        <Switch>
+          <Route path="/access-denied" component={AccessDenied} />
+          <Route component={Landing} />
+        </Switch>
+      </SignedOut>
+      <SignedIn>
+        <AuthenticatedApp />
+      </SignedIn>
+    </>
+  );
+}
+
+function App() {
+  const content = (
     <QueryClientProvider client={queryClient}>
       <DevModeProvider>
         <TooltipProvider>
@@ -67,6 +112,17 @@ function App() {
       </DevModeProvider>
     </QueryClientProvider>
   );
+
+  // Wrap with ClerkProvider only if key is available
+  if (CLERK_PUBLISHABLE_KEY) {
+    return (
+      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+        {content}
+      </ClerkProvider>
+    );
+  }
+
+  return content;
 }
 
 export default App;
