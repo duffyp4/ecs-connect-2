@@ -54,7 +54,7 @@ export const RepairAssessmentSection = React.memo(
           name={`parts.${partIndex}.requireRepairs`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Did the Part Require Repairs?</FormLabel>
+              <FormLabel required>Did the Part Require Repairs?</FormLabel>
               <FormControl>
                 <Select onValueChange={field.onChange} value={field.value || ""}>
                   <SelectTrigger>
@@ -82,7 +82,7 @@ export const RepairAssessmentSection = React.memo(
               name={`parts.${partIndex}.repairsPerformed`}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Which Repairs Were Performed</FormLabel>
+                  <FormLabel required>Which Repairs Were Performed</FormLabel>
                   <div className="space-y-2">
                     {REPAIRS_PERFORMED_OPTIONS.map((option) => {
                       const isChecked = selectedRepairs.has(option);

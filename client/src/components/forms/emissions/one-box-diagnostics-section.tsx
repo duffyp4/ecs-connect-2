@@ -56,7 +56,7 @@ export const OneBoxDiagnosticsSection = React.memo(
           name={`parts.${partIndex}.noxConversionPercent`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>NOx Conversion %</FormLabel>
+              <FormLabel required>NOx Conversion %</FormLabel>
               <FormControl>
                 <Input
                   type="number"
@@ -137,7 +137,7 @@ export const OneBoxDiagnosticsSection = React.memo(
           name={`parts.${partIndex}.hasPhysicalDamage`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Does the One Box have any physical damage?</FormLabel>
+              <FormLabel required>Does the One Box have any physical damage?</FormLabel>
               <FormControl>
                 <Select onValueChange={field.onChange} value={field.value || ""}>
                   <SelectTrigger>
@@ -167,7 +167,7 @@ export const OneBoxDiagnosticsSection = React.memo(
           name={`parts.${partIndex}.wereSensorsRemoved`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Were any sensors removed from the box?</FormLabel>
+              <FormLabel required>Were any sensors removed from the box?</FormLabel>
               <FormControl>
                 <Select onValueChange={field.onChange} value={field.value || ""}>
                   <SelectTrigger>
@@ -255,7 +255,7 @@ export const OneBoxDiagnosticsSection = React.memo(
           name={`parts.${partIndex}.hasCrystallization`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Is There Crystallization?</FormLabel>
+              <FormLabel required>Is There Crystallization?</FormLabel>
               <FormControl>
                 <Select onValueChange={field.onChange} value={field.value || ""}>
                   <SelectTrigger>

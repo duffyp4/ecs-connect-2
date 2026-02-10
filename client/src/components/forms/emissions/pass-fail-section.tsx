@@ -47,7 +47,7 @@ export const PassFailSection = React.memo(
           name={`parts.${partIndex}.passOrFail`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Did the Part Pass or Fail?</FormLabel>
+              <FormLabel required>Did the Part Pass or Fail?</FormLabel>
               <FormControl>
                 <Select onValueChange={field.onChange} value={field.value || ""}>
                   <SelectTrigger>
@@ -75,7 +75,7 @@ export const PassFailSection = React.memo(
               name={`parts.${partIndex}.failedReason`}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Failed Reason</FormLabel>
+                  <FormLabel required>Failed Reason</FormLabel>
                   <FormControl>
                     <Select
                       onValueChange={field.onChange}
@@ -125,7 +125,7 @@ export const PassFailSection = React.memo(
           name={`parts.${partIndex}.submissionStatus`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Submission Status</FormLabel>
+              <FormLabel required>Submission Status</FormLabel>
               <FormControl>
                 <Select onValueChange={field.onChange} value={field.value || ""}>
                   <SelectTrigger>

@@ -37,7 +37,7 @@ export const SealingCanisterSection = React.memo(
           name={`parts.${partIndex}.sealingRingCondition`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Inlet & Outlet Sealing Ring</FormLabel>
+              <FormLabel required>Inlet & Outlet Sealing Ring</FormLabel>
               <FormControl>
                 <Select onValueChange={field.onChange} value={field.value || ""}>
                   <SelectTrigger>
@@ -64,7 +64,7 @@ export const SealingCanisterSection = React.memo(
           name={`parts.${partIndex}.canisterCondition`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Canister Inspection</FormLabel>
+              <FormLabel required>Canister Inspection</FormLabel>
               <FormControl>
                 <Select onValueChange={field.onChange} value={field.value || ""}>
                   <SelectTrigger>

@@ -170,7 +170,7 @@ export const BungFittingSection = React.memo(
           name={`parts.${partIndex}.bungCondition`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Bung & Fitting Condition</FormLabel>
+              <FormLabel required>Bung & Fitting Condition</FormLabel>
               <FormControl>
                 <Select onValueChange={field.onChange} value={field.value || ""}>
                   <SelectTrigger>

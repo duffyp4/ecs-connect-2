@@ -71,7 +71,7 @@ export function SignOffSection({ control, shopName, partsCount }: SignOffSection
           name="technicianName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Technician Name *</FormLabel>
+              <FormLabel required>Technician Name</FormLabel>
               <FormControl>
                 <Select onValueChange={field.onChange} value={field.value || ""}>
                   <SelectTrigger>

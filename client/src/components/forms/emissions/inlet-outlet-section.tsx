@@ -54,7 +54,7 @@ export const InletOutletSection = React.memo(
             name={`parts.${partIndex}.inletColor`}
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Inlet Color & Condition</FormLabel>
+                <FormLabel required>Inlet Color & Condition</FormLabel>
                 <FormControl>
                   <Select onValueChange={field.onChange} value={field.value || ""}>
                     <SelectTrigger>
@@ -152,7 +152,7 @@ export const InletOutletSection = React.memo(
             name={`parts.${partIndex}.outletColor`}
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Outlet Color & Condition</FormLabel>
+                <FormLabel required>Outlet Color & Condition</FormLabel>
                 <FormControl>
                   <Select onValueChange={field.onChange} value={field.value || ""}>
                     <SelectTrigger>

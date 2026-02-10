@@ -35,7 +35,7 @@ export const CollectorSection = React.memo(
           name={`parts.${partIndex}.collectorCondition`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Collector Condition</FormLabel>
+              <FormLabel required>Collector Condition</FormLabel>
               <FormControl>
                 <Select onValueChange={field.onChange} value={field.value || ""}>
                   <SelectTrigger>

@@ -298,7 +298,7 @@ export default function PickupForm() {
                 name="itemCount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Item Count *</FormLabel>
+                    <FormLabel required>Item Count</FormLabel>
                     <FormControl>
                       <Input type="number" min={1} {...field} />
                     </FormControl>

@@ -81,7 +81,7 @@ export const MeasurementsSection = React.memo(
             name={`parts.${partIndex}.weightPreKg`}
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Weight (KG) - PRE Cleaning</FormLabel>
+                <FormLabel required>Weight (KG) - PRE Cleaning</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -101,7 +101,7 @@ export const MeasurementsSection = React.memo(
             name={`parts.${partIndex}.flowRatePre`}
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Flow Rate - PRE Cleaning</FormLabel>
+                <FormLabel required>Flow Rate - PRE Cleaning</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -124,7 +124,7 @@ export const MeasurementsSection = React.memo(
             name={`parts.${partIndex}.weightPostKg`}
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Weight (KG) - Post Cleaning</FormLabel>
+                <FormLabel required>Weight (KG) - Post Cleaning</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -144,7 +144,7 @@ export const MeasurementsSection = React.memo(
             name={`parts.${partIndex}.flowRatePost`}
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Flow Rate - Post Cleaning</FormLabel>
+                <FormLabel required>Flow Rate - Post Cleaning</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -167,7 +167,7 @@ export const MeasurementsSection = React.memo(
             name={`parts.${partIndex}.weightSinteredKg`}
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Weight (KG) - POST SINTERED ASH</FormLabel>
+                <FormLabel required>Weight (KG) - POST SINTERED ASH</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -187,7 +187,7 @@ export const MeasurementsSection = React.memo(
             name={`parts.${partIndex}.flowRateSintered`}
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Flow Rate - POST SINTERED ASH</FormLabel>
+                <FormLabel required>Flow Rate - POST SINTERED ASH</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -234,7 +234,7 @@ export const MeasurementsSection = React.memo(
           name={`parts.${partIndex}.lightTest`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Light Test</FormLabel>
+              <FormLabel required>Light Test</FormLabel>
               <FormControl>
                 <Select onValueChange={field.onChange} value={field.value || ""}>
                   <SelectTrigger>
@@ -259,7 +259,7 @@ export const MeasurementsSection = React.memo(
           name={`parts.${partIndex}.dropRodTest`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Drop Rod Test</FormLabel>
+              <FormLabel required>Drop Rod Test</FormLabel>
               <FormControl>
                 <Select onValueChange={field.onChange} value={field.value || ""}>
                   <SelectTrigger>
@@ -284,7 +284,7 @@ export const MeasurementsSection = React.memo(
           name={`parts.${partIndex}.sinteredAshProcess`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Did You Perform The Sintered Ash Process?</FormLabel>
+              <FormLabel required>Did You Perform The Sintered Ash Process?</FormLabel>
               <FormControl>
                 <Select onValueChange={field.onChange} value={field.value || ""}>
                   <SelectTrigger>

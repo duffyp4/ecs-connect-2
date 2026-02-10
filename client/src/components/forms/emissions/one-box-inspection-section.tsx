@@ -45,7 +45,7 @@ export const OneBoxInspectionSection = React.memo(
           name={`parts.${partIndex}.preCleaningScrSmokeTest`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Pre Cleaning SCR Smoke Test</FormLabel>
+              <FormLabel required>Pre Cleaning SCR Smoke Test</FormLabel>
               <FormControl>
                 <Select onValueChange={field.onChange} value={field.value || ""}>
                   <SelectTrigger>
@@ -73,7 +73,7 @@ export const OneBoxInspectionSection = React.memo(
           name={`parts.${partIndex}.preCleaningDocSmokeTest`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Pre Cleaning DOC Smoke Test</FormLabel>
+              <FormLabel required>Pre Cleaning DOC Smoke Test</FormLabel>
               <FormControl>
                 <Select onValueChange={field.onChange} value={field.value || ""}>
                   <SelectTrigger>
@@ -105,7 +105,7 @@ export const OneBoxInspectionSection = React.memo(
           name={`parts.${partIndex}.postCleaningScrSmokeTest`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Post Cleaning SCR Smoke Test</FormLabel>
+              <FormLabel required>Post Cleaning SCR Smoke Test</FormLabel>
               <FormControl>
                 <Select onValueChange={field.onChange} value={field.value || ""}>
                   <SelectTrigger>
@@ -133,7 +133,7 @@ export const OneBoxInspectionSection = React.memo(
           name={`parts.${partIndex}.postCleaningDocSmokeTest`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Post Cleaning DOC Smoke Test</FormLabel>
+              <FormLabel required>Post Cleaning DOC Smoke Test</FormLabel>
               <FormControl>
                 <Select onValueChange={field.onChange} value={field.value || ""}>
                   <SelectTrigger>

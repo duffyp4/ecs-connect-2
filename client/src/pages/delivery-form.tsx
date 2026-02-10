@@ -340,7 +340,7 @@ export default function DeliveryForm() {
                 name="deliveredTo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Delivered To *</FormLabel>
+                    <FormLabel required>Delivered To</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Name of person who received delivery"

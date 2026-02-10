@@ -156,7 +156,7 @@ export const GasketClampSection = React.memo(
           name={`parts.${partIndex}.gasketOrClamps`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Gasket or Clamps</FormLabel>
+              <FormLabel required>Gasket or Clamps</FormLabel>
               <FormControl>
                 <Select onValueChange={field.onChange} value={field.value || ""}>
                   <SelectTrigger>

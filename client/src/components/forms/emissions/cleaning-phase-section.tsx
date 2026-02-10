@@ -31,7 +31,7 @@ export const CleaningPhaseSection = React.memo(
           name={`parts.${partIndex}.cleaningPhase`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Cleaning Phase</FormLabel>
+              <FormLabel required>Cleaning Phase</FormLabel>
               <FormControl>
                 <Select onValueChange={field.onChange} value={field.value || ""}>
                   <SelectTrigger>
