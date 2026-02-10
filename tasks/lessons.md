@@ -20,6 +20,8 @@ _Record decisions made and why, so future sessions understand the rationale._
 - **Reference data tables**: Fetched separately via `GET /reference_data/{id}`. Some are huge (Customer List = 11,594 rows, Parts Cross-Reference = 3,471 rows).
 - **To get full picture**: Must fetch both flat + nested, merge flat type metadata into nested entries, then fetch all referenced ref data tables. The `dumpGoCanvasForm.js` script does this automatically.
 
+- **Service worker bypasses server-side middleware**: Workbox's `navigateFallback: "index.html"` intercepts all navigation requests and serves cached HTML before they reach the server. Any server-side gate (staging password, maintenance mode) gets bypassed after the SW installs. Fix: add a client-side check (`/api/staging-check`) + redirect to a URL on the SW's `navigateFallbackDenylist` so it hits the server.
+
 ## Patterns That Work
 
 - **`!!prefill.x && (<JSX>)` for unknown conditionals**: When `prefill` is `Record<string, unknown>`, you must coerce to boolean with `!!` before using `&&` in JSX. Otherwise TS sees `unknown | ReactElement` which isn't valid `ReactNode`. Use `String(prefill.x)` (not `as string`) for rendering text from unknown values.
