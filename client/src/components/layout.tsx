@@ -100,6 +100,7 @@ export default function Layout({ children }: LayoutProps) {
   }, {}) ?? {};
 
   const roleOrder = ["admin", "csr", "technician", "driver"];
+  const roleLabels: Record<string, string> = { admin: "Admin", csr: "CSR", technician: "Technician", driver: "Driver" };
   const sortedRoles = Object.keys(groupedPersonas).sort(
     (a, b) => (roleOrder.indexOf(a) === -1 ? 99 : roleOrder.indexOf(a)) - (roleOrder.indexOf(b) === -1 ? 99 : roleOrder.indexOf(b))
   );
@@ -282,7 +283,7 @@ export default function Layout({ children }: LayoutProps) {
                     </SelectItem>
                     {sortedRoles.map((role) => (
                       <SelectGroup key={role}>
-                        <SelectLabel className="capitalize text-xs">{role}</SelectLabel>
+                        <SelectLabel className="text-xs">{roleLabels[role] || role}</SelectLabel>
                         {groupedPersonas[role].map((entry) => (
                           <SelectItem key={entry.email} value={entry.email}>
                             <span className="truncate">
