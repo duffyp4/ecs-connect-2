@@ -62,6 +62,13 @@ export default function Layout({ children }: LayoutProps) {
     }
   }, [isDevMode]);
 
+  // Guard: persona should never be active when dev mode is off
+  useEffect(() => {
+    if (!isDevMode && personaEmail) {
+      clearPersona();
+    }
+  }, [isDevMode, personaEmail, clearPersona]);
+
   // Fetch persona list when dev tools are shown
   const { data: personas } = useQuery<WhitelistEntry[]>({
     queryKey: ["/api/dev/personas"],
