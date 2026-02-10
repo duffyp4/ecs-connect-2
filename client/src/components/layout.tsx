@@ -108,6 +108,13 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-[var(--ecs-light)]">
+      {/* Dev Mode top banner — thin stripe + label, distinct from pill badges */}
+      {isDevMode && (
+        <div className="bg-amber-500 text-white text-[11px] font-semibold tracking-wide text-center py-0.5 select-none">
+          DEV MODE {personaEmail ? `— ${personaEmail}` : ""}
+        </div>
+      )}
+
       {/* Navigation */}
       <nav className="bg-white border-b border-[var(--border)] px-4">
         <div className="flex h-14 items-center justify-between">
@@ -126,11 +133,6 @@ export default function Layout({ children }: LayoutProps) {
             <span className="font-semibold text-[var(--ecs-primary)] text-sm sm:text-base lg:text-lg">
               ECS Connect
             </span>
-            {personaEmail && (
-              <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-medium">
-                Persona
-              </span>
-            )}
           </div>
 
           <DropdownMenu>
@@ -153,7 +155,6 @@ export default function Layout({ children }: LayoutProps) {
                 <>
                   <div className="px-2 py-1.5 text-sm text-muted-foreground">
                     {user.email}
-                    {personaEmail && <span className="ml-1 text-amber-600">(persona)</span>}
                   </div>
                   {whitelistRole && (
                     <div className="px-2 py-0.5 text-xs text-muted-foreground capitalize">
@@ -256,8 +257,8 @@ export default function Layout({ children }: LayoutProps) {
                 </p>
               )}
 
-              {/* Persona Switcher */}
-              <div className="p-2 rounded-md bg-muted/50">
+              {/* Persona Switcher — only when dev mode is on */}
+              {isDevMode && <div className="p-2 rounded-md bg-muted/50">
                 <div className="flex items-center space-x-2 mb-2">
                   <Users className="h-4 w-4 text-muted-foreground" />
                   <span className="text-xs font-medium text-muted-foreground">Switch Persona</span>
@@ -296,7 +297,7 @@ export default function Layout({ children }: LayoutProps) {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </div>}
             </div>
           )}
         </aside>
