@@ -1,7 +1,10 @@
 /**
  * Test data generators for dev-mode "Fill Test Data" buttons.
  * Each generator returns a flat object compatible with React Hook Form's setValue()/reset().
- * Uses actual reference data arrays so dropdown values are valid.
+ *
+ * The emissions generator is config-driven: it iterates EMISSIONS_FIELD_CONFIG
+ * so field names, section visibility, and conditional logic stay in sync with the
+ * form schema and components automatically.
  */
 
 import {
@@ -29,16 +32,14 @@ import {
   YES_NO,
   REPAIRS_PERFORMED_OPTIONS,
   SENSORS_REMOVED_OPTIONS,
+  FAILED_REASONS,
 } from "./emissions-reference-data";
 
 import {
-  showCleaningPhase,
-  showOneBoxDiagnostics,
-  showCrystallization,
-  showInletOutlet,
-  showSealingCanister,
-  showMeasurements,
-} from "./emissions-form-config";
+  EMISSIONS_FIELD_CONFIG,
+  isSectionVisible,
+  type FieldDef,
+} from "./emissions-form-fields";
 
 // ─── Helpers ────────────────────────────────────
 
@@ -52,6 +53,62 @@ function randInt(min: number, max: number): number {
 
 function timestamp(): string {
   return new Date().toLocaleTimeString();
+}
+
+/** Maps config option keys to the actual reference-data arrays. */
+const REFERENCE_DATA_MAP: Record<string, readonly string[]> = {
+  YES_NO,
+  PASS_FAIL,
+  CLEANING_PHASES,
+  SMOKE_TEST_OPTIONS,
+  INLET_COLORS,
+  OUTLET_COLORS,
+  DAMAGE_TYPES,
+  SEALING_RING_CONDITIONS,
+  CANISTER_CONDITIONS,
+  BUNG_CONDITIONS,
+  BUNG_PROBLEMS,
+  FITTING_QUANTITIES,
+  EC_EG_EK_QUANTITIES,
+  COLLECTOR_CONDITIONS,
+  LEAKING_CELLS_OPTIONS,
+  LIGHT_TEST_OPTIONS,
+  DROP_ROD_TEST_OPTIONS,
+  SUBMISSION_STATUSES,
+  FAILED_REASONS,
+  REPAIRS_PERFORMED_OPTIONS,
+  SENSORS_REMOVED_OPTIONS,
+};
+
+/** Generate a test value for a single field based on its config hints. */
+function generateFieldValue(field: FieldDef, index: number): string | boolean {
+  if (field.type === "boolean") return false;
+
+  if (field.options) {
+    const arr = REFERENCE_DATA_MAP[field.options];
+    if (arr) return pick(arr);
+  }
+
+  if (field.range) {
+    return `${randInt(field.range[0], field.range[1])}`;
+  }
+
+  if (field.template) {
+    return field.template.replace(/\{i\}/g, `${index + 1}`);
+  }
+
+  return "";
+}
+
+/** Check whether a field-level condition is satisfied. */
+function matchesCondition(
+  value: unknown,
+  equals: string | boolean | string[],
+): boolean {
+  if (Array.isArray(equals)) {
+    return equals.includes(value as string);
+  }
+  return value === equals;
 }
 
 // ─── Pickup ─────────────────────────────────────
@@ -77,181 +134,55 @@ export function generateDeliveryTestData() {
 function generatePartTestData(index: number) {
   const partType = pick(PART_TYPES);
   const process = pick(PROCESS_TYPES);
+  const part: Record<string, string | boolean> = {};
+
+  // 1. Initialise every field with its default (ensures hidden-section fields exist)
+  for (const section of EMISSIONS_FIELD_CONFIG) {
+    for (const field of section.fields) {
+      part[field.name] = field.type === "boolean" ? false : "";
+    }
+  }
+
+  // 2. Generate values for all fields in visible sections
+  for (const section of EMISSIONS_FIELD_CONFIG) {
+    if (!isSectionVisible(section, partType, process)) continue;
+    for (const field of section.fields) {
+      part[field.name] = generateFieldValue(field, index);
+    }
+  }
+
+  // 3. Clear conditionally-hidden fields (second pass, in config order so
+  //    cascaded dependencies resolve correctly)
+  for (const section of EMISSIONS_FIELD_CONFIG) {
+    if (!isSectionVisible(section, partType, process)) continue;
+    for (const field of section.fields) {
+      if (
+        field.visibleWhen &&
+        !matchesCondition(part[field.visibleWhen.field], field.visibleWhen.equals)
+      ) {
+        part[field.name] = field.type === "boolean" ? false : "";
+      }
+    }
+  }
+
+  // 4. Custom overrides for fields that need non-generic logic
+
+  // Part identification — random serial/part numbers
+  part.ecsSerial = `[TEST] ECS-${1000 + index}`;
+  part.ecsPartNumber = `PN-${randInt(10000, 99999)}`;
+  part.partDescription = `[TEST] ${partType} unit - ${process}`;
+  part.oeSerialNumber = `OE-${randInt(100000, 999999)}`;
+
+  // Bung fitting — pick a fitting object for linked PN + description
   const fitting = pick(FITTING_PART_NUMBERS);
-
-  const part: Record<string, string | boolean> = {
-    // Identification — leave ecsSerial alone (prefilled from job data)
-    ecsSerial: `[TEST] ECS-${1000 + index}`,
-    ecsPartNumber: `PN-${randInt(10000, 99999)}`,
-    partDescription: `[TEST] ${partType} unit - ${process}`,
-    oeSerialNumber: `OE-${randInt(100000, 999999)}`,
-
-    // Always-visible sections
-    // Bung & Fitting
-    bungCondition: pick(BUNG_CONDITIONS),
-    showRecommendedBungs: "",
-    bungProblem: pick(BUNG_PROBLEMS),
-    firstFittingQty: pick(FITTING_QUANTITIES),
-    firstFittingPn: fitting.pn,
-    firstFittingDesc: fitting.description,
-    additionalFittingNeeded: "No",
-    secondFittingQty: "",
-    secondFittingPn: "",
-    secondFittingDesc: "",
-    thirdFittingNeeded: "",
-    thirdFittingQty: "",
-    thirdFittingPn: "",
-    thirdFittingDesc: "",
-    bungFittingComment: `[TEST] Bung fitting comment for part ${index + 1}`,
-
-    // Collector
-    collectorCondition: pick(COLLECTOR_CONDITIONS),
-    collectorComment: "",
-
-    // Gasket & Clamps
-    gasketOrClamps: pick(YES_NO),
-    showRecommendedGaskets: "",
-    ecChecked: false,
-    egChecked: false,
-    ekChecked: false,
-    ecQuantity: "",
-    egQuantity: "",
-    ekQuantity: "",
-    ecPn1: "", ecDesc1: "", ecPn2: "", ecDesc2: "", ecPn3: "", ecDesc3: "",
-    egPn1: "", egDesc1: "", egPn2: "", egDesc2: "", egPn3: "", egDesc3: "",
-    ekPn1: "", ekDesc1: "", ekPn2: "", ekDesc2: "", ekPn3: "", ekDesc3: "",
-
-    // Repair Assessment
-    requireRepairs: pick(YES_NO),
-    repairsPerformed: pick(REPAIRS_PERFORMED_OPTIONS),
-    repairDescription: `[TEST] Repair notes for part ${index + 1}`,
-
-    // Pass/Fail
-    passOrFail: pick(PASS_FAIL),
-    failedReason: "",
-    failureNotes: "",
-    submissionStatus: pick(SUBMISSION_STATUSES),
-    additionalPartComments: `[TEST] Additional comments for part ${index + 1}`,
-    showAdditionalComments: "",
-
-    // One Box fields — default empty
-    noxConversion: "",
-    docInletTemp: "",
-    docOutletTemp: "",
-    dpfOutletTemp: "",
-    physicalDamage: "",
-    sensorsRemoved: "",
-    sensorsRemovedList: "",
-    repairDescriptionOneBox: "",
-    crystallization: "",
-    crystallizationDescription: "",
-
-    // Smoke tests — default empty
-    preScrSmokeTest: "",
-    preDocSmokeTest: "",
-    postScrSmokeTest: "",
-    postDocSmokeTest: "",
-    needsSensors: "",
-    selectedSensors: "",
-
-    // Inlet/Outlet — default empty
-    inletColor: "",
-    inletOtherColor: "",
-    inletDamage: "",
-    inletComment: "",
-    outletColor: "",
-    outletOtherColor: "",
-    outletDamage: "",
-    outletLeakingCells: "",
-    outletComment: "",
-
-    // Sealing & Canister — default empty
-    sealingRing: "",
-    canisterInspection: "",
-
-    // Cleaning — default empty
-    cleaningPhase: "",
-
-    // Measurements — default empty
-    weightPreKg: "",
-    flowRatePre: "",
-    weightPostKg: "",
-    flowRatePost: "",
-    weightSinteredKg: "",
-    flowRateSintered: "",
-    lightTest: "",
-    dropRodTest: "",
-    sinteredAshProcess: "",
-  };
-
-  // ── Conditionally fill sections based on part type + process ──
-
-  if (showCleaningPhase(process)) {
-    part.cleaningPhase = pick(CLEANING_PHASES);
+  if (part.firstFittingQuantity) {
+    part.firstFittingPartNumber = fitting.pn;
+    part.firstFittingDescription = fitting.description;
   }
 
-  if (showOneBoxDiagnostics(partType)) {
-    part.noxConversion = `${randInt(50, 99)}`;
-    part.docInletTemp = `${randInt(200, 600)}`;
-    part.docOutletTemp = `${randInt(200, 600)}`;
-    part.dpfOutletTemp = `${randInt(200, 600)}`;
-    part.physicalDamage = pick(YES_NO);
-    part.sensorsRemoved = pick(SENSORS_REMOVED_OPTIONS);
-    part.sensorsRemovedList = "";
-    part.repairDescriptionOneBox = `[TEST] One box repair for part ${index + 1}`;
-
-    // Smoke tests are part of one-box inspection
-    part.preScrSmokeTest = pick(SMOKE_TEST_OPTIONS);
-    part.preDocSmokeTest = pick(SMOKE_TEST_OPTIONS);
-    part.postScrSmokeTest = pick(SMOKE_TEST_OPTIONS);
-    part.postDocSmokeTest = pick(SMOKE_TEST_OPTIONS);
-    part.needsSensors = pick(YES_NO);
-    part.selectedSensors = "";
-  }
-
-  if (showCrystallization(partType)) {
-    part.crystallization = pick(YES_NO);
-    part.crystallizationDescription = part.crystallization === "Yes"
-      ? `[TEST] Crystallization found on part ${index + 1}`
-      : "";
-  }
-
-  if (showInletOutlet(partType, process)) {
-    part.inletColor = pick(INLET_COLORS);
-    part.inletDamage = pick(DAMAGE_TYPES);
-    part.inletComment = `[TEST] Inlet comment for part ${index + 1}`;
-    part.outletColor = pick(OUTLET_COLORS);
-    part.outletDamage = pick(DAMAGE_TYPES);
-    part.outletLeakingCells = pick(LEAKING_CELLS_OPTIONS);
-    part.outletComment = `[TEST] Outlet comment for part ${index + 1}`;
-  }
-
-  if (showSealingCanister(partType, process)) {
-    part.sealingRing = pick(SEALING_RING_CONDITIONS);
-    part.canisterInspection = pick(CANISTER_CONDITIONS);
-  }
-
-  if (showMeasurements(partType, process)) {
-    part.weightPreKg = `${randInt(5, 25)}`;
-    part.flowRatePre = `${randInt(100, 500)}`;
-    part.weightPostKg = `${randInt(3, 20)}`;
-    part.flowRatePost = `${randInt(150, 550)}`;
-    part.weightSinteredKg = `${randInt(2, 15)}`;
-    part.flowRateSintered = `${randInt(200, 600)}`;
-    part.lightTest = pick(LIGHT_TEST_OPTIONS);
-    part.dropRodTest = pick(DROP_ROD_TEST_OPTIONS);
-    part.sinteredAshProcess = pick(YES_NO);
-  }
-
-  // If passOrFail is "Fail", add a reason
-  if (part.passOrFail === "Fail") {
-    // Pick from failed reasons — imported at top but used as string literal
-    part.failedReason = pick([
-      "Bad Cells", "Light Test", "Melted Core", "Oil Soaked",
-      "Core Shifted", "Damaged Housing", "Deteriorated Ceramic",
-    ]);
-    part.failureNotes = `[TEST] Failure notes for part ${index + 1}`;
-  }
+  // Sensors — leave as empty string (component manages as array internally)
+  part.sensorsRemoved = "";
+  part.oneBoxSensorsNeeded = "";
 
   return part;
 }

@@ -232,7 +232,7 @@ export const OneBoxDiagnosticsSection = React.memo(
 
         <FormField
           control={control}
-          name={`parts.${partIndex}.repairDescription`}
+          name={`parts.${partIndex}.repairDescriptionOneBox`}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Repair Description</FormLabel>

@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useParams, useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { buildPartSchema, getPartDefaults } from "@/lib/emissions-form-fields";
 import { captureGps, getDeviceInfo } from "@/lib/gpsCapture";
 import { enqueue } from "@/lib/offlineQueue";
 import { useToast } from "@/hooks/use-toast";
@@ -34,135 +35,8 @@ interface FormSubmission {
   prefilledData: Record<string, unknown> | null;
 }
 
-// Comprehensive part response schema — all ~60 tech-editable fields per part.
-// All optional at field level; conditional requirements handled by superRefine.
-const partResponseSchema = z.object({
-  // Identification
-  ecsSerial: z.string(),
-  ecsPartNumber: z.string().optional(),
-  partDescription: z.string().optional(),
-  oeSerialNumber: z.string().optional(),
-
-  // Cleaning
-  cleaningPhase: z.string().optional(),
-
-  // One Box Diagnostics
-  noxConversion: z.string().optional(),
-  docInletTemp: z.string().optional(),
-  docOutletTemp: z.string().optional(),
-  dpfOutletTemp: z.string().optional(),
-  physicalDamage: z.string().optional(),
-  sensorsRemoved: z.string().optional(),
-  sensorsRemovedList: z.string().optional(),
-  repairDescriptionOneBox: z.string().optional(),
-  crystallization: z.string().optional(),
-  crystallizationDescription: z.string().optional(),
-
-  // One Box Inspection — smoke tests
-  preScrSmokeTest: z.string().optional(),
-  preDocSmokeTest: z.string().optional(),
-  postScrSmokeTest: z.string().optional(),
-  postDocSmokeTest: z.string().optional(),
-  needsSensors: z.string().optional(),
-  selectedSensors: z.string().optional(),
-
-  // Inlet & Outlet
-  inletColor: z.string().optional(),
-  inletOtherColor: z.string().optional(),
-  inletDamage: z.string().optional(),
-  inletComment: z.string().optional(),
-  outletColor: z.string().optional(),
-  outletOtherColor: z.string().optional(),
-  outletDamage: z.string().optional(),
-  outletLeakingCells: z.string().optional(),
-  outletComment: z.string().optional(),
-
-  // Sealing & Canister
-  sealingRing: z.string().optional(),
-  canisterInspection: z.string().optional(),
-
-  // Bung & Fitting
-  bungCondition: z.string().optional(),
-  showRecommendedBungs: z.string().optional(),
-  bungProblem: z.string().optional(),
-  firstFittingQty: z.string().optional(),
-  firstFittingPn: z.string().optional(),
-  firstFittingDesc: z.string().optional(),
-  additionalFittingNeeded: z.string().optional(),
-  secondFittingQty: z.string().optional(),
-  secondFittingPn: z.string().optional(),
-  secondFittingDesc: z.string().optional(),
-  thirdFittingNeeded: z.string().optional(),
-  thirdFittingQty: z.string().optional(),
-  thirdFittingPn: z.string().optional(),
-  thirdFittingDesc: z.string().optional(),
-  bungFittingComment: z.string().optional(),
-
-  // Collector
-  collectorCondition: z.string().optional(),
-  collectorComment: z.string().optional(),
-
-  // Gasket & Clamps
-  gasketOrClamps: z.string().optional(),
-  showRecommendedGaskets: z.string().optional(),
-  ecChecked: z.boolean().optional(),
-  egChecked: z.boolean().optional(),
-  ekChecked: z.boolean().optional(),
-  ecQuantity: z.string().optional(),
-  egQuantity: z.string().optional(),
-  ekQuantity: z.string().optional(),
-  ecPn1: z.string().optional(),
-  ecDesc1: z.string().optional(),
-  ecPn2: z.string().optional(),
-  ecDesc2: z.string().optional(),
-  ecPn3: z.string().optional(),
-  ecDesc3: z.string().optional(),
-  egPn1: z.string().optional(),
-  egDesc1: z.string().optional(),
-  egPn2: z.string().optional(),
-  egDesc2: z.string().optional(),
-  egPn3: z.string().optional(),
-  egDesc3: z.string().optional(),
-  ekPn1: z.string().optional(),
-  ekDesc1: z.string().optional(),
-  ekPn2: z.string().optional(),
-  ekDesc2: z.string().optional(),
-  ekPn3: z.string().optional(),
-  ekDesc3: z.string().optional(),
-
-  // Measurements
-  weightPreKg: z.string().optional(),
-  flowRatePre: z.string().optional(),
-  weightPostKg: z.string().optional(),
-  flowRatePost: z.string().optional(),
-  weightSinteredKg: z.string().optional(),
-  flowRateSintered: z.string().optional(),
-  lightTest: z.string().optional(),
-  dropRodTest: z.string().optional(),
-  sinteredAshProcess: z.string().optional(),
-
-  // Repair Assessment
-  requireRepairs: z.string().optional(),
-  repairsPerformed: z.string().optional(),
-  repairDescription: z.string().optional(),
-
-  // Pass/Fail
-  passOrFail: z.string().min(1, "Pass or Fail is required"),
-  failedReason: z.string().optional(),
-  failureNotes: z.string().optional(),
-  submissionStatus: z.string().optional(),
-  additionalPartComments: z.string().optional(),
-  showAdditionalComments: z.string().optional(),
-}).superRefine((data, ctx) => {
-  // Failed reason required when part fails
-  if (data.passOrFail === "Fail" && !data.failedReason) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Failed reason is required when part fails",
-      path: ["failedReason"],
-    });
-  }
-});
+// Part schema built from the single-source-of-truth config
+const partResponseSchema = buildPartSchema();
 
 const emissionsFormSchema = z.object({
   parts: z.array(partResponseSchema),
@@ -190,88 +64,9 @@ interface PartPrefill {
   ek?: string;
 }
 
-/** Build default values for a single part */
+/** Build default values for a single part from the config */
 function buildPartDefaults(p: PartPrefill) {
-  return {
-    ecsSerial: p.ecsSerial || "",
-    ecsPartNumber: "",
-    partDescription: "",
-    oeSerialNumber: "",
-    cleaningPhase: "",
-    noxConversion: "",
-    docInletTemp: "",
-    docOutletTemp: "",
-    dpfOutletTemp: "",
-    physicalDamage: "",
-    sensorsRemoved: "",
-    sensorsRemovedList: "",
-    repairDescriptionOneBox: "",
-    crystallization: "",
-    crystallizationDescription: "",
-    preScrSmokeTest: "",
-    preDocSmokeTest: "",
-    postScrSmokeTest: "",
-    postDocSmokeTest: "",
-    needsSensors: "",
-    selectedSensors: "",
-    inletColor: "",
-    inletOtherColor: "",
-    inletDamage: "",
-    inletComment: "",
-    outletColor: "",
-    outletOtherColor: "",
-    outletDamage: "",
-    outletLeakingCells: "",
-    outletComment: "",
-    sealingRing: "",
-    canisterInspection: "",
-    bungCondition: "",
-    showRecommendedBungs: "",
-    bungProblem: "",
-    firstFittingQty: "",
-    firstFittingPn: "",
-    firstFittingDesc: "",
-    additionalFittingNeeded: "",
-    secondFittingQty: "",
-    secondFittingPn: "",
-    secondFittingDesc: "",
-    thirdFittingNeeded: "",
-    thirdFittingQty: "",
-    thirdFittingPn: "",
-    thirdFittingDesc: "",
-    bungFittingComment: "",
-    collectorCondition: "",
-    collectorComment: "",
-    gasketOrClamps: "",
-    showRecommendedGaskets: "",
-    ecChecked: false,
-    egChecked: false,
-    ekChecked: false,
-    ecQuantity: "",
-    egQuantity: "",
-    ekQuantity: "",
-    ecPn1: "", ecDesc1: "", ecPn2: "", ecDesc2: "", ecPn3: "", ecDesc3: "",
-    egPn1: "", egDesc1: "", egPn2: "", egDesc2: "", egPn3: "", egDesc3: "",
-    ekPn1: "", ekDesc1: "", ekPn2: "", ekDesc2: "", ekPn3: "", ekDesc3: "",
-    weightPreKg: "",
-    flowRatePre: "",
-    weightPostKg: "",
-    flowRatePost: "",
-    weightSinteredKg: "",
-    flowRateSintered: "",
-    lightTest: "",
-    dropRodTest: "",
-    sinteredAshProcess: "",
-    requireRepairs: "",
-    repairsPerformed: "",
-    repairDescription: "",
-    passOrFail: "",
-    failedReason: "",
-    failureNotes: "",
-    submissionStatus: "",
-    additionalPartComments: "",
-    showAdditionalComments: "",
-  };
+  return getPartDefaults(p);
 }
 
 export default function EmissionsForm() {
