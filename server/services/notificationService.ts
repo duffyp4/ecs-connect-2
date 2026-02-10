@@ -22,9 +22,18 @@ class NotificationService {
 
   /**
    * Attach the WebSocket server to an existing HTTP server.
+   * Uses noServer mode to avoid conflicting with Vite's HMR WebSocket in dev.
    */
   setup(server: Server): void {
-    this.wss = new WebSocketServer({ server, path: "/ws/notifications" });
+    this.wss = new WebSocketServer({ noServer: true });
+
+    server.on("upgrade", (request, socket, head) => {
+      if (request.url === "/ws/notifications") {
+        this.wss!.handleUpgrade(request, socket, head, (ws) => {
+          this.wss!.emit("connection", ws, request);
+        });
+      }
+    });
 
     this.wss.on("connection", (ws) => {
       let userEmail: string | null = null;
