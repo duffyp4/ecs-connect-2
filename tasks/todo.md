@@ -79,6 +79,12 @@
 - [x] Dump pickup form (15 fields, 2 ref data tables)
 - [x] Dump delivery form (18 fields, 4 conditions, 2 ref data tables)
 
+## Dev Tools & Testing
+- [x] VITE_SHOW_DEV_TOOLS env var (replaces import.meta.env.MODE check for staging)
+- [x] Persona switcher dropdown (switch between whitelist users to test different roles)
+- [x] DevPersonaContext + backend ?asEmail= support
+- [x] Verified on Railway staging
+
 ## Phase 5: Polish & Enhancements
 - [ ] Web Push Notifications (Firebase Cloud Messaging or Web Push API)
 - [ ] Signature capture (canvas-based pad)
