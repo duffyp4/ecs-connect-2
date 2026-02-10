@@ -11,7 +11,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useDevMode } from "@/contexts/DevModeContext";
 import { useDevPersona } from "@/contexts/DevPersonaContext";
 import { Switch } from "@/components/ui/switch";
@@ -46,6 +46,21 @@ export default function Layout({ children }: LayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isDevMode, toggleDevMode } = useDevMode();
   const { personaEmail, setPersonaEmail, clearPersona } = useDevPersona();
+
+  // Track whether this is the initial mount (skip effect on first render)
+  const isInitialMount = useRef(true);
+
+  // When dev mode is toggled on, close mobile menu and scroll to top so the banner is visible
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    if (isDevMode) {
+      setIsMobileMenuOpen(false);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [isDevMode]);
 
   // Fetch persona list when dev tools are shown
   const { data: personas } = useQuery<WhitelistEntry[]>({
