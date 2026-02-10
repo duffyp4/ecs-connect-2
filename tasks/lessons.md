@@ -22,4 +22,8 @@ _Record decisions made and why, so future sessions understand the rationale._
 
 ## Patterns That Work
 
-_Record patterns that proved effective for this codebase._
+- **`!!prefill.x && (<JSX>)` for unknown conditionals**: When `prefill` is `Record<string, unknown>`, you must coerce to boolean with `!!` before using `&&` in JSX. Otherwise TS sees `unknown | ReactElement` which isn't valid `ReactNode`. Use `String(prefill.x)` (not `as string`) for rendering text from unknown values.
+- **`Array.from(new Set(...))` instead of `[...new Set(...)]`**: The spread operator on Set requires `--downlevelIteration` compiler flag. `Array.from()` works without it.
+- **Section sub-component pattern for large forms**: The emissions form has 12 sections per part. Each section is a separate component file in `components/forms/emissions/`. The parts-loop-section.tsx acts as orchestrator, conditionally rendering sections based on centralized visibility rules in `emissions-form-config.ts`. This keeps each file manageable (~100-300 lines) vs one 3000-line monolith.
+- **`useWatch` for scoped re-renders**: Within section components, `useWatch({ control, name: ... })` only re-renders the section that watches that field, not the entire form. Critical for a 60+ field form.
+- **Hardcoded reference data for offline**: All dropdown options extracted from GoCanvas are in `emissions-reference-data.ts` as `const` arrays. This ensures the form works offline without API calls for reference data.

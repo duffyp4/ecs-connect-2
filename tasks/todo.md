@@ -48,6 +48,22 @@
 - [x] GPS auto-capture on submit
 - [x] Server-side processing in formDispatch.ts
 
+## GoCanvas Form Parity (All 3 Forms)
+- [x] Extract reference data constants (emissions-reference-data.ts)
+- [x] Create section visibility config (emissions-form-config.ts)
+- [x] Update pickup form — dispatch info, PO, dates, notes to driver, photo placeholder
+- [x] Update delivery form — cascading order numbers, dates, notes, photo placeholder
+- [x] Build 12 emissions section sub-components (identification, cleaning, diagnostics, inspection, inlet/outlet, sealing, bung/fitting, collector, gasket/clamps, measurements, repair, pass/fail)
+- [x] Create sign-off section (technician name, date, time)
+- [x] Create photo placeholder component
+- [x] Refactor parts-loop-section as orchestrator importing 12 sections
+- [x] Comprehensive ~60-field Zod schema with superRefine conditional validation
+- [x] Update formDispatch.ts backend prefill (dates, order numbers, notes)
+- [x] Fix all TypeScript compilation errors in new code
+- [ ] Test forms render correctly in dev server
+- [ ] Test conditional logic (One Box sections, REPAIR ONLY hiding, cascading fields)
+- [ ] Test offline submission with larger payload
+
 ## Phase 4: Migration & Cutover
 - [x] Add USE_NATIVE_FORMS feature flag
 - [x] Update jobEvents.ts to use formDispatch when flag enabled
