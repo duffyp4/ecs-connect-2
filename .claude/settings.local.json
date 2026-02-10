@@ -1,4 +1,7 @@
 {
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
   "permissions": {
     "allow": [
       "Bash(git add:*)",
@@ -12,7 +15,45 @@
       "Bash(curl:*)",
       "Bash(claude mcp list:*)",
       "Bash(netstat:*)",
-      "Bash(ss:*)"
+      "Bash(ss:*)",
+      "Bash(find:*)",
+      "WebSearch",
+      "WebFetch(domain:api.gocanvas.com)",
+      "Bash(npm install:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git status:*)",
+      "Bash(git rm:*)",
+      "Bash(grep:*)",
+      "Bash(git push:*)",
+      "Bash(npm run build:*)",
+      "Bash(kill:*)",
+      "Bash(wait:*)",
+      "Bash(git -C /Users/pjduffy/Documents/coding-projects/ECS-Connect/ECS-Connect-2/ecs-connect-2 status)",
+      "Bash(git -C /Users/pjduffy/Documents/coding-projects/ECS-Connect/ECS-Connect-2/ecs-connect-2 diff)",
+      "Bash(git -C /Users/pjduffy/Documents/coding-projects/ECS-Connect/ECS-Connect-2/ecs-connect-2 log --oneline -5)",
+      "Bash(python3:*)",
+      "Bash(npx drizzle-kit push:*)",
+      "Bash(source:*)",
+      "Bash(for rid in 176530 176531 323192 344946 344959 345181 345186 345187 345188 345189 346457 452183)",
+      "Bash(do echo \"=== REF DATA $rid ===\")",
+      "Bash(done)",
+      "Bash(node scripts/dumpGoCanvasForm.js:*)",
+      "Bash(node -e:*)",
+      "Bash(node:*)",
+      "Bash(git -C /Users/pjduffy/Documents/coding-projects/ECS-Connect/ECS-Connect-2/ecs-connect-2 diff tasks/)",
+      "Bash(wc:*)",
+      "Bash(ls:*)",
+      "Bash(jq:*)",
+      "Bash(brew install:*)",
+      "Bash(railway whoami:*)",
+      "Bash(railway status:*)",
+      "Bash(railway domain:*)",
+      "Bash(railway logs:*)",
+      "Bash(railway variables:*)",
+      "Bash(railway environment:*)",
+      "Bash(railway:*)"
     ]
-  }
+  },
+  "outputStyle": "Explanatory"
 }

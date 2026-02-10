@@ -55,6 +55,13 @@ ECS Connect is a job tracking and workflow management system for Emissions and C
 - **Database**: Neon PostgreSQL (same `DATABASE_URL` as before, fully portable)
 - **Auth**: Clerk (`CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`)
 - **Custom domain**: `app.ecsconnect.com` (Railway custom domain with auto SSL)
+- **Railway CLI**: Installed locally. Use `railway` commands to manage deployments directly:
+  - `railway logs` — view deploy/runtime logs
+  - `railway status` — check current deployment status
+  - `railway variables` — list/set environment variables
+  - `railway up` — manual deploy
+  - `railway open` — open Railway dashboard in browser
+  - Default to using Railway CLI when troubleshooting deploys, checking logs, or managing env vars.
 
 ### GoCanvas Replacement
 
