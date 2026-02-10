@@ -47,8 +47,10 @@ export default function TechDashboard() {
     enabled: !!user?.email,
   });
 
-  const pending = submissions?.filter((s) => s.status !== "completed") ?? [];
-  const completed = submissions?.filter((s) => s.status === "completed") ?? [];
+  // Only show emissions forms for technicians
+  const techForms = submissions?.filter((s) => s.formType === "emissions");
+  const pending = techForms?.filter((s) => s.status !== "completed") ?? [];
+  const completed = techForms?.filter((s) => s.status === "completed") ?? [];
 
   if (isLoading) {
     return (
