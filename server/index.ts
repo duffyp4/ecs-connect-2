@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { notificationService } from "./services/notificationService";
+import { setupStagingAuth } from "./stagingAuth";
 
 const app = express();
 app.set('trust proxy', 1);
@@ -12,6 +13,9 @@ app.use('/api/gocanvas/webhook', express.text({ type: '*/*' }));
 // JSON and URL-encoded parsers for all other routes
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Staging password gate (no-ops if STAGING_PASSWORD not set)
+setupStagingAuth(app);
 
 app.use((req, res, next) => {
   const start = Date.now();
