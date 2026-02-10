@@ -1,4 +1,4 @@
-import { Control } from "react-hook-form";
+import { Control, useWatch } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,14 +15,22 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { AlertTriangle } from "lucide-react";
 import { TECHNICIANS } from "@/lib/emissions-reference-data";
 
 interface SignOffSectionProps {
   control: Control<any>;
   shopName?: string;
+  partsCount: number;
 }
 
-export function SignOffSection({ control, shopName }: SignOffSectionProps) {
+export function SignOffSection({ control, shopName, partsCount }: SignOffSectionProps) {
+  // Watch all parts' submissionStatus to count open (incomplete) parts
+  const parts: Array<{ submissionStatus?: string }> = useWatch({ control, name: "parts" }) ?? [];
+  const openCount = parts.filter(
+    (p) => p.submissionStatus !== "Completed"
+  ).length;
+
   // Filter technicians by shop if shopName is provided, otherwise show all
   const filteredTechs = shopName
     ? TECHNICIANS.filter((t) => t.shop === shopName)
@@ -42,6 +50,22 @@ export function SignOffSection({ control, shopName }: SignOffSectionProps) {
         <CardTitle className="text-base">Sign Off</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Open submissions warning — matches GoCanvas FORCE STOP behavior */}
+        {openCount > 0 && (
+          <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-300 rounded text-sm text-amber-900">
+            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-amber-600" />
+            <div>
+              <p className="font-semibold">
+                {openCount} of {partsCount} part{partsCount !== 1 ? "s" : ""} not marked Completed
+              </p>
+              <p className="text-xs mt-1 text-amber-700">
+                Ensure each part's "Submission Status" is set to "Completed" before signing off.
+                Go back to the parts log and close out any open part submissions.
+              </p>
+            </div>
+          </div>
+        )}
+
         <FormField
           control={control}
           name="technicianName"

@@ -528,6 +528,7 @@ export default function EmissionsForm() {
           <SignOffSection
             control={form.control}
             shopName={prefill.shopName as string | undefined}
+            partsCount={parts.length}
           />
 
           <Button
