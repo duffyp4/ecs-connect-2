@@ -20,6 +20,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Package, MapPin, ArrowLeft, Loader2, WifiOff, Clock, Calendar, Zap } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { useDevMode } from "@/contexts/DevModeContext";
 import { generatePickupTestData } from "@/lib/test-data-generators";
 import { PhotoPlaceholder } from "@/components/forms/emissions/photo-placeholder";
@@ -43,6 +44,7 @@ export default function PickupForm() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { user } = useAuth();
   const { isDevMode } = useDevMode();
 
   const { data: submission, isLoading } = useQuery<FormSubmission>({
@@ -98,7 +100,7 @@ export default function PickupForm() {
       return res.json();
     },
     onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: [`/api/form-submissions/assigned`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/form-submissions/assigned/${user?.email}`] });
 
       if (result?.offline) {
         toast({

@@ -19,6 +19,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Wrench, ArrowLeft, Loader2, WifiOff, Zap } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { useDevMode } from "@/contexts/DevModeContext";
 import { generateEmissionsTestData } from "@/lib/test-data-generators";
 import { PartsLoopSection } from "@/components/forms/parts-loop-section";
@@ -276,6 +277,7 @@ export default function EmissionsForm() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { user } = useAuth();
   const { isDevMode } = useDevMode();
 
   const { data: submission, isLoading } = useQuery<FormSubmission>({
@@ -335,7 +337,7 @@ export default function EmissionsForm() {
       return res.json();
     },
     onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: [`/api/form-submissions/assigned`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/form-submissions/assigned/${user?.email}`] });
 
       if (result?.offline) {
         toast({
