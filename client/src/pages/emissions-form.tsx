@@ -18,7 +18,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Wrench, ArrowLeft, Loader2, WifiOff } from "lucide-react";
+import { Wrench, ArrowLeft, Loader2, WifiOff, Zap } from "lucide-react";
+import { useDevMode } from "@/contexts/DevModeContext";
+import { generateEmissionsTestData } from "@/lib/test-data-generators";
 import { PartsLoopSection } from "@/components/forms/parts-loop-section";
 import { SignOffSection } from "@/components/forms/emissions/sign-off-section";
 
@@ -274,6 +276,7 @@ export default function EmissionsForm() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { isDevMode } = useDevMode();
 
   const { data: submission, isLoading } = useQuery<FormSubmission>({
     queryKey: [`/api/form-submissions/${id}`],
@@ -493,6 +496,19 @@ export default function EmissionsForm() {
           )}
         </CardContent>
       </Card>
+
+      {isDevMode && (
+        <Button
+          type="button"
+          className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+          onClick={() => {
+            const data = generateEmissionsTestData(parts.length);
+            form.reset(data);
+          }}
+        >
+          <Zap className="h-4 w-4 mr-2" />Fill Test Data
+        </Button>
+      )}
 
       {/* Parts loop and technician input */}
       <Form {...form}>

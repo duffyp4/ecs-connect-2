@@ -19,7 +19,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Truck, MapPin, ArrowLeft, Loader2, WifiOff, Clock, Calendar } from "lucide-react";
+import { Truck, MapPin, ArrowLeft, Loader2, WifiOff, Clock, Calendar, Zap } from "lucide-react";
+import { useDevMode } from "@/contexts/DevModeContext";
+import { generateDeliveryTestData } from "@/lib/test-data-generators";
 import { PhotoPlaceholder } from "@/components/forms/emissions/photo-placeholder";
 
 interface FormSubmission {
@@ -83,6 +85,7 @@ export default function DeliveryForm() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { isDevMode } = useDevMode();
 
   const { data: submission, isLoading } = useQuery<FormSubmission>({
     queryKey: [`/api/form-submissions/${id}`],
@@ -350,6 +353,20 @@ export default function DeliveryForm() {
                   </FormItem>
                 )}
               />
+
+              {isDevMode && (
+                <Button
+                  type="button"
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+                  onClick={() => {
+                    const data = generateDeliveryTestData();
+                    form.setValue("deliveredTo", data.deliveredTo);
+                    form.setValue("deliveryNotes", data.deliveryNotes);
+                  }}
+                >
+                  <Zap className="h-4 w-4 mr-2" />Fill Test Data
+                </Button>
+              )}
 
               <Button
                 type="submit"
