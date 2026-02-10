@@ -65,7 +65,7 @@ export default defineConfig({
         ],
         // Don't precache API routes
         navigateFallback: "index.html",
-        navigateFallbackDenylist: [/^\/api\//],
+        navigateFallbackDenylist: [/^\/api\//, /^\/staging-gate/],
       },
       devOptions: {
         enabled: false, // Disable in dev to avoid conflicts

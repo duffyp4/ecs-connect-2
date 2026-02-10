@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -118,6 +119,25 @@ function Router() {
 }
 
 function App() {
+  // On non-localhost environments, verify the staging password gate has been passed.
+  // If the server has STAGING_PASSWORD set and the cookie is missing/expired,
+  // redirect to /staging-gate which bypasses the service worker and hits the server.
+  useEffect(() => {
+    const host = window.location.hostname;
+    if (host === "localhost" || host === "127.0.0.1") return;
+
+    fetch("/api/staging-check", { credentials: "include" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.authenticated === false) {
+          window.location.href = `/staging-gate?t=${Date.now()}`;
+        }
+      })
+      .catch(() => {
+        // Staging not enabled or network error — proceed normally
+      });
+  }, []);
+
   const content = (
     <QueryClientProvider client={queryClient}>
       <DevPersonaProvider>

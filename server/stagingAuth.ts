@@ -105,6 +105,15 @@ export function setupStagingAuth(app: import("express").Express): void {
 
   const validToken = deriveToken(password);
 
+  // Check endpoint — lets the client verify staging auth status
+  // Registered before the gate middleware so it's always accessible.
+  app.get("/api/staging-check", (req: Request, res: Response) => {
+    const cookies = req.headers.cookie || "";
+    const match = cookies.split(";").find((c) => c.trim().startsWith(`${COOKIE_NAME}=`));
+    const token = match?.split("=")[1]?.trim();
+    res.json({ authenticated: token === validToken });
+  });
+
   // Login endpoint — validates password and sets the cookie
   app.post("/api/staging-login", (req: Request, res: Response) => {
     const submitted = req.body?.password;
@@ -124,7 +133,7 @@ export function setupStagingAuth(app: import("express").Express): void {
   // Gate middleware — blocks all other requests without a valid cookie
   app.use((req: Request, res: Response, next: NextFunction) => {
     // Don't gate the login endpoint itself
-    if (req.path === "/api/staging-login") return next();
+    if (req.path === "/api/staging-login" || req.path === "/api/staging-check") return next();
 
     // Parse the cookie manually (no cookie-parser dependency needed)
     const cookies = req.headers.cookie || "";
