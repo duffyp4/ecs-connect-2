@@ -85,6 +85,11 @@
 - [x] DevPersonaContext + backend ?asEmail= support
 - [x] Verified on Railway staging
 
+## Form UX Improvements
+- [x] Add required field indicators (red asterisks) to all 3 native forms
+- [x] Fix schema/component field name mismatches (33 fields) — single source of truth config created
+- [ ] Tighten Zod validation for required fields (after name alignment)
+
 ## Phase 5: Polish & Enhancements
 - [ ] Web Push Notifications (Firebase Cloud Messaging or Web Push API)
 - [ ] Signature capture (canvas-based pad)
