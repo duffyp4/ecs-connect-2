@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -300,6 +301,23 @@ export default function EmissionsForm() {
       signOffTime: now.toTimeString().slice(0, 5),
     },
   });
+
+  // Re-initialize form once async submission data arrives so that
+  // the internal parts array matches the server-side part count.
+  useEffect(() => {
+    if (submission) {
+      const p = (submission.prefilledData as Record<string, unknown>)?.parts as PartPrefill[] | undefined;
+      const partsList = p ?? [];
+      const n = new Date();
+      form.reset({
+        parts: partsList.map(buildPartDefaults),
+        additionalComments: "",
+        technicianName: "",
+        signOffDate: n.toISOString().split("T")[0],
+        signOffTime: n.toTimeString().slice(0, 5),
+      });
+    }
+  }, [submission]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Mark as in_progress when form is opened
   const startMutation = useMutation({
