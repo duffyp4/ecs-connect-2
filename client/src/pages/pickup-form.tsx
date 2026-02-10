@@ -152,11 +152,27 @@ export default function PickupForm() {
           <Package className="h-5 w-5" />
           Pickup Form
         </h1>
-        {!navigator.onLine && (
-          <span className="text-xs flex items-center gap-1 text-orange-600">
-            <WifiOff className="h-3 w-3" /> Offline
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {!navigator.onLine && (
+            <span className="text-xs flex items-center gap-1 text-orange-600">
+              <WifiOff className="h-3 w-3" /> Offline
+            </span>
+          )}
+          {isDevMode && (
+            <Button
+              type="button"
+              size="sm"
+              className="bg-amber-500 hover:bg-amber-600 text-white"
+              onClick={() => {
+                const data = generatePickupTestData();
+                form.setValue("itemCount", data.itemCount);
+                form.setValue("driverNotes", data.driverNotes);
+              }}
+            >
+              <Zap className="h-3 w-3 mr-1" />Fill Test Data
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Read-only dispatch info */}
@@ -308,20 +324,6 @@ export default function PickupForm() {
                   </FormItem>
                 )}
               />
-
-              {isDevMode && (
-                <Button
-                  type="button"
-                  className="w-full bg-amber-500 hover:bg-amber-600 text-white"
-                  onClick={() => {
-                    const data = generatePickupTestData();
-                    form.setValue("itemCount", data.itemCount);
-                    form.setValue("driverNotes", data.driverNotes);
-                  }}
-                >
-                  <Zap className="h-4 w-4 mr-2" />Fill Test Data
-                </Button>
-              )}
 
               <Button
                 type="submit"
