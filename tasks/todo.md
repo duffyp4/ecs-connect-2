@@ -37,7 +37,7 @@
 - [x] Create client/src/pages/pickup-form.tsx
 - [x] Create client/src/pages/delivery-form.tsx
 - [x] Add /tech and /driver routes to App.tsx
-- [ ] Test offline submission + sync
+- [x] Test offline submission + sync
 
 ## Phase 3: Emissions Service Log Form
 - [x] Create client/src/pages/emissions-form.tsx
@@ -62,7 +62,7 @@
 - [x] Fix all TypeScript compilation errors in new code
 - [x] Test forms render correctly in dev server
 - [x] Test conditional logic (REPAIR ONLY hiding, Pass/Fail conditionals, auto-calculations)
-- [ ] Test offline submission with larger payload
+- [x] Test offline submission with larger payload
 
 ## Phase 4: Migration & Cutover
 - [x] Add USE_NATIVE_FORMS feature flag
