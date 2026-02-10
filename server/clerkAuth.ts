@@ -2,7 +2,7 @@ import { clerkMiddleware, clerkClient, getAuth } from "@clerk/express";
 import type { Express, RequestHandler } from "express";
 import { storage } from "./storage";
 
-const isDev = process.env.NODE_ENV === "development";
+const hasClerkKeys = !!process.env.CLERK_SECRET_KEY;
 
 // Dev mode user info - used when Clerk is not configured
 const DEV_USER = {
@@ -13,9 +13,9 @@ const DEV_USER = {
 };
 
 export async function setupAuth(app: Express) {
-  if (isDev && !process.env.CLERK_SECRET_KEY) {
-    // Development mode without Clerk: use mock auth
-    console.log("[Auth] Development mode - using mock authentication (no Clerk keys)");
+  if (!hasClerkKeys) {
+    // No Clerk keys configured: use mock auth (works in any NODE_ENV)
+    console.log("[Auth] No Clerk keys found - using mock authentication");
 
     // Ensure dev user exists in database and whitelist
     await storage.upsertUser({
