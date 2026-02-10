@@ -15,7 +15,7 @@
 - [x] Update client/src/pages/landing.tsx - use Clerk's SignIn component
 - [x] Remove server/replitAuth.ts and server/auth.ts
 - [x] Remove openid-client, passport, passport-local dependencies
-- [ ] Verify app builds and type-checks
+- [x] Verify app builds and type-checks
 
 ## Phase 1: Database Schema & API Foundation
 - [x] Add form_submissions table to shared/schema.ts
@@ -24,7 +24,7 @@
 - [x] Update server/database.ts with form submission queries
 - [x] Create server/services/formDispatch.ts
 - [x] Add form submission REST endpoints to server/routes.ts
-- [ ] Run db:push to apply schema changes
+- [x] Run db:push to apply schema changes
 
 ## Phase 2: PWA + Pickup & Delivery Forms
 - [x] Add vite-plugin-pwa to vite.config.ts
@@ -56,6 +56,12 @@
 - [ ] Update delivery-dispatch-modal.tsx for native dispatch (no client changes needed - server handles routing)
 - [ ] Parallel operation logging
 - [ ] CSR portal shows native submission status
+
+## GoCanvas Form Reference Dumps
+- [x] Create scripts/dumpGoCanvasForm.js (flat + nested + ref data merge)
+- [x] Dump emissions form (189 fields, 237 conditions, 8 operations, 20 ref data tables)
+- [x] Dump pickup form (15 fields, 2 ref data tables)
+- [x] Dump delivery form (18 fields, 4 conditions, 2 ref data tables)
 
 ## Phase 5: Polish & Enhancements
 - [ ] Web Push Notifications (Firebase Cloud Messaging or Web Push API)
