@@ -80,3 +80,13 @@ GOCANVAS_USERNAME     # GoCanvas API (legacy, until Phase 4 cutover)
 GOCANVAS_PASSWORD     # GoCanvas API (legacy, until Phase 4 cutover)
 USE_NATIVE_FORMS      # Feature flag: true = use native forms, false = GoCanvas
 ```
+
+### Environments & Databases
+
+| Environment | Purpose | Database | Status |
+|-------------|---------|----------|--------|
+| **Development** | Local dev on developer's machine (`localhost:3000`) | Neon dev/staging database | Active |
+| **Staging** | Deployed on Railway for remote testing by team | Same Neon dev/staging database | Setting up |
+| **Production** | Live app used by ECS employees daily | **Separate** Neon production database (currently used by Replit v1) | Replit v1 is live |
+
+**Important:** The `DATABASE_URL` in `.env` / `.env.example` points to the **dev/staging** Neon database — NOT the production database. The production database is a separate Neon instance currently connected to the Replit v1 app. At full cutover, the Railway production deployment will be pointed at the production database. Never connect local dev or staging to the production database without explicit intent.
