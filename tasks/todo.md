@@ -60,8 +60,8 @@
 - [x] Comprehensive ~60-field Zod schema with superRefine conditional validation
 - [x] Update formDispatch.ts backend prefill (dates, order numbers, notes)
 - [x] Fix all TypeScript compilation errors in new code
-- [ ] Test forms render correctly in dev server
-- [ ] Test conditional logic (One Box sections, REPAIR ONLY hiding, cascading fields)
+- [x] Test forms render correctly in dev server
+- [x] Test conditional logic (REPAIR ONLY hiding, Pass/Fail conditionals, auto-calculations)
 - [ ] Test offline submission with larger payload
 
 ## Phase 4: Migration & Cutover
