@@ -18,18 +18,42 @@ import {
 import { AlertTriangle } from "lucide-react";
 import { TECHNICIANS } from "@/lib/emissions-reference-data";
 
+interface PartIssue {
+  partLabel: string;
+  message: string;
+}
+
+/** Validate all parts and return a flat list of issues that prevent a clean sign-off. */
+function getPartIssues(
+  parts: Array<Record<string, unknown>>,
+  partLabels: string[],
+): PartIssue[] {
+  const issues: PartIssue[] = [];
+  parts.forEach((p, i) => {
+    const label = partLabels[i] || `Part ${i + 1}`;
+    if (!p.passOrFail) {
+      issues.push({ partLabel: label, message: "Pass or Fail not selected" });
+    }
+    if (p.passOrFail === "Fail" && !p.failedReason) {
+      issues.push({ partLabel: label, message: "Failed reason is required" });
+    }
+    if (p.submissionStatus !== "Completed") {
+      issues.push({ partLabel: label, message: "Submission status not set to Completed" });
+    }
+  });
+  return issues;
+}
+
 interface SignOffSectionProps {
   control: Control<any>;
   shopName?: string;
-  partsCount: number;
+  partLabels: string[];
 }
 
-export function SignOffSection({ control, shopName, partsCount }: SignOffSectionProps) {
-  // Watch all parts' submissionStatus to count open (incomplete) parts
-  const parts: Array<{ submissionStatus?: string }> = useWatch({ control, name: "parts" }) ?? [];
-  const openCount = parts.filter(
-    (p) => p.submissionStatus !== "Completed"
-  ).length;
+export function SignOffSection({ control, shopName, partLabels }: SignOffSectionProps) {
+  // Watch the full parts array so we can validate multiple fields per part
+  const parts: Array<Record<string, unknown>> = useWatch({ control, name: "parts" }) ?? [];
+  const issues = getPartIssues(parts, partLabels);
 
   // Filter technicians by shop if shopName is provided, otherwise show all
   const filteredTechs = shopName
@@ -50,18 +74,21 @@ export function SignOffSection({ control, shopName, partsCount }: SignOffSection
         <CardTitle className="text-base">Sign Off</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Open submissions warning — matches GoCanvas FORCE STOP behavior */}
-        {openCount > 0 && (
+        {/* Comprehensive issues warning */}
+        {issues.length > 0 && (
           <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-300 rounded text-sm text-amber-900">
             <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-amber-600" />
             <div>
               <p className="font-semibold">
-                {openCount} of {partsCount} part{partsCount !== 1 ? "s" : ""} not marked Completed
+                {issues.length} issue{issues.length !== 1 ? "s" : ""} to resolve before signing off
               </p>
-              <p className="text-xs mt-1 text-amber-700">
-                Ensure each part's "Submission Status" is set to "Completed" before signing off.
-                Go back to the parts log and close out any open part submissions.
-              </p>
+              <ul className="text-xs mt-1 text-amber-700 list-disc list-inside space-y-0.5">
+                {issues.map((issue, idx) => (
+                  <li key={idx}>
+                    <span className="font-medium">{issue.partLabel}:</span> {issue.message}
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         )}

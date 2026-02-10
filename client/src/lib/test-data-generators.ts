@@ -184,6 +184,13 @@ function generatePartTestData(index: number) {
   part.sensorsRemoved = "";
   part.oneBoxSensorsNeeded = "";
 
+  // 5. Force clean submission state so test data always produces green
+  //    checkmarks and no sign-off warnings — ready for a full submit test.
+  part.passOrFail = "Pass";
+  part.failedReason = "";
+  part.failureNotes = "";
+  part.submissionStatus = "Completed";
+
   return part;
 }
 

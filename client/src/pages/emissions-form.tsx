@@ -361,7 +361,7 @@ export default function EmissionsForm() {
           <SignOffSection
             control={form.control}
             shopName={prefill.shopName as string | undefined}
-            partsCount={parts.length}
+            partLabels={parts.map((p, i) => p.part || `Part ${i + 1}`)}
           />
 
           <Button
