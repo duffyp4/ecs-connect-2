@@ -19,7 +19,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Truck, MapPin, ArrowLeft, Loader2, WifiOff } from "lucide-react";
+import { Truck, MapPin, ArrowLeft, Loader2, WifiOff, Clock, Calendar } from "lucide-react";
+import { PhotoPlaceholder } from "@/components/forms/emissions/photo-placeholder";
 
 interface FormSubmission {
   id: string;
@@ -35,6 +36,48 @@ const deliveryFormSchema = z.object({
 });
 
 type DeliveryFormValues = z.infer<typeof deliveryFormSchema>;
+
+/** Shows cascading order numbers — #N+1 visible when #N has a value */
+function CascadingOrderNumbers({ prefill }: { prefill: Record<string, unknown> }) {
+  const orders = [
+    { key: "orderNumber", label: "Order #1" },
+    { key: "orderNumber2", label: "Order #2" },
+    { key: "orderNumber3", label: "Order #3" },
+    { key: "orderNumber4", label: "Order #4" },
+    { key: "orderNumber5", label: "Order #5" },
+  ];
+
+  // Build visible list: always show #1, then each subsequent one if previous has a value
+  const visible: typeof orders = [];
+  for (const order of orders) {
+    const value = prefill[order.key] as string | undefined;
+    if (visible.length === 0) {
+      // Always show #1
+      visible.push(order);
+    } else {
+      // Show #N+1 only if #N had a value
+      const prevValue = prefill[orders[visible.length - 1].key] as string | undefined;
+      if (prevValue?.trim()) {
+        visible.push(order);
+      } else {
+        break;
+      }
+    }
+  }
+
+  if (!prefill.orderNumber) return null;
+
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {visible.map((order) => (
+        <div key={order.key}>
+          <span className="text-muted-foreground">{order.label}</span>
+          <p className="font-medium">{(prefill[order.key] as string) || "—"}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function DeliveryForm() {
   const { id } = useParams<{ id: string }>();
@@ -153,16 +196,20 @@ export default function DeliveryForm() {
         )}
       </div>
 
-      {/* Read-only job info */}
+      {/* Read-only dispatch info */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Job Details</CardTitle>
+          <CardTitle className="text-base">Dispatch Info</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           <div className="grid grid-cols-2 gap-2">
             <div>
               <span className="text-muted-foreground">Job ID</span>
               <p className="font-medium">{submission.jobId}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Shop</span>
+              <p className="font-medium">{(prefill.shopName as string) || "—"}</p>
             </div>
             <div>
               <span className="text-muted-foreground">Customer</span>
@@ -172,47 +219,88 @@ export default function DeliveryForm() {
               <span className="text-muted-foreground">Ship To</span>
               <p className="font-medium">{(prefill.customerShipTo as string) || "—"}</p>
             </div>
-            <div>
-              <span className="text-muted-foreground">Shop</span>
-              <p className="font-medium">{(prefill.shopName as string) || "—"}</p>
-            </div>
           </div>
-          {prefill.deliveryAddress && (
-            <div className="flex items-start gap-1 pt-1">
-              <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
-              <span>{prefill.deliveryAddress as string}</span>
+
+          {/* Dispatch date/time */}
+          {!!(prefill.dispatchDate || prefill.dispatchTime) && (
+            <div className="flex items-center gap-3 text-sm">
+              {!!prefill.dispatchDate && (
+                <span className="flex items-center gap-1">
+                  <Calendar className="h-3 w-3 text-muted-foreground" />
+                  {String(prefill.dispatchDate)}
+                </span>
+              )}
+              {!!prefill.dispatchTime && (
+                <span className="flex items-center gap-1">
+                  <Clock className="h-3 w-3 text-muted-foreground" />
+                  {String(prefill.dispatchTime)}
+                </span>
+              )}
             </div>
           )}
-          {prefill.deliveryNotes && (
-            <div className="pt-1 p-2 bg-muted rounded text-xs">
-              <span className="font-medium">Delivery Notes: </span>
-              {prefill.deliveryNotes as string}
-            </div>
-          )}
-          {prefill.contactName && (
+
+          {/* Cascading order numbers */}
+          <CascadingOrderNumbers prefill={prefill} />
+
+          {/* Delivery date/time */}
+          {!!(prefill.deliveryDate || prefill.deliveryTime) && (
             <div className="grid grid-cols-2 gap-2">
-              <div>
-                <span className="text-muted-foreground">Contact</span>
-                <p className="font-medium">{prefill.contactName as string}</p>
-              </div>
-              {prefill.contactNumber && (
+              {!!prefill.deliveryDate && (
                 <div>
-                  <span className="text-muted-foreground">Phone</span>
-                  <p className="font-medium">{prefill.contactNumber as string}</p>
+                  <span className="text-muted-foreground">Delivery Date</span>
+                  <p className="font-medium">{String(prefill.deliveryDate)}</p>
+                </div>
+              )}
+              {!!prefill.deliveryTime && (
+                <div>
+                  <span className="text-muted-foreground">Delivery Time</span>
+                  <p className="font-medium">{String(prefill.deliveryTime)}</p>
                 </div>
               )}
             </div>
           )}
-          {prefill.orderNumber && (
-            <div>
-              <span className="text-muted-foreground">Order #</span>
-              <p className="font-medium">{prefill.orderNumber as string}</p>
+
+          {!!prefill.deliveryAddress && (
+            <div className="flex items-start gap-1 pt-1">
+              <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+              <span>{String(prefill.deliveryAddress)}</span>
             </div>
           )}
-          {prefill.itemCount && (
+
+          {!!prefill.contactName && (
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <span className="text-muted-foreground">Contact</span>
+                <p className="font-medium">{String(prefill.contactName)}</p>
+              </div>
+              {!!prefill.contactNumber && (
+                <div>
+                  <span className="text-muted-foreground">Phone</span>
+                  <p className="font-medium">{String(prefill.contactNumber)}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {!!prefill.itemCount && (
             <div className="flex items-center gap-1 text-sm">
               <span className="text-muted-foreground">Items:</span>
-              <span className="font-medium">{prefill.itemCount as number}</span>
+              <span className="font-medium">{String(prefill.itemCount)}</span>
+            </div>
+          )}
+
+          {/* Notes to Driver displayed prominently */}
+          {!!prefill.notesToDriver && (
+            <div className="p-2 bg-yellow-50 rounded text-xs border border-yellow-200">
+              <span className="font-medium">Notes to Driver: </span>
+              {String(prefill.notesToDriver)}
+            </div>
+          )}
+
+          {!!prefill.deliveryNotes && (
+            <div className="pt-1 p-2 bg-muted rounded text-xs">
+              <span className="font-medium">Delivery Notes: </span>
+              {String(prefill.deliveryNotes)}
             </div>
           )}
         </CardContent>
@@ -242,6 +330,8 @@ export default function DeliveryForm() {
                   </FormItem>
                 )}
               />
+
+              <PhotoPlaceholder label="Delivery Photo" />
 
               <FormField
                 control={form.control}

@@ -278,10 +278,18 @@ class FormDispatchService {
       contactNumber: job.contactNumber,
     };
 
+    const now = new Date();
+    const dispatchDate = now.toLocaleDateString("en-US");
+    const dispatchTime = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+
     switch (formType) {
       case "pickup":
         return {
           ...base,
+          dispatchDate,
+          dispatchTime,
+          poNumber: job.poNumber,
+          notesToDriver: job.pickupNotes,
           pickupAddress: job.pickupAddress,
           pickupNotes: job.pickupNotes,
           itemCount: job.itemCount,
@@ -290,9 +298,16 @@ class FormDispatchService {
       case "delivery":
         return {
           ...base,
+          dispatchDate,
+          dispatchTime,
+          orderNumber: job.orderNumber,
+          orderNumber2: job.orderNumber2,
+          orderNumber3: job.orderNumber3,
+          orderNumber4: job.orderNumber4,
+          orderNumber5: job.orderNumber5,
+          notesToDriver: job.deliveryNotes,
           deliveryAddress: job.deliveryAddress,
           deliveryNotes: job.deliveryNotes,
-          orderNumber: job.orderNumber,
           itemCount: job.itemCount,
         };
 
@@ -323,6 +338,7 @@ class FormDispatchService {
             ec: p.ec,
             eg: p.eg,
             ek: p.ek,
+            // partDescription not on jobParts table yet
           })),
         };
     }

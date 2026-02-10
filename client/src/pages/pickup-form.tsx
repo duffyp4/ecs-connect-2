@@ -19,7 +19,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Package, MapPin, ArrowLeft, Loader2, WifiOff } from "lucide-react";
+import { Package, MapPin, ArrowLeft, Loader2, WifiOff, Clock, Calendar } from "lucide-react";
+import { PhotoPlaceholder } from "@/components/forms/emissions/photo-placeholder";
 
 interface FormSubmission {
   id: string;
@@ -155,16 +156,20 @@ export default function PickupForm() {
         )}
       </div>
 
-      {/* Read-only job info */}
+      {/* Read-only dispatch info */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Job Details</CardTitle>
+          <CardTitle className="text-base">Dispatch Info</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           <div className="grid grid-cols-2 gap-2">
             <div>
               <span className="text-muted-foreground">Job ID</span>
               <p className="font-medium">{submission.jobId}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Shop</span>
+              <p className="font-medium">{(prefill.shopName as string) || "—"}</p>
             </div>
             <div>
               <span className="text-muted-foreground">Customer</span>
@@ -174,35 +179,86 @@ export default function PickupForm() {
               <span className="text-muted-foreground">Ship To</span>
               <p className="font-medium">{(prefill.customerShipTo as string) || "—"}</p>
             </div>
-            <div>
-              <span className="text-muted-foreground">Shop</span>
-              <p className="font-medium">{(prefill.shopName as string) || "—"}</p>
-            </div>
           </div>
-          {prefill.pickupAddress && (
+
+          {/* Dispatch date/time */}
+          {!!(prefill.dispatchDate || prefill.dispatchTime) && (
+            <div className="flex items-center gap-3 text-sm">
+              {!!prefill.dispatchDate && (
+                <span className="flex items-center gap-1">
+                  <Calendar className="h-3 w-3 text-muted-foreground" />
+                  {String(prefill.dispatchDate)}
+                </span>
+              )}
+              {!!prefill.dispatchTime && (
+                <span className="flex items-center gap-1">
+                  <Clock className="h-3 w-3 text-muted-foreground" />
+                  {String(prefill.dispatchTime)}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* PO Number */}
+          {!!prefill.poNumber && (
+            <div>
+              <span className="text-muted-foreground">PO Number</span>
+              <p className="font-medium">{String(prefill.poNumber)}</p>
+            </div>
+          )}
+
+          {/* Pickup date/time */}
+          {!!(prefill.pickupDate || prefill.pickupTime) && (
+            <div className="grid grid-cols-2 gap-2">
+              {!!prefill.pickupDate && (
+                <div>
+                  <span className="text-muted-foreground">Pick-Up Date</span>
+                  <p className="font-medium">{String(prefill.pickupDate)}</p>
+                </div>
+              )}
+              {!!prefill.pickupTime && (
+                <div>
+                  <span className="text-muted-foreground">Pick-Up Time</span>
+                  <p className="font-medium">{String(prefill.pickupTime)}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {!!prefill.pickupAddress && (
             <div className="flex items-start gap-1 pt-1">
               <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
               <span>{prefill.pickupAddress as string}</span>
             </div>
           )}
-          {prefill.pickupNotes && (
-            <div className="pt-1 p-2 bg-muted rounded text-xs">
-              <span className="font-medium">Pickup Notes: </span>
-              {prefill.pickupNotes as string}
-            </div>
-          )}
-          {prefill.contactName && (
+
+          {!!prefill.contactName && (
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <span className="text-muted-foreground">Contact</span>
-                <p className="font-medium">{prefill.contactName as string}</p>
+                <p className="font-medium">{String(prefill.contactName)}</p>
               </div>
-              {prefill.contactNumber && (
+              {!!prefill.contactNumber && (
                 <div>
                   <span className="text-muted-foreground">Phone</span>
-                  <p className="font-medium">{prefill.contactNumber as string}</p>
+                  <p className="font-medium">{String(prefill.contactNumber)}</p>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Notes to Driver displayed prominently */}
+          {!!prefill.notesToDriver && (
+            <div className="p-2 bg-yellow-50 rounded text-xs border border-yellow-200">
+              <span className="font-medium">Notes to Driver: </span>
+              {String(prefill.notesToDriver)}
+            </div>
+          )}
+
+          {!!prefill.pickupNotes && (
+            <div className="pt-1 p-2 bg-muted rounded text-xs">
+              <span className="font-medium">Pickup Notes: </span>
+              {String(prefill.pickupNotes)}
             </div>
           )}
         </CardContent>
@@ -229,6 +285,8 @@ export default function PickupForm() {
                   </FormItem>
                 )}
               />
+
+              <PhotoPlaceholder label="Pick-Up Photo" />
 
               <FormField
                 control={form.control}

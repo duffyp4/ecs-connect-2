@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/form";
 import { Wrench, ArrowLeft, Loader2, WifiOff } from "lucide-react";
 import { PartsLoopSection } from "@/components/forms/parts-loop-section";
+import { SignOffSection } from "@/components/forms/emissions/sign-off-section";
 
 interface FormSubmission {
   id: string;
@@ -29,18 +30,143 @@ interface FormSubmission {
   prefilledData: Record<string, unknown> | null;
 }
 
+// Comprehensive part response schema — all ~60 tech-editable fields per part.
+// All optional at field level; conditional requirements handled by superRefine.
 const partResponseSchema = z.object({
+  // Identification
   ecsSerial: z.string(),
   ecsPartNumber: z.string().optional(),
-  passOrFail: z.string().min(1, "Pass or Fail is required"),
+  partDescription: z.string().optional(),
+  oeSerialNumber: z.string().optional(),
+
+  // Cleaning
+  cleaningPhase: z.string().optional(),
+
+  // One Box Diagnostics
+  noxConversion: z.string().optional(),
+  docInletTemp: z.string().optional(),
+  docOutletTemp: z.string().optional(),
+  dpfOutletTemp: z.string().optional(),
+  physicalDamage: z.string().optional(),
+  sensorsRemoved: z.string().optional(),
+  sensorsRemovedList: z.string().optional(),
+  repairDescriptionOneBox: z.string().optional(),
+  crystallization: z.string().optional(),
+  crystallizationDescription: z.string().optional(),
+
+  // One Box Inspection — smoke tests
+  preScrSmokeTest: z.string().optional(),
+  preDocSmokeTest: z.string().optional(),
+  postScrSmokeTest: z.string().optional(),
+  postDocSmokeTest: z.string().optional(),
+  needsSensors: z.string().optional(),
+  selectedSensors: z.string().optional(),
+
+  // Inlet & Outlet
+  inletColor: z.string().optional(),
+  inletOtherColor: z.string().optional(),
+  inletDamage: z.string().optional(),
+  inletComment: z.string().optional(),
+  outletColor: z.string().optional(),
+  outletOtherColor: z.string().optional(),
+  outletDamage: z.string().optional(),
+  outletLeakingCells: z.string().optional(),
+  outletComment: z.string().optional(),
+
+  // Sealing & Canister
+  sealingRing: z.string().optional(),
+  canisterInspection: z.string().optional(),
+
+  // Bung & Fitting
+  bungCondition: z.string().optional(),
+  showRecommendedBungs: z.string().optional(),
+  bungProblem: z.string().optional(),
+  firstFittingQty: z.string().optional(),
+  firstFittingPn: z.string().optional(),
+  firstFittingDesc: z.string().optional(),
+  additionalFittingNeeded: z.string().optional(),
+  secondFittingQty: z.string().optional(),
+  secondFittingPn: z.string().optional(),
+  secondFittingDesc: z.string().optional(),
+  thirdFittingNeeded: z.string().optional(),
+  thirdFittingQty: z.string().optional(),
+  thirdFittingPn: z.string().optional(),
+  thirdFittingDesc: z.string().optional(),
+  bungFittingComment: z.string().optional(),
+
+  // Collector
+  collectorCondition: z.string().optional(),
+  collectorComment: z.string().optional(),
+
+  // Gasket & Clamps
+  gasketOrClamps: z.string().optional(),
+  showRecommendedGaskets: z.string().optional(),
+  ecChecked: z.boolean().optional(),
+  egChecked: z.boolean().optional(),
+  ekChecked: z.boolean().optional(),
+  ecQuantity: z.string().optional(),
+  egQuantity: z.string().optional(),
+  ekQuantity: z.string().optional(),
+  ecPn1: z.string().optional(),
+  ecDesc1: z.string().optional(),
+  ecPn2: z.string().optional(),
+  ecDesc2: z.string().optional(),
+  ecPn3: z.string().optional(),
+  ecDesc3: z.string().optional(),
+  egPn1: z.string().optional(),
+  egDesc1: z.string().optional(),
+  egPn2: z.string().optional(),
+  egDesc2: z.string().optional(),
+  egPn3: z.string().optional(),
+  egDesc3: z.string().optional(),
+  ekPn1: z.string().optional(),
+  ekDesc1: z.string().optional(),
+  ekPn2: z.string().optional(),
+  ekDesc2: z.string().optional(),
+  ekPn3: z.string().optional(),
+  ekDesc3: z.string().optional(),
+
+  // Measurements
+  weightPreKg: z.string().optional(),
+  flowRatePre: z.string().optional(),
+  weightPostKg: z.string().optional(),
+  flowRatePost: z.string().optional(),
+  weightSinteredKg: z.string().optional(),
+  flowRateSintered: z.string().optional(),
+  lightTest: z.string().optional(),
+  dropRodTest: z.string().optional(),
+  sinteredAshProcess: z.string().optional(),
+
+  // Repair Assessment
   requireRepairs: z.string().optional(),
-  failedReason: z.string().optional(),
   repairsPerformed: z.string().optional(),
+  repairDescription: z.string().optional(),
+
+  // Pass/Fail
+  passOrFail: z.string().min(1, "Pass or Fail is required"),
+  failedReason: z.string().optional(),
+  failureNotes: z.string().optional(),
+  submissionStatus: z.string().optional(),
+  additionalPartComments: z.string().optional(),
+  showAdditionalComments: z.string().optional(),
+}).superRefine((data, ctx) => {
+  // Failed reason required when part fails
+  if (data.passOrFail === "Fail" && !data.failedReason) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Failed reason is required when part fails",
+      path: ["failedReason"],
+    });
+  }
 });
 
 const emissionsFormSchema = z.object({
   parts: z.array(partResponseSchema),
   additionalComments: z.string().optional(),
+  // Sign-off fields
+  technicianName: z.string().min(1, "Technician name is required"),
+  signOffDate: z.string().optional(),
+  signOffTime: z.string().optional(),
 });
 
 type EmissionsFormValues = z.infer<typeof emissionsFormSchema>;
@@ -60,6 +186,90 @@ interface PartPrefill {
   ek?: string;
 }
 
+/** Build default values for a single part */
+function buildPartDefaults(p: PartPrefill) {
+  return {
+    ecsSerial: p.ecsSerial || "",
+    ecsPartNumber: "",
+    partDescription: "",
+    oeSerialNumber: "",
+    cleaningPhase: "",
+    noxConversion: "",
+    docInletTemp: "",
+    docOutletTemp: "",
+    dpfOutletTemp: "",
+    physicalDamage: "",
+    sensorsRemoved: "",
+    sensorsRemovedList: "",
+    repairDescriptionOneBox: "",
+    crystallization: "",
+    crystallizationDescription: "",
+    preScrSmokeTest: "",
+    preDocSmokeTest: "",
+    postScrSmokeTest: "",
+    postDocSmokeTest: "",
+    needsSensors: "",
+    selectedSensors: "",
+    inletColor: "",
+    inletOtherColor: "",
+    inletDamage: "",
+    inletComment: "",
+    outletColor: "",
+    outletOtherColor: "",
+    outletDamage: "",
+    outletLeakingCells: "",
+    outletComment: "",
+    sealingRing: "",
+    canisterInspection: "",
+    bungCondition: "",
+    showRecommendedBungs: "",
+    bungProblem: "",
+    firstFittingQty: "",
+    firstFittingPn: "",
+    firstFittingDesc: "",
+    additionalFittingNeeded: "",
+    secondFittingQty: "",
+    secondFittingPn: "",
+    secondFittingDesc: "",
+    thirdFittingNeeded: "",
+    thirdFittingQty: "",
+    thirdFittingPn: "",
+    thirdFittingDesc: "",
+    bungFittingComment: "",
+    collectorCondition: "",
+    collectorComment: "",
+    gasketOrClamps: "",
+    showRecommendedGaskets: "",
+    ecChecked: false,
+    egChecked: false,
+    ekChecked: false,
+    ecQuantity: "",
+    egQuantity: "",
+    ekQuantity: "",
+    ecPn1: "", ecDesc1: "", ecPn2: "", ecDesc2: "", ecPn3: "", ecDesc3: "",
+    egPn1: "", egDesc1: "", egPn2: "", egDesc2: "", egPn3: "", egDesc3: "",
+    ekPn1: "", ekDesc1: "", ekPn2: "", ekDesc2: "", ekPn3: "", ekDesc3: "",
+    weightPreKg: "",
+    flowRatePre: "",
+    weightPostKg: "",
+    flowRatePost: "",
+    weightSinteredKg: "",
+    flowRateSintered: "",
+    lightTest: "",
+    dropRodTest: "",
+    sinteredAshProcess: "",
+    requireRepairs: "",
+    repairsPerformed: "",
+    repairDescription: "",
+    passOrFail: "",
+    failedReason: "",
+    failureNotes: "",
+    submissionStatus: "",
+    additionalPartComments: "",
+    showAdditionalComments: "",
+  };
+}
+
 export default function EmissionsForm() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
@@ -73,18 +283,16 @@ export default function EmissionsForm() {
   const prefill = (submission?.prefilledData ?? {}) as Record<string, unknown>;
   const parts = (prefill.parts as PartPrefill[]) ?? [];
 
+  const now = new Date();
+
   const form = useForm<EmissionsFormValues>({
     resolver: zodResolver(emissionsFormSchema),
     defaultValues: {
-      parts: parts.map((p) => ({
-        ecsSerial: p.ecsSerial || "",
-        ecsPartNumber: "",
-        passOrFail: "",
-        requireRepairs: "",
-        failedReason: "",
-        repairsPerformed: "",
-      })),
+      parts: parts.map(buildPartDefaults),
       additionalComments: "",
+      technicianName: "",
+      signOffDate: now.toISOString().split("T")[0],
+      signOffTime: now.toTimeString().slice(0, 5),
     },
   });
 
@@ -220,67 +428,67 @@ export default function EmissionsForm() {
               <span className="text-muted-foreground">PO Number</span>
               <p className="font-medium">{(prefill.poNumber as string) || "—"}</p>
             </div>
-            {prefill.p21OrderNumber && (
+            {!!prefill.p21OrderNumber && (
               <div>
                 <span className="text-muted-foreground">P21 Order #</span>
-                <p className="font-medium">{prefill.p21OrderNumber as string}</p>
+                <p className="font-medium">{String(prefill.p21OrderNumber)}</p>
               </div>
             )}
           </div>
 
-          {prefill.serialNumbers && (
+          {!!prefill.serialNumbers && (
             <div>
               <span className="text-muted-foreground">Serial Numbers</span>
-              <p className="font-medium">{prefill.serialNumbers as string}</p>
+              <p className="font-medium">{String(prefill.serialNumbers)}</p>
             </div>
           )}
 
-          {prefill.permissionToStart && (
+          {!!prefill.permissionToStart && (
             <div>
               <span className="text-muted-foreground">Permission to Start</span>
-              <p className="font-medium">{prefill.permissionToStart as string}</p>
+              <p className="font-medium">{String(prefill.permissionToStart)}</p>
             </div>
           )}
 
-          {prefill.customerSpecificInstructions && (
+          {!!prefill.customerSpecificInstructions && (
             <div className="p-2 bg-yellow-50 rounded text-xs border border-yellow-200">
               <span className="font-medium">Customer Instructions: </span>
-              {prefill.customerSpecificInstructions as string}
+              {String(prefill.customerSpecificInstructions)}
             </div>
           )}
 
-          {prefill.preferredProcess && (
+          {!!prefill.preferredProcess && (
             <div>
               <span className="text-muted-foreground">Preferred Process</span>
-              <p className="font-medium">{prefill.preferredProcess as string}</p>
+              <p className="font-medium">{String(prefill.preferredProcess)}</p>
             </div>
           )}
 
-          {prefill.sendClampsGaskets && (
+          {!!prefill.sendClampsGaskets && (
             <div>
               <span className="text-muted-foreground">Send Clamps & Gaskets?</span>
-              <p className="font-medium">{prefill.sendClampsGaskets as string}</p>
+              <p className="font-medium">{String(prefill.sendClampsGaskets)}</p>
             </div>
           )}
 
-          {prefill.anyOtherSpecificInstructions && (
+          {!!prefill.anyOtherSpecificInstructions && (
             <div className="p-2 bg-muted rounded text-xs">
               <span className="font-medium">Other Instructions: </span>
-              {prefill.anyOtherSpecificInstructions as string}
+              {String(prefill.anyOtherSpecificInstructions)}
             </div>
           )}
 
-          {prefill.anyCommentsForTech && (
+          {!!prefill.anyCommentsForTech && (
             <div className="p-2 bg-blue-50 rounded text-xs border border-blue-200">
               <span className="font-medium">Comments for Tech: </span>
-              {prefill.anyCommentsForTech as string}
+              {String(prefill.anyCommentsForTech)}
             </div>
           )}
 
-          {prefill.noteToTechAboutCustomer && (
+          {!!prefill.noteToTechAboutCustomer && (
             <div className="p-2 bg-orange-50 rounded text-xs border border-orange-200">
               <span className="font-medium">Note about Customer: </span>
-              {prefill.noteToTechAboutCustomer as string}
+              {String(prefill.noteToTechAboutCustomer)}
             </div>
           )}
         </CardContent>
@@ -315,6 +523,12 @@ export default function EmissionsForm() {
               />
             </CardContent>
           </Card>
+
+          {/* Sign-off section */}
+          <SignOffSection
+            control={form.control}
+            shopName={prefill.shopName as string | undefined}
+          />
 
           <Button
             type="submit"
