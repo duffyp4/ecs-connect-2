@@ -4,6 +4,14 @@ import { storage } from "./storage";
 
 const hasClerkKeys = !!process.env.CLERK_SECRET_KEY;
 
+/**
+ * Dev tools are enabled when Clerk is not configured (dev mode)
+ * or when ALLOW_PERSONA_SWITCH is explicitly set (for staging with Clerk).
+ */
+export function isDevToolsEnabled(): boolean {
+  return !hasClerkKeys || process.env.ALLOW_PERSONA_SWITCH === "true";
+}
+
 // Dev mode user info - used when Clerk is not configured
 const DEV_USER = {
   id: "dev-user-123",

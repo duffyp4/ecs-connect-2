@@ -21,6 +21,7 @@ import { Landing } from "@/pages/landing";
 import { AccessDenied } from "@/pages/access-denied";
 import Layout from "@/components/layout";
 import { DevModeProvider } from "@/contexts/DevModeContext";
+import { DevPersonaProvider } from "@/contexts/DevPersonaContext";
 import { ClerkProvider, SignedIn, SignedOut } from "@clerk/clerk-react";
 
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -119,12 +120,14 @@ function Router() {
 function App() {
   const content = (
     <QueryClientProvider client={queryClient}>
-      <DevModeProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </DevModeProvider>
+      <DevPersonaProvider>
+        <DevModeProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </DevModeProvider>
+      </DevPersonaProvider>
     </QueryClientProvider>
   );
 

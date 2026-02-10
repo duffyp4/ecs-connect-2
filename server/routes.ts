@@ -7,7 +7,7 @@ import { googleSheetsService } from "./services/googleSheets";
 import { jobTrackerService } from "./services/jobTracker";
 import { referenceDataService } from "./services/referenceData";
 import { jobEventsService } from "./services/jobEvents";
-import { setupAuth, isAuthenticated, getRequestUserId, requireUserId, getRequestUserEmail, getRequestUserName, syncClerkUser } from "./clerkAuth";
+import { setupAuth, isAuthenticated, getRequestUserId, requireUserId, getRequestUserEmail, getRequestUserName, syncClerkUser, isDevToolsEnabled } from "./clerkAuth";
 import { formDispatchService } from "./services/formDispatch";
 import { webhookService, webhookMetrics } from "./services/webhook";
 import { updatePartsFromSubmission, handleAdditionalComments } from "./services/parts-update";
@@ -38,12 +38,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   };
 
   // Auth routes - get authenticated user info (also syncs Clerk user to our DB)
+  // Supports ?asEmail= for persona switching in dev/staging mode
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       // Sync Clerk user to local database (creates if first login)
       const user = await syncClerkUser(req);
       if (!user) {
         return res.status(403).json({ message: "Access denied - not whitelisted" });
+      }
+
+      // Persona override: if dev tools enabled and ?asEmail= provided,
+      // return the whitelist user for that email instead
+      const asEmail = req.query.asEmail as string | undefined;
+      if (asEmail && isDevToolsEnabled()) {
+        const whitelistEntry = await storage.getWhitelistByEmail(asEmail);
+        if (whitelistEntry) {
+          return res.json({
+            ...user,
+            email: asEmail,
+            whitelistRole: whitelistEntry.role,
+            homeShop: whitelistEntry.homeShop,
+            _persona: true, // flag so frontend knows this is a persona
+          });
+        }
       }
 
       // Also fetch whitelist entry to get job role and homeShop
@@ -83,6 +100,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating user timezone:", error);
       res.status(500).json({ message: "Failed to update timezone" });
+    }
+  });
+
+  // Dev tools: persona list for the persona switcher dropdown
+  app.get('/api/dev/personas', isAuthenticated, async (_req: any, res) => {
+    try {
+      if (!isDevToolsEnabled()) {
+        return res.status(403).json({ message: "Dev tools not enabled" });
+      }
+      const whitelistEntries = await storage.getAllWhitelist();
+      res.json(whitelistEntries);
+    } catch (error) {
+      console.error("Error fetching personas:", error);
+      res.status(500).json({ message: "Failed to fetch personas" });
     }
   });
 

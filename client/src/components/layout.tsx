@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Bolt, Plus, BarChart3, List, Package, FileText, User, LogOut, Menu, X, Code, Settings, Shield, Wrench, Truck } from "lucide-react";
+import { Bolt, Plus, BarChart3, List, Package, FileText, User, LogOut, Menu, X, Code, Settings, Shield, Wrench, Truck, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,13 +13,31 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { useDevMode } from "@/contexts/DevModeContext";
+import { useDevPersona } from "@/contexts/DevPersonaContext";
 import { Switch } from "@/components/ui/switch";
 import { SignOutButton } from "@clerk/clerk-react";
+import { useQuery } from "@tanstack/react-query";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const SHOW_DEV_TOOLS = import.meta.env.VITE_SHOW_DEV_TOOLS === "true";
 
 interface LayoutProps {
   children: React.ReactNode;
+}
+
+interface WhitelistEntry {
+  email: string;
+  role: string;
+  homeShop: string | null;
 }
 
 export default function Layout({ children }: LayoutProps) {
@@ -27,7 +45,13 @@ export default function Layout({ children }: LayoutProps) {
   const { user, whitelistRole } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isDevMode, toggleDevMode } = useDevMode();
-  const isDevelopment = import.meta.env.MODE !== 'production';
+  const { personaEmail, setPersonaEmail, clearPersona } = useDevPersona();
+
+  // Fetch persona list when dev tools are shown
+  const { data: personas } = useQuery<WhitelistEntry[]>({
+    queryKey: ["/api/dev/personas"],
+    enabled: SHOW_DEV_TOOLS,
+  });
 
   const handleLogout = () => {
     window.location.href = "/api/logout";
@@ -67,6 +91,19 @@ export default function Layout({ children }: LayoutProps) {
     }
   };
 
+  // Group personas by role for the dropdown
+  const groupedPersonas = personas?.reduce<Record<string, WhitelistEntry[]>>((acc, entry) => {
+    const role = entry.role || "unknown";
+    if (!acc[role]) acc[role] = [];
+    acc[role].push(entry);
+    return acc;
+  }, {}) ?? {};
+
+  const roleOrder = ["admin", "csr", "technician", "driver"];
+  const sortedRoles = Object.keys(groupedPersonas).sort(
+    (a, b) => (roleOrder.indexOf(a) === -1 ? 99 : roleOrder.indexOf(a)) - (roleOrder.indexOf(b) === -1 ? 99 : roleOrder.indexOf(b))
+  );
+
   const navigationItems = getNavigationItems();
 
   return (
@@ -89,15 +126,20 @@ export default function Layout({ children }: LayoutProps) {
             <span className="font-semibold text-[var(--ecs-primary)] text-sm sm:text-base lg:text-lg">
               ECS Connect
             </span>
+            {personaEmail && (
+              <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-medium">
+                Persona
+              </span>
+            )}
           </div>
-          
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center space-x-2" data-testid="button-user-menu">
                 {user?.profileImageUrl ? (
-                  <img 
-                    src={user.profileImageUrl} 
-                    alt="Profile" 
+                  <img
+                    src={user.profileImageUrl}
+                    alt="Profile"
                     className="h-6 w-6 rounded-full object-cover"
                   />
                 ) : (
@@ -111,7 +153,13 @@ export default function Layout({ children }: LayoutProps) {
                 <>
                   <div className="px-2 py-1.5 text-sm text-muted-foreground">
                     {user.email}
+                    {personaEmail && <span className="ml-1 text-amber-600">(persona)</span>}
                   </div>
+                  {whitelistRole && (
+                    <div className="px-2 py-0.5 text-xs text-muted-foreground capitalize">
+                      Role: {whitelistRole}
+                    </div>
+                  )}
                   <DropdownMenuSeparator />
                 </>
               )}
@@ -153,7 +201,7 @@ export default function Layout({ children }: LayoutProps) {
       <div className="flex relative">
         {/* Mobile Menu Overlay */}
         {isMobileMenuOpen && (
-          <div 
+          <div
             className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
             onClick={() => setIsMobileMenuOpen(false)}
             data-testid="mobile-menu-overlay"
@@ -162,8 +210,8 @@ export default function Layout({ children }: LayoutProps) {
 
         {/* Sidebar */}
         <aside className={`
-          fixed lg:static lg:translate-x-0 top-14 left-0 z-50 
-          w-64 h-[calc(100vh-3.5rem)] lg:h-auto 
+          fixed lg:static lg:translate-x-0 top-14 left-0 z-50
+          w-64 h-[calc(100vh-3.5rem)] lg:h-auto
           sidebar p-4 transition-transform duration-200 ease-in-out
           flex flex-col
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
@@ -172,10 +220,10 @@ export default function Layout({ children }: LayoutProps) {
             {navigationItems.map((item) => {
               const Icon = item.icon;
               const isActive = location === item.href;
-              
+
               return (
                 <Link key={item.href} href={item.href}>
-                  <div 
+                  <div
                     className={`nav-link flex items-center space-x-2 ${isActive ? 'active' : ''}`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
@@ -187,9 +235,10 @@ export default function Layout({ children }: LayoutProps) {
             })}
           </nav>
 
-          {/* Dev Mode Toggle - Only visible in development */}
-          {isDevelopment && (
-            <div className="mt-auto pt-4 border-t border-border">
+          {/* Dev Tools Section - Only visible when VITE_SHOW_DEV_TOOLS=true */}
+          {SHOW_DEV_TOOLS && (
+            <div className="mt-auto pt-4 border-t border-border space-y-3">
+              {/* Dev Mode Toggle */}
               <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                 <div className="flex items-center space-x-2">
                   <Code className="h-4 w-4 text-muted-foreground" />
@@ -202,10 +251,52 @@ export default function Layout({ children }: LayoutProps) {
                 />
               </div>
               {isDevMode && (
-                <p className="text-xs text-muted-foreground mt-2 px-2">
+                <p className="text-xs text-muted-foreground px-2">
                   All action buttons visible for preview
                 </p>
               )}
+
+              {/* Persona Switcher */}
+              <div className="p-2 rounded-md bg-muted/50">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-xs font-medium text-muted-foreground">Switch Persona</span>
+                </div>
+                <Select
+                  value={personaEmail ?? "__none__"}
+                  onValueChange={(value) => {
+                    if (value === "__none__") {
+                      clearPersona();
+                    } else {
+                      setPersonaEmail(value);
+                    }
+                  }}
+                >
+                  <SelectTrigger className="h-8 text-xs" data-testid="persona-switcher">
+                    <SelectValue placeholder="Default (real user)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">
+                      <span className="text-muted-foreground">Default (real user)</span>
+                    </SelectItem>
+                    {sortedRoles.map((role) => (
+                      <SelectGroup key={role}>
+                        <SelectLabel className="capitalize text-xs">{role}</SelectLabel>
+                        {groupedPersonas[role].map((entry) => (
+                          <SelectItem key={entry.email} value={entry.email}>
+                            <span className="truncate">
+                              {entry.email.split("@")[0]}
+                              {entry.homeShop && (
+                                <span className="text-muted-foreground ml-1">— {entry.homeShop}</span>
+                              )}
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           )}
         </aside>
