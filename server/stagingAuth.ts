@@ -105,6 +105,12 @@ export function setupStagingAuth(app: import("express").Express): void {
 
   const validToken = deriveToken(password);
 
+  // Health check endpoint — always accessible so Railway can verify the app is alive.
+  // Must be registered before the gate middleware.
+  app.get("/health", (_req: Request, res: Response) => {
+    res.json({ status: "ok" });
+  });
+
   // Check endpoint — lets the client verify staging auth status
   // Registered before the gate middleware so it's always accessible.
   app.get("/api/staging-check", (req: Request, res: Response) => {
@@ -133,7 +139,7 @@ export function setupStagingAuth(app: import("express").Express): void {
   // Gate middleware — blocks all other requests without a valid cookie
   app.use((req: Request, res: Response, next: NextFunction) => {
     // Don't gate the login endpoint itself
-    if (req.path === "/api/staging-login" || req.path === "/api/staging-check") return next();
+    if (req.path === "/api/staging-login" || req.path === "/api/staging-check" || req.path === "/health") return next();
 
     // Parse the cookie manually (no cookie-parser dependency needed)
     const cookies = req.headers.cookie || "";
