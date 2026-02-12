@@ -55,13 +55,41 @@ ECS Connect is a job tracking and workflow management system for Emissions and C
 - **Database**: Neon PostgreSQL (same `DATABASE_URL` as before, fully portable)
 - **Auth**: Clerk (`CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`)
 - **Custom domain**: `app.ecsconnect.com` (Railway custom domain with auto SSL)
-- **Railway CLI**: Installed locally. Use `railway` commands to manage deployments directly:
-  - `railway logs` — view deploy/runtime logs
-  - `railway status` — check current deployment status
-  - `railway variables` — list/set environment variables
-  - `railway up` — manual deploy
-  - `railway open` — open Railway dashboard in browser
-  - Default to using Railway CLI when troubleshooting deploys, checking logs, or managing env vars.
+- **Health check**: `GET /health` endpoint bypasses the staging password gate (returns `{"status":"ok"}`)
+
+#### Railway MCP Server (preferred)
+
+The Railway MCP server is installed and provides **structured API access** to Railway. **Prefer MCP tools over the CLI** — they return structured data and are more reliable (the CLI can return empty output when containers crash).
+
+**When to use MCP tools:**
+- Checking deployment status, logs, or errors (especially when debugging crashes)
+- Managing environment variables
+- Provisioning databases or services
+- Querying resource metrics
+- Any Railway operation where you need reliable, structured output
+
+**Available Railway slash commands:**
+- `/status` — check project/service status
+- `/deploy` — deploy local code
+- `/deployment` — manage deployments (list, logs, redeploy, remove)
+- `/environment` — manage config (vars, start commands, replicas)
+- `/service` — manage existing services
+- `/domain` — manage service domains
+- `/database` — add Railway databases (Postgres, Redis)
+- `/projects` — list, switch, and configure projects
+- `/new` — create projects, services, databases
+- `/metrics` — query resource usage (CPU, memory, network)
+- `/templates` — deploy from Railway marketplace
+- `/railway-docs` — fetch up-to-date Railway documentation
+
+#### Railway CLI (fallback)
+
+The Railway CLI is also installed for quick terminal operations:
+- `railway logs` — view deploy/runtime logs
+- `railway status` — check current deployment status
+- `railway variables` — list/set environment variables
+- `railway up` — manual deploy
+- `railway open` — open Railway dashboard in browser
 
 ### GoCanvas Replacement
 
